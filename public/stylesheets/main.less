@@ -55,3 +55,30 @@ tr.message-warn {
 body.file-hover, .body .file-hover * {
 	opacity: 0.6;
 }
+
+.scrolltable-outer {
+	position:relative;
+	padding:4em 0 3em 0; /* moves tbody down from thead */
+	
+	table caption {
+		position:absolute;
+		top:0; /* positions the caption above the main table */
+		left:0;
+	}
+	
+	thead tr {
+		position:absolute;
+		top:1.5em;
+		left:0;
+	}
+	
+	th, td {
+		width:20%;/*10em;*/
+		text-align:left;
+	}
+}
+
+.scrolltable-inner {
+	overflow:auto;
+	height:25em; /* sets scrolltable height */
+}

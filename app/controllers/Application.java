@@ -20,4 +20,7 @@ public class Application extends Controller {
 		return status(status, views.html.error.render(status, name, description, message));
 	}
 	
+	public static Result redirect(String path, String file) {
+		return movedPermanently(path+file);
+	}
 }

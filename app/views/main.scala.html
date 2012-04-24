@@ -44,19 +44,19 @@
           <a class="brand" href="@routes.Login.login()">Pipeline 2</a>
           <nav class="nav-collapse">
             <ul class="nav">
-              <li class="@("active".when(nav == "scripts"))"><a href="@routes.Scripts.getScripts()">Scripts</a></li>
-              <li class="@("active".when(nav == "jobs"))"><a href="@routes.Jobs.getJobs()">Jobs</a></li>
-              <li class="@("active".when(nav == "about"))"><a href="http://www.daisy.org/pipeline2">About</a></li>
+              <li class="@("active".when(nav == "scripts"))"><a href="@routes.Scripts.getScripts()"><i class="icon-home icon-white"></i> Scripts</a></li>
+              <li class="@("active".when(nav == "jobs"))"><a href="@routes.Jobs.getJobs()"><i class="icon-tasks icon-white"></i> Jobs</a></li>
+              <li class="@("active".when(nav == "about"))"><a href="http://www.daisy.org/pipeline2"><i class="icon-info-sign icon-white"></i> About</a></li>
             </ul>
             <ul class="nav pull-right">
               @if(session.get("admin")=="true"){
-              <li class="@("active".when(nav == "admin"))"><a href="@routes.Administrator.settings()">Admin settings</a></li>
+              <li class="@("active".when(nav == "admin"))"><a href="@routes.Administrator.settings()"><i class="icon-wrench icon-white"></i> Admin settings</a></li>
               }
-              <li class="@("active".when(nav == "account"))"><a href="@routes.Account.overview()">@session.get("name")</a></li>
+              <li class="@("active".when(nav == "account"))"><a href="@routes.Account.overview()"><i class="icon-user icon-white"></i> @session.get("name")</a></li>
               <li class="@("active".when(nav == "login"))">@if(session.get("email")==null){
-              	<a href="@routes.Login.login()">Log in</a>
+              	<a href="@routes.Login.login()"><i class="icon-lock icon-white"></i>Log in</a>
               	}else{
-              	<a href="@routes.Login.logout()">Log out</a>
+              	<a href="@routes.Login.logout()"><i class="icon-remove icon-white"></i> Log out</a>
               	}
             </ul>
           </nav>

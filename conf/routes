@@ -4,6 +4,7 @@
 
 # Application
 GET     /                                   controllers.Application.index()
+GET     /assets/img/*file                   controllers.Application.redirect(path="/assets/images/", file)
 
 # Login
 GET     /login                              controllers.Login.login()
