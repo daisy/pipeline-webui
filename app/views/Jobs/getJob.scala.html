@@ -27,6 +27,14 @@
 <li>ID: @id</li>
 </ul>
 
+@if(status=="DONE"){
+<h2>Result</h2>
+<a href="@routes.Jobs.getResult(id)">@routes.Jobs.getResult(id)</a>
+}
+
+<h2>Log</h2>
+<a href="@routes.Jobs.getLog(id)">@routes.Jobs.getLog(id)</a>
+
 <h2>Messages</h2>
 <table>
 	<tr class="message">
@@ -42,13 +50,5 @@
 	</tr>
 	}
 </table>
-
-@if(status=="DONE"){
-<h2>Result</h2>
-<a href="@routes.Jobs.getResult(id)">@routes.Jobs.getResult(id)</a>
-}
-
-<h2>Log</h2>
-<a href="@routes.Jobs.getLog(id)">@routes.Jobs.getLog(id)</a>
 
 }
