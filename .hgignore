@@ -1,0 +1,46 @@
+syntax: glob
+
+# Backup files left behind by the Emacs editor.
+*~
+
+# Lock files used by the Emacs editor.
+# Notice that the "#" character is quoted with a backslash.
+# This prevents it from being interpreted as starting a comment.
+.\#*
+
+# Temporary files used by the vim editor.
+.*.swp
+
+# A hidden file created by the Mac OS X Finder.
+.DS_Store
+
+# TextMate projects
+*.tmproj
+
+# Python compiled files
+*.pyc
+
+# Java class files
+*.class
+
+# switch to regexp syntax.
+syntax: regexp
+
+# ignore all bin/ directories
+(^|/)bin/
+
+# ignore all Maven target/ directories
+(^|/)target/
+
+# pipeline2-web-ui ignores
+^\.log$
+^eclipse
+^\.classpath$
+^tmp
+^logs
+^test-result
+^modules
+^bin
+^uploads/\d+
+^target$
+^.*/target$

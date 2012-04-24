@@ -1,0 +1,54 @@
+@(href: String, id: String, nicename: String, description: String, status: String, scriptHref: String, scriptId: String, script: String, log: String, result: String, jobMessages: List[List[String]])
+
+@main("View job", "", "") {
+
+<h1>View job</h1>
+
+@if(status=="DONE"){
+<div id="status" class="alert alert-success">
+<span>Job finished successfully.</span>
+}else{@if(status=="RUNNING"){
+<div id="status" class="alert alert-info">
+<span>Job is running</span>
+}else{@if(status=="IDLE"){
+<div id="status" class="alert alert-info">
+<span>Job is idle</span>
+}else{@if(status=="ERROR"){
+<div id="status" class="alert alert-error">
+<span>Job failed. See the message log for details.</span>
+}else{
+<div id="status" class="alert alert-info">
+@status
+}}}}
+</div>
+
+<ul>
+<li>Script: @nicename</li>
+<li>ID: @id</li>
+</ul>
+
+<h2>Messages</h2>
+<table>
+	<tr class="message">
+		<th>level</td>
+		<th>sequence</td>
+		<th>message</td>
+	</tr>
+	@for(message <- jobMessages){
+	<tr class="message @("message-error".when("ERROR".equals(message.get(0)))) @("message-warn".when("WARN".equals(message.get(0))))">
+		<td>@message.get(0)</td>
+		<td>@message.get(1)</td>
+		<td class="messageline">@message.get(2)</td>
+	</tr>
+	}
+</table>
+
+@if(status=="DONE"){
+<h2>Result</h2>
+<a href="@routes.Jobs.getResult(id)">@routes.Jobs.getResult(id)</a>
+}
+
+<h2>Log</h2>
+<a href="@routes.Jobs.getLog(id)">@routes.Jobs.getLog(id)</a>
+
+}

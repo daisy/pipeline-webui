@@ -1,0 +1,34 @@
+@(jobs: List[List[String]])
+
+@main("Jobs", "jobs") {
+
+<h1>Jobs</h1>
+
+<div class="row">
+
+@if(jobs.size() > 0) {
+
+	<table class="table span6 offset3 joblist">
+	<tr>
+		<th>Job</th>
+		<th>Status</th>
+	</tr>
+	@for(job <- jobs) {
+	<tr>
+		<td><a href="@routes.Jobs.getJob(job.get(1))">@job.get(1)</td>
+		<td>@job.get(2)</td>
+	</tr>
+	}
+	</table>
+
+}else {
+	
+	<div class="alert alert-info span4 offset4">
+		<p>There are no jobs.</p>
+	</div>
+
+}
+
+</div>
+
+}

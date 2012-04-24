@@ -1,0 +1,152 @@
+@(createAdminForm: Form[User])
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>First use</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Web interface for Pipeline 2">
+    <meta name="author" content="DAISY Consortium">
+
+    <!-- Styles -->
+    <link href="@routes.Assets.at("stylesheets/bootstrap.css")" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+    <link href="@routes.Assets.at("stylesheets/bootstrap-responsive.css")" rel="stylesheet">
+    <link rel="stylesheet/less" media="screen" type="text/css" href="@routes.Assets.at("stylesheets/main.less")">
+	
+	<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!-- Parse LESS stylesheets in all browsers -->
+    <script src="@routes.Assets.at("javascripts/less-1.2.1.min.js")" type="text/javascript"></script>
+
+    <!-- Icons -->
+    <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+    <!--<link rel="apple-touch-icon" href="routes.Assets.at("images/apple-touch-icon.png")">
+    <link rel="apple-touch-icon" sizes="72x72" href="routes.Assets.at("images/apple-touch-icon-72x72.png")">
+    <link rel="apple-touch-icon" sizes="114x114" href="routes.Assets.at("images/apple-touch-icon-114x114.png")">-->
+    
+  </head>
+
+  <body class="body">
+  	
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="@routes.Login.login()">Pipeline 2</a>
+        </div>
+      </div>
+    </div>
+	
+	<!-- Load jQuery before the content (so other templates may use jQuery) -->
+	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script type="text/javascript">
+	if (typeof jQuery == 'undefined') {
+		document.write(unescape("%3Cscript src='@routes.Assets.at("javascripts/jquery-1.7.1.min.js")' type='text/javascript'%3E%3C/script%3E"));
+	}
+	</script>
+	
+    <div class="container">
+      	
+      	<div class="page-header">
+           	<h1>Create administrative user</h1>
+        </div>
+      	
+      	<p>This seems to be the first time that you are using the Pipeline 2 Web UI. Please fill in the form below to create an administrator for this website.</p>
+      	<hr/>
+      	
+        @helper.form(action = routes.FirstUse.postCreateAdmin()) {
+            
+            @if(createAdminForm.hasGlobalErrors) {
+                <div class="alert alert-error">
+                    @createAdminForm.globalError.message
+                </div>
+            }
+            
+            @if(flash.contains("success")) {
+                <div class="alert alert-success">
+                    @flash.get("success")
+                </div>
+            }
+            
+            <fieldset>
+	            
+	            <div class="form-horizontal">
+	            	<div class="row control-group @("error".when(createAdminForm.error("email") != null))">
+						<div class="controls offset3 span2">
+							<label for="email" class="control-label">E-mail</label>
+						</div>
+						<div class="controls span4">
+							<input type="email" name="email" id="email" placeholder="Valid e-mail address required." class="input-xlarge span4" value="@createAdminForm.field("email").valueOr("")"/>
+						</div>
+						@if(createAdminForm.field("email").errors().size() > 0){
+							<div class="span3">
+								@if(createAdminForm.error("email").message.startsWith("error.")){
+									<span class="help-inline">A valid e-mail address must be provided.</span>
+								}else{
+									<span class="help-inline">@createAdminForm.error("email").message</span>
+								}
+							</div>
+						}
+					</div>
+					
+					<div class="row control-group @("error".when(createAdminForm.error("password") != null))">
+		            	<div class="controls offset3 span2">
+		            		<label for="password" class="control-label">Password</label>
+						</div>
+						<div class="controls span4">
+							<input type="password" name="password" id="password" placeholder="A password must be at least 6 characters." class="input-xlarge span4"/>
+						</div>
+						@if(createAdminForm.field("password").value() != null && createAdminForm.field("password").valueOr("").length() < 6){
+							<div class="span3">
+								<span class="help-inline">The password must contain at least 6 characters.</span>
+							</div>
+						}
+					</div>
+					
+					<div class="row control-group @("error".when(createAdminForm.error("repeatPassword") != null))">
+		            	<div class="controls offset3 span2">
+		            		<label for="repeatPassword" class="control-label">Repeat password</label>
+						</div>
+						<div class="controls span4">
+							<input type="password" name="repeatPassword" id="repeatPassword" placeholder="Please repeat your password again." class="input-xlarge span4"/>
+						</div>
+						@if(createAdminForm.field("repeatPassword").errors().size() > 0){
+							<div class="span3">
+								<span class="help-inline">@createAdminForm.error("repeatPassword").message</span>
+							</div>
+						}
+					</div>
+				</div>
+				
+				<div class="row">
+					<div class="controls offset3 span6">
+						<input class="btn btn-primary" id="submit" type="submit" name="submit" value="Create administrator" style="width:100%"/>
+					</div>
+				</div>
+				
+			</fieldset>
+        }
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="@routes.Assets.at("javascripts/bootstrap-transition.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-alert.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-modal.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-dropdown.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-scrollspy.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-tab.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-tooltip.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-popover.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-button.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-collapse.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-carousel.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-typeahead.js")" type="text/javascript"></script>
+  </body>
+</html>

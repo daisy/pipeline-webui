@@ -1,0 +1,111 @@
+@(href: String, id: String, nicename: String, description: String, homepage: String, inputs: List[List[String]], options: List[List[String]], outputs: List[List[String]])
+
+@main("Create job", "", "createJob.js") {
+
+<script type="text/javascript">
+	$(function() {
+		Job.inputPorts = [
+		@for(input <- inputs) {
+			{ "name": "@input.get(0)", "desc": "@input.get(1)", "sequence": "@input.get(2)", "mediaType": "@input.get(3)" },
+		}
+		];
+		
+		$(document).bind('dragstart dragenter dragover', function (e) {
+			console.log(e.type);
+	    	console.log(e);
+	    	if (typeof e.originalEvent !== "undefined"
+	    		&& typeof e.originalEvent.dataTransfer !== "undefined"
+	    		&& typeof e.originalEvent.dataTransfer.files !== "undefined") {
+	    		
+	    		console.log("dragstart dragenter dragover");
+	    		window.clearTimeout(Job.removeFileHoverClassEvent);
+	    		$("body").addClass("file-hover");
+	    		
+	    		if (e.type === "dragenter") {
+	    			/*var dragIcon = document.createElement('img');
+					dragIcon.src = 'logo.png';
+					dragIcon.width = 100;
+					e.dataTransfer.setDragImage(dragIcon, -10, -10);*/
+	    		}
+	    	}
+		});
+		
+		$(document).bind('dragleave drop dragend', function (e) {
+			if (typeof e.originalEvent !== "undefined"
+	    		&& typeof e.originalEvent.dataTransfer !== "undefined"
+	    		&& typeof e.originalEvent.dataTransfer.files !== "undefined") {
+	    		
+	    		console.log("dragleave drop dragend");
+	    		window.clearTimeout(Job.removeFileHoverClassEvent);
+	    		Job.removeFileHoverClassEvent = window.setTimeout(function(){ // avoid flickering
+	    			$("body").removeClass("file-hover");
+	    		},250);
+	    	}
+		});
+	});
+</script>
+
+<h1>@nicename</h1>
+
+<div class="well">
+<p>@description</p>
+</div>
+
+@helper.form(action = routes.Jobs.postJob(), 'id -> "job-form") {
+
+<input type="hidden" name="href" value="@href"/>
+<input type="hidden" name="id" value="@id"/>
+<input type="hidden" name="files" id="files" value=""/>
+
+@if(options.size() > 0){
+<div class="control-group well form-horizontal">
+<legend>Options</legend>
+
+@for(option <- options) {
+<label for="option-@option.get(0)" class="control-label">@option.get(0)</label>
+<div class="controls">
+<input name="option-@option.get(0)" id="option-@option.get(0)" type="text" class="input-xlarge"/>
+<span class="help-inline">@option.get(1)</span>
+</div>
+}
+</div>
+}
+
+}
+<div class="control-group well">
+	<legend>Files</legend>
+	@helper.form(action = routes.Jobs.postJob(), 'id -> "file-form", 'enctype -> "multipart/form-data", 'class -> "form-horizontal") {
+	<label for="file-upload">Upload file</label>
+	<div class="controls file-upload-btn">
+		<input id="file-upload" type="file" name="upload-files" multiple=""/>
+	</div>
+	}
+	<table border="1" id="filetable" class="table table-condensed">
+		<thead>
+			<tr class="filetable-headline hidden">
+				<th>&nbsp;</th>
+				<th>Filename</th>
+				<th colspan="2">&nbsp;</th>
+				<th>Context</th>
+				@for(input <- inputs) {
+				<th>@input.get(1)</th>
+				}
+			</tr>
+		</thead>
+	</table>
+</div>
+
+<!--
+<pre>
+TODO:
+- drag'n'drop to change the sequence order
+- drag'n'drop folders from desktop when possible
+- validate form (single document vs sequence, option types)
+</pre>
+-->
+
+<div class="well submitjob">
+	<button type="submit" form="job-form" onsubmit="Job.updateFormFileParameter()" value="Start job" class="btn-large btn-primary">Start job</button>
+</div>
+
+}

@@ -1,0 +1,16 @@
+
+@*
+
+#{extends 'main.html' /}
+#{set title:'Home' /}
+
+<table>
+#{list items:fileMap.keySet(), as:'file'}
+<tr>
+<td>${file}</td>
+<td>${fileMap.get(file)}}</td>
+</tr>
+#{/list}
+</table>
+
+*@
