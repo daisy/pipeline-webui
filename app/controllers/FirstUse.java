@@ -82,7 +82,7 @@ public class FirstUse extends Controller {
 		Form<User> filledForm = createAdminForm.bindFromRequest();
         
         if (User.findByEmail(filledForm.field("email").valueOr("")) != null)
-            filledForm.reject("email", "This username is already taken");
+            filledForm.reject("email", "That e-mail address is already taken");
     	
     	if (!filledForm.field("password").valueOr("").equals("") && !filledForm.field("password").valueOr("").equals(filledForm.field("repeatPassword").value()))
     		filledForm.reject("repeatPassword", "Password doesn't match.");

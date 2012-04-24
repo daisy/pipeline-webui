@@ -77,18 +77,6 @@
       @content
 	
     </div>
-    
-	<div id="socketout"></div>
-	
-	<script type="text/javascript">
-	    // Create a socket
-	    var socket = new WebSocket('@@{Jobs.getResult()}');
-	 
-	    // Message received on the socket
-	    socket.onmessage = function(event) {
-	        $('#socketout').append(event.data+"<br />");
-	    }
-	</script>
 	
     <!-- Scripts -->
     <script src="@routes.Assets.at("javascripts/bootstrap-transition.js")" type="text/javascript"></script>

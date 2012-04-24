@@ -76,35 +76,28 @@
                 </div>
             }
             
-            <fieldset>
-	            
-	            <div class="form-horizontal">
-	            	<div class="row control-group @("error".when(setUploadDirForm.error("uploaddir") != null))">
-						<div class="controls offset3 span2">
+            <div class="row">
+	            <fieldset class="offset2 span8">
+		            
+		            <div class="form-horizontal">
+		            	<div class="control-group @("error".when(setUploadDirForm.error("uploaddir") != null))">
 							<label for="uploaddir" class="control-label">Upload directory</label>
-						</div>
-						<div class="controls span4">
-							<input type="text" name="uploaddir" id="uploaddir" placeholder="URL" class="input-xlarge span4" value="@setUploadDirForm.field("uploaddir").valueOr(System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"))"/>
-						</div>
-						@if(setUploadDirForm.field("uploaddir").errors().size() > 0){
-							<div class="span3">
-								<span class="help-inline">A valid filesystem path must be provided.</span>
+							<div class="controls">
+								<input type="text" name="uploaddir" id="uploaddir" placeholder="URL" class="input-xlarge span4" value="@setUploadDirForm.field("uploaddir").valueOr(System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"))"/>
+								@if(setUploadDirForm.field("uploaddir").errors().size() > 0){
+									<span class="help-inline">A valid filesystem path must be provided.</span>
+								}
 							</div>
-						}
+						</div>
+						
+						<div class="form-actions">
+							<button class="btn btn-primary" id="submit" type="submit" name="submit">Submit</button>
+							<button class="btn" id="skip" type="button" name="skip" formmethod="get" formaction="@routes.FirstUse.getWelcome()" onclick="window.location='@routes.FirstUse.getWelcome()'">Skip</button>
+						</div>
 					</div>
 					
-				</div>
-				
-				<div class="row">
-					<div class="controls offset3 span3">
-						<input class="btn btn-primary" id="submit" type="submit" name="submit" value="Submit" style="width:100%"/>
-					</div>
-					<div class="controls span3">
-						<input class="btn" id="skip" type="button" name="skip" value="Skip" style="width:100%;" formmethod="get" formaction="@routes.FirstUse.getWelcome()" onclick="window.location='@routes.FirstUse.getWelcome()'"/>
-					</div>
-				</div>
-				
-			</fieldset>
+				</fieldset>
+			</div>
         }
 
     </div>

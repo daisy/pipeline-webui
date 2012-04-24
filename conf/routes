@@ -29,6 +29,7 @@ POST    /uploads                            controllers.Uploads.postUpload()
 
 # Account
 GET		/account                            controllers.Account.overview()
+POST	/account                            controllers.Account.changeDetails()
 
 # Administrator
 GET		/admin                              controllers.Administrator.settings()

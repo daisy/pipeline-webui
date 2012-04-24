@@ -76,62 +76,48 @@
                 </div>
             }
             
-            <fieldset>
-	            
-	            <div class="form-horizontal">
-	            	<div class="row control-group @("error".when(setWSForm.error("endpoint") != null))">
-						<div class="controls offset3 span2">
+            <div class="row">
+	            <fieldset class="offset2 span8">
+		            
+		            <div class="form-horizontal">
+		            	<div class="control-group @("error".when(setWSForm.error("endpoint") != null))">
 							<label for="endpoint" class="control-label">Address</label>
-						</div>
-						<div class="controls span4">
-							<input type="text" name="endpoint" id="endpoint" placeholder="URL" class="input-xlarge span4" value="@setWSForm.field("endpoint").valueOr("")"/>
-						</div>
-						@if(setWSForm.field("endpoint").errors().size() > 0){
-							<div class="span3">
-								<span class="help-inline">A valid URL must be provided.</span>
+							<div class="controls">
+								<input type="text" name="endpoint" id="endpoint" placeholder="URL" class="input-xlarge span4" value="@setWSForm.field("endpoint").valueOr("")"/>
+								@if(setWSForm.field("endpoint").errors().size() > 0){
+									<span class="help-inline">A valid URL must be provided.</span>
+								}
 							</div>
-						}
-					</div>
-					
-					<div class="row control-group @("error".when(setWSForm.error("authid") != null))">
-						<div class="controls offset3 span2">
+						</div>
+						
+						<div class="control-group @("error".when(setWSForm.error("authid") != null))">
 							<label for="authid" class="control-label">Authentication ID</label>
-						</div>
-						<div class="controls span4">
-							<input type="text" autocomplete="off" name="authid" id="authid" placeholder="Authentication ID" class="input-xlarge span4" value="@setWSForm.field("authid").valueOr("")"/>
-						</div>
-						@if(setWSForm.field("authid").errors().size() > 0){
-							<div class="span3">
-								<span class="help-inline">A valid authentication id must be provided.</span>
+							<div class="controls">
+								<input type="text" autocomplete="off" name="authid" id="authid" placeholder="Authentication ID" class="input-xlarge span4" value="@setWSForm.field("authid").valueOr("")"/>
+								@if(setWSForm.field("authid").errors().size() > 0){
+									<span class="help-inline">A valid authentication id must be provided.</span>
+								}
 							</div>
-						}
-					</div>
-					
-					<div class="row control-group @("error".when(setWSForm.error("secret") != null))">
-						<div class="controls offset3 span2">
+						</div>
+						
+						<div class="control-group @("error".when(setWSForm.error("secret") != null))">
 							<label for="secret" class="control-label">Secret text</label>
-						</div>
-						<div class="controls span4">
-							<input type="password" autocomplete="off" name="secret" id="secret" placeholder="Secret text" class="input-xlarge span4" value="@setWSForm.field("secret").valueOr("")"/>
-						</div>
-						@if(setWSForm.field("secret").errors().size() > 0){
-							<div class="span3">
-								<span class="help-inline">A valid secret text must be provided.</span>
+							<div class="controls">
+								<input type="password" autocomplete="off" name="secret" id="secret" placeholder="Secret text" class="input-xlarge span4" value="@setWSForm.field("secret").valueOr("")"/>
+								@if(setWSForm.field("secret").errors().size() > 0){
+									<span class="help-inline">A valid secret text must be provided.</span>
+								}
 							</div>
-						}
+						</div>
+						
+						<div class="form-actions">
+							<button class="btn btn-primary" id="submit" type="submit" name="submit">Submit</button>
+							<button class="btn" id="skip" type="button" name="skip" formmethod="get" formaction="@routes.FirstUse.getWelcome()" onclick="window.location='@routes.FirstUse.getWelcome()'">Skip</button>
+						</div>
+						
 					</div>
-				</div>
-				
-				<div class="row">
-					<div class="controls offset3 span3">
-						<input class="btn btn-primary" id="submit" type="submit" name="submit" value="Submit" style="width:100%"/>
-					</div>
-					<div class="controls span3">
-						<input class="btn" id="skip" type="button" name="skip" value="Skip" style="width:100%;" formmethod="get" formaction="@routes.FirstUse.getWelcome()" onclick="window.location='@routes.FirstUse.getWelcome()'"/>
-					</div>
-				</div>
-				
-			</fieldset>
+				</fieldset>
+			</div>
         }
 
     </div>

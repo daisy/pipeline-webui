@@ -13,11 +13,16 @@ import play.data.validation.*;
 public class User extends Model {
     
 	@Id
+	@GeneratedValue(strategy=GenerationType.SEQUENCE)
+	public Long id;
+	
     @Constraints.Required
     @Formats.NonEmpty
     @Constraints.Email
     public String email;
     
+	@Constraints.MinLength(1)
+	@Constraints.Pattern("[^{}\\[\\]();:'\"<>]+") // Avoid breaking JavaScript code in templates
     public String name;
     
     @Constraints.Required
@@ -37,9 +42,20 @@ public class User extends Model {
     	this.admin = admin;
     }
     
+    public String toString() {
+        return "User(" + email + ")";
+    }
+    
+    /**
+     * Encrypts and sets the password.
+     */
+    public void setPassword(String password) {
+    	this.password = Crypto.sign(password);
+    }
+    
     // -- Queries
     
-    public static Model.Finder<String,User> find = new Model.Finder(String.class, User.class);
+    public static Model.Finder<String,User> find = new Model.Finder<String, User>(String.class, User.class);
     
  	/** Retrieve all users. */
     public static List<User> findAll() {
@@ -55,7 +71,6 @@ public class User extends Model {
     public static User authenticate(String email, String password) {
     	// TODO: what if running in free-for-all mode?
     	
-    	User user;
     	try {
     		return find.where()
 			            .eq("email", email)
@@ -70,10 +85,6 @@ public class User extends Model {
     /** Authenticate a user with an unencrypted password */
     public static User authenticateUnencrypted(String email, String password) {
     	return authenticate(email, Crypto.sign(password));
-    }
-    
-    public String toString() {
-        return "User(" + email + ")";
     }
     
 }
