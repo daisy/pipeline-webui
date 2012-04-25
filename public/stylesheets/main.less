@@ -14,6 +14,10 @@ div.submitjob {
 	text-align: center;
 }
 
+body.file-hover, .body .file-hover * {
+	opacity: 0.6;
+}
+
 #filetable {
 	font-size: 12px;
 	text-align: left;
@@ -40,45 +44,26 @@ div.submitjob {
 	white-space: nowrap;
 }
 
-.messageline {
-	white-space: nowrap;
-}
-
-tr.message-error {
-	background-color: #FAA;
-}
-
-tr.message-warn {
-	background-color: #FFA;
-}
-
-body.file-hover, .body .file-hover * {
-	opacity: 0.6;
-}
-
-.scrolltable-outer {
-	position:relative;
-	padding:4em 0 3em 0; /* moves tbody down from thead */
-	
-	table caption {
-		position:absolute;
-		top:0; /* positions the caption above the main table */
-		left:0;
-	}
-	
-	thead tr {
-		position:absolute;
-		top:1.5em;
-		left:0;
-	}
-	
-	th, td {
-		width:20%;/*10em;*/
-		text-align:left;
-	}
-}
-
-.scrolltable-inner {
+ol.messagelist {
 	overflow:auto;
-	height:25em; /* sets scrolltable height */
+	font-family:"Courier New",Courier,mono;
+	margin:0;
+	padding:1em 0 1em 2.8em;
+	width:96%;
+	
+	li {
+		white-space: nowrap;
+		
+		code {
+			color: #000;
+		}
+		
+		code.message-error {
+			background-color: #FAA;
+		}
+		
+		code.message-warn {
+			background-color: #FFA;
+		}
+	}
 }
