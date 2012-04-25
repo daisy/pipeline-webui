@@ -9,7 +9,7 @@
 	
 @if(status=="DONE"){
 	<h2>Job finished successfully!</h1>
-	<a class="btn btn-large btn-primary" href="@routes.Jobs.getResult(id)"><i class="icon-download-alt icon-white"></i> Download results</a>
+	<a class="btn btn-large btn-success" href="@routes.Jobs.getResult(id)"><i class="icon-download-alt icon-white"></i> Download results</a>
 	
 }else{@if(status=="RUNNING"){
 	<h2 style="color:#000080;">Job is running</h2>

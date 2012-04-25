@@ -76,7 +76,7 @@ var Job = {
 			if (!found) {
 				var uploading = Job.uploading[filename];
 				var element = $('<tr class="filetable-uploading">'+
-									'<td><input type="button" value="Cancel" title="Cancel upload" onclick="alert(\'TODO\');"></td>'+
+									'<td><button title="Cancel upload" onclick="alert(\'TODO\');"><i class="icon-stop"></i> Cancel</button></td>'+
 									'<td>'+uploading.href+'</td>'+
 									'<td colspan="2">&nbsp;</td>'+
 									'<td colspan="'+(Job.inputPorts.length+1)+'">'+
@@ -136,7 +136,7 @@ var Job = {
 				else if (totalSize > Math.pow(2,20)) totalSize = Math.round(totalSize*100 / Math.pow(2,20))/100 + " MiB";
 				else if (totalSize > Math.pow(2,10)) totalSize = Math.round(totalSize*100 / Math.pow(2,10))/100 + " kiB";
 				else totalSize = totalSize + " TiB";
-				var element = $('<tr class="filetable-uploaded"><td><input type="button" value="Remove" title="Remove uploaded file" onclick="alert(\'TODO: remove '+uploadId+'\');"></td><td>'+uploaded.href+'</td><td colspan="2">&nbsp;</td><td colspan="'+(Job.inputPorts.length+1)+'">'+totalSize+'</td></tr>');
+				var element = $('<tr class="filetable-uploaded"><td><button title="Remove uploaded file" onclick="alert(\'TODO: remove '+uploadId+'\');"><i class="icon-minus"></i> Remove</button></td><td>'+uploaded.href+'</td><td colspan="2">&nbsp;</td><td colspan="'+(Job.inputPorts.length+1)+'">'+totalSize+'</td></tr>');
 				previousSibling.after(element);
 				$(element).data("upload-id",uploadId);
 				previousSibling = element;
@@ -191,9 +191,9 @@ var Job = {
 			if (Job.isXmlContentType(file.contentType)) {
 				var removable = '<td>&nbsp;</td>';
 				if (typeof Job.uploads[file.uploadId] != 'undefined' && Job.uploads[file.uploadId].contentType.substring(0,15) !== "application/zip")
-					removable = '<td><input type="button" value="Remove" title="Remove uploaded file" onclick="alert(\'TODO: remove '+file.uploadId+'\')"></td>';
-				var moveUp = '<td><input type="button" value="↑" title="Move file up" onclick="Job.moveUp('+f+')"/></td>';
-				var moveDown = '<td><input type="button" value="↓" title="Move file down" onclick="Job.moveDown('+f+')"/></td>';
+					removable = '<td><button title="Remove uploaded file" onclick="alert(\'TODO: remove '+file.uploadId+'\')"><i class="icon-minus"></i> Remove</button></td>';
+				var moveUp = '<td><button title="Move file up" onclick="Job.moveUp('+f+')"><i class="icon-arrow-up"></i></button></td>';
+				var moveDown = '<td><button title="Move file down" onclick="Job.moveDown('+f+')"><i class="icon-arrow-down"></i></button></td>';
 				var selectable = '<td><input type="radio" name="file-'+file.id+'" value="context" title="Context" onclick="Job.fileset['+f+'].selected=\'context\';Job.updateFormFileParameter();"/></td>';
 				for (var i = 0; i < Job.inputPorts.length; i++) {
 					selectable += "<td><input type='radio' name='file-"+file.id+"' value='"+i+"' title='"+Job.inputPorts[i].desc+"' onclick='Job.fileset["+f+"].selected=\""+i+"\";Job.updateFormFileParameter();'/></td>";

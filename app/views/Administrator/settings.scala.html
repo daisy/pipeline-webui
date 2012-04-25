@@ -1,28 +1,150 @@
-@()
+@(userForm: Form[User], users: List[User], tab: String)
 
-@main("Administrator settings", "admin") {
+@main("Create job", "admin", "adminSettings.js") {
 
 <div class="page-header">
     <h1>Administrator settings</h1>
 </div>
 
-<h2>TODO: Administrator settings</h2>
-<ul>
-	<li>Add other users</li>
-	<li>Delete other users</li>
-	<li>Edit name of other users</li>
-	<li>Edit email of other users</li>
-	<li>Send new password to other users</li>
-	<li><span>Hide selected scripts</span>
-		<ul>
-			<li>Globally</li>
-			<li>Per user</li>
-		</ul>
-	</li>
-	<li>A way to set what scripts are free-for-all (i.e. no login required)</li>
-	<li>A way to turn off authentication globally; so no login is required for anyone (only for admin)</li>
-</ul>
+@if(userForm.hasGlobalErrors) {
+    <div class="alert alert-error">
+        @userForm.globalError.message
+    </div>
+}
+
+@if(flash.contains("success")) {
+    <div class="alert alert-success">
+        @flash.get("success")
+    </div>
+}
+
+<div class="tabbable tabs-left">
+	<h2>Users and permissions</h2>
+	<br/>
+	<ul class="nav nav-tabs">
+		<li class="@("active".when(tab == "global"))"><a href="#usertab-global" data-toggle="tab"><i class="icon-globe"></i> <em>Global</em></a></li>
+		<hr/>
+		@for(user <- users) {
+			<li class="@("active".when(tab == ""+user.id))"><a href="#usertab-@user.id" data-toggle="tab"><i class="icon-user"></i> @user.name</a></li>
+		}
+		<li class="@("active".when(tab == "adduser"))"><a href="#usertab-adduser" data-toggle="tab"><i class="icon-plus"></i> <em>Add user</em></a></li>
+	</ul>
+	<div class="tab-content">
+		<div class="tab-pane @("active".when(tab == "global"))" id="usertab-global">
+			<h2>TODO</h2>
+			<ul>
+				<li>Disable login (global free-for-all)</li>
+				<li>Hide selected scripts</li>
+				<li>Set selected scripts as free-for-all (available for guest logins)</li>
+			</ul>
+		</div>
+		@for(user <- users) {
+			<div class="tab-pane @("active".when(tab == ""+user.id))" id="usertab-@user.id">
+				@helper.form(action = routes.Administrator.updateUser()) {
+					<input type="hidden" name="userid" value="@user.id"/>
+					<input type="hidden" name="admin" value="@user.admin" id="user-@{user.id}-admin-value"/>
+				    
+					<fieldset>
+						<legend>Settings for @user.name</legend>
+				        <br/>
+				        
+				        <div class="form-horizontal">
+				        	
+				        	<div class="control-group @("error".when(tab == ""+user.id && userForm.error("resetPassword") != null))" id="user-@{user.id}-resetPasswordGroup">
+								<label for="user-@{user.id}-resetPassword" class="control-label">Password</label>
+								<div class="controls">
+									<button name="resetPassword" id="user-@{user.id}-resetPassword" class="btn" formmethod="post" formaction="@routes.Administrator.resetPassword(user.id)" onclick="window.location='@routes.Administrator.resetPassword(user.id)'"><i class="icon-envelope"></i> Reset password</button>
+									<span class="help-inline">An e-mail will be sent to @user.email, containing a link where @user.name can reset their password.</span>
+								</div>
+							</div>
+							
+							<hr/>
+				        	
+				        	<div class="control-group @("error".when(tab == ""+user.id && userForm.error("name") != null))" id="user-@{user.id}-nameGroup">
+				        		<label for="user-@{user.id}-name" class="control-label">Name</label>
+					            <div class="controls">
+					        		<input type="text" name="name" id="user-@{user.id}-name" class="input-xlarge"
+					        			placeholder="&quot;@user.name&quot; is the users current name."
+					        			value="@{if (userForm.hasErrors()) userForm.field("name").valueOr(""); else user.name;}"
+					        			onkeyup="if(this.value==='@user.name')document.getElementById('user-@{user.id}-nameGroup').style.backgroundColor='#FFF';else document.getElementById('user-@{user.id}-nameGroup').style.backgroundColor='#DDF';"/>
+									@if(tab == ""+user.id && userForm.field("user-@{user.id}-name").errors().size() > 0){
+										@if(userForm.error("name").message.startsWith("error.")){
+											<span class="help-inline">Users must have a name, and it must not consist of any special characters.</span>
+										}else{
+											<span class="help-inline">@userForm.error("name").message</span>
+										}
+									}
+					            </div>
+							</div>
+							
+							<div class="control-group @("error".when(tab == ""+user.id && userForm.error("email") != null))" id="user-@{user.id}-emailGroup">
+								<label for="user-@{user.id}-email" class="control-label">E-mail</label>
+								<div class="controls">
+									<input type="email" name="email" id="user-@{user.id}-email" class="input-xlarge"
+										placeholder="&quot;@user.email&quot; is your current e-mail address."
+										value="@{if (userForm.hasErrors()) userForm.field("email").valueOr(""); else user.email;}"
+										onkeyup="if(this.value==='@user.email')document.getElementById('user-@{user.id}-emailGroup').style.backgroundColor='#FFF';else document.getElementById('user-@{user.id}-emailGroup').style.backgroundColor='#DDF';"/>
+									@if(tab == ""+user.id && userForm.field("email").errors().size() > 0){
+										@if(userForm.error("email").message.startsWith("error.")){
+											<span class="help-inline">A valid e-mail address must be provided.</span>
+										}else{
+											<span class="help-inline">@userForm.error("email").message</span>
+										}
+									}
+								</div>
+							</div>
+							
+							<div class="control-group @("error".when(tab == ""+user.id && userForm.error("admin") != null))" id="user-@{user.id}-adminGroup">
+								<label for="user-@{user.id}-admin" class="control-label">Administrator</label>
+								<div class="controls">
+									<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
+										<button type="button" name="admin-on" class="btn @("active".when(user.admin))" id="user-@{user.id}-admin-on"
+											aria-role="radio" aria-checked="true"
+											onclick="radioToggle('user-@{user.id}-admin', true, '@user.admin');">Yes</button>
+										<button type="button" name="admin-off" class="btn @("active".when(!user.admin))" id="user-@{user.id}-admin-off"
+											aria-role="radio" aria-checked="false"
+											onclick="radioToggle('user-@{user.id}-admin', false, '@user.admin');">No</button>
+									</div>
+								</div>
+							</div>
+							
+							<div class="form-actions">
+								<button type="submit" class="btn btn-primary" id="user-@{user.id}-submit" name="submit">Save changes</button>
+								<button type="reset" class="btn" id="user-@{user.id}-reset" name="reset"
+									onclick="$('#user-@{user.id}-admin-on').attr('aria-checked','@{user.admin}');$('#user-@{user.id}-admin-off').attr('aria-checked','@{!user.admin}');"
+									>Clear changes</button>
+								<button name="delete" id="user-@{user.id}-delete" class="btn btn-danger" formmethod="post" formaction="@routes.Administrator.deleteUser(user.id)" onclick="window.location='@routes.Administrator.deleteUser(user.id)'"><i class="icon-trash icon-white"></i> Delete this user</button>
+				          	</div>
+						</div>
+					</fieldset>
+				}
+				
+				<ul>
+					<li>Delete user</li>
+					<li>Edit name and email</li>
+					<li>Send new password</li>
+					<li>Hide selected scripts</li>
+					<li>Must not be able to delete the last admin user</li>
+					<li>Must not be able to change the last admin user to a normal user</li>
+				</ul>
+			</div>
+		}
+		<div class="tab-pane @("active".when(tab == "adduser"))" id="usertab-adduser">
+			<h2>TODO</h2>
+			<ul>
+				<li>Add user</li>
+			</ul>
+		</div>
+	</div>
+</div>
 
 <hr/>
+
+<h2>Settings: TODO</h2>
+<ul>
+	<li>Change WS endpoint + userid/secret</li>
+	<li>Change upload directory</li>
+	<li>Info about changing the database settings</li>
+</ul>
 
 }

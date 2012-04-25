@@ -67,6 +67,11 @@ public class User extends Model {
         return find.where().eq("email", email).findUnique();
     }
     
+    /** Retrieve a User from id. */
+    public static User findById(long id) {
+        return find.where().eq("id", id).findUnique();
+    }
+    
     /** Authenticate a user. */
     public static User authenticate(String email, String password) {
     	// TODO: what if running in free-for-all mode?

@@ -33,7 +33,12 @@ GET		/account                            controllers.Account.overview()
 POST	/account                            controllers.Account.changeDetails()
 
 # Administrator
-GET		/admin                              controllers.Administrator.settings()
+GET		/admin                              controllers.Administrator.getSettings()
+POST	/admin/edituser                     controllers.Administrator.updateUser()
+GET		/admin/resetpassword/:id            controllers.Administrator.resetPassword(id: Long)
+POST	/admin/resetpassword/:id            controllers.Administrator.resetPassword(id: Long)
+GET		/admin/deleteuser/:id               controllers.Administrator.deleteUser(id: Long)
+POST	/admin/deleteuser/:id               controllers.Administrator.deleteUser(id: Long)
 
 # First use
 GET     /firstuse/welcome                   controllers.FirstUse.getWelcome()
