@@ -35,6 +35,7 @@ POST	/account                            controllers.Account.changeDetails()
 # Administrator
 GET		/admin                              controllers.Administrator.getSettings()
 POST	/admin/edituser                     controllers.Administrator.updateUser()
+POST	/admin/createuser                   controllers.Administrator.createUser()
 GET		/admin/resetpassword/:id            controllers.Administrator.resetPassword(id: Long)
 POST	/admin/resetpassword/:id            controllers.Administrator.resetPassword(id: Long)
 GET		/admin/deleteuser/:id               controllers.Administrator.deleteUser(id: Long)

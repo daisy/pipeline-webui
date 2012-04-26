@@ -11,7 +11,7 @@ import play.data.validation.*;
 
 @Entity
 public class User extends Model {
-    
+	
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE)
 	public Long id;
@@ -32,14 +32,54 @@ public class User extends Model {
     @Constraints.Required
     public boolean admin;
     
+    @Constraints.Required
+    public boolean active; // Account is deactivated until the user sets a password
+    
+    // Crypto.sign(email+passwordLinkSent.getTime()) = uid sent in link
+    public Date passwordLinkSent; // Time that the password link was sent
+    
     /**
      * Constructor
      */
     public User(String email, String name, String password, boolean admin) {
     	this.email = email;
     	this.name = name;
-    	this.password = Crypto.sign(password);
+    	if ("".equals(password)) {
+    		this.password = "";
+    		this.active = false;
+    	} else {
+    		this.password = Crypto.sign(password);
+    		this.active = true;
+    	}
     	this.admin = admin;
+    }
+    
+    /**
+     * Try setting the password using the provided activation UID.
+     * 
+     * @param uid
+     * @param password
+     */
+    public void activate(String uid, String password) {
+    	if (getActivationUid().equals(uid)) {
+    		this.active = true;
+    		this.password = Crypto.sign(password);
+    	}
+    }
+    
+    /**
+     * Generates a new activation UID.
+     */
+    public void makeNewActivationUid() {
+    	this.passwordLinkSent = new Date();
+    }
+    
+    /**
+     * Gets the activation UID.
+     * @return
+     */
+    public String getActivationUid() {
+    	return Crypto.sign(this.email+this.passwordLinkSent.getTime());
     }
     
     public String toString() {

@@ -23,6 +23,8 @@ create table user (
   name                      varchar(255),
   password                  varchar(255),
   admin                     tinyint(1) default 0,
+  active                    tinyint(1) default 0,
+  password_link_sent        datetime,
   constraint pk_user primary key (id))
 ;
 
