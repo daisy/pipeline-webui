@@ -1,12 +1,28 @@
 package controllers;
 
+import java.net.URL;
 import java.util.List;
+import java.util.Properties;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.mail.DefaultAuthenticator;
+import org.apache.commons.mail.Email;
+import org.apache.commons.mail.EmailException;
+import org.apache.commons.mail.HtmlEmail;
+import org.apache.commons.mail.SimpleEmail;
+
+import models.Setting;
 import models.User;
 import play.Logger;
+import play.api.mvc.Call;
+import play.api.templates.Html;
 import play.data.Form;
-import play.data.validation.Constraints.Required;
-import play.data.validation.ValidationError;
 import play.mvc.*;
 
 public class Administrator extends Controller {
@@ -116,13 +132,22 @@ public class Administrator extends Controller {
 		User resetUser = User.findById(userId);
 		
 		if (resetUser.active) {
-			// TODO: Send a mail to the user with a link to a "new password" page
 			
-//			Email email = new SimpleEmail();
+			resetUser.makeNewActivationUid();
+			String resetUrl = routes.Account.showResetPasswordForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
+			String html = views.html.Account.emailResetPassword.render(resetUrl).body();
+			String text = "Go to this link to change your password: "+resetUrl;
+			
+			Account.sendEmail("Reset your password", html, text, resetUser.name, resetUser.email);
 			
 			flash("success", "A password reset link was sent to "+resetUser.name);
 		} else {
-			// TODO: Send a mail to the user with a link to a "your first password" page
+			
+			resetUser.makeNewActivationUid();
+			String activateUrl = routes.Account.showActivateForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
+			String html = views.html.Account.emailActivate.render(activateUrl).body();
+			String text = "Go to this link to activate your account: "+activateUrl;
+			
 			flash("success", "An account activation link was sent to "+resetUser.name);
 		}
 		

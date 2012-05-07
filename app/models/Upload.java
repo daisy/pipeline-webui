@@ -3,7 +3,6 @@ package models;
 import play.*;
 import play.db.ebean.Model;
 import play.mvc.Http.MultipartFormData.FilePart;
-//import play.libs.MimeTypes;
 import utils.Files;
 
 import javax.persistence.*;

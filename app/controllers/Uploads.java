@@ -6,15 +6,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.node.ObjectNode;
+
 import models.User;
 
 import play.Logger;
+import play.libs.Json;
 import play.mvc.*;
 import play.mvc.Http.MultipartFormData.FilePart;
 import play.mvc.Http.*;
 
 public class Uploads extends Controller {
-
+	
 	public static Result getUpload(Long id) {
 		if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());
@@ -52,9 +55,11 @@ public class Uploads extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 		
+		Logger.debug(request().getHeader("Content-Type"));
 		MultipartFormData body = request().body().asMultipartFormData();
 		List<FilePart> files = body.getFiles();
 		
+		/* // Multiple files per upload request (not supported with the current JavaScript upload library)
 		Map<String,Long> uploadIds = new HashMap<String,Long>();
 		for (FilePart upload : files) {
 			File file = upload.getFile();
@@ -63,8 +68,12 @@ public class Uploads extends Controller {
 			Logger.info("File = "+file.getName()+" | Size = "+file.length()+" | contentType = "+upload.getContentType());
 			uploadIds.put(upload.getFilename(), models.Upload.store(upload));
 		}
+		*/
 		
-		return ok(play.libs.Json.toJson(uploadIds));
+		Long uploadId = models.Upload.store(files.get(0));
+		
+		response().setContentType("text/html");
+		return ok("{\"success\":true,\"uploadId\":"+uploadId+"}");
 
     }
 

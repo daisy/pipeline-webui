@@ -75,6 +75,7 @@ var Job = {
 			
 			if (!found) {
 				var uploading = Job.uploading[filename];
+				console.log("DEBUG: Math.floor(("+uploading.total+"==0?0:"+uploading.loaded+"/"+uploading.total+")*100));");
 				var element = $('<tr class="filetable-uploading">'+
 									'<td><button title="Cancel upload" onclick="alert(\'TODO\');"><i class="icon-stop"></i> Cancel</button></td>'+
 									'<td>'+uploading.href+'</td>'+
@@ -190,7 +191,7 @@ var Job = {
 			var file = Job.fileset[f];
 			if (Job.isXmlContentType(file.contentType)) {
 				var removable = '<td>&nbsp;</td>';
-				if (typeof Job.uploads[file.uploadId] != 'undefined' && Job.uploads[file.uploadId].contentType.substring(0,15) !== "application/zip")
+				if (typeof Job.uploads[file.uploadId] !== 'undefined' && typeof Job.uploads[file.uploadId].contentType !== 'undefined' && Job.uploads[file.uploadId].contentType.substring(0,15) !== "application/zip")
 					removable = '<td><button title="Remove uploaded file" onclick="alert(\'TODO: remove '+file.uploadId+'\')"><i class="icon-minus"></i> Remove</button></td>';
 				var moveUp = '<td><button title="Move file up" onclick="Job.moveUp('+f+')"><i class="icon-arrow-up"></i></button></td>';
 				var moveDown = '<td><button title="Move file down" onclick="Job.moveDown('+f+')"><i class="icon-arrow-down"></i></button></td>';
@@ -221,111 +222,131 @@ var Job = {
 		// TODO
 	},
 	isXmlContentType: function(contentType) {
-		return (contentType === "application/xml" || contentType.match(/^application\/.*\+xml$/) || contentType === "text/xml" || contentType.match(/^text\/.*\+xml$/));	
+		if (typeof contentType === 'undefined') return false;
+		return (contentType === "application/xml" || contentType === "text/xml"
+				|| contentType.indexOf("+xml", contentType.length - "+xml".length) !== -1);	
+	},
+	removeFileHoverClassEventElement: null,
+	removeFileHoverClassEvent: null,
+	removeFileHoverClassEventTimer: function() {
+		if (Job.removeFileHoverClassEventElement === null)
+			$("body").removeClass("file-hover");
+		else
+			Job.removeFileHoverClassEvent = window.setTimeout(Job.removeFileHoverClassEventTimer,100); // using a timer to avoid flickering
 	}
 };
 
-$(function () {
-    $('#file-upload').fileupload({
-        dataType: 'json',
-        url: '/uploads',
-        type: 'POST',
-        dataType: 'json',
-        add: function(e, data) {
-        	console.log("add");
-        	data.submit();
-        },
-        submit: function(e, data) {
-        	console.log("submit");
-        	$.each(data.files, function (i, file) {
-        		Job.uploading[file.fileName] = {href: file.fileName, contentType: file.type, total: file.fileSize, loaded: 0};
-        	});
+// Event handlers for drag-and-drop CSS effect
+$(function(){
+	$(".body").bind('dragstart dragenter dragover', function (e) {
+		if (typeof e.originalEvent !== "undefined"
+			&& typeof e.originalEvent.dataTransfer !== "undefined"
+			&& typeof e.originalEvent.dataTransfer.files !== "undefined") {
+			
+			window.clearTimeout(Job.removeFileHoverClassEvent);
+			Job.removeFileHoverClassEventElement = e.srcElement;
+			$("body").addClass("file-hover");
+		}
+	});
+	
+	$(".body").bind('dragleave drop dragend', function (e) {
+		if (typeof e.originalEvent !== "undefined"
+			&& typeof e.originalEvent.dataTransfer !== "undefined"
+			&& typeof e.originalEvent.dataTransfer.files !== "undefined") {
+			
+			window.clearTimeout(Job.removeFileHoverClassEvent);
+			if (Job.removeFileHoverClassEventElement == e.srcElement)
+				Job.removeFileHoverClassEventElement = null;
+			Job.removeFileHoverClassEvent = window.setTimeout(Job.removeFileHoverClassEventTimer,100); // using a timer to avoid flickering
+		}
+	});
+});
+
+// --------------------------------------------------------------------------------------------
+
+/**
+ * Instantiate file upload button
+ */
+$(function(){
+	var uploader = new qq.FileUploader({
+	    element: document.getElementById('file-uploader'),
+	    action: '/uploads',
+	    encoding: 'multipart',
+    	debug: true,
+    	onSubmit: function(id, fileName) {
+    		console.log("["+fileName+"]: submit");
+    		Job.uploading[fileName] = {href: fileName, loaded: 0};
         	Job.refreshUploading();
-        },
-        send: function(e, data) {console.log("send");},
-        done: function (e, data) {
-        	console.log("done");
-        	console.log([e,data]);
-            $.each(data.result, function (filename, uploadId) {
-	                Job.uploads[uploadId] = {href: filename, contentType: Job.uploading[filename].contentType, total: Job.uploading[filename].total, fileset: []};
-	                $.ajax({
-	                	url: '/uploads/'+uploadId,
-	                	dataType: 'json',
-	                	context: {uploadId:uploadId},
-	                	error: function(jqXHR, textStatus, errorThrown) {
-	                		console.log(textStatus);
-	                		console.log(errorThrown);
-	                		delete Job.uploading[Job.uploads[uploadId].href]; // TODO: show error in place of progressbar
-	                	},
-	                	success: function(data, textStatus, jqXHR) {
-	                		console.log('retrieved /uploads/'+this+" successfully")
-	                		Job.uploads[uploadId].fileset = data;
-	                		$(data).each($.proxy(function(i, file) {
-	                			var port = "context";
-	                			if (Job.isXmlContentType(file.contentType)) {
-	                				for (var i = 0; i < Job.inputPorts.length; i++) {
-		                				if (file.contentType === Job.inputPorts[i].mediaType) {
-		                					port = ""+i;
-		                					break;
-		                				}
-		                			}
-	                				if (port === "context") {
-		                				for (var i = 0; i < Job.inputPorts.length; i++) {
-			                				if (Job.inputPorts[i].mediaType === "application/xml") {
-			                					port = ""+i;
-			                					break;
-			                				}
-			                			}
+        	return true;
+    	},
+    	onProgress: function(id, fileName, loaded, total) {
+        	Job.uploading[fileName].total = total;
+    		Job.uploading[fileName].loaded = loaded;
+    		var progressbar = $("tr.filetable-uploading").filter(function(){return $(this).data("filename")===fileName;}).find("div[role=progressbar]");
+    		var bar = $(progressbar).find("div.bar");
+    		$(progressbar).attr("aria-valuenow",Math.floor(100*(total==0?0:loaded/total)));
+    		$(bar).css("width", (100*(total==0?0:loaded/total))+"%");
+    		$(bar).html(Math.floor(100*(total==0?0:loaded/total))+"%");
+        	Job.refreshUploading();
+    	},
+    	onComplete: function(id, fileName, responseJSON) {
+    		console.log("done");
+            Job.uploads[responseJSON.uploadId] = {href: fileName, contentType: Job.uploading[fileName].contentType, total: Job.uploading[fileName].total, fileset: []};
+            console.log(id+" | "+fileName+" | "+responseJSON);
+            console.log(responseJSON);
+            $.ajax({
+            	url: '/uploads/'+responseJSON.uploadId,
+            	dataType: 'json',
+            	context: {uploadId:responseJSON.uploadId},
+            	error: function(jqXHR, textStatus, errorThrown) {
+            		console.log("AJAX error:");
+            		console.log(textStatus);
+            		console.log(errorThrown);
+            		delete Job.uploading[Job.uploads[responseJSON.uploadId].href]; // TODO: show error in place of progressbar
+            	},
+            	success: function(data, textStatus, jqXHR) {
+            		console.log('retrieved /uploads/'+responseJSON.uploadId+" successfully")
+            		Job.uploads[responseJSON.uploadId].fileset = data;
+            		$(data).each($.proxy(function(i, file) {
+            			var port = "context";
+            			if (Job.isXmlContentType(file.contentType)) {
+            				for (var i = 0; i < Job.inputPorts.length; i++) {
+                				if (file.contentType === Job.inputPorts[i].mediaType) {
+                					port = ""+i;
+                					break;
+                				}
+                			}
+            				if (port === "context") {
+                				for (var i = 0; i < Job.inputPorts.length; i++) {
+	                				if (Job.inputPorts[i].mediaType === "application/xml") {
+	                					port = ""+i;
+	                					break;
 	                				}
 	                			}
-	                			Job.fileset.push({id: Job.fileset.length, href: file.href, contentType: file.contentType, uploadId: uploadId, port: "", selected: port});
-	            			},this));
-	            			delete Job.uploading[Job.uploads[uploadId].href];
-	            		},
-	            		complete: function(jqXHR, textStatus) {
-	                		console.log('request complete for /uploads/'+this);
-	                		Job.refreshUploaded();
-				            Job.refreshNonXml();
-	            			Job.refreshFiles();
-	            			Job.refreshMoreXml();
-	            			Job.refreshUploading();
-	                	}
-	                });
-	                console.log("["+filename+","+uploadId+"]: "+".queue refreshUploading");
-	                Job.refreshUploading();
+            				}
+            			}
+            			Job.fileset.push({id: Job.fileset.length, href: file.href, contentType: file.contentType, uploadId: responseJSON.uploadId, port: "", selected: port});
+        			},this));
+        			delete Job.uploading[Job.uploads[responseJSON.uploadId].href];
+        		},
+        		complete: function(jqXHR, textStatus) {
+            		console.log('request complete for /uploads/'+responseJSON.uploadId);
+            		Job.refreshUploaded();
+		            Job.refreshNonXml();
+        			Job.refreshFiles();
+        			Job.refreshMoreXml();
+        			Job.refreshUploading();
+            	}
             });
-            
-        },
-        fail: function(e, data) {console.log("fail (TODO: error message in place of progressbar in table)");},
-        always: function(e, data) {console.log("always");},
-        progress: function(e, data) {
-        	console.log("progress...");
-            $.each(data.files,$.proxy(function(i, file) {
-            	Job.uploading[file.fileName].total = this.total;
-        		Job.uploading[file.fileName].loaded = this.loaded;
-        		var progressbar = $("tr.filetable-uploading").filter(function(){return $(this).data("filename")===file.fileName;}).find("div[role=progressbar]");
-        		var bar = $(progressbar).find("div.bar");
-        		$(progressbar).attr("aria-valuenow",Math.floor(100*(this.total==0?0:this.loaded/this.total)));
-        		$(bar).css("width", (100*(this.total==0?0:this.loaded/this.total))+"%");
-        		$(bar).html(Math.floor(100*(this.total==0?0:this.loaded/this.total))+"%");
-            },data));
-        	Job.refreshUploading();
-        },
-        progressall: function(e, data) {console.log("progressall");},
-        start: function(e) {console.log("start");},
-        stop: function(e) {console.log("stop");},
-        change: function(e, data) {console.log("change");},
-        paste: function(e, data) {
-        	console.log("paste");
-        	console.log(data);
-        	for (var i = 0; i < data.files.length; i++) {
-        		console.log("submitting pasted");
-        		console.log(data.files[i]);
-        		data.files[i].submit();
-        	}
-        	// TODO: paste doesn't seem to work
-        },
-        drop: function(e, data) {console.log("drop");},
-        dragover: function(e, data) {/*console.log("dragover");*/}
-    });
+            console.log("["+fileName+","+responseJSON.uploadId+"]: "+".queue refreshUploading");
+            Job.refreshUploading();
+    	},
+    	onCancel: function(id, fileName) {
+    		alert("TODO: cancel is not implemented.");
+    	},
+    	messages: {
+    	    // TODO i18n: error messages, see qq.FileUploaderBasic for content            
+    	},
+    	showMessage: function(message){ alert(message); }
+	});
 });

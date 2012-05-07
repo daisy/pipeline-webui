@@ -29,6 +29,10 @@ GET		/uploads/:id                        controllers.Uploads.getUpload(id: Long)
 POST    /uploads                            controllers.Uploads.postUpload()
 
 # Account
+GET		/account/resetpassword              controllers.Account.showResetPasswordForm(email, resetUid)
+POST	/account/resetpassword              controllers.Account.resetPassword(email, resetUid)
+GET		/account/activate                   controllers.Account.showActivateForm(email, resetUid)
+POST	/account/activate                   controllers.Account.activate(email, resetUid)
 GET		/account                            controllers.Account.overview()
 POST	/account                            controllers.Account.changeDetails()
 
