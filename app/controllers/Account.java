@@ -13,6 +13,8 @@ import play.mvc.*;
 public class Account extends Controller {
 	
 	final static Form<User> editDetailsForm = form(User.class);
+	final static Form<User> resetPasswordForm = form(User.class);
+	final static Form<User> activateAccountForm = form(User.class);
 	
 	/**
 	 * GET /account
@@ -120,10 +122,14 @@ public class Account extends Controller {
     		return redirect(routes.FirstUse.getFirstUse());
 		
 		User user = User.findByEmail(email);
-		if (user == null)
+		if (user == null) {
+			return redirect(routes.Login.login());
+		}
+		
+		if (resetUid == null || !resetUid.equals(user.getActivationUid()))
 			return redirect(routes.Login.login());
 		
-		return TODO; // render "set your new password"-form
+		return ok(views.html.Account.resetPassword.render(form(User.class), email, resetUid));
 	}
 	
 	/**
@@ -143,9 +149,28 @@ public class Account extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 		
-		// <-- check for valid password, and either badRequest() the form or ok() it
+		if (resetUid == null || !resetUid.equals(user.getActivationUid()))
+			return redirect(routes.Login.login());
 		
-		return TODO;
+		Form<User> filledForm = resetPasswordForm.bindFromRequest();
+        
+		if (!filledForm.field("password").valueOr("").equals("") && !filledForm.field("password").valueOr("").equals(filledForm.field("repeatPassword").value()))
+    		filledForm.reject("repeatPassword", "Password doesn't match.");
+        
+        if (filledForm.hasErrors()) {
+        	return badRequest(views.html.Account.resetPassword.render(filledForm, email, resetUid));
+        	
+        } else {
+        	user.setPassword(filledForm.field("password").valueOr(""));
+        	user.active = true;
+        	user.passwordLinkSent = null;
+        	user.save();
+        	session("name", user.name);
+        	session("email", user.email);
+        	session("password", user.password);
+        	session("admin", user.admin+"");
+        	return redirect(routes.Login.login());
+        }
 	}
 	
 	/**

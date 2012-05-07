@@ -12,6 +12,8 @@ import play.data.validation.*;
 @Entity
 public class User extends Model {
 	
+	public static final Long LINK_TIMEOUT = 24*3600*1000L; // TODO: make as admin setting instead
+	
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE)
 	public Long id;
@@ -79,7 +81,10 @@ public class User extends Model {
      * @return
      */
     public String getActivationUid() {
-    	return Crypto.sign(this.email+this.passwordLinkSent.getTime());
+    	if (this.passwordLinkSent == null || new Date(new Date().getTime() - LINK_TIMEOUT).after(this.passwordLinkSent)) {
+    		return null;
+    	}
+    	return Crypto.sign(this.email+this.passwordLinkSent.getTime()/1000);
     }
     
     public String toString() {

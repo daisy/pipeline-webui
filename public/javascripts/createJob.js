@@ -1,4 +1,5 @@
 var Job = {
+	debug: false,
 	uploading: {},
 	uploads: {},
 	fileset: [],
@@ -75,7 +76,7 @@ var Job = {
 			
 			if (!found) {
 				var uploading = Job.uploading[filename];
-				console.log("DEBUG: Math.floor(("+uploading.total+"==0?0:"+uploading.loaded+"/"+uploading.total+")*100));");
+				if (Job.debug) console.log("DEBUG: Math.floor(("+uploading.total+"==0?0:"+uploading.loaded+"/"+uploading.total+")*100));");
 				var element = $('<tr class="filetable-uploading">'+
 									'<td><button title="Cancel upload" onclick="alert(\'TODO\');"><i class="icon-stop"></i> Cancel</button></td>'+
 									'<td>'+uploading.href+'</td>'+
@@ -274,7 +275,7 @@ $(function(){
 	    encoding: 'multipart',
     	debug: true,
     	onSubmit: function(id, fileName) {
-    		console.log("["+fileName+"]: submit");
+    		if (Job.debug) console.log("["+fileName+"]: submit");
     		Job.uploading[fileName] = {href: fileName, loaded: 0};
         	Job.refreshUploading();
         	return true;
@@ -290,22 +291,22 @@ $(function(){
         	Job.refreshUploading();
     	},
     	onComplete: function(id, fileName, responseJSON) {
-    		console.log("done");
+    		if (Job.debug) console.log("done");
             Job.uploads[responseJSON.uploadId] = {href: fileName, contentType: Job.uploading[fileName].contentType, total: Job.uploading[fileName].total, fileset: []};
-            console.log(id+" | "+fileName+" | "+responseJSON);
-            console.log(responseJSON);
+            if (Job.debug) console.log(id+" | "+fileName+" | "+responseJSON);
+            if (Job.debug) console.log(responseJSON);
             $.ajax({
             	url: '/uploads/'+responseJSON.uploadId,
             	dataType: 'json',
             	context: {uploadId:responseJSON.uploadId},
             	error: function(jqXHR, textStatus, errorThrown) {
-            		console.log("AJAX error:");
-            		console.log(textStatus);
-            		console.log(errorThrown);
+            		if (Job.debug) console.log("AJAX error:");
+            		if (Job.debug) console.log(textStatus);
+            		if (Job.debug) console.log(errorThrown);
             		delete Job.uploading[Job.uploads[responseJSON.uploadId].href]; // TODO: show error in place of progressbar
             	},
             	success: function(data, textStatus, jqXHR) {
-            		console.log('retrieved /uploads/'+responseJSON.uploadId+" successfully")
+            		if (Job.debug) console.log('retrieved /uploads/'+responseJSON.uploadId+" successfully")
             		Job.uploads[responseJSON.uploadId].fileset = data;
             		$(data).each($.proxy(function(i, file) {
             			var port = "context";
@@ -330,7 +331,7 @@ $(function(){
         			delete Job.uploading[Job.uploads[responseJSON.uploadId].href];
         		},
         		complete: function(jqXHR, textStatus) {
-            		console.log('request complete for /uploads/'+responseJSON.uploadId);
+            		if (Job.debug) console.log('request complete for /uploads/'+responseJSON.uploadId);
             		Job.refreshUploaded();
 		            Job.refreshNonXml();
         			Job.refreshFiles();
@@ -338,7 +339,7 @@ $(function(){
         			Job.refreshUploading();
             	}
             });
-            console.log("["+fileName+","+responseJSON.uploadId+"]: "+".queue refreshUploading");
+            if (Job.debug) console.log("["+fileName+","+responseJSON.uploadId+"]: "+".queue refreshUploading");
             Job.refreshUploading();
     	},
     	onCancel: function(id, fileName) {

@@ -40,10 +40,10 @@
 		<div class="tab-pane @("active".when(tab == "global"))" id="usertab-global">
 			<h2>TODO</h2>
 			<ul>
-				<li>Disable login (global free-for-all)</li>
-				<li>Hide selected scripts</li>
-				<li>Set selected scripts as free-for-all (available for guest logins)</li>
-				<li>Set how long activation links are valid</li>
+				<li>Disable login (global free-for-all) (post 1.0 / end of may?)</li>
+				<li>Hide selected scripts (post 1.0 / end of may?)</li>
+				<li>Set selected scripts as free-for-all (available for guest logins) (post 1.0 / end of may?)</li>
+				<li>Set how long activation links are valid (post 1.0)</li>
 			</ul>
 		</div>
 		@for(user <- users) {
@@ -133,12 +133,6 @@
 						</div>
 					</fieldset>
 				}
-				
-				<h2>TODO</h2>
-				<ul>
-					<li>Send new password</li>
-					<li>Hide selected scripts</li>
-				</ul>
 			</div>
 		}
 		<div class="tab-pane @("active".when(tab == "adduser"))" id="usertab-adduser">
@@ -201,11 +195,6 @@
 					</div>
 				</fieldset>
 			}
-			
-			<h2>TODO</h2>
-			<ul>
-				<li>Send link</li>
-			</ul>
 		</div>
 	</div>
 </div>
@@ -214,9 +203,12 @@
 
 <h2>Settings: TODO</h2>
 <ul>
-	<li>Change WS endpoint + userid/secret</li>
-	<li>Change upload directory</li>
-	<li>Info about changing the database settings</li>
+	<li>Change WS endpoint + userid/secret (mid-may)</li>
+	<li>Change upload directory (mid-may)</li>
+	<li>Instructions about how to change the database settings (mid-may)</li>
+	<li>Change how long the activation links / password reset links are valid (post 1.0)</li>
+	<li>E-mail settings: notifications, what to send out, enable/disable lost password functionality? (post 1.0)</li>
+	<li>E-mail settings: configure SMTP server, with templates for popular servers like GMail (only e-mail and password required) and Exchange (information on how to get the server into the right Exchange domain etc.?) (end-of-may / post 1.0)</li>
 </ul>
 
 }

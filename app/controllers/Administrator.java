@@ -19,7 +19,6 @@ import org.apache.commons.mail.SimpleEmail;
 
 import models.Setting;
 import models.User;
-import play.Logger;
 import play.api.mvc.Call;
 import play.api.templates.Html;
 import play.data.Form;
@@ -134,19 +133,21 @@ public class Administrator extends Controller {
 		if (resetUser.active) {
 			
 			resetUser.makeNewActivationUid();
+			resetUser.save();
 			String resetUrl = routes.Account.showResetPasswordForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
 			String html = views.html.Account.emailResetPassword.render(resetUrl).body();
 			String text = "Go to this link to change your password: "+resetUrl;
-			
 			Account.sendEmail("Reset your password", html, text, resetUser.name, resetUser.email);
-			
 			flash("success", "A password reset link was sent to "+resetUser.name);
 		} else {
 			
 			resetUser.makeNewActivationUid();
+			resetUser.save();
 			String activateUrl = routes.Account.showActivateForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
 			String html = views.html.Account.emailActivate.render(activateUrl).body();
 			String text = "Go to this link to activate your account: "+activateUrl;
+			
+			Account.sendEmail("Activate your account", html, text, resetUser.name, resetUser.email);
 			
 			flash("success", "An account activation link was sent to "+resetUser.name);
 		}
@@ -201,10 +202,18 @@ public class Administrator extends Controller {
         	
         } else {
         	User newUser = new User(filledForm.field("email").valueOr(""), filledForm.field("name").valueOr(""), "", filledForm.field("admin").valueOr("").equals("true"));
-        	//TODO: sendUserCreatedPleaseSetYourPasswordMail(newUser)
+        	newUser.makeNewActivationUid();
         	newUser.save();
+        	
+			String activateUrl = routes.Account.showActivateForm(newUser.email, newUser.getActivationUid()).absoluteURL(request());
+			String html = views.html.Account.emailActivate.render(activateUrl).body();
+			String text = "Go to this link to activate your account: "+activateUrl;
+			
+			Account.sendEmail("Activate your account", html, text, newUser.name, newUser.email);
+			
         	flash("adminsettings.userview", newUser.id+"");
         	flash("success", "User "+newUser.name+" created successfully!");
+        	
         	return redirect(routes.Administrator.getSettings());
         }
 		
