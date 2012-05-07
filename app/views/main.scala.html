@@ -43,7 +43,7 @@
             <ul class="nav">
               <li class="@("active".when(nav == "scripts"))"><a href="@routes.Scripts.getScripts()"><i class="icon-home icon-white"></i> Scripts</a></li>
               <li class="@("active".when(nav == "jobs"))"><a href="@routes.Jobs.getJobs()"><i class="icon-tasks icon-white"></i> Jobs</a></li>
-              <li class="@("active".when(nav == "about"))"><a href="http://www.daisy.org/pipeline2"><i class="icon-info-sign icon-white"></i> About</a></li>
+              <li class="@("active".when(nav == "about"))"><a href="@routes.Application.about()"><i class="icon-info-sign icon-white"></i> About</a></li>
             </ul>
             <ul class="nav pull-right">
               @if(session.get("admin")=="true"){

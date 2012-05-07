@@ -16,6 +16,13 @@ public class Application extends Controller {
 		return redirect(routes.Scripts.getScripts());
 	}
 	
+	public static Result about() {
+		if (FirstUse.isFirstUse())
+    		return redirect(routes.FirstUse.getFirstUse());
+		
+		return ok(views.html.about.render());
+	}
+	
 	public static Result error(int status, String name, String description, String message) {
 		return status(status, views.html.error.render(status, name, description, message));
 	}
@@ -23,4 +30,5 @@ public class Application extends Controller {
 	public static Result redirect(String path, String file) {
 		return movedPermanently(path+file);
 	}
+
 }

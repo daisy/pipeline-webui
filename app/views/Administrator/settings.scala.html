@@ -151,7 +151,7 @@
 							<div class="controls">
 								<input type="text" name="name" id="user-new-name" placeholder="The name of the user." class="input-xlarge span4" value="@userForm.field("name").valueOr("")"/>
 								@if(userForm.field("name").errors().size() > 0){
-									<span class="help-inline">@userForm.error("email").message</span>
+									<span class="help-inline">@userForm.error("name").message</span>
 								}
 							</div>
 						</div>
