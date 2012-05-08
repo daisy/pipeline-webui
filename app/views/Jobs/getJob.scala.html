@@ -12,6 +12,7 @@
 	<a class="btn btn-large btn-success" href="@routes.Jobs.getResult(id)"><i class="icon-download-alt icon-white"></i> Download results</a>
 	
 }else{@if(status=="RUNNING"){
+	<meta http-equiv="refresh" content="1"/><!-- TEMP: will replace this with push-notifications or similar soon! -->
 	<h2 style="color:#000080;">Job is running</h2>
 	@if(jobMessages.size()>0){
 		<ol start="@jobMessages.get(jobMessages.size()-1).get(1)"><li><pre>@jobMessages.get(jobMessages.size()-1).get(2)</pre></li></ol>

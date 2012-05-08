@@ -144,8 +144,8 @@ public class Files {
 	 * @param zipfile
 	 * @return
 	 */
-	public static Map<String, String> listZipFilesWithContentType(File zipfile) {
-		Map<String, String> files = new HashMap<String, String>();
+	public static List<FileInfo> listZipFilesWithContentType(File zipfile) {
+		List<FileInfo> files = new ArrayList<FileInfo>();
 		
 		try {
 			ZipInputStream zin = new ZipInputStream(new FileInputStream(zipfile));
@@ -155,8 +155,9 @@ public class Files {
 				if (!entry.isDirectory()) {
 					String entryName = entry.getName();
 					String contentType = ContentType.probe(entryName, zin);
-					Logger.debug("file: "+entryName+" | contentType: "+contentType);
-					files.put(entryName, contentType);
+					Long entrySize = entry.getSize();
+					Logger.debug("file: "+entryName+" | contentType: "+contentType+" | "+entrySize);
+					files.add(new FileInfo(entryName, contentType, entrySize));
 				}
 				
 				entry = zin.getNextEntry();

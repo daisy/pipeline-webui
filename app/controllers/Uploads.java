@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.codehaus.jackson.node.ObjectNode;
 
+import models.Upload;
 import models.User;
 
 import play.Logger;
@@ -15,6 +16,7 @@ import play.libs.Json;
 import play.mvc.*;
 import play.mvc.Http.MultipartFormData.FilePart;
 import play.mvc.Http.*;
+import utils.FileInfo;
 
 public class Uploads extends Controller {
 	
@@ -27,24 +29,32 @@ public class Uploads extends Controller {
 			return redirect(routes.Login.login());
 		
 		models.Upload upload = models.Upload.find.byId(id);
-		Map<String,String> fileMap;
+		List<FileInfo> fileList;
 		if (upload == null) {
 			Logger.debug("Upload #"+id+" was not found.");
-			fileMap = new HashMap<String,String>();
+			fileList = new ArrayList<FileInfo>();
 		} else {
 			Logger.debug("Listing files from upload #"+id+"...");
-			fileMap = upload.listFiles();
-			Logger.debug("Found "+fileMap.size()+" files in upload #"+id);
+			fileList = upload.listFiles();
+			Logger.debug("Found "+fileList.size()+" files in upload #"+id);
 		}
 		
-		List<Map<String,String>> jsonFileset = new ArrayList<Map<String,String>>();
-		for (String filename : fileMap.keySet()) {
-			Map<String,String> file = new HashMap<String,String>();
-			file.put("href", filename);
-			file.put("contentType", fileMap.get(filename));
+		Map<String,Object> result = new HashMap<String,Object>();
+		result.put("uploadId", id);
+		result.put("href", upload.getFile().getName());
+		result.put("contentType", upload.contentType);
+		result.put("size", upload.getFile().length());
+		List<Map<String,Object>> jsonFileset = new ArrayList<Map<String,Object>>();
+		for (FileInfo fileInfo : fileList) {
+			Map<String,Object> file = new HashMap<String,Object>();
+			file.put("href", fileInfo.href);
+			file.put("contentType", fileInfo.contentType);
+			file.put("size", fileInfo.size);
 			jsonFileset.add(file);
 		}
-		return ok(play.libs.Json.toJson(jsonFileset));
+		result.put("fileset", jsonFileset);
+		
+		return ok(play.libs.Json.toJson(result));
     }
 	
 	public static Result postUpload() {
@@ -58,17 +68,6 @@ public class Uploads extends Controller {
 		Logger.debug(request().getHeader("Content-Type"));
 		MultipartFormData body = request().body().asMultipartFormData();
 		List<FilePart> files = body.getFiles();
-		
-		/* // Multiple files per upload request (not supported with the current JavaScript upload library)
-		Map<String,Long> uploadIds = new HashMap<String,Long>();
-		for (FilePart upload : files) {
-			File file = upload.getFile();
-			if ("".equals(file.getName()) || file.length() == 0)
-				continue;
-			Logger.info("File = "+file.getName()+" | Size = "+file.length()+" | contentType = "+upload.getContentType());
-			uploadIds.put(upload.getFilename(), models.Upload.store(upload));
-		}
-		*/
 		
 		Long uploadId = models.Upload.store(files.get(0));
 		

@@ -3,16 +3,20 @@ package models;
 import play.*;
 import play.db.ebean.Model;
 import play.mvc.Http.MultipartFormData.FilePart;
+import utils.ContentType;
+import utils.FileInfo;
 import utils.Files;
 
 import javax.persistence.*;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.*;
 
 @Entity
 public class Upload extends Model {
-    
+	
 	@Id
 	public Long id;
 	
@@ -35,17 +39,24 @@ public class Upload extends Model {
 		u.absolutePath = uploadDir.getAbsolutePath();
 		
 		File file = upload.getFile();
-		file.renameTo(new File(uploadDir, upload.getFilename()));
-		Logger.debug("Stored uploaded file as: "+file.getAbsolutePath());
-		u.contentType = upload.getContentType();
+		File newFile = new File(uploadDir, upload.getFilename());
+		file.renameTo(newFile);
+		file = newFile;
+		Logger.debug("Stored uploaded file as: "+file.getAbsolutePath()+" (=="+new File(uploadDir, upload.getFilename()).getAbsolutePath()+")");
+		try {
+			u.contentType = ContentType.probe(file.getName(), new FileInputStream(file));
+		} catch (FileNotFoundException e) {
+			Logger.error("Was unable to probe "+file.getAbsolutePath()+" : "+e.getMessage());
+			u.contentType = upload.getContentType();
+		}
 		
 		u.save();
 		
 		return u.id;
 	}
 	
-	public Map<String, String> listFiles() {
-		Map<String, String> fileMap = new HashMap<String,String>();
+	public List<FileInfo> listFiles() {
+		List<FileInfo> fileList = new ArrayList<FileInfo>();
 		
 		Logger.debug("opening "+this.absolutePath);
 		File uploadDir = new File(this.absolutePath);
@@ -58,16 +69,16 @@ public class Upload extends Model {
 				
 				if ("application/zip".equals(this.contentType)) {
 					Logger.debug(this.absolutePath+" is a ZIP file, listing ZIP entries...");
-					fileMap = Files.listZipFilesWithContentType(file);
+					fileList = Files.listZipFilesWithContentType(file);
 					
 				} else {
 					Logger.debug(this.absolutePath+" is a normal file...");
-					fileMap.put(file.getName(), this.contentType);
+					fileList.add(new FileInfo(file.getName(), this.contentType, file.length()));
 				}
 			}
 		}
 		
-		return fileMap;
+		return fileList;
 	}
 	
 	public File getFile() {
@@ -80,7 +91,7 @@ public class Upload extends Model {
 		}
 		Logger.debug("Could not retrieve the upload with id "+this.id+" from "+this.absolutePath);
 		return null;
-	}	
+	}
 	
 	public boolean isZip() {
 		return "application/zip".equals(this.contentType);

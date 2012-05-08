@@ -1,9 +1,10 @@
 var Job = {
-	debug: false,
+	debug: true,
 	uploading: {},
 	uploads: {},
 	fileset: [],
 	updateFormFileParameter: function() {
+		console.log("updateFormFileParameter...");
 		var file = {uploads:[],inputs:{}};
 		for (var uploadId in Job.uploads) file.uploads.push(uploadId);
 		for (var f = 0; f < Job.fileset.length; f++) {
@@ -224,7 +225,7 @@ var Job = {
 	},
 	isXmlContentType: function(contentType) {
 		if (typeof contentType === 'undefined') return false;
-		return (contentType === "application/xml" || contentType === "text/xml"
+		return (contentType === "application/xml" || contentType === "text/xml" || contentType === "application/x-zip-compressed"
 				|| contentType.indexOf("+xml", contentType.length - "+xml".length) !== -1);	
 	},
 	removeFileHoverClassEventElement: null,
@@ -276,7 +277,7 @@ $(function(){
     	debug: true,
     	onSubmit: function(id, fileName) {
     		if (Job.debug) console.log("["+fileName+"]: submit");
-    		Job.uploading[fileName] = {href: fileName, loaded: 0};
+    		Job.uploading[fileName] = {href: fileName, loaded: 0, total: 1};
         	Job.refreshUploading();
         	return true;
     	},
@@ -307,8 +308,10 @@ $(function(){
             	},
             	success: function(data, textStatus, jqXHR) {
             		if (Job.debug) console.log('retrieved /uploads/'+responseJSON.uploadId+" successfully")
-            		Job.uploads[responseJSON.uploadId].fileset = data;
-            		$(data).each($.proxy(function(i, file) {
+            		Job.uploads[responseJSON.uploadId].fileset = data.fileset;
+            		Job.uploads[responseJSON.uploadId].total = data.size;
+            		Job.uploads[responseJSON.uploadId].contentType = data.contentType;
+            		$(data.fileset).each($.proxy(function(i, file) {
             			var port = "context";
             			if (Job.isXmlContentType(file.contentType)) {
             				for (var i = 0; i < Job.inputPorts.length; i++) {
@@ -345,9 +348,9 @@ $(function(){
     	onCancel: function(id, fileName) {
     		alert("TODO: cancel is not implemented.");
     	},
-    	messages: {
+    	/*messages: {
     	    // TODO i18n: error messages, see qq.FileUploaderBasic for content            
-    	},
+    	},*/
     	showMessage: function(message){ alert(message); }
 	});
 });

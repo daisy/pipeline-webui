@@ -5,8 +5,9 @@
 <script type="text/javascript">
 	$(function() {
 		Job.inputPorts = [
-		@for(input <- inputs) {
-			{ "name": "@input.get(0)", "desc": "@input.get(1)", "sequence": "@input.get(2)", "mediaType": "@input.get(3)" },
+	    @for(i <- 0 until inputs.length) {
+			{ "name": "@inputs.get(i).get(0)", "desc": "@inputs.get(i).get(1)", "sequence": "@inputs.get(i).get(2)", "mediaType": "@inputs.get(i).get(3)" }
+			@if(i<inputs.length-1){ , }
 		}
 		];
 	});
@@ -38,52 +39,18 @@
 </div>
 }
 
-}
 <div class="control-group well">
 	<legend>Files</legend>
-	@helper.form(action = routes.Jobs.postJob(), 'id -> "file-form", 'enctype -> "multipart/form-data", 'class -> "form-horizontal") {
+	<!--helper.form(action = routes.Jobs.postJob(), 'id -> "file-form", 'enctype -> "multipart/form-data", 'class -> "form-horizontal") {-->
 	<label for="file-upload">Upload file</label>
 	<div class="controls file-upload-btn">
-		<!--<style>
-		/*.qq-uploader { position:relative; width: 100%;}*/
-		
-		.qq-upload-button {
-		    display:block; /* or inline-block */
-		    width: 105px; padding: 7px 0; text-align:center;    
-		    background:#880000; border-bottom:1px solid #ddd;color:#fff;
-		}
-		.qq-upload-button-hover {background:#cc0000;}
-		.qq-upload-button-focus {outline:1px dotted black;}
-		
-		.qq-upload-drop-area {
-		    position:absolute; top:0; left:0; width:100%; height:100%; min-height: 70px; z-index:2;
-		    background:#FF9797; text-align:center; 
-		}
-		.qq-upload-drop-area span {
-		    display:block; position:absolute; top: 50%; width:100%; margin-top:-8px; font-size:16px;
-		}
-		.qq-upload-drop-area-active {background:#FF7171;}
-		
-		.qq-upload-list {margin:15px 35px; padding:0; list-style:disc;}
-		.qq-upload-list li { margin:0; padding:0; line-height:15px; font-size:12px;}
-		.qq-upload-file, .qq-upload-spinner, .qq-upload-size, .qq-upload-cancel, .qq-upload-failed-text {
-		    margin-right: 7px;
-		}
-		
-		.qq-upload-file {}
-		.qq-upload-size,.qq-upload-cancel {font-size:11px;}
-		
-		.qq-upload-failed-text {display:none;}
-		.qq-upload-fail .qq-upload-failed-text {display:inline;}
-		</style>-->
-		<!--<input id="file-upload" multiple="multiple" type="file" name="upload-files" class="btn btn-large"/>-->
 		<div id="file-uploader">
 		    <noscript>          
 		        <p>Please enable JavaScript to upload files.</p>
 		    </noscript>         
 		</div>
 	</div>
-	}
+	<!--}-->
 	<table border="1" id="filetable" class="table table-condensed">
 		<thead>
 			<tr class="filetable-headline hidden">
@@ -111,5 +78,7 @@ TODO:
 <div class="well submitjob">
 	<button type="submit" form="job-form" onsubmit="Job.updateFormFileParameter()" value="Start job" class="btn-large btn-primary">Start job</button>
 </div>
+
+} <!-- end of form -->
 
 }
