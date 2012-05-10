@@ -1,5 +1,6 @@
 package controllers;
 
+import play.Logger;
 import play.mvc.*;
 import play.data.*;
 
@@ -14,7 +15,7 @@ public class Login extends Controller {
         public String password;
         
         public String validate() {
-            if(User.authenticateUnencrypted(email, password) == null) {
+            if (User.authenticateUnencrypted(email, password) == null) {
                 return "Invalid e-mail address or password";
             }
             return null;
@@ -42,9 +43,8 @@ public class Login extends Controller {
     public static Result authenticate() {
         Form<LoginForm> loginForm = form(LoginForm.class).bindFromRequest();
         
-        User user = User.authenticateUnencrypted(loginForm.field("email").valueOr(""), loginForm.field("password").valueOr(""));
-        
-        if(loginForm.hasErrors()) {
+    	User user = User.authenticateUnencrypted(loginForm.field("email").valueOr(""), loginForm.field("password").valueOr(""));
+        if (loginForm.hasErrors()) {
             return badRequest(views.html.Login.login.render(loginForm));
         } else {
         	session("name", user.name);
@@ -53,6 +53,31 @@ public class Login extends Controller {
         	session("admin", user.admin+"");
             return redirect(routes.Scripts.getScripts());
         }
+    }
+    
+    public static Result resetPassword() {
+    	String email = request().queryString().containsKey("email") ? request().queryString().get("email")[0] : "";
+    	User user = User.findByEmail(email);
+    	
+    	if ("".equals(email)) {
+    		flash("error", "You must enter an e-mail address.");
+    		return badRequest(views.html.Login.login.render(form(LoginForm.class)));
+    		
+    	} else if (user == null) {
+    		flash("error", "There is no user using that e-mail address; did you type it correctly?");
+    		return badRequest(views.html.Login.login.render(form(LoginForm.class)));
+    		
+    	} else {
+    		user.makeNewActivationUid();
+    		user.save();
+			String resetUrl = routes.Account.showResetPasswordForm(user.email, user.getActivationUid()).absoluteURL(request());
+			String html = views.html.Account.emailResetPassword.render(resetUrl).body();
+			String text = "Go to this link to change your password: "+resetUrl;
+			Account.sendEmail("Reset your password", html, text, user.name, user.email);
+    		flash("success", "An e-mail has been sent to "+email+" with further instructions. Please check your e-mail.");
+    		return ok(views.html.Login.login.render(form(LoginForm.class)));
+    		
+    	}
     }
 
     /**

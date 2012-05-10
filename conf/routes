@@ -8,6 +8,7 @@ GET     /assets/img/*file                   controllers.Application.redirect(pat
 GET     /about								controllers.Application.about()
 
 # Login
+GET		/login/resetpassword				controllers.Login.resetPassword()
 GET     /login                              controllers.Login.login()
 POST    /login                              controllers.Login.authenticate()
 

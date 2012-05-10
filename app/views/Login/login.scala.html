@@ -15,7 +15,6 @@
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
     </style>
-    <link href="@routes.Assets.at("stylesheets/bootstrap-responsive.css")" rel="stylesheet">
     <link rel="stylesheet/css" media="screen" type="text/css" href="@routes.Assets.at("stylesheets/main.css")">
 	
 	<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -49,17 +48,9 @@
 	}
 	</script>
 	
-    <div class="container">
-      
-        @helper.form(action = routes.Login.authenticate()) {
-            
-            <h1>Sign in</h1>
-            
-            @if(form.hasGlobalErrors) {
-                <div class="alert alert-error">
-                    @form.globalError.message
-                </div>
-            }
+	<div class="container">
+
+   		@helper.form(action = routes.Login.authenticate()) {
             
             @if(flash.contains("success")) {
                 <div class="alert alert-success">
@@ -67,52 +58,57 @@
                 </div>
             }
             
-            <div class="control-group">
-            	<div class="row">
-					<div class="controls offset4 span4">
-						<label for="email" class="control-label">E-mail</label>
-						<input type="email" name="email" id="email" placeholder="e-mail" class="input-xlarge span4" value="@form("email").value"/>
+            @if(flash.contains("error")) {
+                <div class="alert alert-error">
+                    @flash.get("error")
+                </div>
+            }
+            
+	        @if(!flash.contains("error") && !flash.contains("success") && form.hasGlobalErrors) {
+                <div class="alert alert-error">
+                    @form.globalError.message
+                </div>
+            }
+            
+            <div class="form-horizontal">
+		        <fieldset>
+		        	<legend>Sign in</legend>
+	           
+		            <div class="control-group">
+		            	<label for="email" class="control-label">E-mail</label>
+						<div class="controls">
+							<input type="email" name="email" id="email" placeholder="e-mail" class="input-xlarge" value="@form("email").value"/>
+						</div>
 					</div>
-				</div>
-				
-				<div class="row">
-	            	<div class="controls offset4 span4">
+					
+					<div class="control-group">	
 	            		<label for="password" class="control-label">Password</label>
-						<input type="password" name="password" id="password" placeholder="Password" class="input-xlarge span4"/>
+						<div class="controls">
+							<input type="password" name="password" id="password" placeholder="Password" class="input-xlarge"/>
+							<span class="help-inline">Forgot your password?
+								<button type="button" class="btn" id="submitLostPassword" name="submitLostPassword"
+										formaction="@routes.Login.resetPassword()" method="get"
+										onclick="window.location='@routes.Login.resetPassword()?email='+$('#email').val()">Get a new one!</button></span>
+						</div>
 					</div>
-				</div>
-			</div>
-			
-			<div class="row">
-				<div class="controls offset4 span4">
-					<input id="submit" type="submit" name="submit" value="Login" style="width:100%"/>
-				</div>
+					
+			        <div class="form-actions">
+						<button type="submit" class="btn btn-primary btn-large" id="submit" name="submit">Login</button>
+		          	</div>
+		          	
+	          	</fieldset>
 			</div>
 			
         }
-        
-        <!--
-        <h2>TODO: Login screen</h2>
-		<ul>
-			<li>Retrieve lost password</li>
-			<li>Log in as guest</li>
-		</ul>
+	    
+		<!--
+	        <h2>TODO: Login screen</h2>
+			<ul>
+				<li>Retrieve lost password</li>
+				<li>Log in as guest</li>
+			</ul>
 		-->
-
+	    
     </div>
-
-    <!-- Scripts -->
-    <script src="@routes.Assets.at("javascripts/bootstrap-transition.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-alert.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-modal.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-dropdown.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-scrollspy.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-tab.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-tooltip.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-popover.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-button.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-collapse.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-carousel.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-typeahead.js")" type="text/javascript"></script>
   </body>
 </html>
