@@ -38,6 +38,7 @@
 	</ul>
 	<div class="tab-content">
 		<div class="tab-pane @("active".when(tab == "global"))" id="usertab-global">
+			<!--
 			<h2>TODO</h2>
 			<ul>
 				<li>Disable login (global free-for-all) (post 1.0 / end of may?)</li>
@@ -45,6 +46,7 @@
 				<li>Set selected scripts as free-for-all (available for guest logins) (post 1.0 / end of may?)</li>
 				<li>Set how long activation links are valid (post 1.0)</li>
 			</ul>
+			-->
 		</div>
 		@for(user <- users) {
 			<div class="tab-pane @("active".when(tab == ""+user.id))" id="usertab-@user.id">
@@ -201,6 +203,7 @@
 
 <hr/>
 
+<!--
 <h2>Settings: TODO</h2>
 <ul>
 	<li>Change WS endpoint + userid/secret (mid-may)</li>
@@ -210,5 +213,6 @@
 	<li>E-mail settings: notifications, what to send out, enable/disable lost password functionality? (post 1.0)</li>
 	<li>E-mail settings: configure SMTP server, with templates for popular servers like GMail (only e-mail and password required) and Exchange (information on how to get the server into the right Exchange domain etc.?) (end-of-may / post 1.0)</li>
 </ul>
+-->
 
 }
