@@ -2,7 +2,10 @@ package utils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,18 +61,22 @@ public class ContentType {
 		}
 		
 		if (isXML && contentType == null) {
-			byte[] buf = new byte[4 * 1024]; // 4 KiB
-			StringWriter headStream = new StringWriter();
-			int len = 0;
+			char[] buf = new char[4 * 1024]; // 4 KiB
+			StringBuilder headBuilder = new StringBuilder();
 			try {
-				len = in.read(buf);
+				Reader reader = new InputStreamReader(in, "UTF-8");
+				int len = 0;
+				len = reader.read(buf, 0, buf.length);
 				if (len > 0)
-					headStream.write(new String(buf).toCharArray(), 0, len);
-				headStream.close();
+					headBuilder.append(buf, 0, len);
+				reader.close();
+				in.close();
+			} catch (UnsupportedEncodingException e) {
+				Logger.error("Encoding not supported (while reading filestream)", e);
 			} catch (IOException e) {
 				Logger.error("Could not read filestream", e);
 			}
-			String head = headStream.toString();
+			String head = headBuilder.toString();
 			
 			Map<String,String> documentElement = parseDocument(head);
 			
@@ -83,8 +90,6 @@ public class ContentType {
 					prefix = split[0];
 					name = split[1];
 				}
-				
-				namespace = documentElement.get("xmlns" + ("".equals(prefix)?"":":") + prefix);
 				
 				if ("".equals(prefix))
 					namespace = documentElement.get("xmlns");
@@ -210,6 +215,7 @@ public class ContentType {
         
     	nsMap.put("http://www.w3.org/1999/xhtml", "application/xhtml+xml");
     	nsMap.put("http://www.idpf.org/2007/opf", "application/oebps-package+xml");
+    	nsMap.put("http://www.daisy.org/z3986/2005/dtbook/", "application/x-dtbook+xml");
     	nsMap.put("http://www.w3.org/TR/REC-smil", "application/smil+xml"); // SMIL 1.0
     	nsMap.put("http://www.w3.org/2001/SMIL20/", "application/smil+xml"); // SMIL 2.0
     	nsMap.put("http://www.w3.org/2001/SMIL20/Language", "application/smil+xml"); // SMIL 2.0
@@ -220,7 +226,6 @@ public class ContentType {
     	nsMap.put("http://www.w3.org/2005/SMIL21/MobileProfile", "application/smil+xml"); // SMIL 2.1
     	nsMap.put("http://www.w3.org/2005/SMIL21/BasicExclTimeContainers", "application/smil+xml"); // SMIL 2.1
     	nsMap.put("http://www.w3.org/ns/SMIL", "application/smil+xml"); // SMIL 3.0
-    	nsMap.put("http://www.w3.org/ns/smil", "application/smil+xml"); // SMIL 3.0
     	nsMap.put("http://www.daisy.org/z3986/2005/ncx/", "application/x-dtbncx+xml");
     	nsMap.put("http://www.w3.org/2000/svg", "image/svg+xml");
     	nsMap.put("http://www.w3.org/ns/xproc", "application/xproc+xml");
@@ -230,6 +235,7 @@ public class ContentType {
     	nsMap.put("http://www.w3.org/1999/XSL/Format", "text/xsl");
     	nsMap.put("http://www.daisy.org/ns/z3986/authoring/", "application/z3998-auth+xml");
     	nsMap.put("http://www.daisy.org/ns/z3998/authoring/", "application/z3998-auth+xml");
+    	nsMap.put("http://www.w3.org/XML/1998/namespace", "application/xml");
     	
     	// TODO: see if some of these namespaces (grep'ed from daisy-pipeline.modules) has content types
     	//nsMap.put("http://maven.apache.org/POM/4.0.0", "");
@@ -275,12 +281,10 @@ public class ContentType {
     	//nsMap.put("http://www.daisy.org/ns/z3986/authoring/", "");
     	//nsMap.put("http://www.daisy.org/z3986/2011/vocab/decl/#", "");
     	//nsMap.put("http://expath.org/ns/pkg", "");
-    	//nsMap.put("http://www.daisy.org/z3986/2005/dtbook/", "");
     	//nsMap.put("http://pipeline.daisy.org/ns/pipeline/tmp", "");
     	//nsMap.put("http://www.daisy.org/ns/z3998/authoring/features/rend/", "");
     	//nsMap.put("http://www.daisy.org/z3998/2011/vocab/decl/#", "");
     	//nsMap.put("http://www.daisy.org/pipeline/ns/tmp", "");
-    	//nsMap.put("http://www.daisy.org/z3986/2005/dtbook/", "");
     	//nsMap.put("http://www.oxygenxml.com/ns/doc/xsl", "");
     	//nsMap.put("http://www.oxygenxml.com/ns/doc/xsl", "");
     	//nsMap.put("http://www.daisy.org/ns/pipeline/internal-function", "");
@@ -309,7 +313,6 @@ public class ContentType {
     	//nsMap.put("http://www.w3.org/2000/10/swap/pim/contact#", "");
     	//nsMap.put("http://www.example.com/cdr/metadata", "");
     	//nsMap.put("http://www.daisy.org/ns/pipeline/data", "");
-    	//nsMap.put("http://www.w3.org/XML/1998/namespace", "");
     	//nsMap.put("http://example.net/non-xhtml", "");
     	//nsMap.put("http://www.loc.gov/mods/v3", "");
     	//nsMap.put("http://www.w3.org/ns/", "");
