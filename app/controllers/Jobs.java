@@ -9,8 +9,11 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -18,6 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import javax.management.RuntimeErrorException;
 
+import models.Job;
 import models.Setting;
 import models.Upload;
 import models.User;
@@ -36,6 +40,7 @@ import play.db.ebean.Transactional;
 import play.libs.XPath;
 import play.mvc.*;
 import scala.actors.threadpool.Arrays;
+import utils.Pair;
 
 public class Jobs extends Controller {
 	
@@ -43,8 +48,11 @@ public class Jobs extends Controller {
 	public static Map<String,List<WebSocket<String>>> statusUpdates = Collections.synchronizedMap(new HashMap<String,List<WebSocket<String>>>());
 	public static Map<String,List<WebSocket<String>>> messageUpdates = Collections.synchronizedMap(new HashMap<String,List<WebSocket<String>>>());
 	
+	public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	
 	public static Result getJobs() {
 		// TODO: hide when running in free-for-all mode in a DAISY/WIPO-envoronment, but not NLB/SBS environment
+		// TODO: show only jobs for the current user when logged in as normal user; admins can see all jobs, as well as a "created by"-column
 		
 		if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());
@@ -59,16 +67,26 @@ public class Jobs extends Controller {
 			return Application.error(jobs.status, jobs.statusName, jobs.statusDescription, "");
 		}
 		
-		List<List<String>> jobList = new ArrayList<List<String>>();
+		List<Job> jobList = new ArrayList<Job>();
 
 		List<Node> jobNodes = XPath.selectNodes("//d:job", jobs.asXml(), Pipeline2WS.ns);
 		for (Node jobNode : jobNodes) {
-			List<String> row = new ArrayList<String>();
-			row.add(XPath.selectText("@href", jobNode, Pipeline2WS.ns));
-			row.add(XPath.selectText("@id", jobNode, Pipeline2WS.ns));
-			row.add(XPath.selectText("@status", jobNode, Pipeline2WS.ns));
-			jobList.add(row);
+			
+			Job job = Job.findById(XPath.selectText("@id", jobNode, Pipeline2WS.ns));
+			if (job == null) {
+				Logger.error("No job with id "+XPath.selectText("@id", jobNode, Pipeline2WS.ns)+" was found.");
+			} else {
+				job.href = XPath.selectText("@href", jobNode, Pipeline2WS.ns);
+				job.status = XPath.selectText("@status", jobNode, Pipeline2WS.ns);
+				if (user.admin || user.id == job.user)
+					jobList.add(job);
+			}
 		}
+		
+		Collections.sort(jobList);
+		Collections.reverse(jobList);
+		if (user.admin)
+			flash("showOwner", "true");
 
 		return ok(views.html.Jobs.getJobs.render(jobList));
 	}
@@ -367,6 +385,9 @@ public class Jobs extends Controller {
 			}
 
 			String jobId = XPath.selectText("/*/@id", job.asXml());
+			Job webUiJob = new Job(jobId, user);
+			webUiJob.save();
+			
 			return redirect(controllers.routes.Jobs.getJob(jobId));
 
 		} else {
@@ -378,6 +399,9 @@ public class Jobs extends Controller {
 			}
 			
 			String jobId = XPath.selectText("/*/@id", job.asXml(), Pipeline2WS.ns);
+			Job webUiJob = new Job(jobId, user);
+			webUiJob.save();
+			
 			return redirect(controllers.routes.Jobs.getJob(jobId));
 		}
 	}

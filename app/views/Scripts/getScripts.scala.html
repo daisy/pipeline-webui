@@ -4,30 +4,28 @@
 
 <h1>Scripts</h1>
 
-<div class="row">
-    @if(scripts.size() > 0) {
+@if(scripts.size() > 0) {
 
-		<table class="table span8 offset2 scriptlist">
+	<table class="table scriptlist">
+	<tr>
+		<th>Script</th>
+		<th>Description</th>
+	</tr>
+	@for(script <- scripts) {
 		<tr>
-			<th>Script</th>
-			<th>Description</th>
+			<td><a href="@routes.Scripts.getScript(script.get(1))">@script.get(1)</td>
+			<td>@script.get(2)</td>
 		</tr>
-		@for(script <- scripts) {
-			<tr>
-				<td><a href="@routes.Scripts.getScript(script.get(1))">@script.get(1)</td>
-				<td>@script.get(2)</td>
-			</tr>
-		}
-		</table>
-
-	}else {
-	
-		<div class="alert alert-info span4 offset4">
-			<p>There are no scripts installed.</p>
-		</div>
-
 	}
+	</table>
 
-</div>
+}else {
+
+	<div class="alert alert-info">
+		<p>There are no scripts installed.</p>
+	</div>
+
+}
+
 
 }

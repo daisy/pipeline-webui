@@ -3,6 +3,17 @@
 
 # --- !Ups
 
+create table job (
+  id                        varchar(255) not null,
+  nicename                  varchar(255),
+  created                   datetime,
+  started                   datetime,
+  user                      bigint,
+  notified_created          tinyint(1) default 0,
+  notified_complete         tinyint(1) default 0,
+  constraint pk_job primary key (id))
+;
+
 create table setting (
   name                      varchar(255) not null,
   value                     varchar(255),
@@ -34,6 +45,8 @@ create table user (
 # --- !Downs
 
 SET FOREIGN_KEY_CHECKS=0;
+
+drop table job;
 
 drop table setting;
 

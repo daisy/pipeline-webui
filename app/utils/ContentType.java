@@ -69,8 +69,6 @@ public class ContentType {
 				len = reader.read(buf, 0, buf.length);
 				if (len > 0)
 					headBuilder.append(buf, 0, len);
-				reader.close();
-				in.close();
 			} catch (UnsupportedEncodingException e) {
 				Logger.error("Encoding not supported (while reading filestream)", e);
 			} catch (IOException e) {

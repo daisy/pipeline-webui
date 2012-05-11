@@ -1,34 +1,38 @@
-@(jobs: List[List[String]])
+@(jobs: List[Job])
 
 @main("Jobs", "jobs") {
 
 <h1>Jobs</h1>
 
-<div class="row">
-
 @if(jobs.size() > 0) {
 
-	<table class="table span6 offset3 joblist">
+	<table class="table joblist">
 	<tr>
 		<th>Job</th>
 		<th>Status</th>
+		<th>Created</th>
+		@if(Controller.flash("showOwner")=="true"){
+			<th>Owner</th>
+		}
 	</tr>
 	@for(job <- jobs) {
 	<tr>
-		<td><a href="@routes.Jobs.getJob(job.get(1))">@job.get(1)</td>
-		<td>@job.get(2)</td>
+		<td><a href="@routes.Jobs.getJob(job.id)">@job.nicename</td>
+		<td>@job.status</td>
+		<td>@controllers.Jobs.DATE_FORMAT.format(job.created)</td>
+		@if(Controller.flash("showOwner")=="true"){
+			<td>@job.userNicename</td>
+		}
 	</tr>
 	}
 	</table>
 
 }else {
 	
-	<div class="alert alert-info span4 offset4">
+	<div class="alert alert-info">
 		<p>There are no jobs.</p>
 	</div>
 
 }
-
-</div>
 
 }

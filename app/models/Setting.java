@@ -2,6 +2,7 @@ package models;
 
 import java.util.List;
 
+import play.Logger;
 import play.db.ebean.Model;
 
 import javax.persistence.*;
