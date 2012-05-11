@@ -115,7 +115,9 @@ public class Jobs extends Controller {
 		String description = XPath.selectText("/d:job/d:script/d:description", job.asXml(), Pipeline2WS.ns);
 		String log = XPath.selectText("/d:job/d:log/@href", job.asXml(), Pipeline2WS.ns);
 		String result = XPath.selectText("/d:job/d:result/@href", job.asXml(), Pipeline2WS.ns);
-
+		
+		Job webUiJob = Job.findById(jobId);
+		
 		List<List<String>> messages = new ArrayList<List<String>>();
 
 		List<Node> messageNodes = XPath.selectNodes("/d:job/d:messages/d:message", job.asXml(), Pipeline2WS.ns);
@@ -128,7 +130,7 @@ public class Jobs extends Controller {
 			messages.add(row);
 		}
 		
-		return ok(views.html.Jobs.getJob.render(href, jobId, nicename, description, status, scriptHref, scriptId, script, log, result, messages));
+		return ok(views.html.Jobs.getJob.render(href, jobId, webUiJob.nicename, description, status, scriptHref, scriptId, script, log, result, messages));
 	}
 	
 	public static Result getResult(String id) {
@@ -386,6 +388,7 @@ public class Jobs extends Controller {
 
 			String jobId = XPath.selectText("/*/@id", job.asXml());
 			Job webUiJob = new Job(jobId, user);
+			webUiJob.nicename = id;
 			webUiJob.save();
 			
 			return redirect(controllers.routes.Jobs.getJob(jobId));
@@ -400,6 +403,7 @@ public class Jobs extends Controller {
 			
 			String jobId = XPath.selectText("/*/@id", job.asXml(), Pipeline2WS.ns);
 			Job webUiJob = new Job(jobId, user);
+			webUiJob.nicename = id;
 			webUiJob.save();
 			
 			return redirect(controllers.routes.Jobs.getJob(jobId));
