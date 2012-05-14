@@ -198,17 +198,15 @@ public class Account extends Controller {
 	public static boolean sendEmail(String subject, String html, String text, String recipientName, String recipientEmail) {
 		try {
 			HtmlEmail email = new HtmlEmail();
-			String authuser = Setting.get("mail.username");
-			String authpwd = Setting.get("mail.password");
-			email.setAuthenticator(new DefaultAuthenticator(authuser, authpwd));
-			email.setDebug(true);
+			email.setAuthenticator(new DefaultAuthenticator(Setting.get("mail.username"), Setting.get("mail.password")));
+			email.setDebug("true".equals(Setting.get("mail.debug")));
 			email.setHostName("smtp.gmail.com");
-			email.getMailSession().getProperties().put("mail.smtps.auth", "true");
-			email.getMailSession().getProperties().put("mail.debug", "true");
-			email.getMailSession().getProperties().put("mail.smtps.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-			email.getMailSession().getProperties().put("mail.smtps.socketFactory.fallback", "false");
-			email.getMailSession().getProperties().put("mail.smtp.starttls.enable", "true");
-			email.setFrom("josteinaj@gmail.com", "Pipeline 2");
+			email.getMailSession().getProperties().put("mail.smtps.auth", Setting.get("mail.smtps.auth"));
+			email.getMailSession().getProperties().put("mail.debug", Setting.get("mail.debug"));
+			email.getMailSession().getProperties().put("mail.smtps.socketFactory.class", Setting.get("mail.smtps.socketFactory.class"));
+			email.getMailSession().getProperties().put("mail.smtps.socketFactory.fallback", Setting.get("mail.smtps.socketFactory.fallback"));
+			email.getMailSession().getProperties().put("mail.smtp.starttls.enable", Setting.get("mail.smtp.starttls.enable"));
+			email.setFrom("josteinaj@gmail.com", Setting.get("mail.from"));
 			email.setSubject("[DAISY Pipeline 2] "+subject);
 			email.setHtmlMsg(html);
 			email.setTextMsg(text);

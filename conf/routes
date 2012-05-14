@@ -49,6 +49,9 @@ POST	/admin/deleteuser/:id               controllers.Administrator.deleteUser(id
 
 # First use
 GET     /firstuse/welcome                   controllers.FirstUse.getWelcome()
+GET     /firstuse/configureemail/test       controllers.FirstUse.testEmail()
+POST    /firstuse/configureemail            controllers.FirstUse.postConfigureEmail()
+GET     /firstuse/configureemail            controllers.FirstUse.getConfigureEmail()
 POST    /firstuse/setuploaddir              controllers.FirstUse.postSetUploadDir()
 GET     /firstuse/setuploaddir              controllers.FirstUse.getSetUploadDir()
 POST    /firstuse/setws                     controllers.FirstUse.postSetWS()

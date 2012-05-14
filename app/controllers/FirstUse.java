@@ -2,16 +2,26 @@ package controllers;
 
 import java.io.File;
 
+import org.apache.commons.mail.DefaultAuthenticator;
+
 import play.mvc.*;
 import play.data.*;
 import play.data.validation.Constraints.Required;
 import models.*;
 
+/**
+ * Helps with configuring the Web UI for the first time.
+ * 
+ * Configure database -> create admin account -> set webservice endpoint -> set upload directory -> configure SMTP -> welcome page!
+ * 
+ * @author jostein
+ */
 public class FirstUse extends Controller {
 	
 	final static Form<User> createAdminForm = form(User.class);
 	final static Form<SetWSForm> setWSForm = form(SetWSForm.class);
 	final static Form<SetUploadDirForm> setUploadDirForm = form(SetUploadDirForm.class);
+	final static Form<ConfigureEmailForm> configureEmailForm = form(ConfigureEmailForm.class);
 	
 	public static class SetWSForm {
         @Required
@@ -27,6 +37,15 @@ public class FirstUse extends Controller {
         @Required
         public String uploaddir;
     }
+	
+	public static class ConfigureEmailForm {
+		@Required
+		public String smtp;
+		@Required
+		public String username;
+		
+		public String password;
+	}
 	
 	/**
 	 * GET /firstuse
@@ -189,8 +208,62 @@ public class FirstUse extends Controller {
         	
         } else {
         	Setting.set("uploads", uploadPath);
+        	return redirect(routes.FirstUse.getConfigureEmail());
+        }
+	}
+	
+	/**
+	 * GET /firstuse/configureemail
+	 * @return
+	 */
+	public static Result getConfigureEmail() {
+		if (isFirstUse())
+			return redirect(routes.FirstUse.getCreateAdmin());
+		
+		User user = User.authenticate(session("email"), session("password"));
+		if (user == null || !user.admin)
+			return redirect(routes.Login.login());
+		
+		return ok(views.html.FirstUse.configureEmail.render(form(ConfigureEmailForm.class), "smtp"));
+	}
+	
+	/**
+	 * POST /firstuse/configureemail
+	 * @return
+	 */
+	public static Result postConfigureEmail() {
+		User user = User.authenticate(session("email"), session("password"));
+		if (user == null || !user.admin)
+			return redirect(routes.Login.login());
+		
+		Form<ConfigureEmailForm> filledForm = configureEmailForm.bindFromRequest();
+    	
+    	if (filledForm.field("smtp").valueOr("").equals(""))
+    		filledForm.reject("smtp", "Invalid endpoint IP / domain name.");
+        
+        if(filledForm.hasErrors()) {
+        	return badRequest(views.html.FirstUse.configureEmail.render(filledForm, "smtp"/*TODO*/));
+        	
+        } else {
+        	Setting.set("mail.username",filledForm.field("username").valueOr(""));
+			Setting.set("mail.password",filledForm.field("password").valueOr(""));
+			Setting.set("mail.smtp", filledForm.field("smtp").valueOr(""));
+			Setting.set("mail.smtps.auth", "true");
+			Setting.set("mail.debug", "true");
+			Setting.set("mail.smtps.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+			Setting.set("mail.smtps.socketFactory.fallback", "false");
+			Setting.set("mail.smtp.starttls.enable", "true");
+			Setting.set("mail.from", "Pipeline 2");
         	return redirect(routes.FirstUse.getWelcome());
         }
+	}
+	
+	/**
+	 * POST /firstuse/configureemail/test
+	 * @return
+	 */
+	public static Result testEmail() {
+		return TODO;
 	}
 	
 	/**

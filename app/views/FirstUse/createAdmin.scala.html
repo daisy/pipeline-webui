@@ -1,56 +1,7 @@
 @(createAdminForm: Form[User])
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>First use</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Web interface for Pipeline 2">
-    <meta name="author" content="DAISY Consortium">
+@main("First use", "", Array(), Array(), Array()){
 
-    <!-- Styles -->
-    <link href="@routes.Assets.at("stylesheets/bootstrap.css")" rel="stylesheet">
-    <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
-    </style>
-    <link href="@routes.Assets.at("stylesheets/bootstrap-responsive.css")" rel="stylesheet">
-    <link rel="stylesheet/css" media="screen" type="text/css" href="@routes.Assets.at("stylesheets/main.css")">
-	
-	<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-    <!-- Icons -->
-    <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
-    <!--<link rel="apple-touch-icon" href="routes.Assets.at("images/apple-touch-icon.png")">
-    <link rel="apple-touch-icon" sizes="72x72" href="routes.Assets.at("images/apple-touch-icon-72x72.png")">
-    <link rel="apple-touch-icon" sizes="114x114" href="routes.Assets.at("images/apple-touch-icon-114x114.png")">-->
-    
-  </head>
-
-  <body class="body">
-  	
-    <div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="brand" href="@routes.Login.login()">Pipeline 2</a>
-        </div>
-      </div>
-    </div>
-	
-	<!-- Load jQuery before the content (so other templates may use jQuery) -->
-	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-	<script type="text/javascript">
-	if (typeof jQuery == 'undefined') {
-		document.write(unescape("%3Cscript src='@routes.Assets.at("javascripts/jquery-1.7.1.min.js")' type='text/javascript'%3E%3C/script%3E"));
-	}
-	</script>
-	
-    <div class="container">
-      	
       	<div class="page-header">
            	<h1>Create administrative user</h1>
         </div>
@@ -72,8 +23,7 @@
                 </div>
             }
             
-            <div class="row">
-				<fieldset class="offset2 span8">
+				<fieldset>
 		            
 		            <div class="form-horizontal">
 		            	
@@ -117,23 +67,6 @@
 						
 					</div>
 				</fieldset>
-			</div>
         }
 
-    </div>
-
-    <!-- Scripts -->
-    <script src="@routes.Assets.at("javascripts/bootstrap-transition.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-alert.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-modal.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-dropdown.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-scrollspy.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-tab.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-tooltip.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-popover.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-button.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-collapse.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-carousel.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-typeahead.js")" type="text/javascript"></script>
-  </body>
-</html>
+}
