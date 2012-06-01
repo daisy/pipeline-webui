@@ -1,0 +1,27 @@
+@(arg: pipeline2.models.script.Argument)
+
+<div class="control-group">
+	<label class="control-label">@arg.nicename</label>
+	<div class="controls">
+		<div class="row"></div>
+		<div class="row">
+			<div class="span"><input name="@{arg.kind}1name-@{arg.name}" type="text" placeholder="Name"></div>
+			<div class="span"><input name="@{arg.kind}1value-@{arg.name}" type="text" placeholder="Value"></div>
+			<div class="span"><button class="btn"><i class="icon-remove"></i> Remove</button></div>
+		</div>
+		<div class="row">
+			<div class="span"><input name="@{arg.kind}2name-@{arg.name}" type="text" placeholder="Name"></div>
+			<div class="span"><input name="@{arg.kind}2value-@{arg.name}" type="text" placeholder="Value"></div>
+			<div class="span"><button class="btn"><i class="icon-remove"></i> Remove</button></div>
+		</div>
+		<div class="row">
+			<div class="span"></div>
+			<div class="span"></div>
+			<div class="span"><button class="btn"><i class="icon-plus"></i> Add</button></div>
+		</div>
+		@if(arg.desc.length > 0){
+			<span class="help-block">@arg.desc</span>
+			<span class="help-block"><em><!--TODO-->NOTE: Parameters are not yet supported in the Pipeline 2 Web UI. The input fields above are meant as a demonstration of how the parameter input widget will look like.</em></span>
+		}
+	</div>
+</div>

@@ -10,6 +10,9 @@ import org.w3c.dom.Node;
 
 import pipeline2.Pipeline2WS;
 import pipeline2.Pipeline2WSResponse;
+import pipeline2.models.Script;
+import pipeline2.models.script.*;
+import play.Logger;
 import play.libs.XPath;
 import play.mvc.*;
 
@@ -42,7 +45,7 @@ public class Scripts extends Controller {
 
 		return ok(views.html.Scripts.getScripts.render(scriptList));
 	}
-
+	
 	public static Result getScript(String id) {
 		if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());
@@ -51,55 +54,23 @@ public class Scripts extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 		
-		Pipeline2WSResponse script = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
+		Pipeline2WSResponse wsScript = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
 
-		if (script.status != 200) {
-			return Application.error(script.status, script.statusName, script.statusDescription, "");
+		if (wsScript.status != 200) {
+			return Application.error(wsScript.status, wsScript.statusName, wsScript.statusDescription, "");
 		}
 		
-		String href = XPath.selectText("/d:script/@href", script.asXml(), Pipeline2WS.ns);
-		String scriptId = XPath.selectText("/d:script/@id", script.asXml(), Pipeline2WS.ns);
-		String nicename = XPath.selectText("/d:script/d:nicename", script.asXml(), Pipeline2WS.ns);
-		String description = XPath.selectText("/d:script/d:description", script.asXml(), Pipeline2WS.ns);
-		String homepage = XPath.selectText("/d:script/d:homepage", script.asXml(), Pipeline2WS.ns);
-
-		List<List<String>> inputList = new ArrayList<List<String>>();
-		List<List<String>> optionList = new ArrayList<List<String>>();
-		List<List<String>> outputList = new ArrayList<List<String>>();
-
-		List<Node> inputNodes = XPath.selectNodes("/d:script/d:input", script.asXml(), Pipeline2WS.ns);
-		List<Node> optionNodes = XPath.selectNodes("/d:script/d:option", script.asXml(), Pipeline2WS.ns);
-		List<Node> outputNodes = XPath.selectNodes("/d:script/d:output", script.asXml(), Pipeline2WS.ns);
-
-		for (Node inputNode : inputNodes) {
-			List<String> row = new ArrayList<String>();
-			row.add(XPath.selectText("@name", inputNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			row.add(XPath.selectText("@desc", inputNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			row.add(XPath.selectText("@sequence", inputNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			row.add(XPath.selectText("@mediaType", inputNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			inputList.add(row);
-		}
-
-		for (Node optionNode : optionNodes) {
-			List<String> row = new ArrayList<String>();
-			row.add(XPath.selectText("@name", optionNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			row.add(XPath.selectText("@desc", optionNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			row.add(XPath.selectText("@required", optionNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			row.add(XPath.selectText("@type", optionNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			row.add(XPath.selectText("@mediaType", optionNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			optionList.add(row);
-		}
-
-		for (Node outputNode : outputNodes) {
-			List<String> row = new ArrayList<String>();
-			row.add(XPath.selectText("@name", outputNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			row.add(XPath.selectText("@desc", outputNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			row.add(XPath.selectText("@sequence", outputNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			row.add(XPath.selectText("@mediaType", outputNode, Pipeline2WS.ns).replaceAll("\"", "'").replaceAll("\\n", " "));
-			outputList.add(row);
+		Script script = new Script(wsScript.asXml());
+		
+		boolean uploadFiles = false;
+		for (Argument arg : script.arguments) {
+			if ("input".equals(arg.kind) || "anyFileURI".equals(arg.xsdType)) {
+				uploadFiles = true;
+				break;
+			}
 		}
 		
-		return ok(views.html.Scripts.getScript.render(href, scriptId, nicename, description, homepage, inputList, optionList, outputList));
+		return ok(views.html.Scripts.getScript.render(script, uploadFiles));
 
 	}
 

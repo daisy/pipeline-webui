@@ -25,6 +25,7 @@ create table upload (
   absolute_path             varchar(255),
   content_type              varchar(255),
   uploaded                  datetime,
+  user                      bigint,
   constraint pk_upload primary key (id))
 ;
 

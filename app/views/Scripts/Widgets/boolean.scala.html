@@ -1,0 +1,16 @@
+@(arg: pipeline2.models.script.Argument)
+
+<div class="control-group">
+	<label class="control-label">@arg.nicename</label>
+	<div class="controls">
+		<label class="radio">
+			<input type="radio" name="@{arg.kind}-@{arg.name}" value="true" checked=""> Yes
+		</label>
+		<label class="radio">
+			<input type="radio" name="@{arg.kind}-@{arg.name}" value="false"> No
+		</label>
+		@if(arg.desc.length > 0){
+			<span class="help-block">@arg.desc</span>
+		}
+	</div>
+</div>

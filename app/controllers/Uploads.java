@@ -1,18 +1,14 @@
 package controllers;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jackson.node.ObjectNode;
-
-import models.Upload;
+import models.Notification;
 import models.User;
 
 import play.Logger;
-import play.libs.Json;
 import play.mvc.*;
 import play.mvc.Http.MultipartFormData.FilePart;
 import play.mvc.Http.*;
@@ -28,6 +24,12 @@ public class Uploads extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 		
+		Map<String,Object> result = getUploadInfo(id);
+		
+		return ok(play.libs.Json.toJson(result));
+    }
+	
+	public static Map<String, Object> getUploadInfo(Long id) {
 		models.Upload upload = models.Upload.find.byId(id);
 		List<FileInfo> fileList;
 		if (upload == null) {
@@ -40,40 +42,55 @@ public class Uploads extends Controller {
 		}
 		
 		Map<String,Object> result = new HashMap<String,Object>();
-		result.put("uploadId", id);
-		result.put("href", upload.getFile().getName());
+		result.put("id", id);
+		result.put("fileName", upload.getFile().getName());
 		result.put("contentType", upload.contentType);
-		result.put("size", upload.getFile().length());
+		result.put("total", upload.getFile().length());
 		List<Map<String,Object>> jsonFileset = new ArrayList<Map<String,Object>>();
 		for (FileInfo fileInfo : fileList) {
 			Map<String,Object> file = new HashMap<String,Object>();
-			file.put("href", fileInfo.href);
+			file.put("fileName", fileInfo.href);
 			file.put("contentType", fileInfo.contentType);
-			file.put("size", fileInfo.size);
+			file.put("total", fileInfo.size);
+			file.put("isXML", fileInfo.contentType != null && (fileInfo.contentType.equals("application/xml") || fileInfo.contentType.equals("text/xml") || fileInfo.contentType.endsWith("+xml")));
 			jsonFileset.add(file);
 		}
 		result.put("fileset", jsonFileset);
 		
-		return ok(play.libs.Json.toJson(result));
+		return result;
     }
 	
 	public static Result postUpload() {
 		if (FirstUse.isFirstUse())
-    		return redirect(routes.FirstUse.getFirstUse());
+			return forbidden();
 		
 		User user = User.authenticate(session("email"), session("password"));
 		if (user == null)
-			return redirect(routes.Login.login());
+			return forbidden();
 		
-		Logger.debug(request().getHeader("Content-Type"));
-		MultipartFormData body = request().body().asMultipartFormData();
-		List<FilePart> files = body.getFiles();
-		
-		Long uploadId = models.Upload.store(files.get(0));
-		
+        MultipartFormData body = request().body().asMultipartFormData();
+        List<FilePart> files = body.getFiles();
+        
+        List<Map<String,Object>> result = new ArrayList<Map<String,Object>>();
+        
+        for (FilePart file : files) {
+        	Logger.debug(request().method()+" | "+file.getContentType()+" | "+file.getFilename()+" | "+file.getFile().getAbsolutePath());
+        	
+        	Map<String,Object> fileObject = new HashMap<String,Object>();
+        	fileObject.put("name", file.getFilename());
+        	fileObject.put("size", file.getFile().length());
+        	result.add(fileObject);
+        	
+        	Long uploadId = models.Upload.store(file, user);
+        	User.push(user.id, new Notification("uploads", getUploadInfo(uploadId)));
+        }
+        
+//        Long uploadId = models.Upload.store(files.get(0));
+        
 		response().setContentType("text/html");
-		return ok("{\"success\":true,\"uploadId\":"+uploadId+"}");
-
+//		return ok("{\"success\":true,\"id\":"+uploadId+"}");
+		return ok(play.libs.Json.toJson(result));
+		
     }
 
 }

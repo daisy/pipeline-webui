@@ -53,19 +53,19 @@
    		@helper.form(action = routes.Login.authenticate()) {
             
             @if(flash.contains("success")) {
-                <div class="alert alert-success">
+                <div role="alert" class="alert alert-success">
                     @flash.get("success")
                 </div>
             }
             
             @if(flash.contains("error")) {
-                <div class="alert alert-error">
+                <div role="alert" class="alert alert-error">
                     @flash.get("error")
                 </div>
             }
             
 	        @if(!flash.contains("error") && !flash.contains("success") && form.hasGlobalErrors) {
-                <div class="alert alert-error">
+                <div role="alert" class="alert alert-error">
                     @form.globalError.message
                 </div>
             }

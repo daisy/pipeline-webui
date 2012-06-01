@@ -1,54 +1,76 @@
-@(href: String, id: String, nicename: String, description: String, status: String, scriptHref: String, scriptId: String, script: String, log: String, result: String, jobMessages: List[List[String]])
+@(job: pipeline2.models.Job, nicename: String)
 
-@main("View job") {
+@main("View job", "", Array("notifications.js")) {
 
-<h1>Job: @nicename <br/><small>(@id)</small></h1>
+<script type="text/javascript" charset="utf-8">
+	$(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(request)", "@routes.Notifications.xhr()");});
+</script>
+
+<h1>Job: @nicename <br/><small>(@job.id)</small></h1>
 
 <div class="row">
 	<div class="hero-unit" style="text-align:center">
 	
-@if(status=="DONE"){
-	<h2>Job finished successfully!</h1>
-	<a class="btn btn-large btn-success" href="@routes.Jobs.getResult(id)"><i class="icon-download-alt icon-white"></i> Download results</a>
+	<div id="status-done" style="display:none;">
+		<h2 role="status">Job finished successfully!</h1>
+		<a class="btn btn-large btn-success" href="@routes.Jobs.getResult(job.id)"><i class="icon-download-alt icon-white"></i> Download results</a>
+	</div>
 	
-}else{@if(status=="RUNNING"){
-	<meta http-equiv="refresh" content="1"/><!-- TEMP: will replace this with push-notifications or similar soon! -->
-	<h2 style="color:#000080;">Job is running</h2>
-	@if(jobMessages.size()>0){
-		<ol start="@jobMessages.get(jobMessages.size()-1).get(1)"><li><pre>@jobMessages.get(jobMessages.size()-1).get(2)</pre></li></ol>
-	}
+	<div id="status-running" style="display:none;">
+		<h2 role="status" style="color:#000080;">Job is running</h2>
+		@if(job.messages.size()>0){
+			<ol start="@job.messages.get(job.messages.size()-1).sequence"><li><pre>@job.messages.get(job.messages.size()-1).text</pre></li></ol>
+		}
+	</div>
 	
-}else{@if(status=="IDLE"){
-	<h2 style="color:#000080;">Job is idle</h2>
-	@if(jobMessages.size()>0){
-		<ol start="@jobMessages.get(jobMessages.size()-1).get(1)"><li><pre>@jobMessages.get(jobMessages.size()-1).get(2)</pre></li></ol>
-	}
+	<div id="status-idle" style="display:none;">
+		<h2 role="status" style="color:#000080;">Job is idle</h2>
+		@if(job.messages.size()>0){
+			<ol start="@job.messages.get(job.messages.size()-1).sequence"><li><pre>@job.messages.get(job.messages.size()-1).text</pre></li></ol>
+		}
+	</div>
 	
-}else{@if(status=="ERROR"){
-	<h2 style="color:#800000;">Job failed</h2>
-	<p>See the message log for details.</p>
+	<div id="status-error" style="display:none;">
+		<h2 role="status" style="color:#800000;">Job failed</h2>
+		<p>See the message log for details.</p>
+	</div>
 	
-}else{
-	@status
+	<script type="text/javascript">
+		$("#status-@(job.status.toString().toLowerCase())").show();
+	</script>
 	
-}}}}
-
 	</div>
 </div>
 
 <div class="well">
 	<h2>Other output</h2>
 	<br/>
-	<a class="btn btn-info" href="@routes.Jobs.getLog(id)"><i class="icon-eye-open"></i> Detailed log</a>
+	<a class="btn btn-info" href="@routes.Jobs.getLog(job.id)"><i class="icon-eye-open"></i> Detailed log</a>
 	<!-- Other outputs such as secondary output ports can be listed here -->
 </div>
 
 <h2>Messages</h2>
 
-<ol class="messagelist">
-	@for(message <- jobMessages){
-		<li class="message @("message-error".when("ERROR".equals(message.get(0)))) @("message-warn".when("WARN".equals(message.get(0))))""><code>@message.get(2)</code></li>
+<ol aria-live="polite" role="log" class="messagelist" id="message-list">
+	@for(message <- job.messages){
+		<li value="@message.sequence" class="message @("message-error".when(pipeline2.models.job.Message.Level.ERROR==message.level)) @("message-warn".when(pipeline2.models.job.Message.Level.WARNING==message.level))""><code>@message.text</code></li>
 	}
 </ol>
+
+<script type="text/javascript">
+	$(function(){
+		Notifications.listen("job-message-@job.id", function(message){
+			$("#message-list").append(
+				'<li value="'+message.sequence+'" class="message '+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><code>'+message.text+'</code></li>'
+			);
+		});
+		Notifications.listen("job-status-@job.id", function(status){
+			@for(status <- pipeline2.models.Job.Status.values()){
+				$("#status-@(status.toString().toLowerCase())").hide();
+			}
+			$("#status-"+status.toLowerCase()).show();
+		});
+	});
+</script>
 
 }

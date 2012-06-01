@@ -15,6 +15,10 @@ POST    /login                              controllers.Login.authenticate()
 # Logout
 GET     /logout                             controllers.Login.logout()
 
+# Notifications
+GET     /notifications/websocket            controllers.Notifications.websocket()
+GET     /notifications/xhr                  controllers.Notifications.xhr()
+
 # Scripts
 GET		/scripts/:id                        controllers.Scripts.getScript(id: String)
 GET     /scripts                            controllers.Scripts.getScripts()

@@ -9,13 +9,13 @@
 @helper.form(action = routes.Account.changeDetails()) {
             
 	@if(editDetailsForm.hasGlobalErrors) {
-	    <div class="alert alert-error">
+	    <div role="alert" class="alert alert-error">
 	        @editDetailsForm.globalError.message
 	    </div>
 	}
 	
 	@if(flash.contains("success")) {
-	    <div class="alert alert-success">
+	    <div role="alert" class="alert alert-success">
 	        @flash.get("success")
 	    </div>
 	}

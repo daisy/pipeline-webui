@@ -18,6 +18,7 @@ import org.apache.commons.mail.HtmlEmail;
 import org.apache.commons.mail.SimpleEmail;
 
 import models.Setting;
+import models.Upload;
 import models.User;
 import play.api.mvc.Call;
 import play.api.templates.Html;
@@ -176,6 +177,7 @@ public class Administrator extends Controller {
 			return redirect(routes.Administrator.getSettings());
 		}
 		
+		Upload.deleteUserUploads(deleteUser);
 		deleteUser.delete();
 		flash("adminsettings.userview", "global");
 		flash("success", deleteUser.name+" was deleted");

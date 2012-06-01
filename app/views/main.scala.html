@@ -10,11 +10,6 @@
 	
 	<!-- Styles -->
 	<link href="@routes.Assets.at("stylesheets/bootstrap.min.css")" rel="stylesheet" type="text/css"/>
-	<style>
-	  body {
-		padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-	  }
-	</style>
 	<link href="@routes.Assets.at("stylesheets/main.min.css")" rel="stylesheet" type="text/css"/>
 	@for(style <- moreStyles) {
 		<link href="@routes.Assets.at("stylesheets/"+style)" rel="stylesheet"/>

@@ -19,12 +19,12 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
+import pipeline2.models.script.Argument;
 import play.Logger;
 
 
 public class Jobs {
-
-//	public final static String JOB_REQUEST_NAMESPACE = "http://www.daisy.org/ns/pipeline/data";
 
 	/**
 	 * Get all jobs
@@ -33,7 +33,7 @@ public class Jobs {
 	 * HTTP 401 Unauthorized: Client was not authorized to perform request.
 	 */
 	public static Pipeline2WSResponse get(String endpoint, String username, String secret) {
-		return Pipeline2WS.get(endpoint, "/jobs", username, secret);
+		return Pipeline2WS.get(endpoint, "/jobs", username, secret, null);
 	}
 
 	/**
@@ -44,48 +44,18 @@ public class Jobs {
 	 * @param inputs
 	 * @return
 	 */
-	private static Document createJobRequestDocument(String href, Map<String, String> options, Map<String, List<String>> inputs) {
+	private static Document createJobRequestDocument(String id, List<Argument> arguments) {
 		Document jobRequestDocument = utils.XML.getXml("<jobRequest xmlns='http://www.daisy.org/ns/pipeline/data'/>");
 		Element jobRequest = jobRequestDocument.getDocumentElement();
 
 		Element element = jobRequestDocument.createElement("script");
-		element.setAttribute("href", href);
+		element.setAttribute("href", id);
 		jobRequest.appendChild(element);
-
-		for (String inputPort : inputs.keySet()) {
-			element = jobRequestDocument.createElement("input");
-			element.setAttribute("name", inputPort);
-
-			for (String src : inputs.get(inputPort)) {
-				Element fileElement = jobRequestDocument.createElement("file");
-				fileElement.setAttribute("src", src);
-				element.appendChild(fileElement);
-			}
-
-			jobRequest.appendChild(element);
-		}
-
-		for (String option : options.keySet()) {
-			element = jobRequestDocument.createElement("option");
-			element.setAttribute("name", option);
-			element.setTextContent(options.get(option));
-			jobRequest.appendChild(element);
-		}
+		
+		for (Argument arg : arguments)
+			jobRequest.appendChild(arg.asDocumentElement(jobRequestDocument));
 		
 		return jobRequestDocument;
-	}
-
-	/**
-	 * Create a job without files
-	 * 
-	 * HTTP 201 Created: The URI of the new job is found in the HTTP location header
-	 * HTTP 400 Bad Request: Errors in the parameters such as invalid script name
-	 * HTTP 401 Unauthorized: Client was not authorized to perform request.
-	 * @return 
-	 */
-	public static Pipeline2WSResponse post(String endpoint, String username, String secret, final String href, final Map<String,String> options, final Map<String,List<String>> inputs) {
-		Document jobRequestDocument = createJobRequestDocument(href, options, inputs);
-		return Pipeline2WS.postXml(endpoint, "/jobs", username, secret, jobRequestDocument);
 	}
 
 	/**
@@ -96,40 +66,46 @@ public class Jobs {
 	 * HTTP 401 Unauthorized: Client was not authorized to perform request.
 	 * @return 
 	 */
-	public static Pipeline2WSResponse post(String endpoint, String username, String secret, final String href, final Map<String,String> options, final Map<String,List<String>> inputs, final File contextZipFile) {
+	public static Pipeline2WSResponse post(String endpoint, String username, String secret, String id, List<Argument> arguments, File contextZipFile) {
 		
-		Document jobRequestDocument = createJobRequestDocument(href, options, inputs);
-		File jobRequestFile = null;
-		try {
-			jobRequestFile = File.createTempFile("jobRequest", ".xml");
-
-			StringWriter writer = new StringWriter();
-			Transformer transformer = TransformerFactory.newInstance().newTransformer();
-			transformer.transform(new DOMSource(jobRequestDocument), new StreamResult(writer));
-			FileUtils.writeStringToFile(jobRequestFile, writer.toString());
+		Document jobRequestDocument = createJobRequestDocument(id, arguments);
+		
+		if (contextZipFile == null) {
+			return Pipeline2WS.postXml(endpoint, "/jobs", username, secret, jobRequestDocument);
 			
-		} catch (IOException e) {
-			Logger.error("Could not create and/or write to temporary jobRequest file", e);
-			throw new RuntimeErrorException(new Error(e), "Could not create and/or write to temporary jobRequest file");
-		} catch (TransformerConfigurationException e) {
-			Logger.error("Could not serialize jobRequest XML", e);
-			throw new RuntimeErrorException(new Error(e), "Could not serialize jobRequest XML");
-		} catch (TransformerFactoryConfigurationError e) {
-			Logger.error("Could not serialize jobRequest XML", e);
-			throw new RuntimeErrorException(new Error(e), "Could not serialize jobRequest XML");
-		} catch (TransformerException e) {
-			Logger.error("Could not serialize jobRequest XML", e);
-			throw new RuntimeErrorException(new Error(e), "Could not serialize jobRequest XML");
+		} else {
+			File jobRequestFile = null;
+			try {
+				jobRequestFile = File.createTempFile("jobRequest", ".xml");
+	
+				StringWriter writer = new StringWriter();
+				Transformer transformer = TransformerFactory.newInstance().newTransformer();
+				transformer.transform(new DOMSource(jobRequestDocument), new StreamResult(writer));
+				FileUtils.writeStringToFile(jobRequestFile, writer.toString());
+				
+			} catch (IOException e) {
+				Logger.error("Could not create and/or write to temporary jobRequest file", e);
+				throw new RuntimeErrorException(new Error(e), "Could not create and/or write to temporary jobRequest file");
+			} catch (TransformerConfigurationException e) {
+				Logger.error("Could not serialize jobRequest XML", e);
+				throw new RuntimeErrorException(new Error(e), "Could not serialize jobRequest XML");
+			} catch (TransformerFactoryConfigurationError e) {
+				Logger.error("Could not serialize jobRequest XML", e);
+				throw new RuntimeErrorException(new Error(e), "Could not serialize jobRequest XML");
+			} catch (TransformerException e) {
+				Logger.error("Could not serialize jobRequest XML", e);
+				throw new RuntimeErrorException(new Error(e), "Could not serialize jobRequest XML");
+			}
+			
+			Map<String,File> parts = new HashMap<String,File>();
+			parts.put("job-request", jobRequestFile);
+			parts.put("job-data", contextZipFile);
+			
+			return Pipeline2WS.postMultipart(endpoint, "/jobs", username, secret, parts);
 		}
 		
-		Map<String,File> parts = new HashMap<String,File>();
-		parts.put("job-request", jobRequestFile);
-		parts.put("job-data", contextZipFile);
-		
-		return Pipeline2WS.postMultipart(endpoint, "/jobs", username, secret, parts);
-		
 	}
-
+	
 	/**
 	 * Get a single job
 	 * 
@@ -137,8 +113,14 @@ public class Jobs {
 	 * HTTP 401 Unauthorized: Client was not authorized to perform request.
 	 * HTTP 404 Not Found: Resource not found
 	 */
-	public static Pipeline2WSResponse get(String endpoint, String username, String secret, String id) {
-		return Pipeline2WS.get(endpoint, "/jobs/"+id, username, secret);
+	public static Pipeline2WSResponse get(String endpoint, String username, String secret, String id, Integer fromSequence) {
+		if (fromSequence == null) {
+			return Pipeline2WS.get(endpoint, "/jobs/"+id, username, secret, null);
+		} else {
+			Map<String,String> parameters = new HashMap<String,String>();
+			parameters.put("msgSeq", fromSequence+"");
+			return Pipeline2WS.get(endpoint, "/jobs/"+id, username, secret, parameters);
+		}
 	}
 
 	/**
@@ -161,7 +143,7 @@ public class Jobs {
 	 * @return 
 	 */
 	public static Pipeline2WSResponse getResult(String endpoint, String username, String secret, String id) {
-		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/result", username, secret);
+		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/result", username, secret, null);
 	}
 
 	/**
@@ -172,7 +154,7 @@ public class Jobs {
 	 * HTTP 404 Not Found: Resource not found
 	 */
 	public static Pipeline2WSResponse getLog(String endpoint, String username, String secret, String id) {
-		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/log", username, secret);
+		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/log", username, secret, null);
 	}
 
 }

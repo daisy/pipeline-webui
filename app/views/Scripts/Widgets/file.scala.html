@@ -1,0 +1,189 @@
+@(arg: pipeline2.models.script.Argument)
+
+@if(arg.sequence){
+	
+	<div class="control-group">
+		<label class="control-label">@arg.nicename</label>
+		<!-- TODO: javascript to auto-populate the list -->
+		<!-- TODO: add drag'n'drop support for reordering items -->
+		<div class="controls">
+			<input type="hidden" id="@{arg.kind}-@{arg.name}" name="@{arg.kind}-@{arg.name}" value=""/>
+			<div class="row"></div>
+			<div class="row">
+				<div class="span">
+					<select style="width:auto;min-width:220px;" id="@{arg.kind}-@{arg.name}-all" multiple="multiple" size="10" class="all-files">
+						<optgroup id="@{arg.kind}-@{arg.name}-suggested" label="Suggested files"></optgroup>
+						<optgroup id="@{arg.kind}-@{arg.name}-other" label="Other files"></optgroup>
+					</select>
+				</div>
+				<div class="span">
+					<button type="button" id="@{arg.kind}-@{arg.name}-add" class="btn" style="white-space:nowrap; width:120px;">Add <i class="icon-arrow-right"></i></button><br/>
+					<button type="button" id="@{arg.kind}-@{arg.name}-remove" class="btn" style="white-space:nowrap; width:120px;"><i class="icon-arrow-left"></i> Remove</button>
+				</div>
+				<div class="span scrollable">
+					<select style="width:auto;min-width:220px;" id="@{arg.kind}-@{arg.name}-selected" multiple="multiple" size="10">
+					</select>
+				</div>
+				@if(arg.ordered){
+					<div class="span">
+						<button type="button" id="@{arg.kind}-@{arg.name}-up" class="btn" style="white-space:nowrap; width:120px;"><i class="icon-arrow-up"></i> Move up</button><br/>
+						<button type="button" id="@{arg.kind}-@{arg.name}-down" class="btn" style="white-space:nowrap; width:120px;"><i class="icon-arrow-down"></i> Move down</button>
+					</div>
+					
+				}
+			</div>
+			@if(arg.desc.length > 0){
+				<span class="help-block">@arg.desc</span>
+			}
+			
+			<script type="text/javascript">
+				$(function(){
+					@if(arg.ordered){
+						/* Event handler for "move up"-button. */
+						$("#@{arg.kind}-@{arg.name}-up").click(function() {
+							var options = "#@{arg.kind}-@{arg.name}-selected option";
+							for (var i = 1; i < $(options).size(); i++) {
+								if (!$($(options)[i-1]).is(":selected") && $($(options)[i]).is(":selected")) {
+									var top = $($(options)[i-1]);
+									var bottom = $($(options)[i]);
+									top.remove();
+									bottom.after(top);
+								}
+							}
+						});
+						
+						/* Event handler for "move down"-button. */
+						$("#@{arg.kind}-@{arg.name}-down").click(function() {
+							var options = "#@{arg.kind}-@{arg.name}-selected option";
+							for (var i = $(options).size()-2; i >= 0; i--) {
+								if (!$($(options)[i+1]).is(":selected") && $($(options)[i]).is(":selected")) {
+									var top = $($(options)[i]);
+									var bottom = $($(options)[i+1]);
+									top.remove();
+									bottom.after(top);
+								}
+							}
+						});
+					}
+					
+					/* Event handler for "add"-button. */
+					$("#@{arg.kind}-@{arg.name}-add").click(function() {
+						$.each($("#@{arg.kind}-@{arg.name}-all option:selected"), function(i,e){
+							$(e).remove();
+							$(e).appendTo($("#@{arg.kind}-@{arg.name}-selected"));
+						});
+					});
+					
+					/* Event handler for "remove"-button. */
+					$("#@{arg.kind}-@{arg.name}-remove").click(function() {
+						$.each($("#@{arg.kind}-@{arg.name}-selected option:selected"), function(i,e){
+							$(e).remove();
+							if ($(e).hasClass("rightContentType"))
+								$(e).appendTo($("#@{arg.kind}-@{arg.name}-suggested"));
+							else
+								$(e).appendTo($("#@{arg.kind}-@{arg.name}-other"));
+							// TODO: instead of append; insert in sorted order according to fileName
+						});
+					});
+					
+					/* Event handler for fileset changes. */
+					Job.onNewUpload(function(fileset, id){
+						console.log("Called listener for @{arg.kind}-@{arg.name}!");
+						var contentTypes = @Html(play.libs.Json.stringify(play.libs.Json.toJson(arg.mediaTypes)));
+						for (var f = 0; f < fileset.length; f++) {
+							var file = fileset[f];
+							var matchingContentType = false;
+							switch (file.contentType) {
+								@for(contentType <- arg.mediaTypes){
+								case "@contentType":
+								}
+								@if(arg.mediaTypes.length > 0){
+									matchingContentType = true;
+									break;
+								}
+								default:
+									matchingContentType = @{arg.kind == "input" && arg.mediaTypes.length == 0} && file.isXML; 
+							}
+							
+							if (matchingContentType) {
+								$("#@{arg.kind}-@{arg.name}-selected").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>')
+								);
+							} else {
+								$("#@{arg.kind}-@{arg.name}-other").append($('<option class="wrongContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>')
+								);
+							}
+							
+							// TODO: instead of append; insert in sorted order according to fileName
+						}
+					});
+					
+					/* Function called right before submitting the form. */
+					Job.onSubmit(function(){
+						var value = [];
+						$.each($("#@{arg.kind}-@{arg.name}-selected option"), function(i, e) {
+							value.push($(e).attr("value"));
+						});
+						$('#@{arg.kind}-@{arg.name}').attr("value", value.join());
+						console.log(value.join());
+					});
+				});
+			</script>
+		</div>
+	</div>
+	
+}else{
+	
+	<div class="control-group">
+		<label class="control-label">@arg.nicename</label>
+		<!-- TODO: javascript to auto-populate the list -->
+		<div class="controls">
+			<select name="@{arg.kind}-@{arg.name}">
+				<optgroup id="@{arg.kind}-@{arg.name}-suggested" label="Supported files"></optgroup>
+				<optgroup id="@{arg.kind}-@{arg.name}-other" label="Other files"></optgroup>
+			</select>
+			@if(arg.desc.length > 0){
+				<span class="help-block">@arg.desc</span>
+			}
+			
+			<script type="text/javascript">
+				$(function(){
+					/* Event handler for fileset changes. */
+					Job.onNewUpload(function(fileset, id){
+						console.log("Called listener for @{arg.kind}-@{arg.name}!");
+						var contentTypes = @Html(play.libs.Json.stringify(play.libs.Json.toJson(arg.mediaTypes)));
+						var selectedSomething = $("#@{arg.kind}-@{arg.name} option").size() > 0;
+						for (var f = 0; f < fileset.length; f++) {
+							var file = fileset[f];
+							var matchingContentType = false;
+							switch (file.contentType) {
+								@for(contentType <- arg.mediaTypes){
+								case "@contentType":
+								}
+								@if(arg.mediaTypes.length > 0){
+									matchingContentType = true;
+									break;
+								}
+								default:
+									matchingContentType = @{arg.kind == "input" && arg.mediaTypes.length == 0} && file.isXML; 
+							}
+							
+							if (matchingContentType) {
+								if (!selectedSomething) {
+									$("#@{arg.kind}-@{arg.name}-suggested").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'" selected="">'+file.fileName+'</option>'));
+								} else {
+									$("#@{arg.kind}-@{arg.name}-suggested").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>'));
+								}
+							} else {
+								$("#@{arg.kind}-@{arg.name}-other").append($('<option class="wrongContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>')
+								);
+							}
+							
+							// TODO: instead of append; insert in sorted order according to fileName
+						}
+					});
+				});
+			</script>
+		</div>
+	</div>
+	
+}

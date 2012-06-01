@@ -13,12 +13,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.management.RuntimeErrorException;
 
 import models.Job;
@@ -26,52 +26,45 @@ import models.Setting;
 import models.Upload;
 import models.User;
 
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.w3c.dom.Node;
 
 import pipeline2.Pipeline2WS;
 import pipeline2.Pipeline2WSResponse;
+import pipeline2.models.script.Argument;
+import pipeline2.models.script.arguments.*;
+import pipeline2.models.Script;
 import play.Logger;
 import play.db.ebean.Transactional;
 import play.libs.XPath;
 import play.mvc.*;
 import scala.actors.threadpool.Arrays;
-import utils.Pair;
 
 public class Jobs extends Controller {
-	
-	// Each key is a job ID, each list is a list of web sockets for the corresponding job
-	public static Map<String,List<WebSocket<String>>> statusUpdates = Collections.synchronizedMap(new HashMap<String,List<WebSocket<String>>>());
-	public static Map<String,List<WebSocket<String>>> messageUpdates = Collections.synchronizedMap(new HashMap<String,List<WebSocket<String>>>());
-	
+
 	public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-	
+
 	public static Result getJobs() {
 		// TODO: hide when running in free-for-all mode in a DAISY/WIPO-envoronment, but not NLB/SBS environment
 		// TODO: show only jobs for the current user when logged in as normal user; admins can see all jobs, as well as a "created by"-column
-		
+
 		if (FirstUse.isFirstUse())
-    		return redirect(routes.FirstUse.getFirstUse());
-		
+			return redirect(routes.FirstUse.getFirstUse());
+
 		User user = User.authenticate(session("email"), session("password"));
 		if (user == null)
 			return redirect(routes.Login.login());
-		
+
 		Pipeline2WSResponse jobs = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
-		
+
 		if (jobs.status != 200) {
 			return Application.error(jobs.status, jobs.statusName, jobs.statusDescription, "");
 		}
-		
+
 		List<Job> jobList = new ArrayList<Job>();
 
 		List<Node> jobNodes = XPath.selectNodes("//d:job", jobs.asXml(), Pipeline2WS.ns);
 		for (Node jobNode : jobNodes) {
-			
+
 			Job job = Job.findById(XPath.selectText("@id", jobNode, Pipeline2WS.ns));
 			if (job == null) {
 				Logger.error("No job with id "+XPath.selectText("@id", jobNode, Pipeline2WS.ns)+" was found.");
@@ -82,7 +75,7 @@ public class Jobs extends Controller {
 					jobList.add(job);
 			}
 		}
-		
+
 		Collections.sort(jobList);
 		Collections.reverse(jobList);
 		if (user.admin)
@@ -93,213 +86,234 @@ public class Jobs extends Controller {
 
 	public static Result getJob(String id) {
 		if (FirstUse.isFirstUse())
-    		return redirect(routes.FirstUse.getFirstUse());
-		
+			return redirect(routes.FirstUse.getFirstUse());
+
 		User user = User.authenticate(session("email"), session("password"));
 		if (user == null)
 			return redirect(routes.Login.login());
-		
-		Pipeline2WSResponse job = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-		
-		if (job.status != 200 && job.status != 201) {
-			return Application.error(job.status, job.statusName, job.statusDescription, "");
+
+		Pipeline2WSResponse wsJob = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, null);
+
+		if (wsJob.status != 200 && wsJob.status != 201) {
+			return Application.error(wsJob.status, wsJob.statusName, wsJob.statusDescription, "");
 		}
 		
-		String href = XPath.selectText("/d:job/@href", job.asXml(), Pipeline2WS.ns);
-		String jobId = XPath.selectText("/d:job/@id", job.asXml(), Pipeline2WS.ns);
-		String status = XPath.selectText("/d:job/@status", job.asXml(), Pipeline2WS.ns);
-		String script = XPath.selectText("/d:job/d:script/@script", job.asXml(), Pipeline2WS.ns);
-		String scriptId = XPath.selectText("/d:job/d:script/@id", job.asXml(), Pipeline2WS.ns);
-		String scriptHref = XPath.selectText("/d:job/d:script/@href", job.asXml(), Pipeline2WS.ns);
-		String nicename = XPath.selectText("/d:job/d:script/d:nicename", job.asXml(), Pipeline2WS.ns);
-		String description = XPath.selectText("/d:job/d:script/d:description", job.asXml(), Pipeline2WS.ns);
-		String log = XPath.selectText("/d:job/d:log/@href", job.asXml(), Pipeline2WS.ns);
-		String result = XPath.selectText("/d:job/d:result/@href", job.asXml(), Pipeline2WS.ns);
-		
-		Job webUiJob = Job.findById(jobId);
-		
-		List<List<String>> messages = new ArrayList<List<String>>();
+		pipeline2.models.Job job = new pipeline2.models.Job(wsJob.asXml());
 
-		List<Node> messageNodes = XPath.selectNodes("/d:job/d:messages/d:message", job.asXml(), Pipeline2WS.ns);
-
-		for (Node messageNode : messageNodes) {
-			List<String> row = new ArrayList<String>();
-			row.add(XPath.selectText("@level", messageNode, Pipeline2WS.ns));
-			row.add(XPath.selectText("@sequence", messageNode, Pipeline2WS.ns));
-			row.add(XPath.selectText(".", messageNode, Pipeline2WS.ns));
-			messages.add(row);
+		Job webuiJob = Job.findById(job.id);
+		if (!Job.lastMessageSequence.containsKey(job.id) && job.messages.size() > 0) {
+			Collections.sort(job.messages);
+			Job.lastMessageSequence.put(job.id, job.messages.get(job.messages.size()-1).sequence);
 		}
-		
-		return ok(views.html.Jobs.getJob.render(href, jobId, webUiJob.nicename, description, status, scriptHref, scriptId, script, log, result, messages));
+		if (!Job.lastStatus.containsKey(job.id)) {
+			Job.lastStatus.put(job.id, job.status);
+		}
+
+		return ok(views.html.Jobs.getJob.render(job, webuiJob.nicename));
 	}
-	
+
 	public static Result getResult(String id) {
 		if (FirstUse.isFirstUse())
-    		return redirect(routes.FirstUse.getFirstUse());
-		
+			return redirect(routes.FirstUse.getFirstUse());
+
 		User user = User.authenticate(session("email"), session("password"));
 		if (user == null)
 			return redirect(routes.Login.login());
-		
+
 		Pipeline2WSResponse result = pipeline2.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-		
+
 		response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
 		response().setContentType("application/zip");
-		
+
 		return ok(result.asStream());
 	}
-	
+
 	public static Result getLog(final String id) {
 		if (FirstUse.isFirstUse())
-    		return redirect(routes.FirstUse.getFirstUse());
-		
+			return redirect(routes.FirstUse.getFirstUse());
+
 		User user = User.authenticate(session("email"), session("password"));
 		if (user == null)
 			return redirect(routes.Login.login());
-		
+
 		Pipeline2WSResponse jobLog = pipeline2.Jobs.getLog(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
 		InputStream responseStream = jobLog.asStream();
 		String responseText = "";
 
 		if (responseStream != null) {
-            Writer writer = new StringWriter();
-            char[] buffer = new char[1024];
-            try {
-                Reader reader = new BufferedReader(new InputStreamReader(responseStream, "UTF-8"));
-                int n;
-                while ((n = reader.read(buffer)) != -1) {
-                    writer.write(buffer, 0, n);
-                }
-            } catch (UnsupportedEncodingException e) {
+			Writer writer = new StringWriter();
+			char[] buffer = new char[1024];
+			try {
+				Reader reader = new BufferedReader(new InputStreamReader(responseStream, "UTF-8"));
+				int n;
+				while ((n = reader.read(buffer)) != -1) {
+					writer.write(buffer, 0, n);
+				}
+			} catch (UnsupportedEncodingException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} finally {
-            	try {
+				try {
 					responseStream.close();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-            }
-            responseText = writer.toString();
-        } else {        
-        	responseText = "";
-        }
-		
+			}
+			responseText = writer.toString();
+		} else {        
+			responseText = "";
+		}
+
 		if (jobLog.status != 200 && jobLog.status != 201 && jobLog.status != 204) {
 			return Application.error(jobLog.status, jobLog.statusName, jobLog.statusDescription, responseText);
 		}
-		
+
 		if (jobLog.status == 204) {
 			return ok(views.html.Jobs.emptyLog.render(id));
-			
+
 		} else {
 			String[] lines = responseText.split("\n");
 			return ok(views.html.Jobs.getLog.render(id, Arrays.asList(lines)));
 		}
 	}
 
+	//                                                          kind    position  part      name
+	private static final Pattern PARAM_NAME = Pattern.compile("^([A-Za-z]+)(\\d*)([A-Za-z]*?)-(.*)$");
+	private static final Pattern FILE_REFERENCE = Pattern.compile("^upload(\\d+)-file(\\d+)$");
+
 	@Transactional
 	public static Result postJob() {
 		if (FirstUse.isFirstUse())
-    		return redirect(routes.FirstUse.getFirstUse());
-		
+			return redirect(routes.FirstUse.getFirstUse());
+
 		User user = User.authenticate(session("email"), session("password"));
 		if (user == null)
 			return redirect(routes.Login.login());
-		
+
 		Logger.debug("------------------------------ Posting job... ------------------------------");
+
 		Map<String, String[]> params = request().body().asFormUrlEncoded();
 		if (params == null) {
 			return internalServerError("Internal server error: could not read form data.");
 		}
 
-		// ---------- Read request parameters ----------
-		List<models.Upload> uploads = new ArrayList<models.Upload>();
-		Map<String,List<String>> inputs = new HashMap<String,List<String>>();
-		Map<String,String> options = new HashMap<String,String>();
-		String id = params.get("id") != null && params.get("id").length > 0 ? params.get("id")[0] : null;
-		String href = params.get("href") != null && params.get("href").length > 0 ? params.get("href")[0] : null;
-		File contextZipFile = null;
+		String id = params.get("id")[0];
+		String href = Setting.get("dp2ws.endpoint")+"/scripts/"+id; // TODO: will be unneccessary in next update of Web API ?
 
+		// Get all referenced uploads from DB
+		Map<Long,Upload> uploads = new HashMap<Long,Upload>();
+		for (String uploadId : params.get("uploads")[0].split(",")) {
+			Upload upload = Upload.findById(Long.parseLong(uploadId));
+			if (upload.user == user.id)
+				uploads.put(upload.id, upload);
+		}
+
+		// Get a description of the script from Pipeline 2 Web Service
+		Pipeline2WSResponse wsScript = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
+		if (wsScript.status != 200) { return Application.error(wsScript.status, wsScript.statusName, wsScript.statusDescription, ""); }
+		Script script = new Script(wsScript.asXml());
+
+		// Parse all arguments
+		List<Argument> arguments = new ArrayList<Argument>();
 		for (String param : params.keySet()) {
-			if (param.startsWith("option-")) {
-				String value = params.get(param)[0];
-				param = param.substring(7);
-				options.put(param, value);
-				Logger.debug("Option: "+param+" = "+value);
+			Matcher matcher = PARAM_NAME.matcher(param);
+			if (!matcher.find()) {
+				Logger.debug("Unable to parse argument parameter: "+param);
+			} else {
+				String kind = matcher.group(1);
+				String name = matcher.group(4);
+				Logger.debug(kind+": "+name);
+
+				Argument argument = null;
+				for (Argument arg : script.arguments) {
+					if (arg.name.equals(name)) {
+						argument = arg;
+						break;
+					}
+				}
+				if (argument == null) {
+					Logger.debug("'"+name+"' is not an argument for the script '"+id+"'; ignoring it");
+					continue;
+				}
+
+				if ("anyFileURI".equals(argument.xsdType)) {
+					if (argument.sequence) { // Multiple files
+						ArgFiles argFiles = new ArgFiles(argument);
+						for (int i = 0; i < params.get(param).length; i++) {
+							matcher = FILE_REFERENCE.matcher(params.get(param)[i]);
+							if (!matcher.find()) {
+								Logger.debug("Unable to parse file reference: "+params.get(param)[i]);
+							} else {
+								Long uploadId = Long.parseLong(matcher.group(1));
+								Integer fileNr = Integer.parseInt(matcher.group(2));
+								argFiles.hrefs.add(uploads.get(uploadId).listFiles().get(fileNr).href);
+							}
+						}
+						arguments.add(argFiles);
+
+					} else { // Single file
+						matcher = FILE_REFERENCE.matcher(params.get(param)[0]);
+						if (!matcher.find()) {
+							Logger.debug("Unable to parse file reference: "+params.get(param)[0]);
+						} else {
+							Long uploadId = Long.parseLong(matcher.group(1));
+							Integer fileNr = Integer.parseInt(matcher.group(2));
+	
+							arguments.add( new ArgFile(argument, uploads.get(uploadId).listFiles().get(fileNr).href) );
+						}
+					}
+
+				} else if ("boolean".equals(argument.xsdType)) {
+					// Boolean
+					arguments.add( new ArgBoolean(argument, new Boolean(params.get(param)[0])) );
+
+				} else if ("parameters".equals(argument.xsdType)) {
+					// TODO: parameters are not implemented yet
+
+				} else { // Unknown types are treated like strings
+
+					if (argument.sequence) { // Multiple strings
+						ArgStrings argStrings = new ArgStrings(argument);
+						for (int i = 0; i < params.get(param).length; i++) {
+							argStrings.add(params.get(param)[i]);
+						}
+						arguments.add(argStrings);
+
+					} else { // Single string
+						arguments.add( new ArgString(argument, params.get(param)[0]) );
+					}
+
+				}
 			}
 		}
 
-		// ---------- Read JSON object provided in the "files" parameter ----------
-		Logger.debug("params.get(\"files\")[0]: "+params.get("files")[0]);
-		if (params.get("files") != null && params.get("files").length > 0 && !"".equals(params.get("files")[0])) {
-			JsonNode files = null;
-			try {
-				files = new ObjectMapper().readTree(new JsonFactory().createJsonParser(params.get("files")[0]));
-			} catch (JsonParseException e) {
-				Logger.error("Unable to parse JSON value of 'files' parameter.", e);
-				throw new RuntimeErrorException(new Error(e), "Unable to parse JSON value of 'files' parameter.");
-			} catch (JsonProcessingException e) {
-				Logger.error("Unable to process JSON value of 'files' parameter.", e);
-				throw new RuntimeErrorException(new Error(e), "Unable to process JSON value of 'files' parameter.");
-			} catch (IOException e) {
-				Logger.error("Unable to get the JSON value of 'files' parameter.", e);
-				throw new RuntimeErrorException(new Error(e), "Unable to get the JSON value of 'files' parameter.");
-			}
-			JsonNode jsonUploads = files.has("uploads") ? files.get("uploads") : null; // Array
-			JsonNode jsonInputs = files.has("inputs") ? files.get("inputs") : null; // Object
+		File contextZipFile = null;
 
-			// ---------- List of all uploads --------
-			if (jsonUploads != null && jsonUploads.isArray()) {
-				for (JsonNode jsonUploadId : jsonUploads) {
-					Logger.debug("upload id: "+jsonUploadId.asLong());
-					Long uploadId = jsonUploadId.asLong();
-					Upload upload = Upload.find.byId(uploadId);
-					if (upload == null)
-						return badRequest("Could not find the upload with id "+uploadId+".");
-					uploads.add(upload);
-				}
-			}
-
-			// ---------- List of which files goes on which input ports ----------
-			if (jsonInputs != null && jsonInputs.isObject()) {
-				Iterator<Entry<String, JsonNode>> jsonInputEntries = jsonInputs.getFields();
-				while (jsonInputEntries.hasNext()) {
-					Entry<String, JsonNode> jsonInput = jsonInputEntries.next();
-					String port = jsonInput.getKey();
-					inputs.put(port, new ArrayList<String>());
-					JsonNode jsonPortSequence = jsonInput.getValue();
-					if (jsonPortSequence.isArray()) {
-						for (JsonNode jsonPortElement : jsonPortSequence) {
-							Logger.debug("'"+jsonPortElement.getTextValue()+"' goes on port '"+port+"'");
-							inputs.get(port).add(jsonPortElement.getTextValue());
-						}
-					}
-				}
-			}
+		if (uploads.size() > 0) {
 
 			// ---------- See if there's an existing ZIP we can use as the context ----------
-//			models.Upload contextZipUpload = null;
-//			Long biggestZipSoFar = 0L;
-//
-//			for (Upload upload : uploads) {
-//				if (upload.isZip()) {
-//					File file = upload.getFile();
-//					if (file.length() > biggestZipSoFar) {
-//						biggestZipSoFar = file.length();
-//						contextZipUpload = upload;
-//					}
-//				}
-//			}
-//			
-//			if (contextZipUpload == null)
-//				Logger.debug("There's no ZIP files available to use as context");
-//			else
-//				Logger.debug("The ZIP file '"+contextZipUpload.getFile().getAbsolutePath()+"' is the biggest ZIP file available and will be used as context");
+			//	models.Upload contextZipUpload = null;
+			//	Long biggestZipSoFar = 0L;
+			//	
+			//	for (Long uploadId : uploads.keySet()) {
+			//		Upload upload = uploads.get(uploadId);
+			//		if (upload.isZip()) {
+			//			File file = upload.getFile();
+			//			if (file.length() > biggestZipSoFar) {
+			//				biggestZipSoFar = file.length();
+			//				contextZipUpload = upload;
+			//			}
+			//		}
+			//	}
+			//	
+			//	if (contextZipUpload == null)
+			//		Logger.debug("There's no ZIP files available to use as context");
+			//	else
+			//		Logger.debug("The ZIP file '"+contextZipUpload.getFile().getAbsolutePath()+"' is the biggest ZIP file available and will be used as context");
 
 			// ---------- Create a temporary directory ("the context") ----------
 			File contextDir = null;
@@ -317,17 +331,18 @@ public class Jobs extends Controller {
 				Logger.error("Could not create temporary file (context directory): "+e.getMessage(), e);
 				return internalServerError("Could not create temporary file (context directory)");
 			}
-			
+
 			Logger.debug("Created context directory: "+contextDir.getAbsolutePath());
 
 			// ---------- Copy or unzip all uploads to a common directory ----------
 			Logger.info("number of uploads: "+uploads.size());
-			for (models.Upload upload : uploads) {
+			for (Long uploadId : uploads.keySet()) {
+				Upload upload = uploads.get(uploadId);
 				if (upload.isZip()) {
-//					if (contextZipUpload != null && contextZipUpload.id == upload.id) {
-//						Logger.info("not unzipping context zip ("+upload.getFile().getAbsolutePath()+")");
-//						continue;
-//					}
+					//					if (contextZipUpload != null && contextZipUpload.id == upload.id) {
+					//						Logger.info("not unzipping context zip ("+upload.getFile().getAbsolutePath()+")");
+					//						continue;
+					//					}
 					Logger.info("unzipping "+upload.getFile()+" to contextDir");
 					try {
 						utils.Files.unzip(upload.getFile(), contextDir);
@@ -348,118 +363,56 @@ public class Jobs extends Controller {
 				}
 			}
 
-//			if (contextZipUpload == null) {
-				if (contextDir.list().length == 0) {
-					contextZipFile = null;
-				} else {
-					try {
-						contextZipFile = File.createTempFile("jobContext", ".zip");
-						Logger.debug("Created job context zip file: "+contextZipFile);
-					} catch (IOException e) {
-						Logger.error("Unable to create temporary job context ZIP file.", e);
-						throw new RuntimeErrorException(new Error(e), "Unable to create temporary job context ZIP file.");
-					}
-					try {
-						utils.Files.zip(contextDir, contextZipFile);
-					} catch (IOException e) {
-						Logger.error("Unable to zip context directory.", e);
-						throw new RuntimeErrorException(new Error(e), "Unable to zip context directory.");
-					}
+			//	if (contextZipUpload == null) {
+			if (contextDir.list().length == 0) {
+				contextZipFile = null;
+			} else {
+				try {
+					contextZipFile = File.createTempFile("jobContext", ".zip");
+					Logger.debug("Created job context zip file: "+contextZipFile);
+				} catch (IOException e) {
+					Logger.error("Unable to create temporary job context ZIP file.", e);
+					throw new RuntimeErrorException(new Error(e), "Unable to create temporary job context ZIP file.");
 				}
-//			} else {
-//				contextZipFile = contextZipUpload.getFile();
-//				try {
-//					Logger.debug("adding contents of '"+contextDir+"' to the ZIP '"+contextZipFile+"'");
-//					utils.Files.addDirectoryContentsToZip(contextZipFile, contextDir);
-//				} catch (IOException e) {
-//					Logger.error("Unable to add files to existing context ZIP file.", e);
-//					throw new RuntimeErrorException(new Error(e), "Unable to add files to existing context ZIP file.");
-//				}
-//			}
+				try {
+					utils.Files.zip(contextDir, contextZipFile);
+				} catch (IOException e) {
+					Logger.error("Unable to zip context directory.", e);
+					throw new RuntimeErrorException(new Error(e), "Unable to zip context directory.");
+				}
+			}
+			//	} else {
+			//		contextZipFile = contextZipUpload.getFile();
+			//		try {
+			//			Logger.debug("adding contents of '"+contextDir+"' to the ZIP '"+contextZipFile+"'");
+			//			utils.Files.addDirectoryContentsToZip(contextZipFile, contextDir);
+			//		} catch (IOException e) {
+			//			Logger.error("Unable to add files to existing context ZIP file.", e);
+			//			throw new RuntimeErrorException(new Error(e), "Unable to add files to existing context ZIP file.");
+			//		}
+			//	}
+
 		}
 
-		if (contextZipFile == null) {
+		if (contextZipFile == null)
 			Logger.debug("No files in context, submitting job without context ZIP file");
-			Pipeline2WSResponse job = pipeline2.Jobs.post(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), href, options, inputs);
-			
-			if (job.status != 200 && job.status != 201) {
-				return Application.error(job.status, job.statusName, job.statusDescription, "");
-			}
-
-			String jobId = XPath.selectText("/*/@id", job.asXml());
-			Job webUiJob = new Job(jobId, user);
-			webUiJob.nicename = id;
-			webUiJob.save();
-			
-			return redirect(controllers.routes.Jobs.getJob(jobId));
-
-		} else {
+		else
 			Logger.debug("Context ZIP file is present, submitting job with context ZIP file");
-			Pipeline2WSResponse job = pipeline2.Jobs.post(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), href, options, inputs, contextZipFile);
-			
-			if (job.status != 200 && job.status != 201) {
-				return Application.error(job.status, job.statusName, job.statusDescription, "");
-			}
-			
-			String jobId = XPath.selectText("/*/@id", job.asXml(), Pipeline2WS.ns);
-			Job webUiJob = new Job(jobId, user);
-			webUiJob.nicename = id;
-			webUiJob.save();
-			
-			return redirect(controllers.routes.Jobs.getJob(jobId));
+		
+		
+		Pipeline2WSResponse job = pipeline2.Jobs.post(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), href, arguments, contextZipFile);
+
+		if (job.status != 200 && job.status != 201) {
+			return Application.error(job.status, job.statusName, job.statusDescription, "");
 		}
+		String jobId = XPath.selectText("/*/@id", job.asXml(), Pipeline2WS.ns);
+		Job webUiJob = new Job(jobId, user);
+		webUiJob.nicename = id;
+		webUiJob.save();
+		
+		webUiJob.pushNotifications();
+
+		return redirect(controllers.routes.Jobs.getJob(jobId));
 	}
-	
-	/*
-	public static WebSocket<String> getStatusUpdates(final String id) {
-		return new WebSocket<String>() {
-			public void onReady(WebSocket.In<String> in, WebSocket.Out<String> out) {
-				final WebSocket<String> self = this;
-				in.onMessage(new Callback<String>() {
-					public void invoke(String event) {
-						Logger.debug("Received event on WebSocket: "+event);  
-					} 
-				});
-				in.onClose(new Callback0() {
-					public void invoke() {
-						synchronized (statusUpdates) {
-							List<WebSocket<String>> sockets = statusUpdates.get(id);
-							if (sockets != null)
-								sockets.remove(self);
-						}
-						Logger.info("Disconnected from WebSocket");
-					}
-				});
-				
-				out.write("Hello!");
-			}
-		};
-	}
-	
-	public static WebSocket<String> getMessageUpdates(final String id) {
-		return new WebSocket<String>() {
-			public void onReady(WebSocket.In<String> in, WebSocket.Out<String> out) {
-				final WebSocket<String> self = this;
-				in.onMessage(new Callback<String>() {
-					public void invoke(String event) {
-						Logger.debug("Received event on WebSocket: "+event);  
-					} 
-				});
-				in.onClose(new Callback0() {
-					public void invoke() {
-						synchronized (statusUpdates) {
-							List<WebSocket<String>> sockets = statusUpdates.get(id);
-							if (sockets != null)
-								sockets.remove(self);
-						}
-						Logger.info("Disconnected from WebSocket");
-					}
-				});
-				
-				out.write("Hello!");
-			}
-		};
-	}
-	*/
-	
+
 }

@@ -12,13 +12,13 @@
         @helper.form(action = routes.FirstUse.postCreateAdmin()) {
             
             @if(createAdminForm.hasGlobalErrors) {
-                <div class="alert alert-error">
+                <div role="alert" class="alert alert-error">
                     @createAdminForm.globalError.message
                 </div>
             }
             
             @if(flash.contains("success")) {
-                <div class="alert alert-success">
+                <div role="alert" class="alert alert-success">
                     @flash.get("success")
                 </div>
             }

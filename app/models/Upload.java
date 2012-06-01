@@ -24,13 +24,16 @@ public class Upload extends Model {
 	public String contentType;
 	public Date uploaded;
 	
-	public static Finder<Long,Upload> find = new Finder<Long,Upload>(Long.class, Upload.class);
+	public Long user;
+	
+	@Transient
+	private List<FileInfo> fileList;
 	
 	private Upload() {
 		this.uploaded = new Date();
 	}
 	
-	public static Long store(FilePart upload) {
+	public static Long store(FilePart upload, User user) {
 		Upload u = new Upload();
 		u.save(); // saving here generates the unique id for this row
 		
@@ -38,7 +41,7 @@ public class Upload extends Model {
 		uploadDir.mkdir();
 		u.absolutePath = uploadDir.getAbsolutePath();
 		
-		File file = upload.getFile();
+        File file = upload.getFile();
 		File newFile = new File(uploadDir, upload.getFilename());
 		file.renameTo(newFile);
 		file = newFile;
@@ -50,13 +53,18 @@ public class Upload extends Model {
 			u.contentType = upload.getContentType();
 		}
 		
+		u.user = user.id;
+		
 		u.save();
 		
 		return u.id;
 	}
 	
 	public List<FileInfo> listFiles() {
-		List<FileInfo> fileList = new ArrayList<FileInfo>();
+		if (fileList != null)
+			return fileList;
+		
+		fileList = new ArrayList<FileInfo>();
 		
 		Logger.debug("opening "+this.absolutePath);
 		File uploadDir = new File(this.absolutePath);
@@ -67,7 +75,7 @@ public class Upload extends Model {
 				Logger.debug(this.absolutePath+" contains 1 or more files...");
 				File file = dirContents[0];
 				
-				if ("application/zip".equals(this.contentType)) {
+				if (isZip()) {
 					Logger.debug(this.absolutePath+" is a ZIP file, listing ZIP entries...");
 					fileList = Files.listZipFilesWithContentType(file);
 					
@@ -95,5 +103,21 @@ public class Upload extends Model {
 	
 	public boolean isZip() {
 		return "application/zip".equals(this.contentType);
+	}
+	
+	// -- Queries
+	
+	public static Finder<Long,Upload> find = new Finder<Long,Upload>(Long.class, Upload.class);
+	
+	/** Retrieve a Upload by its id. */
+    public static Upload findById(Long id) {
+        return find.where().eq("id", id).findUnique();
+    }
+    
+    /** Delete all Uploads belonging to a user */
+	public static void deleteUserUploads(User user) {
+		for (Upload upload : find.where().eq("user", user.id).findList()) {
+			upload.delete();
+		}
 	}
 }

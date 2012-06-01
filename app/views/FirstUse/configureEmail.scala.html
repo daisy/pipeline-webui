@@ -12,13 +12,13 @@
      	
      	
      	@if(configureEmailForm.hasGlobalErrors) {
-		    <div class="alert alert-error">
+		    <div role="alert" class="alert alert-error">
 		        @configureEmailForm.globalError.message
 		    </div>
 		}
 		
 		@if(flash.contains("success")) {
-		    <div class="alert alert-success">
+		    <div role="alert" class="alert alert-success">
 		        @flash.get("success")
 		    </div>
 		}
@@ -33,13 +33,13 @@
 					@helper.form(action = routes.FirstUse.postConfigureEmail()) {
 						
 						@if(configureEmailForm.hasGlobalErrors) {
-						    <div class="alert alert-error">
+						    <div role="alert" class="alert alert-error">
 						        @configureEmailForm.globalError.message
 						    </div>
 						}
 						
 						@if(flash.contains("success")) {
-						    <div class="alert alert-success">
+						    <div role="alert" class="alert alert-success">
 						        @flash.get("success")
 						    </div>
 						}

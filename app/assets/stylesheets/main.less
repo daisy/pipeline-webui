@@ -1,6 +1,14 @@
+@media (min-width: 980px) {
+	body {
+		padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+	}
+}
 h1 {
 	text-align: center;
 	padding-bottom: 2em;
+}
+h2.label-headline {
+	font-size: 1em;
 }
 
 .alert {
@@ -16,28 +24,6 @@ div.submitjob {
 
 body.file-hover, .body .file-hover * {
 	opacity: 0.6;
-}
-
-#filetable {
-	font-size: 12px;
-	text-align: left;
-	border-collapse: collapse;
-	border: 1px solid #69c;
-	
-	th {
-		padding: 12px 17px 12px 17px;
-		font-weight: normal;
-		font-size: 14px;
-		border: 0px;
-		border-bottom: 1px dashed #69c;
-	}
-	td {
-		padding: 7px 17px 7px 17px;
-		border: 0px;
-	}
-	tbody tr:hover td {
-		background: #d0dafd;
-	}
 }
 
 .logline {

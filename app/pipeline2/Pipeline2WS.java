@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.SignatureException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -58,10 +59,11 @@ public class Pipeline2WS {
 	 * @param path Path to resource, for instance "/scripts".
 	 * @param username Robot username.
 	 * @param secret Robot secret.
+	 * @param parameters URL query string parameters
 	 * @return The return body.
 	 */
-	public static Pipeline2WSResponse get(String endpoint, String path, String username, String secret) {
-		String url = url(endpoint, path, username, secret);
+	public static Pipeline2WSResponse get(String endpoint, String path, String username, String secret, Map<String,String> parameters) {
+		String url = url(endpoint, path, username, secret, parameters);
 		if (endpoint == null) {
 			return new Pipeline2WSResponse(503, "Pipeline 2 Web Service endpoint is not configured.", "Please configure Pipeline 2 in the administrator settings.", null);
 		}
@@ -95,7 +97,7 @@ public class Pipeline2WS {
 	 * @return The return body.
 	 */
 	public static Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) {
-		String url = url(endpoint, path, username, secret);
+		String url = url(endpoint, path, username, secret, null);
 		
 		ClientResource resource = new ClientResource(url);
 		Representation representation = resource.post(xml);
@@ -122,7 +124,7 @@ public class Pipeline2WS {
 	 * @return The return body.
 	 */
 	public static Pipeline2WSResponse postMultipart(String endpoint, String path, String username, String secret, Map<String,File> parts) {
-		String url = url(endpoint, path, username, secret);
+		String url = url(endpoint, path, username, secret, null);
 		
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpPost httppost = new HttpPost(url);
@@ -158,7 +160,7 @@ public class Pipeline2WS {
 		return new Pipeline2WSResponse(status.getCode(), status.getName(), status.getDescription(), bodyStream);
 	}
 	
-	public static String url(String endpoint, String path, String username, String secret) {
+	public static String url(String endpoint, String path, String username, String secret, Map<String,String> parameters) {
 		String time = iso8601.format(new Date());
 		
 		String nonce = "";
@@ -166,7 +168,14 @@ public class Pipeline2WS {
 			nonce += (Math.random()+"").substring(2);
 		nonce = nonce.substring(0, 30);
 		
-		String url = endpoint + path + "?authid="+username + "&time="+time + "&nonce="+nonce;
+		String url = endpoint + path + "?";
+		if (parameters != null) {
+			for (String name : parameters.keySet()) {
+				try { url += URLEncoder.encode(name, "UTF-8") + "=" + URLEncoder.encode(parameters.get(name), "UTF-8") + "&"; }
+				catch (UnsupportedEncodingException e) { Logger.error("Unsupported encoding: UTF-8", e); }
+			}
+		}
+		url += "authid="+username + "&time="+time + "&nonce="+nonce;
 		
 		String hash = "";
 		try {

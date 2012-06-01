@@ -247,13 +247,11 @@ public class FirstUse extends Controller {
         } else {
         	Setting.set("mail.username",filledForm.field("username").valueOr(""));
 			Setting.set("mail.password",filledForm.field("password").valueOr(""));
-			Setting.set("mail.smtp", filledForm.field("smtp").valueOr(""));
-			Setting.set("mail.smtps.auth", "true");
-			Setting.set("mail.debug", "true");
-			Setting.set("mail.smtps.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-			Setting.set("mail.smtps.socketFactory.fallback", "false");
-			Setting.set("mail.smtp.starttls.enable", "true");
-			Setting.set("mail.from", "Pipeline 2");
+			Setting.set("mail.smtp.host", filledForm.field("smtp").valueOr(""));
+			Setting.set("mail.smtp.port", "465"); // TODO: make configurable like the host
+			Setting.set("mail.smtp.ssl", "true"); // TODO: make configurable like the host
+			Setting.set("mail.from.name", "Pipeline 2");
+			Setting.set("mail.from.email", user.email);
         	return redirect(routes.FirstUse.getWelcome());
         }
 	}

@@ -1,84 +1,55 @@
-@(href: String, id: String, nicename: String, description: String, homepage: String, inputs: List[List[String]], options: List[List[String]], outputs: List[List[String]])
+@(script: pipeline2.models.Script, uploadFiles: Boolean)
 
-@main("Create job", "", Array("fileuploader.js","createJob.js")) {
+@main("Create job", "",
+Array("tmpl.js","jquery.ui.widget.js","jquery.iframe-transport.js","jquery.fileupload.js","jquery.fileupload-ui.js","notifications.js","createJob.js"),
+Array("jquery.fileupload-ui.css")) {
 
-<script type="text/javascript">
-	$(function() {
-		Job.inputPorts = [
-	    @for(i <- 0 until inputs.length) {
-			{ "name": "@inputs.get(i).get(0)", "desc": "@inputs.get(i).get(1)", "sequence": "@inputs.get(i).get(2)", "mediaType": "@inputs.get(i).get(3)" }
-			@if(i<inputs.length-1){ , }
-		}
-		];
-	});
+<script type="text/javascript" charset="utf-8">
+	script = @Html(play.libs.Json.stringify(play.libs.Json.toJson(script)));
+	@if(play.Play.application().isDev()){
+		$(function(){Job.debug = true;});
+	}
+	$(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(request)", "@routes.Notifications.xhr()");});
 </script>
 
-<h1>@nicename</h1>
+<h1>
+	@script.nicename<br /> <small>@script.desc</small>
+</h1>
 
-<div class="well">
-<p>@description</p>
-</div>
-
-@helper.form(action = routes.Jobs.postJob(), 'id -> "job-form") {
-
-<input type="hidden" name="href" value="@href"/>
-<input type="hidden" name="id" value="@id"/>
-<input type="hidden" name="files" id="files" value=""/>
-
-@if(options.size() > 0){
-<div class="control-group well form-horizontal">
-<legend>Options</legend>
-
-@for(option <- options) {
-<label for="option-@option.get(0)" class="control-label">@option.get(0)</label>
-<div class="controls">
-<input name="option-@option.get(0)" id="option-@option.get(0)" type="text" class="input-xlarge"/>
-<span class="help-inline">@option.get(1)</span>
-</div>
-}
-</div>
+@if(uploadFiles){
+	@Widgets.upload()
 }
 
-<div class="control-group well">
-	<legend>Files</legend>
-	<!--helper.form(action = routes.Jobs.postJob(), 'id -> "file-form", 'enctype -> "multipart/form-data", 'class -> "form-horizontal") {-->
-	<label for="file-upload">Upload file</label>
-	<div class="controls file-upload-btn">
-		<div id="file-uploader">
-		    <noscript>          
-		        <p>Please enable JavaScript to upload files.</p>
-		    </noscript>         
+@helper.form(action = routes.Jobs.postJob(), 'id -> "job-form", 'class -> "form-horizontal", 'onsubmit -> "Job.submit();") {
+	<input type="hidden" id="id" name="id" value="@script.id" />
+	<input type="hidden" id="uploads" name="uploads" value=""/>
+	
+	<fieldset>
+	
+		@for(arg <- script.arguments){
+			@if(arg.kind=="parameters"){
+				@Widgets.parameters(arg)
+			}else{
+				@defining(arg.xsdType){xsdType => @xsdType match{
+					case "string" => { @Widgets.string(arg) }
+					case "boolean" => { @Widgets.boolean(arg) }
+					case "anyFileURI" => { @Widgets.file(arg) }
+					case _ => { @Widgets.string(arg) }
+				}}
+			}
+		}
+	
+		<div class="form-actions">
+			<button type="submit" value="Start job" class="btn btn-large btn-primary">Start job</button>
 		</div>
-	</div>
-	<!--}-->
-	<table border="1" id="filetable" class="table table-condensed">
-		<thead>
-			<tr class="filetable-headline hidden">
-				<th>&nbsp;</th>
-				<th>Filename</th>
-				<th colspan="2">&nbsp;</th>
-				<th>Context</th>
-				@for(input <- inputs) {
-				<th>@input.get(1)</th>
-				}
-			</tr>
-		</thead>
-	</table>
-</div>
-
-<!--
-<pre>
-TODO:
-- drag'n'drop to change the sequence order
-- drag'n'drop folders from desktop when possible
-- validate form (single document vs sequence, option types)
-</pre>
--->
-
-<div class="well submitjob">
-	<button type="submit" form="job-form" onsubmit="Job.updateFormFileParameter()" value="Start job" class="btn-large btn-primary">Start job</button>
-</div>
-
-} <!-- end of form -->
+	
+	</fieldset>
+	
+} @if(script.homepage!=null){
+	<address style="text-align: center;">
+		Script homepage: <a href="@script.homepage.href" target="_blank">@script.homepage.href</a>.
+		@script.homepage.desc
+	</address>
+}
 
 }

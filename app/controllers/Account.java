@@ -7,6 +7,7 @@ import org.apache.commons.mail.HtmlEmail;
 import models.Setting;
 import models.User;
 import play.Logger;
+import play.Play;
 import play.data.Form;
 import play.mvc.*;
 
@@ -199,23 +200,32 @@ public class Account extends Controller {
 		try {
 			HtmlEmail email = new HtmlEmail();
 			email.setAuthenticator(new DefaultAuthenticator(Setting.get("mail.username"), Setting.get("mail.password")));
-			email.setDebug("true".equals(Setting.get("mail.debug")));
-			email.setHostName("smtp.gmail.com");
-			email.getMailSession().getProperties().put("mail.smtps.auth", Setting.get("mail.smtps.auth"));
-			email.getMailSession().getProperties().put("mail.debug", Setting.get("mail.debug"));
-			email.getMailSession().getProperties().put("mail.smtps.socketFactory.class", Setting.get("mail.smtps.socketFactory.class"));
-			email.getMailSession().getProperties().put("mail.smtps.socketFactory.fallback", Setting.get("mail.smtps.socketFactory.fallback"));
-			email.getMailSession().getProperties().put("mail.smtp.starttls.enable", Setting.get("mail.smtp.starttls.enable"));
-			email.setFrom("josteinaj@gmail.com", Setting.get("mail.from"));
+			email.setDebug(Play.application().isDev());
+			email.setHostName(Setting.get("mail.smtp.host"));
+			email.getMailSession().getProperties().put("mail.debug", Play.application().isDev() ? "true" : "false");
+			email.getMailSession().getProperties().put("mail.smtp.debug", Play.application().isDev() ? "true" : "false");
+			email.getMailSession().getProperties().put("mail.smtps.auth", "true");
+			email.getMailSession().getProperties().put("mail.smtps.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+			email.getMailSession().getProperties().put("mail.smtps.socketFactory.fallback", "false");
+			email.getMailSession().getProperties().put("mail.smtp.starttls.enable", Setting.get("mail.smtp.ssl"));
+			email.getMailSession().getProperties().put("mail.smtp.user", Setting.get("mail.from.email"));
+			email.getMailSession().getProperties().put("mail.smtp.host", Setting.get("mail.smtp.host"));
+			email.getMailSession().getProperties().put("mail.smtp.port", Setting.get("mail.smtp.port"));
+			email.getMailSession().getProperties().put("mail.smtp.auth", "true");
+			email.getMailSession().getProperties().put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+			email.getMailSession().getProperties().put("mail.smtp.socketFactory.fallback", "false");
+			email.getMailSession().getProperties().put("mail.smtp.socketFactory.port", Setting.get("mail.smtp.port"));
+			email.setFrom(Setting.get("mail.from.email"), Setting.get("mail.from.name"));
 			email.setSubject("[DAISY Pipeline 2] "+subject);
 			email.setHtmlMsg(html);
 			email.setTextMsg(text);
 			email.addTo(recipientEmail, recipientName);
+			email.setSSL(true);
 			email.setTLS(true);
 			email.send();
 			return true;
 		} catch (EmailException e) {
-			Logger.error("EmailException occured while trying to send an e-mail!: "+e.getMessage());
+			Logger.error("EmailException occured while trying to send an e-mail!", e);
 			e.printStackTrace();
 			return false;
 		}

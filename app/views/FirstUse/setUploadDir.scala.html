@@ -14,13 +14,13 @@
         @helper.form(action = routes.FirstUse.postSetUploadDir()) {
         	
             @if(setUploadDirForm.hasGlobalErrors) {
-                <div class="alert alert-error">
+                <div role="alert" class="alert alert-error">
                     @setUploadDirForm.globalError.message
                 </div>
             }
             
             @if(flash.contains("success")) {
-                <div class="alert alert-success">
+                <div role="alert" class="alert alert-success">
                     @flash.get("success")
                 </div>
             }
