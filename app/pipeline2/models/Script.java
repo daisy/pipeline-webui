@@ -1,9 +1,23 @@
 package pipeline2.models;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.management.RuntimeErrorException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -11,6 +25,7 @@ import pipeline2.Pipeline2WS;
 import pipeline2.models.script.Argument;
 import pipeline2.models.script.Author;
 import pipeline2.models.script.Homepage;
+import play.Logger;
 import play.libs.XPath;
 
 /** Information about the current script. */
@@ -24,10 +39,14 @@ public class Script {
 	public Author author;
 	public List<Argument> arguments;
 	
+	/** List of mime types that are supported by multiple file arguments, and thus cannot be automatically assigned to a single argument. */
+	public List<String> mediaTypeBlacklist;
+	
 	// ---------- Constructors ----------
 	
 	public Script() {
 		this.arguments = new ArrayList<Argument>();
+		this.mediaTypeBlacklist = new ArrayList<String>();
 	}
 	
 	/** Parse a Script XML document retrieved from the Pipeline 2 Web Service and create Helper function for the Script(Document) constructor */
@@ -56,6 +75,8 @@ public class Script {
 			arg.sequence = parseTypeBoolean(XPath.selectText("@sequence", inputNode, Pipeline2WS.ns), false);
 			arg.ordered = parseTypeBoolean(XPath.selectText("@ordered", inputNode, Pipeline2WS.ns), true);
 			arg.mediaTypes = parseTypeMediaTypes(XPath.selectText("@mediaType", inputNode, Pipeline2WS.ns));
+			if (arg.mediaTypes.size() == 0)
+				arg.mediaTypes.add("application/xml");
 			arg.xsdType = "anyFileURI";
 			arg.output = ""; // irrelevant, but let's give it a value
 			arg.kind = "input"; // TODO "parameters": is there a @kind attribute in the Web API?
@@ -94,11 +115,28 @@ public class Script {
 			arg.sequence = parseTypeBoolean(XPath.selectText("@sequence", outputNode, Pipeline2WS.ns), false);
 			arg.ordered = parseTypeBoolean(XPath.selectText("@ordered", outputNode, Pipeline2WS.ns), true);
 			arg.mediaTypes = parseTypeMediaTypes(XPath.selectText("@mediaType", outputNode, Pipeline2WS.ns));
+			if (arg.mediaTypes.size() == 0)
+				arg.mediaTypes.add("application/xml");
 			arg.xsdType = "anyFileURI";
 			arg.output = parseTypeString(XPath.selectText("@output", outputNode, Pipeline2WS.ns));
 			arg.kind = "output";
 			
 			this.arguments.add(arg);
+		}
+		
+		Map<String,Integer> mediaTypeOccurences = new HashMap<String,Integer>();
+		for (Argument arg : this.arguments) {
+			for (String mediaType : arg.mediaTypes) {
+				if (mediaTypeOccurences.containsKey(mediaType)) {
+					mediaTypeOccurences.put(mediaType, mediaTypeOccurences.get(mediaType)+1);
+				} else {
+					mediaTypeOccurences.put(mediaType, 1);
+				}
+			}
+		}
+		for (String mediaType : mediaTypeOccurences.keySet()) {
+			if (mediaTypeOccurences.get(mediaType) > 1)
+				this.mediaTypeBlacklist.add(mediaType);
 		}
 	}
 	
@@ -124,10 +162,20 @@ public class Script {
 	private static List<String> parseTypeMediaTypes(String mediaTypesString) {
 		if (!(mediaTypesString instanceof String))
 			return new ArrayList<String>();
-		String[] mediaTypes = mediaTypesString.split(" ");
-		for (int i = 0; i < mediaTypes.length; i++)
-			mediaTypes[i] = parseTypeString(mediaTypes[i]);
-		return Arrays.asList(mediaTypes);
+		Logger.debug("mediaTypeString: '"+mediaTypesString+"'");
+		mediaTypesString = parseTypeString(mediaTypesString);
+		String[] mediaTypes = (mediaTypesString==null?"":mediaTypesString).split(" ");
+		List<String> mediaTypesList = new ArrayList<String>();
+		for (String mediaType : mediaTypes) {
+			if ("".equals(mediaType))
+				continue;
+			
+			if ("text/xml".equals(mediaType))
+				mediaTypesList.add("application/xml");
+			else
+				mediaTypesList.add(mediaType);
+		}
+		return mediaTypesList;
 	}
 	
 }

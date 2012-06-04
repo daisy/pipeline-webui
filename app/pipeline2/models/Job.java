@@ -1,6 +1,7 @@
 package pipeline2.models;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.w3c.dom.Document;
@@ -48,12 +49,13 @@ public class Job {
 		
 		List<Node> messageNodes = XPath.selectNodes("/d:job/d:messages/d:message", jobXml, Pipeline2WS.ns);
 		for (Node messageNode : messageNodes) {
-			messages.add(new Message(
+			this.messages.add(new Message(
 				XPath.selectText("@level", messageNode, Pipeline2WS.ns),
 				XPath.selectText("@sequence", messageNode, Pipeline2WS.ns),
 				XPath.selectText(".", messageNode, Pipeline2WS.ns)
 			));
 		}
+		Collections.sort(this.messages);
 	}
 	
 }

@@ -14,7 +14,7 @@ import play.mvc.WebSocket;
 public class Global extends GlobalSettings {
 
 	@Override
-	public void onStart(Application app) {
+	public synchronized void onStart(Application app) {
 		// Application has started...
 		
 		User.notificationQueues = new ConcurrentHashMap<Long,List<Notification>>();
@@ -26,10 +26,12 @@ public class Global extends GlobalSettings {
 				Duration.create(1, TimeUnit.SECONDS),
 				new Runnable() {
 					public void run() {
-						for (Long userId : User.notificationQueues.keySet()) {
-							List<Notification> notificationQueue = User.notificationQueues.get(userId);
-							if (notificationQueue.isEmpty()) {
-								User.push(userId, new Notification("heartbeat", null));
+						synchronized (User.notificationQueues) {
+							for (Long userId : User.notificationQueues.keySet()) {
+								List<Notification> notificationQueue = User.notificationQueues.get(userId);
+								if (notificationQueue.isEmpty()) {
+									User.push(userId, new Notification("heartbeat", null));
+								}
 							}
 						}
 					}

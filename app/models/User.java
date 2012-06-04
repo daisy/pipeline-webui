@@ -178,16 +178,19 @@ public class User extends Model {
 				// When the socket is closed
 				in.onClose(new Callback0() {
 					public void invoke() {
-						websockets.get(id).remove(out);
-						Logger.debug("Disconnected (websockets.get("+id+").size()="+websockets.get(id).size()+")");
+						synchronized (websockets) {
+							websockets.get(id).remove(out);
+							Logger.debug("Disconnected (websockets.get("+id+").size()="+websockets.get(id).size()+")");
+						}
 					}
 				});
 
 				// Remember socket
-				if (!websockets.containsKey(id))
-					websockets.put(id, new ArrayList<WebSocket.Out<JsonNode>>());
-				websockets.get(id).add(out);
-				Logger.debug("Connected (websockets.get("+id+").size()="+websockets.get(id).size()+")");
+				websockets.putIfAbsent(id, new ArrayList<WebSocket.Out<JsonNode>>());
+				synchronized (websockets) {
+					websockets.get(id).add(out);
+					Logger.debug("Connected (websockets.get("+id+").size()="+websockets.get(id).size()+")");
+				}
 
 			}
 		};
@@ -200,20 +203,24 @@ public class User extends Model {
 	 * @param notification
 	 */
 	public static void push(Long userId, Notification notification) {
-		if (!notificationQueues.containsKey(userId))
-			notificationQueues.put(userId, new ArrayList<Notification>());
-
-		notificationQueues.get(userId).add(notification);
-
-		// if the user has any open WebSockets, push the notification(s) right away
-		if (websockets.get(userId).size() > 0) {
-			for (Notification n : notificationQueues.get(userId)) {
-				JsonNode jsonNotification = n.toJson();
-				for (WebSocket.Out<JsonNode> out : websockets.get(userId)) {
-					out.write(jsonNotification);
+		notificationQueues.putIfAbsent(userId, new ArrayList<Notification>());
+		websockets.putIfAbsent(userId, new ArrayList<WebSocket.Out<JsonNode>>());
+		
+		synchronized (notificationQueues) {
+			notificationQueues.get(userId).add(notification);
+			
+			synchronized (websockets) {
+				// if the user has any open WebSockets, push the notification(s) right away
+				if (websockets.get(userId).size() > 0) {
+					for (Notification n : notificationQueues.get(userId)) {
+						JsonNode jsonNotification = n.toJson();
+						for (WebSocket.Out<JsonNode> out : websockets.get(userId)) {
+							out.write(jsonNotification);
+						}
+					}
+					notificationQueues.get(userId).clear();
 				}
 			}
-			notificationQueues.get(userId).clear();
 		}
 	}
 

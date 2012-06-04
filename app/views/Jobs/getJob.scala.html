@@ -3,7 +3,7 @@
 @main("View job", "", Array("notifications.js")) {
 
 <script type="text/javascript" charset="utf-8">
-	$(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(request)", "@routes.Notifications.xhr()");});
+$(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(request)", "@routes.Notifications.xhr().absoluteURL(request)");});
 </script>
 
 <h1>Job: @nicename <br/><small>(@job.id)</small></h1>
@@ -17,9 +17,35 @@
 	</div>
 	
 	<div id="status-running" style="display:none;">
-		<h2 role="status" style="color:#000080;">Job is running</h2>
+		<h2 role="status" style="color:#000080;">
+			Job is running
+			<span aria-live="none">
+				<span id="runningDot1"                       >&nbsp;.&nbsp; &nbsp; &nbsp;</span>
+				<span id="runningDot2" style="display: none;">&nbsp;.&nbsp;.&nbsp; &nbsp;</span>
+				<span id="runningDot3" style="display: none;">&nbsp;.&nbsp;.&nbsp;.&nbsp;</span>
+				<script type="text/javascript">
+					window.setInterval(function(){
+						if ($("#runningDot1").is(":visible")) {
+							$("#runningDot1").hide();
+							$("#runningDot2").show();
+							
+						} else if ($("#runningDot2").is(":visible")) {
+							$("#runningDot2").hide();
+							$("#runningDot3").show();
+							
+						} else {
+							$("#runningDot3").hide();
+							$("#runningDot1").show();
+						}
+					},1000);
+				</script>
+			</span>
+		</h2>
+		<br/>
 		@if(job.messages.size()>0){
-			<ol start="@job.messages.get(job.messages.size()-1).sequence"><li><pre>@job.messages.get(job.messages.size()-1).text</pre></li></ol>
+			<ul style="list-style-type:none;text-align:left;padding-top:20px;"><li id="message-latest"><pre>@job.messages.get(job.messages.size()-1).text</pre></li></ul>
+		} else {
+			<ul style="list-style-type:none;text-align:left;padding-top:20px;"><li id="message-latest"><pre>&nbsp;</pre></li></ul>
 		}
 	</div>
 	
@@ -60,9 +86,10 @@
 <script type="text/javascript">
 	$(function(){
 		Notifications.listen("job-message-@job.id", function(message){
-			$("#message-list").append(
-				'<li value="'+message.sequence+'" class="message '+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><code>'+message.text+'</code></li>'
-			);
+			//if ($("#message-list li").filter(function(i){return $(this).attr("value")===message.sequence;}).size() === 0) {
+				$("#message-list").append('<li value="'+message.sequence+'" class="message '+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><code>'+message.text+'</code></li>');
+				$("#message-latest").html("<pre>"+message.text+"</pre>");
+			//}
 		});
 		Notifications.listen("job-status-@job.id", function(status){
 			@for(status <- pipeline2.models.Job.Status.values()){

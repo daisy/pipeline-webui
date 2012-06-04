@@ -1,6 +1,6 @@
 @(userForm: Form[User], users: List[User], tab: String)
 
-@main("Create job", "admin", Array("adminSettings.js")) {
+@main("Administrator settings", "admin", Array("adminSettings.js")) {
 
 <div class="page-header">
     <h1>Administrator settings</h1>
@@ -79,7 +79,7 @@
 					            <div class="controls">
 					        		<input type="text" name="name" id="user-@{user.id}-name" class="input-xlarge"
 					        			placeholder="&quot;@user.name&quot; is the users current name."
-					        			value="@{if (userForm.hasErrors()) userForm.field("name").valueOr(""); else user.name;}"
+					        			value="@{if (user.id==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("name").valueOr(""); else user.name;}"
 					        			onkeyup="if(this.value==='@user.name')document.getElementById('user-@{user.id}-nameGroup').style.backgroundColor='#FFF';else document.getElementById('user-@{user.id}-nameGroup').style.backgroundColor='#DDF';"/>
 									@if(tab == ""+user.id && userForm.field("user-@{user.id}-name").errors().size() > 0){
 										@if(userForm.error("name").message.startsWith("error.")){
@@ -96,7 +96,7 @@
 								<div class="controls">
 									<input type="email" name="email" id="user-@{user.id}-email" class="input-xlarge"
 										placeholder="&quot;@user.email&quot; is your current e-mail address."
-										value="@{if (userForm.hasErrors()) userForm.field("email").valueOr(""); else user.email;}"
+										value="@{if (user.id==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("email").valueOr(""); else user.email;}"
 										onkeyup="toggleChanged('user-@{user.id}-email', this.value==='@user.email');"/>
 									@if(tab == ""+user.id && userForm.field("email").errors().size() > 0){
 										@if(userForm.error("email").message.startsWith("error.")){

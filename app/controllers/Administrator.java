@@ -1,27 +1,8 @@
 package controllers;
 
-import java.net.URL;
 import java.util.List;
-import java.util.Properties;
-
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
-import org.apache.commons.mail.DefaultAuthenticator;
-import org.apache.commons.mail.Email;
-import org.apache.commons.mail.EmailException;
-import org.apache.commons.mail.HtmlEmail;
-import org.apache.commons.mail.SimpleEmail;
-
-import models.Setting;
 import models.Upload;
 import models.User;
-import play.api.mvc.Call;
-import play.api.templates.Html;
 import play.data.Form;
 import play.mvc.*;
 
@@ -88,11 +69,13 @@ public class Administrator extends Controller {
 				filledForm.reject("admin", "The user must either *be* an admin, or *not be* an admin");
 			}
 			
-			if (filledForm.field("userid").valueOr("").equals(updateUser.id+"")) {
+			if (filledForm.field("userid").valueOr("").equals(user.id+"")) {
 				filledForm.reject("admin", "Only other admins can demote you to a normal user, you cannot do it yourself");
 			}
 		}
     	
+		filledForm.errors().remove("password"); // user password not required for admin
+		
 		if (!changedName && !changedEmail && !changedAdmin) {
 			flash("success", "You did not submit any changes. No changes were made.");
 			return redirect(routes.Administrator.getSettings());
@@ -138,8 +121,10 @@ public class Administrator extends Controller {
 			String resetUrl = routes.Account.showResetPasswordForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
 			String html = views.html.Account.emailResetPassword.render(resetUrl).body();
 			String text = "Go to this link to change your password: "+resetUrl;
-			Account.sendEmail("Reset your password", html, text, resetUser.name, resetUser.email);
-			flash("success", "A password reset link was sent to "+resetUser.name);
+			if (Account.sendEmail("Reset your password", html, text, resetUser.name, resetUser.email))
+				flash("success", "A password reset link was sent to "+resetUser.name);
+			else
+				flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
 		} else {
 			
 			resetUser.makeNewActivationUid();
@@ -148,9 +133,10 @@ public class Administrator extends Controller {
 			String html = views.html.Account.emailActivate.render(activateUrl).body();
 			String text = "Go to this link to activate your account: "+activateUrl;
 			
-			Account.sendEmail("Activate your account", html, text, resetUser.name, resetUser.email);
-			
-			flash("success", "An account activation link was sent to "+resetUser.name);
+			if (Account.sendEmail("Activate your account", html, text, resetUser.name, resetUser.email))
+				flash("success", "An account activation link was sent to "+resetUser.name);
+			else
+				flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
 		}
 		
 		return redirect(routes.Administrator.getSettings());
@@ -211,7 +197,8 @@ public class Administrator extends Controller {
 			String html = views.html.Account.emailActivate.render(activateUrl).body();
 			String text = "Go to this link to activate your account: "+activateUrl;
 			
-			Account.sendEmail("Activate your account", html, text, newUser.name, newUser.email);
+			if (!Account.sendEmail("Activate your account", html, text, newUser.name, newUser.email))
+				flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
 			
         	flash("adminsettings.userview", newUser.id+"");
         	flash("success", "User "+newUser.name+" created successfully!");

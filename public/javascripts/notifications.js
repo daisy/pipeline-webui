@@ -5,8 +5,9 @@ if (!Date.now) {
 }
 
 Notifications = {
-	lastWebSocketHeartbeat: Date.now() + 5000,
-	lastXHRHeartbeat: Date.now() + 5000,
+	lastWebSocketHeartbeat: Date.now(),
+	lastXHRHeartbeat: Date.now(),
+	WebSocket: typeof MozWebSocket !== "undefined" ? MozWebSocket : typeof WebSocket !== "undefined" ? WebSocket : null,
 	websocket: null,
 	websocketURL: "",
 	xhrURL: "",
@@ -24,13 +25,20 @@ Notifications = {
                 	Notifications.websocket.close();
                 	Notifications.websocket = null;
 				}
-    			$.getJSON(Notifications.xhrURL, function(data){
-    				for (var i = 0; i < data.length; i++) {
-    					Notifications.handleNotifications(data[i]);
-    				}
+    			$.ajax({
+    				url: Notifications.xhrURL,
+    				dataType: 'json',
+    				cache: false,
+    				data: Date.now()+"",
+    				success: function(data, textStatus, jqXHR){
+    	    			for (var i = 0; i < data.length; i++) {
+    	    				Notifications.handleNotifications(data[i]);
+    	    			}
+    	    		}
     			});
     		}
-    		if (Date.now() - Notifications.lastWebSocketHeartbeat > 30000) {
+    		if (Notifications.WebSocket && Date.now() - Notifications.lastWebSocketHeartbeat > 30000) {
+    			// retry websockets
     			Notifications.lastWebSocketHeartbeat = Date.now() - 5000;
     			Notifications.openWebSocket();
     		}
@@ -67,9 +75,8 @@ Notifications = {
 	},
 	
 	openWebSocket: function() {
-        var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
-        if (!WS) return;
-        Notifications.websocket = new WS(Notifications.websocketURL);
+        if (!Notifications.WebSocket) return;
+        Notifications.websocket = new Notifications.WebSocket(Notifications.websocketURL);
         Notifications.websocket.onmessage = function(event) {Notifications.handleNotifications(JSON.parse(event.data));};
         Notifications.websocket.onerror = function() {}
         Notifications.websocket.onclose = function() {Notifications.websocket = null;}

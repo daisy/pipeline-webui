@@ -29,6 +29,9 @@ public class Argument {
 	/** MIME types accepted (only relevant if type=anyDirURI or anyFileURI) */
 	public List<String> mediaTypes;
 	
+	/** Only relevant for file arguments. If mediaTypeBlacklist is defined, then all XML files are supported for this argument, except those listed in this list. */
+	public List<String> mediaTypeBlacklist;
+	
 	/** XSD type */
 	public String xsdType = "";
 	
@@ -39,7 +42,7 @@ public class Argument {
 	public String kind;
 	
 	public Argument() {
-		
+		this.mediaTypes = new ArrayList<String>();
 	}
 	
 	public Argument(Argument arg) {

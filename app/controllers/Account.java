@@ -130,7 +130,7 @@ public class Account extends Controller {
 		if (resetUid == null || !resetUid.equals(user.getActivationUid()))
 			return redirect(routes.Login.login());
 		
-		return ok(views.html.Account.resetPassword.render(form(User.class), email, resetUid));
+		return ok(views.html.Account.resetPassword.render(form(User.class), email, resetUid, user.active));
 	}
 	
 	/**
@@ -159,7 +159,7 @@ public class Account extends Controller {
     		filledForm.reject("repeatPassword", "Password doesn't match.");
         
         if (filledForm.hasErrors()) {
-        	return badRequest(views.html.Account.resetPassword.render(filledForm, email, resetUid));
+        	return badRequest(views.html.Account.resetPassword.render(filledForm, email, resetUid, user.active));
         	
         } else {
         	user.setPassword(filledForm.field("password").valueOr(""));

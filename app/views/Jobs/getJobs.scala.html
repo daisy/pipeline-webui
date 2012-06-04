@@ -1,6 +1,10 @@
 @(jobs: List[Job])
 
-@main("Jobs", "jobs") {
+@main("Jobs", "jobs", Array("notifications.js")) {
+
+<script type="text/javascript" charset="utf-8">
+$(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(request)", "@routes.Notifications.xhr().absoluteURL(request)");});
+</script>
 
 <h1>Jobs</h1>
 
@@ -18,7 +22,12 @@
 	@for(job <- jobs) {
 	<tr>
 		<td><a href="@routes.Jobs.getJob(job.id)">@job.nicename</td>
-		<td>@job.status</td>
+		<td id="job-status-@job.id">
+			@job.status
+			<script type="text/javascript">
+				$(function(){Notifications.listen("job-status-@job.id", function(status){$("#job-status-@job.id").html(status);});});
+			</script>
+		</td>
 		<td>@controllers.Jobs.DATE_FORMAT.format(job.created)</td>
 		@if(Controller.flash("showOwner")=="true"){
 			<td>@job.userNicename</td>

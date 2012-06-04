@@ -25,8 +25,7 @@ public class Notifications extends Controller {
 		if (user == null)
 			return null; // forbidden
 		
-		if (!User.notificationQueues.containsKey(user.id))
-			User.notificationQueues.put(user.id, new ArrayList<Notification>());
+		User.notificationQueues.putIfAbsent(user.id, new ArrayList<Notification>());
 		
 		return user.addWebSocket();
 		
@@ -44,15 +43,15 @@ public class Notifications extends Controller {
 		if (user == null)
 			return null; // forbidden
 		
-		if (!User.notificationQueues.containsKey(user.id))
-			User.notificationQueues.put(user.id, new ArrayList<Notification>());
+		User.notificationQueues.putIfAbsent(user.id, new ArrayList<Notification>());
 		
 		List<JsonNode> result = new ArrayList<JsonNode>();
-		for (Notification n : User.notificationQueues.get(user.id)) {
-			result.add(n.toJson());
+		synchronized (User.notificationQueues) {
+			for (Notification n : User.notificationQueues.get(user.id)) {
+				result.add(n.toJson());
+			}
+			User.notificationQueues.get(user.id).clear();
 		}
-		
-		User.notificationQueues.get(user.id).clear();
 		
 		return ok(play.libs.Json.toJson(result));
 	}

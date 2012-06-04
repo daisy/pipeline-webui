@@ -1,4 +1,4 @@
-@(arg: pipeline2.models.script.Argument)
+@(arg: pipeline2.models.script.Argument, script: pipeline2.models.Script)
 
 @if(arg.sequence){
 	
@@ -88,21 +88,30 @@
 					
 					/* Event handler for fileset changes. */
 					Job.onNewUpload(function(fileset, id){
-						console.log("Called listener for @{arg.kind}-@{arg.name}!");
 						var contentTypes = @Html(play.libs.Json.stringify(play.libs.Json.toJson(arg.mediaTypes)));
 						for (var f = 0; f < fileset.length; f++) {
 							var file = fileset[f];
-							var matchingContentType = false;
-							switch (file.contentType) {
-								@for(contentType <- arg.mediaTypes){
-								case "@contentType":
+							
+							var matchingContentType = @arg.mediaTypes.contains("application/xml") && file.isXML;
+							
+							@if(arg.mediaTypes.length > 0){
+								switch (file.contentType) {
+									@for(contentType <- arg.mediaTypes){
+									case "@contentType":
+									}
+										matchingContentType = true;
+										break;
 								}
-								@if(arg.mediaTypes.length > 0){
-									matchingContentType = true;
-									break;
+							}
+							
+							@if(script.mediaTypeBlacklist.length > 0){
+								switch (file.contentType) {
+									@for(contentType <- script.mediaTypeBlacklist){
+									case "@contentType":
+									}
+										matchingContentType = false;
+										break;
 								}
-								default:
-									matchingContentType = @{arg.kind == "input" && arg.mediaTypes.length == 0} && file.isXML; 
 							}
 							
 							if (matchingContentType) {
@@ -124,7 +133,6 @@
 							value.push($(e).attr("value"));
 						});
 						$('#@{arg.kind}-@{arg.name}').attr("value", value.join());
-						console.log(value.join());
 					});
 				});
 			</script>
@@ -149,22 +157,31 @@
 				$(function(){
 					/* Event handler for fileset changes. */
 					Job.onNewUpload(function(fileset, id){
-						console.log("Called listener for @{arg.kind}-@{arg.name}!");
 						var contentTypes = @Html(play.libs.Json.stringify(play.libs.Json.toJson(arg.mediaTypes)));
 						var selectedSomething = $("#@{arg.kind}-@{arg.name} option").size() > 0;
 						for (var f = 0; f < fileset.length; f++) {
 							var file = fileset[f];
-							var matchingContentType = false;
-							switch (file.contentType) {
-								@for(contentType <- arg.mediaTypes){
-								case "@contentType":
+							
+							var matchingContentType = @arg.mediaTypes.contains("application/xml") && file.isXML;
+							
+							@if(arg.mediaTypes.length > 0){
+								switch (file.contentType) {
+									@for(contentType <- arg.mediaTypes){
+									case "@contentType":
+									}
+										matchingContentType = true;
+										break;
 								}
-								@if(arg.mediaTypes.length > 0){
-									matchingContentType = true;
-									break;
+							}
+							
+							@if(script.mediaTypeBlacklist.length > 0){
+								switch (file.contentType) {
+									@for(contentType <- script.mediaTypeBlacklist){
+									case "@contentType":
+									}
+										matchingContentType = false;
+										break;
 								}
-								default:
-									matchingContentType = @{arg.kind == "input" && arg.mediaTypes.length == 0} && file.isXML; 
 							}
 							
 							if (matchingContentType) {

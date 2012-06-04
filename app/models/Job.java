@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import pipeline2.Pipeline2WSResponse;
+import pipeline2.models.job.Message;
 import play.Logger;
 import play.db.ebean.Model;
 
@@ -89,8 +90,7 @@ public class Job extends Model implements Comparable<Job> {
 				Duration.create(250, TimeUnit.MILLISECONDS),
 				new Runnable() {
 					public void run() {
-						Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) : 0;
-						Logger.debug("Job update notifications");
+						Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) + 1 : 0;
 						
 						Pipeline2WSResponse wsJob = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, fromSequence);
 						
@@ -104,7 +104,6 @@ public class Job extends Model implements Comparable<Job> {
 							pushNotifier.cancel();
 						}
 						
-						Collections.sort(job.messages);
 						Job webuiJob = Job.findById(job.id);
 						for (pipeline2.models.job.Message message : job.messages) {
 							Notification notification = new Notification("job-message-"+job.id, message);
@@ -114,6 +113,10 @@ public class Job extends Model implements Comparable<Job> {
 						if (!job.status.equals(lastStatus.get(job.id))) {
 							lastStatus.put(job.id, job.status);
 							User.push(webuiJob.user, new Notification("job-status-"+job.id, job.status));
+						}
+						
+						if (job.messages.size() > 0) {
+							Job.lastMessageSequence.put(job.id, job.messages.get(job.messages.size()-1).sequence);
 						}
 					}
 				}

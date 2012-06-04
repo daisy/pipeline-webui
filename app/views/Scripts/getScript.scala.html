@@ -9,7 +9,7 @@ Array("jquery.fileupload-ui.css")) {
 	@if(play.Play.application().isDev()){
 		$(function(){Job.debug = true;});
 	}
-	$(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(request)", "@routes.Notifications.xhr()");});
+	$(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(request)", "@routes.Notifications.xhr().absoluteURL(request)");});
 </script>
 
 <h1>
@@ -28,13 +28,13 @@ Array("jquery.fileupload-ui.css")) {
 	
 		@for(arg <- script.arguments){
 			@if(arg.kind=="parameters"){
-				@Widgets.parameters(arg)
+				@Widgets.parameters(arg, script)
 			}else{
 				@defining(arg.xsdType){xsdType => @xsdType match{
-					case "string" => { @Widgets.string(arg) }
-					case "boolean" => { @Widgets.boolean(arg) }
-					case "anyFileURI" => { @Widgets.file(arg) }
-					case _ => { @Widgets.string(arg) }
+					case "string" => { @Widgets.string(arg, script) }
+					case "boolean" => { @Widgets.boolean(arg, script) }
+					case "anyFileURI" => { @Widgets.file(arg, script) }
+					case _ => { @Widgets.string(arg, script) }
 				}}
 			}
 		}
@@ -45,7 +45,9 @@ Array("jquery.fileupload-ui.css")) {
 	
 	</fieldset>
 	
-} @if(script.homepage!=null){
+}
+
+@if(script.homepage!=null){
 	<address style="text-align: center;">
 		Script homepage: <a href="@script.homepage.href" target="_blank">@script.homepage.href</a>.
 		@script.homepage.desc

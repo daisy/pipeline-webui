@@ -73,8 +73,10 @@ public class Login extends Controller {
 			String resetUrl = routes.Account.showResetPasswordForm(user.email, user.getActivationUid()).absoluteURL(request());
 			String html = views.html.Account.emailResetPassword.render(resetUrl).body();
 			String text = "Go to this link to change your password: "+resetUrl;
-			Account.sendEmail("Reset your password", html, text, user.name, user.email);
-    		flash("success", "An e-mail has been sent to "+email+" with further instructions. Please check your e-mail.");
+			if (Account.sendEmail("Reset your password", html, text, user.name, user.email))
+				flash("success", "An e-mail has been sent to "+email+" with further instructions. Please check your e-mail.");
+			else
+				flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
     		return ok(views.html.Login.login.render(form(LoginForm.class)));
     		
     	}

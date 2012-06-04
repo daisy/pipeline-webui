@@ -1,6 +1,6 @@
 package pipeline2.models.job;
 
-public class Message implements Comparable {
+public class Message implements Comparable<Message> {
 	
 	public enum Level { ERROR, WARNING, INFO, DEBUG, TRACE };
 	
@@ -28,7 +28,7 @@ public class Message implements Comparable {
 	}
 
 	@Override
-	public int compareTo(Object other) {
+	public int compareTo(Message other) {
 		if (!(other instanceof Message))
 			return 0;
 		
