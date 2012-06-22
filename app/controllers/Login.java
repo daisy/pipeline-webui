@@ -1,5 +1,7 @@
 package controllers;
 
+import java.util.Random;
+
 import play.Logger;
 import play.mvc.*;
 import play.data.*;
@@ -29,7 +31,7 @@ public class Login extends Controller {
     	if (FirstUse.isFirstUse()) {
     		return redirect(routes.FirstUse.getFirstUse());
     		
-    	} else if (User.authenticate(session("email"), session("password")) == null) {
+    	} else if (User.authenticate(session("userid"), session("email"), session("password")) == null) {
     		return ok(views.html.Login.login.render(form(LoginForm.class)));
     		
     	} else {
@@ -47,12 +49,29 @@ public class Login extends Controller {
         if (loginForm.hasErrors()) {
             return badRequest(views.html.Login.login.render(loginForm));
         } else {
+        	session("userid", user.id+"");
         	session("name", user.name);
         	session("email", user.email);
         	session("password", user.password);
         	session("admin", user.admin+"");
             return redirect(routes.Scripts.getScripts());
         }
+    }
+    
+    private static Random randomGuestUserId = new Random();
+    /**
+     * Handle login form submission for guest logins.
+     */
+    public static Result authenticateGuest() {
+    	if (!"true".equals(models.Setting.get("guest.allowGuests")))
+    		return badRequest(views.html.Login.login.render(form(LoginForm.class)));
+    	
+    	session("userid", ""+(-1-randomGuestUserId.nextInt(2147483640)));
+    	session("name", models.Setting.get("guest.name"));
+    	session("email", "");
+    	session("password", "");
+    	session("admin", "false");
+        return redirect(routes.Scripts.getScripts());
     }
     
     public static Result resetPassword() {

@@ -1,5 +1,6 @@
+
 function toggleRadio(idPrefix, state, defaultState) {
-	$('#'+idPrefix+'-value').attr('value',state?'true':'false');
+	$('#'+idPrefix+'-value').val(state?'true':'false');
 	$('#'+idPrefix+'-on').attr('aria-checked',state?'true':'false');
 	$('#'+idPrefix+'-off').attr('aria-checked',state?'false':'true');
 	if (state) {

@@ -1,4 +1,4 @@
-@(configureEmailForm: Form[controllers.FirstUse.ConfigureEmailForm], tab: String)
+@(configureEmailForm: Form[controllers.Administrator.ConfigureEmailForm])
 
 @main("First use", "", Array(), Array(), Array()){
     
@@ -10,12 +10,11 @@
      	<hr/>
      	<br/>
      	
-     	
-     	@if(configureEmailForm.hasGlobalErrors) {
-		    <div role="alert" class="alert alert-error">
-		        @configureEmailForm.globalError.message
-		    </div>
-		}
+     	@if(flash.contains("error")) {
+	        <div role="alert" class="alert alert-error">
+	            @flash.get("error")
+	        </div>
+	    }
 		
 		@if(flash.contains("success")) {
 		    <div role="alert" class="alert alert-success">
@@ -23,107 +22,6 @@
 		    </div>
 		}
 		
-     	<div class="tabbable tabs-left">
-			<ul class="nav nav-tabs">
-				<li class="@("active".when(tab == "smtp"))"><a href="#mailtab-smtp" data-toggle="tab"><img src="@routes.Assets.at("images/mail_icon_32.png")" alt=""/> SMTP</a></li>
-				<li class="@("active".when(tab == "gmail"))"><a href="#mailtab-gmail" data-toggle="tab"><img src="@routes.Assets.at("images/gmail_icon_32.png")" alt=""/> GMail</a></li>
-			</ul>
-			<div class="tab-content">
-				<div class="tab-pane @("active".when(tab == "smtp"))" id="mailtab-smtp">
-					@helper.form(action = routes.FirstUse.postConfigureEmail()) {
-						
-						@if(configureEmailForm.hasGlobalErrors) {
-						    <div role="alert" class="alert alert-error">
-						        @configureEmailForm.globalError.message
-						    </div>
-						}
-						
-						@if(flash.contains("success")) {
-						    <div role="alert" class="alert alert-success">
-						        @flash.get("success")
-						    </div>
-						}
-			
-						<fieldset>
-							<legend>Generic SMTP Server</legend>
-							<br/>
-							
-						    <div class="form-horizontal">
-						    	
-					        	<div class="control-group @("error".when(configureEmailForm.error("smtp") != null))">
-									<label for="smtp" class="control-label">SMTP Address</label>
-									<div class="controls">
-										<input type="text" name="smtp" id="smtp-smtp" placeholder="IP or domain name" class="input-xlarge" value="@configureEmailForm.field("smtp").valueOr("")"/>
-										@if(configureEmailForm.field("smtp").errors().size() > 0){
-											<span class="help-inline">A valid IP or domain name must be provided.</span>
-										}
-									</div>
-								</div>
-								
-								<div class="control-group @("error".when(configureEmailForm.error("username") != null))">
-									<label for="username" class="control-label">Username</label>
-									<div class="controls">
-										<input type="text" autocomplete="off" name="username" id="smtp-username" placeholder="Username" class="input-xlarge" value="@configureEmailForm.field("username").valueOr("")"/>
-										@if(configureEmailForm.field("username").errors().size() > 0){
-											<span class="help-inline">A username must be provided.</span>
-										}
-									</div>
-								</div>
-								
-								<div class="control-group @("error".when(configureEmailForm.error("password") != null))">
-									<label for="password" class="control-label">Password</label>
-									<div class="controls">
-										<input type="password" autocomplete="off" name="password" id="smtp-password" placeholder="Password" class="input-xlarge" value="@configureEmailForm.field("password").valueOr("")"/>
-									</div>
-								</div>
-								
-								<div class="form-actions">
-									<button class="btn btn-primary" id="smtp-submit" type="submit" name="submit">Ok, looks good</button>
-									<button class="btn" id="smtp-skip" type="button" name="skip" formmethod="get" formaction="@routes.FirstUse.getWelcome()" onclick="window.location='@routes.FirstUse.getWelcome()'">I'll configure it later <i class="icon-hand-right"></i></button>
-								</div>
-								
-							</div>
-						</fieldset>
-			        }
-				</div>
-				<div class="tab-pane @("active".when(tab == "gmail"))" id="mailtab-gmail">
-					@helper.form(action = routes.FirstUse.postConfigureEmail()) {
-						
-						<input type="hidden" name="smtp" id="gmail-smtp" value="smtp.gmail.com"/>
-						
-						<fieldset>
-							<legend>GMail</legend>
-							<br/>
-							
-						    <div class="form-horizontal">
-								
-								<div class="control-group @("error".when(configureEmailForm.error("username") != null))">
-									<label for="username" class="control-label">Username</label>
-									<div class="controls">
-										<input type="text" autocomplete="off" name="username" id="gmail-username" placeholder="Username" class="input-xlarge" value="@configureEmailForm.field("username").valueOr("")"/>
-										@if(configureEmailForm.field("username").errors().size() > 0){
-											<span class="help-inline">A username must be provided.</span>
-										}
-									</div>
-								</div>
-								
-								<div class="control-group @("error".when(configureEmailForm.error("password") != null))">
-									<label for="password" class="control-label">Password</label>
-									<div class="controls">
-										<input type="password" autocomplete="off" name="password" id="gmail-password" placeholder="Password" class="input-xlarge" value="@configureEmailForm.field("password").valueOr("")"/>
-									</div>
-								</div>
-								
-								<div class="form-actions">
-									<button class="btn btn-primary" id="gmail-submit" type="submit" name="submit">Ok, looks good</button>
-									<button class="btn" id="gmail-skip" type="button" name="skip" formmethod="get" formaction="@routes.FirstUse.getWelcome()" onclick="window.location='@routes.FirstUse.getWelcome()'">I'll configure it later <i class="icon-hand-right"></i></button>
-								</div>
-								
-							</div>
-						</fieldset>
-			        }
-				</div>
-			</div>
-     	</div>
-
+     	@views.html.Administrator.Forms.configureEmail(configureEmailForm, routes.FirstUse.postFirstUse(), routes.Application.index())
+		
 }

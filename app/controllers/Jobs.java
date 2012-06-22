@@ -50,10 +50,10 @@ public class Jobs extends Controller {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
 
-		User user = User.authenticate(session("email"), session("password"));
-		if (user == null)
+		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		if (user == null || user.id < 0)
 			return redirect(routes.Login.login());
-
+		
 		Pipeline2WSResponse jobs = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
 
 		if (jobs.status != 200) {
@@ -87,8 +87,19 @@ public class Jobs extends Controller {
 	public static Result getJob(String id) {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
-
-		User user = User.authenticate(session("email"), session("password"));
+		
+		if (request().queryString().containsKey("userid") && request().queryString().get("userid").length > 0) {
+			Long userId = Long.parseLong(request().queryString().get("userid")[0]);
+			if (userId < 0) {
+				session("userid", ""+userId);
+		    	session("name", models.Setting.get("guest.name"));
+		    	session("email", "");
+		    	session("password", "");
+		    	session("admin", "false");
+			}
+		}
+		
+		User user = User.authenticate(session("userid"), session("email"), session("password"));
 		if (user == null)
 			return redirect(routes.Login.login());
 
@@ -101,6 +112,9 @@ public class Jobs extends Controller {
 		pipeline2.models.Job job = new pipeline2.models.Job(wsJob.asXml());
 
 		Job webuiJob = Job.findById(job.id);
+		if (webuiJob.user != user.id)
+			return forbidden();
+		
 		if (!Job.lastMessageSequence.containsKey(job.id) && job.messages.size() > 0) {
 			Collections.sort(job.messages);
 			Job.lastMessageSequence.put(job.id, job.messages.get(job.messages.size()-1).sequence);
@@ -115,11 +129,22 @@ public class Jobs extends Controller {
 	public static Result getResult(String id) {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
-
-		User user = User.authenticate(session("email"), session("password"));
+		
+		if (request().queryString().containsKey("userid") && request().queryString().get("userid").length > 0) {
+			Long userId = Long.parseLong(request().queryString().get("userid")[0]);
+			if (userId < 0) {
+				session("userid", ""+userId);
+		    	session("name", models.Setting.get("guest.name"));
+		    	session("email", "");
+		    	session("password", "");
+		    	session("admin", "false");
+			}
+		}
+		
+		User user = User.authenticate(session("userid"), session("email"), session("password"));
 		if (user == null)
 			return redirect(routes.Login.login());
-
+		
 		Pipeline2WSResponse result = pipeline2.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
 
 		response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
@@ -131,8 +156,19 @@ public class Jobs extends Controller {
 	public static Result getLog(final String id) {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
-
-		User user = User.authenticate(session("email"), session("password"));
+		
+		if (request().queryString().containsKey("userid") && request().queryString().get("userid").length > 0) {
+			Long userId = Long.parseLong(request().queryString().get("userid")[0]);
+			if (userId < 0) {
+				session("userid", ""+userId);
+		    	session("name", models.Setting.get("guest.name"));
+		    	session("email", "");
+		    	session("password", "");
+		    	session("admin", "false");
+			}
+		}
+		
+		User user = User.authenticate(session("userid"), session("email"), session("password"));
 		if (user == null)
 			return redirect(routes.Login.login());
 
@@ -190,7 +226,7 @@ public class Jobs extends Controller {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
 
-		User user = User.authenticate(session("email"), session("password"));
+		User user = User.authenticate(session("userid"), session("email"), session("password"));
 		if (user == null)
 			return redirect(routes.Login.login());
 
@@ -262,8 +298,14 @@ public class Jobs extends Controller {
 						} else {
 							Long uploadId = Long.parseLong(matcher.group(1));
 							Integer fileNr = Integer.parseInt(matcher.group(2));
-	
-							arguments.add( new ArgFile(argument, uploads.get(uploadId).listFiles().get(fileNr).href) );
+							
+							if (uploads.containsKey(uploadId)) {
+								arguments.add( new ArgFile(argument, uploads.get(uploadId).listFiles().get(fileNr).href) );
+								
+							} else {
+								Logger.warn("No such upload: "+uploadId);
+							}
+							
 						}
 					}
 

@@ -11,6 +11,7 @@ GET     /about								controllers.Application.about()
 GET		/login/resetpassword				controllers.Login.resetPassword()
 GET     /login                              controllers.Login.login()
 POST    /login                              controllers.Login.authenticate()
+GET     /login/guest                        controllers.Login.authenticateGuest()
 
 # Logout
 GET     /logout                             controllers.Login.logout()
@@ -44,25 +45,12 @@ POST	/account                            controllers.Account.changeDetails()
 
 # Administrator
 GET		/admin                              controllers.Administrator.getSettings()
-POST	/admin/edituser                     controllers.Administrator.updateUser()
-POST	/admin/createuser                   controllers.Administrator.createUser()
-GET		/admin/resetpassword/:id            controllers.Administrator.resetPassword(id: Long)
-POST	/admin/resetpassword/:id            controllers.Administrator.resetPassword(id: Long)
-GET		/admin/deleteuser/:id               controllers.Administrator.deleteUser(id: Long)
-POST	/admin/deleteuser/:id               controllers.Administrator.deleteUser(id: Long)
+POST	/admin                              controllers.Administrator.postSettings()
+GET 	/admin/POST                         controllers.Administrator.getPostSettings()
 
 # First use
-GET     /firstuse/welcome                   controllers.FirstUse.getWelcome()
-GET     /firstuse/configureemail/test       controllers.FirstUse.testEmail()
-POST    /firstuse/configureemail            controllers.FirstUse.postConfigureEmail()
-GET     /firstuse/configureemail            controllers.FirstUse.getConfigureEmail()
-POST    /firstuse/setuploaddir              controllers.FirstUse.postSetUploadDir()
-GET     /firstuse/setuploaddir              controllers.FirstUse.getSetUploadDir()
-POST    /firstuse/setws                     controllers.FirstUse.postSetWS()
-GET     /firstuse/setws                     controllers.FirstUse.getSetWS()
-POST    /firstuse/createadmin               controllers.FirstUse.postCreateAdmin()
-GET     /firstuse/createadmin               controllers.FirstUse.getCreateAdmin()
 GET     /firstuse                           controllers.FirstUse.getFirstUse()
+POST    /firstuse                           controllers.FirstUse.postFirstUse()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file                       controllers.Assets.at(path="/public", file)

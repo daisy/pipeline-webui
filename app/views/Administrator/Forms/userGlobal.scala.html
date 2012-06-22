@@ -1,0 +1,36 @@
+@(globalForm: Form[controllers.Administrator.GlobalPermissions], route: play.api.mvc.Call)
+
+@helper.form(action = route) {
+	
+	<input type="hidden" name="formName" value="updateGlobalPermissions"/>
+	<input type="hidden" name="allowGuests" value="@{models.Setting.get("guest.allowGuests")}" id="allowGuests-value"/>
+    
+	<fieldset>
+		<legend>Global permissions</legend>
+        <br/>
+        
+        <div class="form-horizontal">
+			<div class="control-group @("error".when(globalForm.error("allowGuests") != null))" id="allowGuestsGroup">
+				<label class="control-label">Allow guest login</label>
+				<div class="controls">
+					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
+						<button type="button" name="admin-on" class="btn  @("active".when(globalForm.field("allowGuests").valueOr(models.Setting.get("guest.allowGuests"))=="true"))" id="allowGuests-on"
+							aria-role="radio"                             aria-checked="@(globalForm.field("allowGuests").valueOr(models.Setting.get("guest.allowGuests"))=="true")"
+							onclick="toggleRadio('allowGuests', true,                  '@(globalForm.field("allowGuests").valueOr(models.Setting.get("guest.allowGuests")))');">Yes</button>
+						<button type="button" name="admin-off" class="btn @("active".when(globalForm.field("allowGuests").valueOr(models.Setting.get("guest.allowGuests"))=="false"))" id="allowGuests-off"
+							aria-role="radio"                             aria-checked="@(globalForm.field("allowGuests").valueOr(models.Setting.get("guest.allowGuests"))=="false")"
+							onclick="toggleRadio('allowGuests', false,                 '@(globalForm.field("allowGuests").valueOr(models.Setting.get("guest.allowGuests")))');">No</button>
+					</div>
+					@if(globalForm.field("allowGuests").errors().size() > 0){
+						<span class="help-inline">@globalForm.error("allowGuests").message</span>
+					}
+				</div>
+			</div>
+			
+			<div class="form-actions">
+				<button type="submit" class="btn btn-primary" id="allowGuests-submit" name="submit">Save changes</button>
+				<button type="reset" class="btn" id="allowGuests-reset" name="reset" onclick="toggleRadio('allowGuests', @models.Setting.get("guest.allowGuests"), '@models.Setting.get("guest.allowGuests")')">Clear changes</button>
+			</div>
+		</div>
+	</fieldset>
+}

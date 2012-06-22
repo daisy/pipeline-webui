@@ -1,70 +1,28 @@
-@(setWSForm: Form[controllers.FirstUse.SetWSForm])
+@(setWSForm: Form[controllers.Administrator.SetWSForm])
 
 @main("First use", "", Array(), Array(), Array()){
 
-      	<div class="page-header">
-           	<h1>Set the Pipeline 2 Web Service endpoint</h1>
+  	<div class="page-header">
+       	<h1>Set the Pipeline 2 Web Service endpoint</h1>
+    </div>
+  	
+ 	<p>Please enter the address of the Pipeline 2 Web Service below, along with the authentication ID and secret text to use it.</p>
+ 	<p>You may skip this step now and change the address in the administrator settings at any time later; however you will not be able to use any of the Pipeline 2 scripts until the endpoint is configured. If you have not yet installed the Pipeline 2 framework, please download and install the latest version from the DAISY Pipeline 2 homepage: <a href="http://www.daisy.org/pipeline2" target="_blank">http://www.daisy.org/pipeline2</a>. If you know the address of the Pipeline 2 Web Service you want to connect to but don't have an authentication ID yet, then please read <a href="#" target="_blank">TODO</a> for more information.</p>
+ 	<p>If you are running the Pipeline 2 framework with the default settings on the same server as this Web UI, then the address is most likely <code>http://localhost:8182/ws</code>.</p>
+  	<hr/>
+  	
+    @if(flash.contains("error")) {
+        <div role="alert" class="alert alert-error">
+            @flash.get("error")
         </div>
-      	
-     	<p>Please enter the address of the Pipeline 2 Web Service below, along with the authentication ID and secret text to use it.</p>
-     	<p>You may skip this step now and change the address in the administrator settings at any time later; however you will not be able to use any of the Pipeline 2 scripts until the endpoint is configured. If you have not yet installed the Pipeline 2 framework, please download and install the latest version from the DAISY Pipeline 2 homepage: <a href="http://www.daisy.org/pipeline2" target="_blank">http://www.daisy.org/pipeline2</a>. If you know the address of the Pipeline 2 Web Service you want to connect to but don't have an authentication ID yet, then please read <a href="#" target="_blank">TODO</a> for more information.</p>
-     	<p>If you are running the Pipeline 2 framework with the default settings on the same server as this Web UI, then the address is most likely <code>http://localhost:8182/ws</code>.</p>
-      	<hr/>
-      	
-        @helper.form(action = routes.FirstUse.postSetWS()) {
-        	
-            @if(setWSForm.hasGlobalErrors) {
-                <div role="alert" class="alert alert-error">
-                    @setWSForm.globalError.message
-                </div>
-            }
-            
-            @if(flash.contains("success")) {
-                <div role="alert" class="alert alert-success">
-                    @flash.get("success")
-                </div>
-            }
-            
-            <fieldset>
-	            
-	            <div class="form-horizontal">
-	            	<div class="control-group @("error".when(setWSForm.error("endpoint") != null))">
-						<label for="endpoint" class="control-label">Address</label>
-						<div class="controls">
-							<input type="text" name="endpoint" id="endpoint" placeholder="URL" class="input-xlarge" value="@setWSForm.field("endpoint").valueOr("http://localhost:8182/ws")"/>
-							@if(setWSForm.field("endpoint").errors().size() > 0){
-								<span class="help-inline">A valid URL must be provided.</span>
-							}
-						</div>
-					</div>
-					
-					<div class="control-group @("error".when(setWSForm.error("authid") != null))">
-						<label for="authid" class="control-label">Authentication ID</label>
-						<div class="controls">
-							<input type="text" autocomplete="off" name="authid" id="authid" placeholder="Authentication ID" class="input-xlarge" value="@setWSForm.field("authid").valueOr("")"/>
-							@if(setWSForm.field("authid").errors().size() > 0){
-								<span class="help-inline">A valid authentication id must be provided.</span>
-							}
-						</div>
-					</div>
-					
-					<div class="control-group @("error".when(setWSForm.error("secret") != null))">
-						<label for="secret" class="control-label">Secret text</label>
-						<div class="controls">
-							<input type="password" autocomplete="off" name="secret" id="secret" placeholder="Secret text" class="input-xlarge" value="@setWSForm.field("secret").valueOr("")"/>
-							@if(setWSForm.field("secret").errors().size() > 0){
-								<span class="help-inline">A valid secret text must be provided.</span>
-							}
-						</div>
-					</div>
-					
-					<div class="form-actions">
-						<button class="btn btn-primary" id="submit" type="submit" name="submit">Ok, looks good</button>
-						<button class="btn" id="skip" type="button" name="skip" formmethod="get" formaction="@routes.FirstUse.getWelcome()" onclick="window.location='@routes.FirstUse.getWelcome()'">I'll configure it later <i class="icon-hand-right"></i></button>
-					</div>
-					
-				</div>
-			</fieldset>
-        }
+    }
+    
+    @if(flash.contains("success")) {
+        <div role="alert" class="alert alert-success">
+            @flash.get("success")
+        </div>
+    }
+  	
+  	@views.html.Administrator.Forms.setWS(setWSForm, routes.FirstUse.postFirstUse(), routes.Application.index())
 
 }

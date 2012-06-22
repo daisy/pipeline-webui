@@ -26,8 +26,8 @@ public class Account extends Controller {
 		if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());
 		
-		User user = User.authenticate(session("email"), session("password"));
-		if (user == null)
+		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		if (user == null || user.id < 0)
 			return redirect(routes.Login.login());
     	
 		return ok(views.html.Account.overview.render(form(User.class)));
@@ -42,8 +42,8 @@ public class Account extends Controller {
 		if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());
 		
-		User user = User.authenticate(session("email"), session("password"));
-		if (user == null)
+		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		if (user == null || user.id < 0)
 			return redirect(routes.Login.login());
 		
 		Form<User> filledForm = editDetailsForm.bindFromRequest();
@@ -123,9 +123,8 @@ public class Account extends Controller {
     		return redirect(routes.FirstUse.getFirstUse());
 		
 		User user = User.findByEmail(email);
-		if (user == null) {
+		if (user == null || user.id < 0)
 			return redirect(routes.Login.login());
-		}
 		
 		if (resetUid == null || !resetUid.equals(user.getActivationUid()))
 			return redirect(routes.Login.login());
@@ -147,7 +146,7 @@ public class Account extends Controller {
     		return redirect(routes.FirstUse.getFirstUse());
 		
 		User user = User.findByEmail(email);
-		if (user == null)
+		if (user == null || user.id < 0)
 			return redirect(routes.Login.login());
 		
 		if (resetUid == null || !resetUid.equals(user.getActivationUid()))

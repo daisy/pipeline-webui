@@ -41,10 +41,10 @@
     </div>
 	
 	<!-- Load jQuery before the content (so other templates may use jQuery) -->
-	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
 	<script type="text/javascript">
 	if (typeof jQuery == 'undefined') {
-		document.write(unescape("%3Cscript src='@routes.Assets.at("javascripts/jquery-1.7.1.min.js")' type='text/javascript'%3E%3C/script%3E"));
+		document.write(unescape("%3Cscript src='@routes.Assets.at("javascripts/jquery-1.7.2.min.js")' type='text/javascript'%3E%3C/script%3E"));
 	}
 	</script>
 	
@@ -86,14 +86,16 @@
 						<div class="controls">
 							<input type="password" name="password" id="password" placeholder="Password" class="input-xlarge"/>
 							<span class="help-inline">Forgot your password?
-								<button type="button" class="btn" id="submitLostPassword" name="submitLostPassword"
-										formaction="@routes.Login.resetPassword()" method="get"
-										onclick="window.location='@routes.Login.resetPassword()?email='+$('#email').val()">Get a new one!</button></span>
+								<button type="button" class="btn" id="submitLostPassword" name="submitLostPassword" onclick="window.location='@routes.Login.resetPassword()?email='+$('#email').val();return false;">Get a new one!</button></span>
 						</div>
 					</div>
 					
-			        <div class="form-actions">
-						<button type="submit" class="btn btn-primary btn-large" id="submit" name="submit">Login</button>
+			        <div class="form-actions" style="text-align: right;">
+						<span style="float: left;"><button type="submit" class="btn btn-primary btn-large" id="submit" name="submit">Login</button></span>
+						<span>
+							Don't have an account? &nbsp;&nbsp;&nbsp;
+							<button type="button" class="btn btn-large" id="guest-login" name="guest-login" onclick="window.location='@routes.Login.authenticateGuest()';return false;">Log in as guest <i class="icon-hand-right"></i></button>
+						</span>
 		          	</div>
 		          	
 	          	</fieldset>

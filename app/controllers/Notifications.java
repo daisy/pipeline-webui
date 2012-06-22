@@ -21,16 +21,15 @@ public class Notifications extends Controller {
 		if (FirstUse.isFirstUse())
     		return null; // forbidden
 		
-		User user = User.authenticate(session("email"), session("password"));
+		User user = User.authenticate(session("userid"), session("email"), session("password"));
 		if (user == null)
 			return null; // forbidden
 		
 		User.notificationQueues.putIfAbsent(user.id, new ArrayList<Notification>());
 		
 		return user.addWebSocket();
-		
 	}
-
+	
 	/**
 	 * Handle XHR polling.
 	 * @return
@@ -39,7 +38,7 @@ public class Notifications extends Controller {
 		if (FirstUse.isFirstUse())
     		return null; // forbidden
 		
-		User user = User.authenticate(session("email"), session("password"));
+		User user = User.authenticate(session("userid"), session("email"), session("password"));
 		if (user == null)
 			return null; // forbidden
 		

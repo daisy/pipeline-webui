@@ -1,12 +1,8 @@
 package controllers;
 
-import java.io.File;
-
-import org.apache.commons.mail.DefaultAuthenticator;
-
+import play.Logger;
 import play.mvc.*;
 import play.data.*;
-import play.data.validation.Constraints.Required;
 import models.*;
 
 /**
@@ -18,272 +14,132 @@ import models.*;
  */
 public class FirstUse extends Controller {
 	
-	final static Form<User> createAdminForm = form(User.class);
-	final static Form<SetWSForm> setWSForm = form(SetWSForm.class);
-	final static Form<SetUploadDirForm> setUploadDirForm = form(SetUploadDirForm.class);
-	final static Form<ConfigureEmailForm> configureEmailForm = form(ConfigureEmailForm.class);
-	
-	public static class SetWSForm {
-        @Required
-        public String endpoint;
-        
-        @Required
-        public String authid;
-        
-        public String secret;
-    }
-	
-	public static class SetUploadDirForm {
-        @Required
-        public String uploaddir;
-    }
-	
-	public static class ConfigureEmailForm {
-		@Required
-		public String smtp;
-		@Required
-		public String username;
-		
-		public String password;
-	}
-	
 	/**
 	 * GET /firstuse
 	 * @return
 	 */
 	public static Result getFirstUse() {
-		if (!isFirstUse()) {
-			User user = User.authenticate(session("email"), session("password"));
-			if (user == null || !user.admin) {
-				return redirect(routes.Login.login());
-				
-			} else {
-				return redirect(routes.FirstUse.getWelcome());
-			}
+		if (isFirstUse()) {
+			return ok(views.html.FirstUse.createAdmin.render(form(Administrator.CreateAdminForm.class)));
 		}
 		
-		return redirect(routes.FirstUse.getCreateAdmin());
-	}
-	
-	/**
-	 * GET /firstuse/createadmin
-	 * @return
-	 */
-	public static Result getCreateAdmin() {
-		if (!isFirstUse()) {
-			User user = User.authenticate(session("email"), session("password"));
-			if (user == null || !user.admin) {
-				return redirect(routes.Login.login());
-				
-			} else {
-				return redirect(routes.FirstUse.getWelcome());
-			}
-		}
-		
-		return ok(views.html.FirstUse.createAdmin.render(form(User.class)));
-	}
-	
-	/**
-	 * POST /firstuse/createadmin
-	 * @return
-	 */
-	public static Result postCreateAdmin() {
-		if (!isFirstUse()) {
-			User user = User.authenticate(session("email"), session("password"));
-			if (user == null || !user.admin) {
-				return redirect(routes.Login.login());
-				
-			} else {
-				return redirect(routes.FirstUse.getWelcome());
-			}
-		}
-		
-		Form<User> filledForm = createAdminForm.bindFromRequest();
-        
-        if (User.findByEmail(filledForm.field("email").valueOr("")) != null)
-            filledForm.reject("email", "That e-mail address is already taken");
-    	
-    	if (!filledForm.field("password").valueOr("").equals("") && !filledForm.field("password").valueOr("").equals(filledForm.field("repeatPassword").value()))
-    		filledForm.reject("repeatPassword", "Password doesn't match.");
-        
-        if (filledForm.hasErrors()) {
-        	return badRequest(views.html.FirstUse.createAdmin.render(filledForm));
-        	
-        } else {
-        	User admin = new User(filledForm.field("email").valueOr(""), "Administrator", filledForm.field("password").valueOr(""), true);
-        	admin.save();
-        	session("name", admin.name);
-        	session("email", admin.email);
-        	session("password", admin.password);
-        	session("admin", admin.admin+"");
-        	session("setws", "true");
-        	return redirect(routes.FirstUse.getSetWS());
-        }
-		
-	}
-	
-	/**
-	 * GET /firstuse/setws
-	 * @return
-	 */
-	public static Result getSetWS() {
-		if (isFirstUse())
-			return redirect(routes.FirstUse.getCreateAdmin());
-		
-		User user = User.authenticate(session("email"), session("password"));
-		if (user == null || !user.admin)
-			return redirect(routes.Login.login());
-		
-		return ok(views.html.FirstUse.setWS.render(form(SetWSForm.class)));
-	}
-	
-	/**
-	 * POST /firstuse/setws
-	 * @return
-	 */
-	public static Result postSetWS() {
-		User user = User.authenticate(session("email"), session("password"));
-		if (user == null || !user.admin)
-			return redirect(routes.Login.login());
-		
-		Form<SetWSForm> filledForm = setWSForm.bindFromRequest();
-    	
-    	if (filledForm.field("endpoint").valueOr("").equals(""))
-    		filledForm.reject("endpoint", "Invalid endpoint URL.");
-        
-        if(filledForm.hasErrors()) {
-        	return badRequest(views.html.FirstUse.setWS.render(filledForm));
-        	
-        } else {
-        	Setting.set("dp2ws.endpoint", filledForm.field("endpoint").valueOr(""));
-        	Setting.set("dp2ws.authid", filledForm.field("authid").valueOr(""));
-        	Setting.set("dp2ws.secret", filledForm.field("secret").valueOr(""));
-        	return redirect(routes.FirstUse.getSetUploadDir());
-        }
-	}
-	
-	/**
-	 * GET /firstuse/setuploaddir
-	 * @return
-	 */
-	public static Result getSetUploadDir() {
-		if (isFirstUse())
-			return redirect(routes.FirstUse.getCreateAdmin());
-		
-		User user = User.authenticate(session("email"), session("password"));
-		if (user == null || !user.admin)
-			return redirect(routes.Login.login());
-			
-		return ok(views.html.FirstUse.setUploadDir.render(form(SetUploadDirForm.class)));
-	}
-	
-	/**
-	 * POST /firstuse/setuploaddir
-	 * @return
-	 */
-	public static Result postSetUploadDir() {
-		User user = User.authenticate(session("email"), session("password"));
+		User user = User.authenticate(session("userid"), session("email"), session("password"));
 		if (user == null || !user.admin) {
 			return redirect(routes.Login.login());
-			
 		}
 		
-		Form<SetUploadDirForm> filledForm = setUploadDirForm.bindFromRequest();
-    	
-    	if (filledForm.field("uploaddir").valueOr("").equals(""))
-    		filledForm.reject("uploaddir", "Invalid upload directory path.");
-    	
-    	String uploadPath = filledForm.field("uploaddir").valueOr("");
-    	if (!uploadPath.endsWith(System.getProperty("file.separator")))
-    		uploadPath += System.getProperty("file.separator");
-    	File dir = new File(uploadPath);
-    	if (!dir.exists())
-    		filledForm.reject("uploaddir", "The directory does not exist.");
-    	if (!dir.isDirectory())
-    		filledForm.reject("uploaddir", "The path does not point to a directory.");
-        
-        if(filledForm.hasErrors()) {
-        	session("setws", "true");
-        	return badRequest(views.html.FirstUse.setUploadDir.render(filledForm));
-        	
-        } else {
-        	Setting.set("uploads", uploadPath);
-        	return redirect(routes.FirstUse.getConfigureEmail());
-        }
-	}
-	
-	/**
-	 * GET /firstuse/configureemail
-	 * @return
-	 */
-	public static Result getConfigureEmail() {
-		if (isFirstUse())
-			return redirect(routes.FirstUse.getCreateAdmin());
+		if (Setting.get("dp2ws.endpoint") == null) {
+			return ok(views.html.FirstUse.setWS.render(form(Administrator.SetWSForm.class)));
+		}
 		
-		User user = User.authenticate(session("email"), session("password"));
-		if (user == null || !user.admin)
-			return redirect(routes.Login.login());
+		if (Setting.get("uploads") == null) {
+			return ok(views.html.FirstUse.setUploadDir.render(form(Administrator.SetUploadDirForm.class)));
+		}
 		
-		return ok(views.html.FirstUse.configureEmail.render(form(ConfigureEmailForm.class), "smtp"));
-	}
-	
-	/**
-	 * POST /firstuse/configureemail
-	 * @return
-	 */
-	public static Result postConfigureEmail() {
-		User user = User.authenticate(session("email"), session("password"));
-		if (user == null || !user.admin)
-			return redirect(routes.Login.login());
+		if (Setting.get("mail.from.email") == null) {
+			return ok(views.html.FirstUse.configureEmail.render(form(Administrator.ConfigureEmailForm.class)));
+		}
 		
-		Form<ConfigureEmailForm> filledForm = configureEmailForm.bindFromRequest();
-    	
-    	if (filledForm.field("smtp").valueOr("").equals(""))
-    		filledForm.reject("smtp", "Invalid endpoint IP / domain name.");
-        
-        if(filledForm.hasErrors()) {
-        	return badRequest(views.html.FirstUse.configureEmail.render(filledForm, "smtp"/*TODO*/));
-        	
-        } else {
-        	Setting.set("mail.username",filledForm.field("username").valueOr(""));
-			Setting.set("mail.password",filledForm.field("password").valueOr(""));
-			Setting.set("mail.smtp.host", filledForm.field("smtp").valueOr(""));
-			Setting.set("mail.smtp.port", "465"); // TODO: make configurable like the host
-			Setting.set("mail.smtp.ssl", "true"); // TODO: make configurable like the host
-			Setting.set("mail.from.name", "Pipeline 2");
-			Setting.set("mail.from.email", user.email);
-        	return redirect(routes.FirstUse.getWelcome());
-        }
+		return ok(views.html.FirstUse.welcome.render());
 	}
 	
-	/**
-	 * POST /firstuse/configureemail/test
-	 * @return
-	 */
-	public static Result testEmail() {
-		return TODO;
-	}
-	
-	/**
-	 * GET /firstuse/welcome
-	 * @return
-	 */
-	public static Result getWelcome() {
-		if (!isFirstUse()) {
-			User user = User.authenticate(session("email"), session("password"));
-			if (user == null || !user.admin) {
-				return redirect(routes.Login.login());
-				
+	public static Result postFirstUse() {
+		String formName = request().body().asFormUrlEncoded().containsKey("formName") ? request().body().asFormUrlEncoded().get("formName")[0] : "";
+		for (String key : request().body().asFormUrlEncoded().keySet())
+			for (String value : request().body().asFormUrlEncoded().get(key))
+				Logger.debug(key+" : "+value);
+		Logger.debug("formName: "+formName);
+		
+		if ("createAdmin".equals(formName)) {
+			if (!isFirstUse())
+				return redirect(routes.FirstUse.getFirstUse());
+			
+			Form<Administrator.CreateAdminForm> filledForm = form(Administrator.CreateAdminForm.class).bindFromRequest();
+			Administrator.CreateAdminForm.validate(filledForm);
+			
+			if (filledForm.hasErrors()) {
+				return badRequest(views.html.FirstUse.createAdmin.render(filledForm));
+			
 			} else {
-				return ok(views.html.FirstUse.welcome.render());
+				User admin = new User(filledForm.field("email").valueOr(""), "Administrator", filledForm.field("password").valueOr(""), true);
+				admin.save();
+				session("userid", admin.id+"");
+				session("name", admin.name);
+				session("email", admin.email);
+				session("password", admin.password);
+				session("admin", admin.admin+"");
+				session("setws", "true");
+				
+				// Create the guest user (might as well do it here)
+				Setting.set("guest.name", "Guest");
+				Setting.set("guest.allowGuests", "false");
+				
+				return redirect(routes.FirstUse.getFirstUse());
 			}
 		}
 		
-		return redirect(routes.FirstUse.getCreateAdmin());
+		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		if (user == null || !user.admin) {
+			return redirect(routes.Login.login());
+		}
+		
+		if ("setWS".equals(formName)) {
+			
+			Form<Administrator.SetWSForm> filledForm = form(Administrator.SetWSForm.class).bindFromRequest();
+			Administrator.SetWSForm.validate(filledForm);
+			
+			if (filledForm.hasErrors()) {
+	        	return badRequest(views.html.FirstUse.setWS.render(filledForm));
+	        	
+	        } else {
+	        	Setting.set("dp2ws.endpoint", filledForm.field("endpoint").valueOr(""));
+	        	Setting.set("dp2ws.authid", filledForm.field("authid").valueOr(""));
+	        	Setting.set("dp2ws.secret", filledForm.field("secret").valueOr(""));
+	        	return redirect(routes.FirstUse.getFirstUse());
+	        }
+		}
+		
+		if ("setUploadDir".equals(formName)) {
+			Form<Administrator.SetUploadDirForm> filledForm = form(Administrator.SetUploadDirForm.class).bindFromRequest();
+			Administrator.SetUploadDirForm.validate(filledForm);
+			
+			if(filledForm.hasErrors()) {
+	        	session("setws", "true");
+	        	return badRequest(views.html.FirstUse.setUploadDir.render(filledForm));
+	        	
+	        } else {
+	        	String uploadPath = filledForm.field("uploaddir").valueOr("");
+	        	if (!uploadPath.endsWith(System.getProperty("file.separator")))
+	        		uploadPath += System.getProperty("file.separator");
+	        	Setting.set("uploads", uploadPath);
+	        	return redirect(routes.FirstUse.getFirstUse());
+	        }
+		}
+		
+		if ("configureEmail".equals(formName)) {
+			Form<Administrator.ConfigureEmailForm> filledForm = form(Administrator.ConfigureEmailForm.class).bindFromRequest();
+			Administrator.ConfigureEmailForm.validate(filledForm);
+			
+			if(filledForm.hasErrors()) {
+				return badRequest(views.html.FirstUse.configureEmail.render(filledForm));
+
+			} else {
+				Setting.set("mail.username", filledForm.field("username").valueOr(""));
+				Setting.set("mail.password", filledForm.field("password").valueOr(""));
+				Setting.set("mail.smtp.host", filledForm.field("smtp").valueOr(""));
+				Setting.set("mail.smtp.port", "465"); // TODO: make configurable like the host
+				Setting.set("mail.smtp.ssl", "true"); // TODO: make configurable like the host
+				Setting.set("mail.from.name", "Pipeline 2");
+				Setting.set("mail.from.email", user.email);
+				return redirect(routes.FirstUse.getFirstUse());
+			}
+		}
+		
+		return getFirstUse();
 	}
 	
 	/**
-	 * Returns true if there are no registered users (i.e. this is the first time that the Web UI is used).
+	 * Returns true if this is the first time that the Web UI are used (i.e. there are no registered users).
 	 * @return
 	 */
 	public static boolean isFirstUse() {

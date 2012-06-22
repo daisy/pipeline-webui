@@ -27,4 +27,8 @@ public class Notification {
 	public String toString() {
 		return toJson().toString();
 	}
+	
+	public Date getTime() {
+		return (Date)notification.get("time");
+	}
 }

@@ -1,0 +1,61 @@
+@(setWSForm: Form[controllers.Administrator.SetWSForm], route: play.api.mvc.Call, skipRoute: play.api.mvc.Call)
+
+@helper.form(action = route) {
+	
+	<input type="hidden" name="formName" value="setWS"/>
+    
+    <fieldset>
+          
+        <div class="form-horizontal">
+        
+          	<div class="control-group @("error".when(setWSForm.error("endpoint") != null))" id="setWS-endpointGroup">
+				<label for="endpoint" class="control-label">Address</label>
+				<div class="controls">
+					<input type="text" name="endpoint" id="endpoint" placeholder="URL" class="input-xlarge"
+							value="@setWSForm.field("endpoint").valueOr("http://localhost:8182/ws")"
+							onkeyup="if(@{models.Setting.get("dp2ws.endpoint")==null} || this.value==='@models.Setting.get("dp2ws.endpoint")')document.getElementById('setWS-endpointGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-endpointGroup').style.backgroundColor='#DDF';"
+					/>
+					@if(setWSForm.field("endpoint").errors().size() > 0){
+						<span class="help-inline">A valid URL must be provided.</span>
+					}
+				</div>
+			</div>
+			
+			<div class="control-group @("error".when(setWSForm.error("authid") != null))" id="setWS-authidGroup">
+				<label for="authid" class="control-label">Authentication ID</label>
+				<div class="controls">
+					<input type="text" autocomplete="off" name="authid" id="authid" placeholder="Authentication ID" class="input-xlarge"
+							value="@setWSForm.field("authid").valueOr(models.Setting.get("dp2ws.authid"))"
+							onkeyup="if(@{models.Setting.get("dp2ws.authid")==null} || this.value==='@models.Setting.get("dp2ws.authid")')document.getElementById('setWS-authidGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-authidGroup').style.backgroundColor='#DDF';"
+					/>
+					@if(setWSForm.field("authid").errors().size() > 0){
+						<span class="help-inline">A valid authentication id must be provided.</span>
+					}
+				</div>
+			</div>
+			
+			<div class="control-group @("error".when(setWSForm.error("secret") != null))" id="setWS-secretGroup">
+				<label for="secret" class="control-label">Secret text</label>
+				<div class="controls">
+					<input type="password" autocomplete="off" name="secret" id="secret" value=""
+							placeholder="@if(models.Setting.get("dp2ws.secret")==null){Secret text}else{**********}" class="input-xlarge"
+							onkeyup="if(@{models.Setting.get("dp2ws.secret")==null} || this.value==='')document.getElementById('setWS-secretGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-secretGroup').style.backgroundColor='#DDF';"
+					/>
+					@if(setWSForm.field("secret").errors().size() > 0){
+						<span class="help-inline">A valid secret text must be provided.</span>
+					}
+				</div>
+			</div>
+			
+			<div class="form-actions">
+				<button class="btn btn-primary" id="submit" type="submit" name="submit">Ok, looks good</button>
+				@if(skipRoute != null){
+					<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Application.index()';return false;">I'll configure it later <i class="icon-hand-right"></i></button>
+				}
+			</div>
+			
+		</div>
+		
+	</fieldset>
+
+}

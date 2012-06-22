@@ -1,0 +1,62 @@
+@(userForm: Form[User], route: play.api.mvc.Call)
+
+@helper.form(action = route) {
+	
+	<input type="hidden" name="formName" value="createUser"/>
+	<input type="hidden" name="admin" value="@(if(userForm!=null)userForm.field("admin").valueOr("false") else "false")" id="user-new-admin-value"/>
+    
+	<fieldset>
+		<legend>Create a new user</legend>
+		<br/>
+           
+       	<div class="form-horizontal">
+           	
+           	<div class="control-group @("error".when(userForm != null && userForm.error("name") != null))">
+				<label for="user-new-name" class="control-label">Name</label>
+				<div class="controls">
+					<input type="text" name="name" id="user-new-name" placeholder="The name of the user." class="input-xlarge" value="@(if(userForm!=null)userForm.field("name").valueOr("") else "")"/>
+					@if(userForm!=null && userForm.field("name").errors().size() > 0){
+						<span class="help-inline">@userForm.error("name").message</span>
+					}
+				</div>
+			</div>
+			
+			<div class="control-group @("error".when(userForm != null && userForm.error("email") != null))">
+				<label for="email" class="control-label">E-mail</label>
+				<div class="controls">
+					<input type="email" name="email" id="email" placeholder="Valid e-mail address required." class="input-xlarge" value="@(if(userForm!=null)userForm.field("email").valueOr("") else "")"/>
+					@if(userForm != null && userForm.field("email").errors().size() > 0){
+						@if(userForm.error("email").message.startsWith("error.")){
+							<span class="help-inline">A valid e-mail address must be provided.</span>
+						}else{
+							<span class="help-inline">@userForm.error("email").message</span>
+						}
+					}
+				</div>
+			</div>
+			
+			<div class="control-group @("error".when("tab" == "new" && userForm != null && userForm.error("admin") != null))" id="user-new-adminGroup">
+				<label class="control-label">Administrator</label>
+				<div class="controls">
+					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
+						<button type="button" name="admin-on" class="btn @("active".when(userForm != null && userForm.field("admin").valueOr("false")=="true"))" id="user-new-admin-on"
+							aria-role="radio" aria-checked="true"
+							onclick="toggleRadio('user-new-admin', true, 'true');return false;">Yes</button>
+						<button type="button" name="admin-off" class="btn @("active".when(userForm != null && userForm.field("admin").valueOr("false")=="false"))" id="user-new-admin-off"
+							aria-role="radio" aria-checked="false"
+							onclick="toggleRadio('user-new-admin', false, 'false');return false;">No</button>
+					</div>
+					@if("tab" == "new" && userForm != null && userForm.field("admin").errors().size() > 0){
+						<span class="help-inline">@userForm.error("admin").message</span>
+					}
+				</div>
+			</div>
+			
+			<div class="form-actions">
+				<button class="btn btn-primary" id="submit" type="submit" name="submit">Create user</button>
+				<span class="help-inline">An e-mail will be sent to the user with a link to a page where the user can set up their password.</span>
+			</div>
+			
+		</div>
+	</fieldset>
+}

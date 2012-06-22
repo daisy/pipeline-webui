@@ -1,72 +1,26 @@
-@(createAdminForm: Form[User])
+@(createAdminForm: Form[controllers.Administrator.CreateAdminForm])
 
 @main("First use", "", Array(), Array(), Array()){
 
-      	<div class="page-header">
-           	<h1>Create administrative user</h1>
+  	<div class="page-header">
+       	<h1>Create administrative user</h1>
+    </div>
+  	
+	<p>This seems to be the first time that you are using the Pipeline 2 Web UI. Please fill in the form below to create an administrator for this website.</p>
+  	<hr/>
+  	
+    @if(flash.contains("error")) {
+        <div role="alert" class="alert alert-error">
+            @flash.get("error")
         </div>
-      	
-   		<p>This seems to be the first time that you are using the Pipeline 2 Web UI. Please fill in the form below to create an administrator for this website.</p>
-      	<hr/>
-      	
-        @helper.form(action = routes.FirstUse.postCreateAdmin()) {
-            
-            @if(createAdminForm.hasGlobalErrors) {
-                <div role="alert" class="alert alert-error">
-                    @createAdminForm.globalError.message
-                </div>
-            }
-            
-            @if(flash.contains("success")) {
-                <div role="alert" class="alert alert-success">
-                    @flash.get("success")
-                </div>
-            }
-            
-				<fieldset>
-		            
-		            <div class="form-horizontal">
-		            	
-		            	<div class="control-group @("error".when(createAdminForm.error("email") != null))">
-							<label for="email" class="control-label">E-mail</label>
-							<div class="controls">
-								<input type="email" name="email" id="email" placeholder="Valid e-mail address required." class="input-xlarge span4" value="@createAdminForm.field("email").valueOr("")"/>
-								@if(createAdminForm.field("email").errors().size() > 0){
-									@if(createAdminForm.error("email").message.startsWith("error.")){
-										<span class="help-inline">A valid e-mail address must be provided.</span>
-									}else{
-										<span class="help-inline">@createAdminForm.error("email").message</span>
-									}
-								}
-							</div>
-						</div>
-						
-						<div class="control-group @("error".when(createAdminForm.error("password") != null))">
-		            		<label for="password" class="control-label">Password</label>
-							<div class="controls">
-								<input type="password" name="password" id="password" placeholder="A password must be at least 6 characters." class="input-xlarge span4"/>
-								@if(createAdminForm.field("password").value() != null && createAdminForm.field("password").valueOr("").length() < 6){
-									<span class="help-inline">The password must contain at least 6 characters.</span>
-								}
-							</div>
-						</div>
-						
-						<div class="control-group @("error".when(createAdminForm.error("repeatPassword") != null))">
-		            		<label for="repeatPassword" class="control-label">Repeat password</label>
-							<div class="controls">
-								<input type="password" name="repeatPassword" id="repeatPassword" placeholder="Please repeat your password again." class="input-xlarge span4"/>
-								@if(createAdminForm.field("repeatPassword").errors().size() > 0){
-									<span class="help-inline">@createAdminForm.error("repeatPassword").message</span>
-								}
-							</div>
-						</div>
-						
-						<div class="form-actions">
-							<button class="btn btn-primary" id="submit" type="submit" name="submit">Create administrator</button>
-						</div>
-						
-					</div>
-				</fieldset>
-        }
+    }
+    
+    @if(flash.contains("success")) {
+        <div role="alert" class="alert alert-success">
+            @flash.get("success")
+        </div>
+    }
+    
+  	@views.html.Administrator.Forms.createAdmin(createAdminForm, routes.FirstUse.postFirstUse())
 
 }

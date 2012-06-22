@@ -1,3 +1,4 @@
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -26,11 +27,22 @@ public class Global extends GlobalSettings {
 				Duration.create(1, TimeUnit.SECONDS),
 				new Runnable() {
 					public void run() {
+						Date timeoutDate = new Date(new Date().getTime()-10*60*1000);
 						synchronized (User.notificationQueues) {
 							for (Long userId : User.notificationQueues.keySet()) {
-								List<Notification> notificationQueue = User.notificationQueues.get(userId);
-								if (notificationQueue.isEmpty()) {
-									User.push(userId, new Notification("heartbeat", null));
+								if (User.notificationQueues.get(userId).size() == 0) {
+									User.notificationQueues.remove(User.notificationQueues.get(userId));
+									continue;
+								}
+								
+								if (User.notificationQueues.get(userId).get(0).getTime().before(timeoutDate)) {
+									User.notificationQueues.get(userId).remove(0);
+									
+								}else{
+									List<Notification> notificationQueue = User.notificationQueues.get(userId);
+									if (notificationQueue.isEmpty()) {
+										User.push(userId, new Notification("heartbeat", null));
+									}
 								}
 							}
 						}

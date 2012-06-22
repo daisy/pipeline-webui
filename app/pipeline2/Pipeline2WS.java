@@ -17,7 +17,6 @@ import java.util.TimeZone;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import javax.management.RuntimeErrorException;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -99,8 +98,16 @@ public class Pipeline2WS {
 	public static Pipeline2WSResponse postXml(String endpoint, String path, String username, String secret, Document xml) {
 		String url = url(endpoint, path, username, secret, null);
 		
+		Logger.debug("URL: ["+url+"]");
 		ClientResource resource = new ClientResource(url);
-		Representation representation = resource.post(xml);
+		Logger.debug("-->"+utils.XML.toString(xml)+"<--");
+		Representation representation;
+		try {
+			representation = resource.post(xml);
+		} catch (org.restlet.resource.ResourceException e) {
+			Logger.error(e.getMessage(), e);
+			return null;
+		}
 		
 		InputStream in = null;
 		try {

@@ -1,16 +1,25 @@
-@(userForm: Form[User], users: List[User], tab: String)
+@(forms: controllers.Administrator.AdminForms, userList: List[User])
 
-@main("Administrator settings", "admin", Array("adminSettings.js")) {
+@main("Administrator settings", "admin") {
 
 <div class="page-header">
     <h1>Administrator settings</h1>
 </div>
 
-@if(userForm.hasGlobalErrors || Controller.flash("error") != null) {
+@if(forms.userForm != null && forms.userForm.hasGlobalErrors()
+	|| forms.guestForm != null && forms.guestForm.hasGlobalErrors()
+	|| forms.globalForm != null && forms.globalForm.hasGlobalErrors()
+	|| Controller.flash("error") != null) {
     <div role="alert" class="alert alert-error">
     	<button class="close" data-dismiss="alert">×</button>
-    	@if(userForm.hasGlobalErrors) {
-        	<p>@userForm.globalError.message</p>
+    	@if(forms.userForm != null && forms.userForm.hasGlobalErrors) {
+        	<p>@forms.userForm.globalError.message</p>
+        }
+        @if(forms.guestForm != null && forms.guestForm.hasGlobalErrors) {
+        	<p>@forms.guestForm.globalError.message</p>
+        }
+        @if(forms.globalForm != null && forms.globalForm.hasGlobalErrors) {
+        	<p>@forms.globalForm.globalError.message</p>
         }
         @if(Controller.flash("error") != null) {
         	<p>@Controller.flash("error")</p>
@@ -28,191 +37,71 @@
 <div class="tabbable tabs-left">
 	<h2>Users and permissions</h2>
 	<br/>
+	
 	<ul class="nav nav-tabs">
-		<li class="@("active".when(tab == "global"))"><a href="#usertab-global" data-toggle="tab"><i class="icon-globe"></i> <em>Global</em></a></li>
+		<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "global" || play.mvc.Controller.flash("settings.usertab") == null))"><a href="#usertab-global" data-toggle="tab"><i class="icon-globe"></i> <em>Global</em></a></li>
 		<hr/>
-		@for(user <- users) {
-			<li class="@("active".when(tab == ""+user.id))"><a href="#usertab-@user.id" data-toggle="tab"><i class="icon-user"></i> @user.name</a></li>
+		
+		<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))"><a href="#usertab-guest" data-toggle="tab"><i class="icon-user"></i> @models.Setting.get("guest.name")</a></li>
+		
+		@for(user <- userList) {
+			<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.id))"><a href="#usertab-@user.id" data-toggle="tab"><i class="icon-user"></i> @user.name</a></li>
 		}
-		<li class="@("active".when(tab == "adduser"))"><a href="#usertab-adduser" data-toggle="tab"><i class="icon-plus"></i> <em>Add user</em></a></li>
+		
+		<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "adduser"))"><a href="#usertab-adduser" data-toggle="tab"><i class="icon-plus"></i> <em>Add user</em></a></li>
 	</ul>
+	
 	<div class="tab-content">
-		<div class="tab-pane @("active".when(tab == "global"))" id="usertab-global">
-			<!--
-			<h2>TODO</h2>
-			<ul>
-				<li>Disable login (global free-for-all) (post 1.0 / end of may?)</li>
-				<li>Hide selected scripts (post 1.0 / end of may?)</li>
-				<li>Set selected scripts as free-for-all (available for guest logins) (post 1.0 / end of may?)</li>
-				<li>Set how long activation links are valid (post 1.0)</li>
-			</ul>
-			-->
+		<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == "global" || play.mvc.Controller.flash("settings.usertab") == null))" id="usertab-global">
+			@Forms.userGlobal(forms.globalForm, routes.Administrator.postSettings())
 		</div>
-		@for(user <- users) {
-			<div class="tab-pane @("active".when(tab == ""+user.id))" id="usertab-@user.id">
-				@helper.form(action = routes.Administrator.updateUser()) {
-					<input type="hidden" name="userid" value="@user.id"/>
-					<input type="hidden" name="admin" value="@user.admin" id="user-@{user.id}-admin-value"/>
-				    
-					<fieldset>
-						<legend>Settings for @user.name</legend>
-				        <br/>
-				        
-				        <div class="form-horizontal">
-				        	
-				        	<div class="control-group @("error".when(tab == ""+user.id && userForm.error("resetPassword") != null))" id="user-@{user.id}-resetPasswordGroup">
-								<label for="user-@{user.id}-resetPassword" class="control-label">Password</label>
-								<div class="controls">
-									<button name="resetPassword" id="user-@{user.id}-resetPassword" class="btn" formmethod="post" formaction="@routes.Administrator.resetPassword(user.id)" onclick="window.location='@routes.Administrator.resetPassword(user.id)'"><i class="icon-envelope"></i> @if(user.active){Send password reset link}else{Send new activation link}</button>
-									@if(user.active){
-										<span class="help-inline">An e-mail will be sent to @user.email, containing a link where @user.name can reset their password.</span>
-									}else{
-										<span class="help-inline">An e-mail will be sent to @user.email, containing a link where @user.name can set their password.</span>
-									}
-								</div>
-							</div>
-							
-							<hr/>
-				        	
-				        	<div class="control-group @("error".when(tab == ""+user.id && userForm.error("name") != null))" id="user-@{user.id}-nameGroup">
-				        		<label for="user-@{user.id}-name" class="control-label">Name</label>
-					            <div class="controls">
-					        		<input type="text" name="name" id="user-@{user.id}-name" class="input-xlarge"
-					        			placeholder="&quot;@user.name&quot; is the users current name."
-					        			value="@{if (user.id==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("name").valueOr(""); else user.name;}"
-					        			onkeyup="if(this.value==='@user.name')document.getElementById('user-@{user.id}-nameGroup').style.backgroundColor='#FFF';else document.getElementById('user-@{user.id}-nameGroup').style.backgroundColor='#DDF';"/>
-									@if(tab == ""+user.id && userForm.field("user-@{user.id}-name").errors().size() > 0){
-										@if(userForm.error("name").message.startsWith("error.")){
-											<span class="help-inline">Users must have a name, and it must not consist of any special characters.</span>
-										}else{
-											<span class="help-inline">@userForm.error("name").message</span>
-										}
-									}
-					            </div>
-							</div>
-							
-							<div class="control-group @("error".when(tab == ""+user.id && userForm.error("email") != null))" id="user-@{user.id}-emailGroup">
-								<label for="user-@{user.id}-email" class="control-label">E-mail</label>
-								<div class="controls">
-									<input type="email" name="email" id="user-@{user.id}-email" class="input-xlarge"
-										placeholder="&quot;@user.email&quot; is your current e-mail address."
-										value="@{if (user.id==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("email").valueOr(""); else user.email;}"
-										onkeyup="toggleChanged('user-@{user.id}-email', this.value==='@user.email');"/>
-									@if(tab == ""+user.id && userForm.field("email").errors().size() > 0){
-										@if(userForm.error("email").message.startsWith("error.")){
-											<span class="help-inline">A valid e-mail address must be provided.</span>
-										}else{
-											<span class="help-inline">@userForm.error("email").message</span>
-										}
-									}
-								</div>
-							</div>
-							
-							<div class="control-group @("error".when(tab == ""+user.id && userForm.error("admin") != null))" id="user-@{user.id}-adminGroup">
-								<label for="user-@{user.id}-admin" class="control-label">Administrator</label>
-								<div class="controls">
-									<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
-										<button type="button" name="admin-on" class="btn @("active".when(user.admin))" id="user-@{user.id}-admin-on"
-											aria-role="radio" aria-checked="true"
-											onclick="toggleRadio('user-@{user.id}-admin', true, '@user.admin');">Yes</button>
-										<button type="button" name="admin-off" class="btn @("active".when(!user.admin))" id="user-@{user.id}-admin-off"
-											aria-role="radio" aria-checked="false"
-											onclick="toggleRadio('user-@{user.id}-admin', false, '@user.admin');">No</button>
-									</div>
-									@if(tab == ""+user.id && userForm.field("admin").errors().size() > 0){
-										<span class="help-inline">@userForm.error("admin").message</span>
-									}
-								</div>
-							</div>
-							
-							<div class="form-actions">
-								<button type="submit" class="btn btn-primary" id="user-@{user.id}-submit" name="submit">Save changes</button>
-								<button type="reset" class="btn" id="user-@{user.id}-reset" name="reset"
-									onclick="toggleRadio('user-@{user.id}-admin', @user.admin, '@user.admin');toggleChanged('user-@{user.id}-name', '@user.name', '@user.name');toggleChanged('user-@{user.id}-email', '@user.email', '@user.email');"
-									>Clear changes</button>
-								<button name="delete" id="user-@{user.id}-delete" class="btn btn-danger" formmethod="post" formaction="@routes.Administrator.deleteUser(user.id)" onclick="window.location='@routes.Administrator.deleteUser(user.id)'"><i class="icon-trash icon-white"></i> Delete this user</button>
-				          	</div>
-						</div>
-					</fieldset>
-				}
+		
+		<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))" id="usertab-guest">
+			@Forms.userGuest(forms.guestForm, routes.Administrator.postSettings())
+		</div>
+		
+		@for(user <- userList) {
+			<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.id))" id="usertab-@user.id">
+				@Forms.user(forms.userForm, user, routes.Administrator.postSettings(), routes.Administrator.getPostSettings())
 			</div>
 		}
-		<div class="tab-pane @("active".when(tab == "adduser"))" id="usertab-adduser">
-			
-			@helper.form(action = routes.Administrator.createUser()) {
-				<input type="hidden" name="admin" value="@userForm.field("admin").valueOr("false")" id="user-new-admin-value"/>
-			    
-				<fieldset>
-					<legend>Create a new user</legend>
-					<br/>
-		            
-		            <div class="form-horizontal">
-		            	
-		            	<div class="control-group @("error".when(userForm.error("name") != null))">
-							<label for="user-new-name" class="control-label">Name</label>
-							<div class="controls">
-								<input type="text" name="name" id="user-new-name" placeholder="The name of the user." class="input-xlarge span4" value="@userForm.field("name").valueOr("")"/>
-								@if(userForm.field("name").errors().size() > 0){
-									<span class="help-inline">@userForm.error("name").message</span>
-								}
-							</div>
-						</div>
-						
-						<div class="control-group @("error".when(userForm.error("email") != null))">
-							<label for="email" class="control-label">E-mail</label>
-							<div class="controls">
-								<input type="email" name="email" id="email" placeholder="Valid e-mail address required." class="input-xlarge span4" value="@userForm.field("email").valueOr("")"/>
-								@if(userForm.field("email").errors().size() > 0){
-									@if(userForm.error("email").message.startsWith("error.")){
-										<span class="help-inline">A valid e-mail address must be provided.</span>
-									}else{
-										<span class="help-inline">@userForm.error("email").message</span>
-									}
-								}
-							</div>
-						</div>
-						
-						<div class="control-group @("error".when(tab == "new" && userForm.error("admin") != null))" id="user-new-adminGroup">
-								<label for="user-new-admin" class="control-label">Administrator</label>
-								<div class="controls">
-									<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
-										<button type="button" name="admin-on" class="btn @("active".when(userForm.field("admin").valueOr("false")=="true"))" id="user-new-admin-on"
-											aria-role="radio" aria-checked="true"
-											onclick="toggleRadio('user-new-admin', true, 'true');">Yes</button>
-										<button type="button" name="admin-off" class="btn @("active".when(userForm.field("admin").valueOr("false")=="false"))" id="user-new-admin-off"
-											aria-role="radio" aria-checked="false"
-											onclick="toggleRadio('user-new-admin', false, 'false');">No</button>
-									</div>
-									@if(tab == "new" && userForm.field("admin").errors().size() > 0){
-										<span class="help-inline">@userForm.error("admin").message</span>
-									}
-								</div>
-							</div>
-						
-						<div class="form-actions">
-							<button class="btn btn-primary" id="submit" type="submit" name="submit">Create user</button>
-							<span class="help-inline">An e-mail will be sent to the user with a link to a page where the user can set up their password.</span>
-						</div>
-						
-					</div>
-				</fieldset>
-			}
+		
+		<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == "adduser"))" id="usertab-adduser">
+			@Forms.userAdd(forms.userForm, routes.Administrator.postSettings())
 		</div>
 	</div>
 </div>
+<hr/>
 
+<br/><br/>
+<div>
+	<h2>Pipeline 2 Web Service endpoint</h2>
+	<br/>
+  	@views.html.Administrator.Forms.setWS(forms.setWSForm, routes.Administrator.postSettings(), null)
+</div>
+<hr/>
+
+<br/><br/>
+<div>
+	<h2>Temporary directory for uploads</h2>
+	<br/>
+	@views.html.Administrator.Forms.setUploadDir(forms.setUploadDirForm, routes.Administrator.postSettings(), null)
+</div>
+<hr/>
+
+<br/><br/>
+<div>
+	<h2>E-mail settings</h2>
+	<br/>
+	@views.html.Administrator.Forms.configureEmail(forms.configureEmailForm, routes.Administrator.postSettings(), null)
+</div>
 <hr/>
 
 <!--
-<h2>Settings: TODO</h2>
-<ul>
-	<li>Change WS endpoint + userid/secret (mid-may)</li>
-	<li>Change upload directory (mid-may)</li>
-	<li>Instructions about how to change the database settings (mid-may)</li>
-	<li>Change how long the activation links / password reset links are valid (post 1.0)</li>
-	<li>E-mail settings: notifications, what to send out, enable/disable lost password functionality? (post 1.0)</li>
-	<li>E-mail settings: configure SMTP server, with templates for popular servers like GMail (only e-mail and password required) and Exchange (information on how to get the server into the right Exchange domain etc.?) (end-of-may / post 1.0)</li>
-</ul>
+<div>
+	<h2>Visual themes</h2>
+</div>
+<hr/>
 -->
 
 }

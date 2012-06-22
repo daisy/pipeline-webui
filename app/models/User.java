@@ -11,6 +11,7 @@ import org.codehaus.jackson.JsonNode;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 
+import play.data.Form;
 import play.data.format.*;
 import play.data.validation.*;
 import play.libs.F.Callback;
@@ -74,7 +75,7 @@ public class User extends Model {
 		}
 		this.admin = admin;
 	}
-
+	
 	/**
 	 * Try setting the password using the provided activation UID.
 	 * 
@@ -137,23 +138,39 @@ public class User extends Model {
 	}
 
 	/** Authenticate a user. */
-	public static User authenticate(String email, String password) {
-		// TODO: what if running in free-for-all mode?
-
+	public static User authenticate(String userid, String email, String password) {
+		
+		Long id = null;
 		try {
-			return find.where()
-					.eq("email", email)
-					.eq("password", password)
-					.findUnique();
-		} catch (NullPointerException e) {
-			// Not found
-			return null;
+			id = Long.parseLong(userid);
+		} catch (NumberFormatException e) {
+			// unparseable id; continue as if nothing happened
+		}
+		
+		if (id == null || id >= 0) {
+			try {
+				return find.where()
+						.eq("email", email)
+						.eq("password", password)
+						.findUnique();
+			} catch (NullPointerException e) {
+				// Not found
+				return null;
+			}
+			
+		} else {
+			if (!"true".equals(models.Setting.get("guest.allowGuests")))
+				return null;
+			
+			User guest = new User("", models.Setting.get("guest.name"), "", false);
+			guest.id = id;
+			return guest;
 		}
 	}
 
 	/** Authenticate a user with an unencrypted password */
 	public static User authenticateUnencrypted(String email, String password) {
-		return authenticate(email, Crypto.sign(password));
+		return authenticate(null, email, Crypto.sign(password));
 	}
 
 	/**
@@ -223,5 +240,55 @@ public class User extends Model {
 			}
 		}
 	}
+	
+	/**
+	 * Validate a new user.
+	 * @param filledForm
+	 */
+	public static void validateNew(Form<User> filledForm) {
+		if (User.findByEmail(filledForm.field("email").valueOr("")) != null)
+			filledForm.reject("email", "That e-mail address is already taken");
+		
+		String adminString = filledForm.field("admin").valueOr("");
+		if (!adminString.equals("true") && !adminString.equals("false"))
+			filledForm.reject("admin", "The user must either *be* an admin, or *not be* an admin");
+		
+		// only "name", "email" and "admin" are set during user creation
+		filledForm.errors().remove("password");
+		filledForm.errors().remove("active");
+	}
+	
+	/**
+	 * Validate changes for a user.
+	 * @param filledForm
+	 */
+	public void validateChange(Form<User> filledForm) {
+		if (!this.email.equals(filledForm.field("email").value()) && User.findByEmail(filledForm.field("email").valueOr("")) != null)
+			filledForm.reject("email", "That e-mail address is already taken");
+		
+		if (!(this.admin + "").equals(filledForm.field("admin").valueOr(""))) {
+			String adminString = filledForm.field("admin").valueOr("");
+			if (!adminString.equals("true") && !adminString.equals("false"))
+				filledForm.reject("admin", "The user must either *be* an admin, or *not be* an admin");
+			
+			if (Long.valueOf(filledForm.field("userid").value()) == this.id)
+				filledForm.reject("admin", "Only other admins can demote you to a normal user, you cannot do it yourself");
+		}
+	}
+	
+	public boolean hasChanges(Form<User> filledForm) {
+		if (!this.name.equals(filledForm.field("name").valueOr("")))
+			return true;
+		
+		if (!this.email.equals(filledForm.field("email").valueOr("")))
+			return true;
 
+		if (!(this.admin + "").equals(filledForm.field("admin").valueOr("")))
+			return true;
+		
+		// "password" and "active" are not changed directly so they are not checked.
+		
+		return false;
+	}
+	
 }

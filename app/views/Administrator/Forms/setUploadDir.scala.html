@@ -1,0 +1,38 @@
+@(setUploadDirForm: Form[controllers.Administrator.SetUploadDirForm], route: play.api.mvc.Call, skipRoute: play.api.mvc.Call)
+
+@helper.form(action = route) {
+	
+	<input type="hidden" name="formName" value="setUploadDir"/>
+	
+   	<fieldset>
+   		
+   		<div class="form-horizontal">
+   			
+			<div class="control-group @("error".when(setUploadDirForm.error("uploaddir") != null))" id="setUploadDir-uploaddirGroup">
+				<label for="uploaddir" class="control-label">Upload directory</label>
+				<div class="controls">
+					<input type="text" name="uploaddir" id="uploaddir" placeholder="URL" class="input-xlarge"
+							value="@setUploadDirForm.field("uploaddir").valueOr(if (Setting.get("uploads") != null) Setting.get("uploads") else System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"))"
+							onkeyup="if(@{models.Setting.get("uploads")==null} || this.value==='@models.Setting.get("uploads")')document.getElementById('setUploadDir-uploaddirGroup').style.backgroundColor='#FFF';else document.getElementById('setUploadDir-uploaddirGroup').style.backgroundColor='#DDF';"
+					/>
+					@if(setUploadDirForm.field("uploaddir").errors().size() > 0){
+						@if(setUploadDirForm.field("uploaddir").errors().get(0).message().startsWith("error.")){
+							<span class="help-inline">A valid filesystem path must be provided.</span>
+						}else{
+							<span class="help-inline">@setUploadDirForm.field("uploaddir").errors().get(0).message()</span>
+						}
+					}
+				</div>
+			</div>
+			
+			<div class="form-actions">
+				<button class="btn btn-primary" id="submit" type="submit" name="submit">Ok, looks good</button>
+				@if(skipRoute != null){
+					<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Application.index()';return false;">I'll configure it later <i class="icon-hand-right"></i></button>
+				}
+			</div>
+			
+		</div>
+	
+	</fieldset>
+}
