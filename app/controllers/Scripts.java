@@ -15,6 +15,7 @@ import pipeline2.models.script.*;
 import play.Logger;
 import play.libs.XPath;
 import play.mvc.*;
+import utils.XML;
 
 public class Scripts extends Controller {
 	
@@ -26,24 +27,15 @@ public class Scripts extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 		
-		Pipeline2WSResponse scripts = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
+		Pipeline2WSResponse response = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
 		
-		if (scripts.status != 200) {
-			return Application.error(scripts.status, scripts.statusName, scripts.statusDescription, "");
+		if (response.status != 200) {
+			return Application.error(response.status, response.statusName, response.statusDescription, "");
 		}
 		
-		List<List<String>> scriptList = new ArrayList<List<String>>();
-
-		List<Node> scriptNodes = XPath.selectNodes("//d:script", scripts.asXml(), Pipeline2WS.ns);
-		for (Node scriptNode : scriptNodes) {
-			List<String> row = new ArrayList<String>();
-			row.add(XPath.selectText("@href", scriptNode, Pipeline2WS.ns));
-			row.add(XPath.selectText("d:nicename", scriptNode, Pipeline2WS.ns));
-			row.add(XPath.selectText("d:description", scriptNode, Pipeline2WS.ns));
-			scriptList.add(row);
-		}
-
-		return ok(views.html.Scripts.getScripts.render(scriptList));
+		List<Script> scripts = Script.getScripts(response);
+		
+		return ok(views.html.Scripts.getScripts.render(scripts));
 	}
 	
 	public static Result getScript(String id) {
@@ -54,13 +46,13 @@ public class Scripts extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 		
-		Pipeline2WSResponse wsScript = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-
-		if (wsScript.status != 200) {
-			return Application.error(wsScript.status, wsScript.statusName, wsScript.statusDescription, "");
+		Pipeline2WSResponse response = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
+		
+		if (response.status != 200) {
+			return Application.error(response.status, response.statusName, response.statusDescription, "");
 		}
 		
-		Script script = new Script(wsScript.asXml());
+		Script script = new Script(response);
 		
 		boolean uploadFiles = false;
 		for (Argument arg : script.arguments) {

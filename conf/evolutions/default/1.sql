@@ -8,6 +8,7 @@ create table job (
   nicename                  varchar(255),
   created                   datetime,
   started                   datetime,
+  finished                  datetime,
   user                      bigint,
   notified_created          tinyint(1) default 0,
   notified_complete         tinyint(1) default 0,
@@ -26,6 +27,7 @@ create table upload (
   content_type              varchar(255),
   uploaded                  datetime,
   user                      bigint,
+  job                       varchar(255),
   constraint pk_upload primary key (id))
 ;
 

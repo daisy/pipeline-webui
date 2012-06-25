@@ -22,6 +22,7 @@ import org.w3c.dom.Element;
 
 import pipeline2.models.script.Argument;
 import play.Logger;
+import utils.XML;
 
 
 public class Jobs {
@@ -44,12 +45,12 @@ public class Jobs {
 	 * @param inputs
 	 * @return
 	 */
-	private static Document createJobRequestDocument(String id, List<Argument> arguments) {
+	private static Document createJobRequestDocument(String href, List<Argument> arguments) {
 		Document jobRequestDocument = utils.XML.getXml("<jobRequest xmlns='http://www.daisy.org/ns/pipeline/data'/>");
 		Element jobRequest = jobRequestDocument.getDocumentElement();
 
 		Element element = jobRequestDocument.createElement("script");
-		element.setAttribute("href", id);
+		element.setAttribute("href", href);
 		jobRequest.appendChild(element);
 		
 		for (Argument arg : arguments)
@@ -66,9 +67,10 @@ public class Jobs {
 	 * HTTP 401 Unauthorized: Client was not authorized to perform request.
 	 * @return 
 	 */
-	public static Pipeline2WSResponse post(String endpoint, String username, String secret, String id, List<Argument> arguments, File contextZipFile) {
+	public static Pipeline2WSResponse post(String endpoint, String username, String secret, String href, List<Argument> arguments, File contextZipFile) {
 		
-		Document jobRequestDocument = createJobRequestDocument(id, arguments);
+		Document jobRequestDocument = createJobRequestDocument(href, arguments);
+		Logger.debug(XML.toString(jobRequestDocument));
 		
 		if (contextZipFile == null) {
 			return Pipeline2WS.postXml(endpoint, "/jobs", username, secret, jobRequestDocument);

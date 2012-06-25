@@ -8,6 +8,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import controllers.Administrator.SetJobCleanupForm;
+
+import models.Job;
 import models.Setting;
 import models.Upload;
 import models.User;
@@ -29,6 +32,7 @@ public class Administrator extends Controller {
 		public Form<User> userForm = Administrator.userForm;
 		public Form<GuestUser> guestForm = Administrator.guestForm;
 		public Form<GlobalPermissions> globalForm = Administrator.globalForm;
+		public Form<SetJobCleanupForm> setJobCleanupForm = Administrator.setJobCleanupForm;
 	}
 	
 	public final static Form<CreateAdminForm> createAdminForm = form(CreateAdminForm.class);
@@ -100,6 +104,24 @@ public class Administrator extends Controller {
 	    		filledForm.reject("smtp", "Invalid SMTP IP / domain name.");
 		}
 	}
+	
+	public final static Form<SetJobCleanupForm> setJobCleanupForm = form(SetJobCleanupForm.class);
+	public static class SetJobCleanupForm {
+        @Required
+        public String jobcleanup;
+        
+        public static void validate(Form<SetJobCleanupForm> filledForm) {
+        	String jobCleanupString = filledForm.field("jobcleanup").valueOr("0");
+        	Long jobCleanup = null;
+        	try {
+        		jobCleanup = Long.parseLong(jobCleanupString);
+        	} catch (NumberFormatException e) {
+        		filledForm.reject("jobcleanup", "Please enter a number.");
+        	}
+        	if (jobCleanup != null && jobCleanup < 0)
+        		filledForm.reject("jobcleanup", "Please enter a positive number.");
+        }
+    }
 	
 	final static Form<User> userForm = form(User.class);
 	
@@ -290,7 +312,6 @@ public class Administrator extends Controller {
 				return redirect(routes.Administrator.getSettings());
 			}
 			
-			Upload.deleteUserUploads(deleteUser);
 			deleteUser.delete();
 			flash("settings.usertab", "global");
 			flash("success", deleteUser.name + " was deleted");
@@ -338,7 +359,8 @@ public class Administrator extends Controller {
 	        } else {
 	        	Setting.set("dp2ws.endpoint", filledForm.field("endpoint").valueOr(""));
 	        	Setting.set("dp2ws.authid", filledForm.field("authid").valueOr(""));
-	        	Setting.set("dp2ws.secret", filledForm.field("secret").valueOr(""));
+	        	if (Setting.get("dp2ws.secret") == null || !"".equals(filledForm.field("secret").value()))
+	        		Setting.set("dp2ws.secret", filledForm.field("secret").valueOr(""));
 	        	flash("success", "Pipeline 2 Web Service endpoint changed successfully!");
 	        	return redirect(routes.Administrator.getSettings());
 	        }
@@ -383,6 +405,23 @@ public class Administrator extends Controller {
 				flash("success", "Successfully changed e-mail settings!");
 	        	return redirect(routes.Administrator.getSettings());
 			}
+		}
+		
+		if ("setJobCleanup".equals(formName)) {
+			Form<Administrator.SetJobCleanupForm> filledForm = setJobCleanupForm.bindFromRequest();
+			Administrator.SetJobCleanupForm.validate(filledForm);
+			
+			if(filledForm.hasErrors()) {
+	        	List<User> users = User.find.orderBy("admin, name, email").findList();
+				forms.setJobCleanupForm  = filledForm;
+				return badRequest(views.html.Administrator.settings.render(forms, users));
+	        	
+	        } else {
+	        	long jobCleanupTime = Long.parseLong(filledForm.field("jobcleanup").valueOr("0")) * 60000L;
+	        	Setting.set("jobs.deleteAfterDuration", jobCleanupTime+"");
+	        	flash("success", "Job cleanup time changed successfully!");
+	        	return redirect(routes.Administrator.getSettings());
+	        }
 		}
 		
 //		if ("setUITemplate".equals(formName)) {

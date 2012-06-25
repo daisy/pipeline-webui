@@ -8,6 +8,7 @@ import models.User;
 
 import org.codehaus.jackson.JsonNode;
 
+import play.Logger;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.WebSocket;
@@ -17,7 +18,7 @@ public class Notifications extends Controller {
 	/**
 	 * Handle WebSocket pushing.
 	 */
-	public static WebSocket<JsonNode> websocket() {
+	public static WebSocket<JsonNode> websocket() {Logger.debug("websocket");
 		if (FirstUse.isFirstUse())
     		return null; // forbidden
 		
@@ -34,7 +35,7 @@ public class Notifications extends Controller {
 	 * Handle XHR polling.
 	 * @return
 	 */
-	public static Result xhr() {
+	public static Result xhr() {Logger.debug("xhr");
 		if (FirstUse.isFirstUse())
     		return null; // forbidden
 		

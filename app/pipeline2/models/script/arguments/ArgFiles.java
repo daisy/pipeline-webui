@@ -32,25 +32,25 @@ public class ArgFiles extends Argument {
 		element.setAttribute("name", name);
 		
 		// new API
-//		for (String href : hrefs) {
-//			Element item = document.createElement("item");
-//			item.setTextContent(href);
-//			element.appendChild(item);
-//		}
+		for (String href : hrefs) {
+			Element item = document.createElement("item");
+			item.setAttribute("value", href);
+			element.appendChild(item);
+		}
 		
 		// old API
-		if ("option".equals(kind)) {
-			String csv = hrefs.size() > 0 ? hrefs.get(0) : "";
-			for (int i = 1; i < hrefs.size(); i++)
-				csv += ","+hrefs.get(i);
-			element.setTextContent(csv);
-		} else {
-			for (String href : hrefs) {
-				Element file = document.createElement("file");
-				file.setAttribute("src", href);
-				element.appendChild(file);
-			}
-		}
+//		if ("option".equals(kind)) {
+//			String csv = hrefs.size() > 0 ? hrefs.get(0) : "";
+//			for (int i = 1; i < hrefs.size(); i++)
+//				csv += ","+hrefs.get(i);
+//			element.setTextContent(csv);
+//		} else {
+//			for (String href : hrefs) {
+//				Element file = document.createElement("file");
+//				file.setAttribute("src", href);
+//				element.appendChild(file);
+//			}
+//		}
 		
 		return element;
 	}

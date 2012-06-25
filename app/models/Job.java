@@ -39,6 +39,7 @@ public class Job extends Model implements Comparable<Job> {
 	public String nicename;
 	public Date created;
 	public Date started;
+	public Date finished;
 	public Long user;
 
 	// Notification flags
@@ -77,7 +78,13 @@ public class Job extends Model implements Comparable<Job> {
 	/** Retrieve a Job by its id. */
 	public static Job findById(String id) {
 		Job job = find.where().eq("id", id).findUnique();
-		job.userNicename = User.findById(job.user).name;
+		if (job != null) {
+			User user = User.findById(job.user);
+			if (user != null)
+				job.userNicename = user.name;
+			else
+				job.userNicename = "User #"+job.user;
+		}
 		return job;
 	}
 
@@ -94,6 +101,8 @@ public class Job extends Model implements Comparable<Job> {
 						
 						Pipeline2WSResponse wsJob = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, fromSequence);
 						
+						Logger.debug(utils.XML.toString(wsJob.asXml()));
+						
 						if (wsJob.status != 200 && wsJob.status != 201) {
 							return;
 						}
@@ -101,6 +110,9 @@ public class Job extends Model implements Comparable<Job> {
 						pipeline2.models.Job job = new pipeline2.models.Job(wsJob.asXml());
 						
 						if (job.status != pipeline2.models.Job.Status.RUNNING && job.status != pipeline2.models.Job.Status.IDLE) {
+							Job webUiJob = Job.findById(job.id);
+							webUiJob.finished = new Date();
+							webUiJob.save();
 							pushNotifier.cancel();
 						}
 						
@@ -121,6 +133,18 @@ public class Job extends Model implements Comparable<Job> {
 					}
 				}
 				);
+	}
+	
+	public List<Upload> getUploads() {
+		return Upload.find.where("job = '"+id+"'").findList();
+	}
+	
+	@Override
+	public void delete() {
+		List<Upload> uploads = getUploads();
+		for (Upload upload : uploads)
+			upload.delete();
+		super.delete();
 	}
 
 }

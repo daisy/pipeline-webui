@@ -1,4 +1,4 @@
-@(scripts: List[List[String]])
+@(scripts: List[pipeline2.models.Script])
 
 @main("Scripts", "scripts") {
 
@@ -13,8 +13,8 @@
 	</tr>
 	@for(script <- scripts) {
 		<tr>
-			<td><a href="@routes.Scripts.getScript(script.get(1))">@script.get(1)</td>
-			<td>@script.get(2)</td>
+			<td><a href="@routes.Scripts.getScript(script.id)">@script.nicename</td>
+			<td>@script.desc</td>
 		</tr>
 	}
 	</table>

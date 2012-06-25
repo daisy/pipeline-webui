@@ -291,4 +291,16 @@ public class User extends Model {
 		return false;
 	}
 	
+	public List<Job> getJobs() {
+		return Job.find.where("user = '"+id+"'").findList();
+	}
+	
+	@Override
+	public void delete() {
+		List<Job> jobs = getJobs();
+		for (Job job : jobs)
+			job.delete();
+		super.delete();
+	}
+	
 }

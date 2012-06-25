@@ -1,32 +1,21 @@
 package pipeline2.models;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.management.RuntimeErrorException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import pipeline2.Pipeline2WS;
+import pipeline2.Pipeline2WSResponse;
 import pipeline2.models.script.Argument;
 import pipeline2.models.script.Author;
 import pipeline2.models.script.Homepage;
 import play.Logger;
 import play.libs.XPath;
+import utils.XML;
 
 /** Information about the current script. */
 public class Script {
@@ -49,19 +38,23 @@ public class Script {
 		this.mediaTypeBlacklist = new ArrayList<String>();
 	}
 	
+	public Script(Pipeline2WSResponse response) {
+		this(XPath.selectNode("/d:script", response.asXml(), Pipeline2WS.ns));
+	}
+	
 	/** Parse a Script XML document retrieved from the Pipeline 2 Web Service and create Helper function for the Script(Document) constructor */
-	public Script(Document scriptXml) {
+	public Script(Node scriptXml) {
 		this();
 		
-		this.id = XPath.selectText("/d:script/@id", scriptXml, Pipeline2WS.ns);
-		this.href = XPath.selectText("/d:script/@href", scriptXml, Pipeline2WS.ns);
-		this.nicename = XPath.selectText("/d:script/d:nicename", scriptXml, Pipeline2WS.ns);
-		this.desc = XPath.selectText("/d:script/d:description", scriptXml, Pipeline2WS.ns);
-		this.homepage = new Homepage(XPath.selectText("/d:script/d:homepage", scriptXml, Pipeline2WS.ns), "");
+		this.id = XPath.selectText("@id", scriptXml, Pipeline2WS.ns);
+		this.href = XPath.selectText("@href", scriptXml, Pipeline2WS.ns);
+		this.nicename = XPath.selectText("d:nicename", scriptXml, Pipeline2WS.ns);
+		this.desc = XPath.selectText("d:description", scriptXml, Pipeline2WS.ns);
+		this.homepage = new Homepage(XPath.selectText("d:homepage", scriptXml, Pipeline2WS.ns), "");
 		
-		List<Node> inputNodes = XPath.selectNodes("/d:script/d:input", scriptXml, Pipeline2WS.ns);
-		List<Node> optionNodes = XPath.selectNodes("/d:script/d:option", scriptXml, Pipeline2WS.ns);
-		List<Node> outputNodes = XPath.selectNodes("/d:script/d:output", scriptXml, Pipeline2WS.ns);
+		List<Node> inputNodes = XPath.selectNodes("d:input", scriptXml, Pipeline2WS.ns);
+		List<Node> optionNodes = XPath.selectNodes("d:option", scriptXml, Pipeline2WS.ns);
+		List<Node> outputNodes = XPath.selectNodes("d:output", scriptXml, Pipeline2WS.ns);
 		
 		for (Node inputNode : inputNodes) {
 			Argument arg = new Argument();
@@ -138,6 +131,17 @@ public class Script {
 			if (mediaTypeOccurences.get(mediaType) > 1)
 				this.mediaTypeBlacklist.add(mediaType);
 		}
+	}
+	
+	public static List<Script> getScripts(Pipeline2WSResponse response) {
+		List<Script> scripts = new ArrayList<Script>();
+		
+		List<Node> scriptNodes = XPath.selectNodes("/d:scripts/d:script", response.asXml(), Pipeline2WS.ns);
+		for (Node scriptNode : scriptNodes) {
+			scripts.add(new Script(scriptNode));
+		}
+		
+		return scripts;
 	}
 	
 	/** Helper function for the Script(Document) constructor */

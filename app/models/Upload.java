@@ -25,6 +25,7 @@ public class Upload extends Model {
 	public Date uploaded;
 	
 	public Long user;
+	public String job;
 	
 	@Transient
 	private List<FileInfo> fileList;
@@ -114,10 +115,16 @@ public class Upload extends Model {
         return find.where().eq("id", id).findUnique();
     }
     
-    /** Delete all Uploads belonging to a user */
-	public static void deleteUserUploads(User user) {
-		for (Upload upload : find.where().eq("user", user.id).findList()) {
-			upload.delete();
-		}
-	}
+//    /** Delete all Uploads belonging to a user */
+//	public static void deleteUserUploads(User user) {
+//		for (Upload upload : find.where().eq("user", user.id).findList()) {
+//			upload.delete();
+//		}
+//	}
+    
+    @Override
+    public void delete() {
+    	getFile().delete();
+    	super.delete();
+    }
 }

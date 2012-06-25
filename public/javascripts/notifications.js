@@ -64,8 +64,6 @@ Notifications = {
         		Notifications.lastXHRHeartbeat = Date.now();
         	}
         	
-        	// TODO: check correct resource, and ignore if it is the wrong resource
-        	
         	if (Notifications.handlers[notification.kind]) {
         		for (var i = 0; i < Notifications.handlers[notification.kind].length; i++) {
         			Notifications.handlers[notification.kind][i](notification.data);

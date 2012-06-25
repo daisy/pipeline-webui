@@ -12,7 +12,7 @@
 				<label for="endpoint" class="control-label">Address</label>
 				<div class="controls">
 					<input type="text" name="endpoint" id="endpoint" placeholder="URL" class="input-xlarge"
-							value="@setWSForm.field("endpoint").valueOr("http://localhost:8182/ws")"
+							value="@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "http://localhost:8182/ws")"
 							onkeyup="if(@{models.Setting.get("dp2ws.endpoint")==null} || this.value==='@models.Setting.get("dp2ws.endpoint")')document.getElementById('setWS-endpointGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-endpointGroup').style.backgroundColor='#DDF';"
 					/>
 					@if(setWSForm.field("endpoint").errors().size() > 0){

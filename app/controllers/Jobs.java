@@ -13,6 +13,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,9 +45,6 @@ public class Jobs extends Controller {
 	public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
 	public static Result getJobs() {
-		// TODO: hide when running in free-for-all mode in a DAISY/WIPO-envoronment, but not NLB/SBS environment
-		// TODO: show only jobs for the current user when logged in as normal user; admins can see all jobs, as well as a "created by"-column
-
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
 
@@ -55,16 +53,16 @@ public class Jobs extends Controller {
 			return redirect(routes.Login.login());
 		
 		Pipeline2WSResponse jobs = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
-
+		
 		if (jobs.status != 200) {
 			return Application.error(jobs.status, jobs.statusName, jobs.statusDescription, "");
 		}
-
+		
 		List<Job> jobList = new ArrayList<Job>();
-
+		
 		List<Node> jobNodes = XPath.selectNodes("//d:job", jobs.asXml(), Pipeline2WS.ns);
 		for (Node jobNode : jobNodes) {
-
+			
 			Job job = Job.findById(XPath.selectText("@id", jobNode, Pipeline2WS.ns));
 			if (job == null) {
 				Logger.error("No job with id "+XPath.selectText("@id", jobNode, Pipeline2WS.ns)+" was found.");
@@ -75,12 +73,12 @@ public class Jobs extends Controller {
 					jobList.add(job);
 			}
 		}
-
+		
 		Collections.sort(jobList);
 		Collections.reverse(jobList);
 		if (user.admin)
 			flash("showOwner", "true");
-
+		
 		return ok(views.html.Jobs.getJobs.render(jobList));
 	}
 
@@ -103,15 +101,20 @@ public class Jobs extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 
-		Pipeline2WSResponse wsJob = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, null);
+		Pipeline2WSResponse response = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, null);
 
-		if (wsJob.status != 200 && wsJob.status != 201) {
-			return Application.error(wsJob.status, wsJob.statusName, wsJob.statusDescription, "");
+		if (response.status != 200 && response.status != 201) {
+			return Application.error(response.status, response.statusName, response.statusDescription, "");
 		}
 		
-		pipeline2.models.Job job = new pipeline2.models.Job(wsJob.asXml());
-
+		pipeline2.models.Job job = new pipeline2.models.Job(response.asXml());
+		Logger.debug(utils.XML.toString(response.asXml()));
+		
 		Job webuiJob = Job.findById(job.id);
+		if (webuiJob == null) {
+			Logger.debug("Job #"+job.id+" was not found.");
+			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
+		}
 		if (webuiJob.user != user.id)
 			return forbidden();
 		
@@ -146,7 +149,7 @@ public class Jobs extends Controller {
 			return redirect(routes.Login.login());
 		
 		Pipeline2WSResponse result = pipeline2.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-
+		
 		response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
 		response().setContentType("application/zip");
 
@@ -244,14 +247,14 @@ public class Jobs extends Controller {
 		Map<Long,Upload> uploads = new HashMap<Long,Upload>();
 		for (String uploadId : params.get("uploads")[0].split(",")) {
 			Upload upload = Upload.findById(Long.parseLong(uploadId));
-			if (upload.user == user.id)
+			if (upload != null && upload.user == user.id)
 				uploads.put(upload.id, upload);
 		}
 
 		// Get a description of the script from Pipeline 2 Web Service
-		Pipeline2WSResponse wsScript = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-		if (wsScript.status != 200) { return Application.error(wsScript.status, wsScript.statusName, wsScript.statusDescription, ""); }
-		Script script = new Script(wsScript.asXml());
+		Pipeline2WSResponse scriptResponse = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
+		if (scriptResponse.status != 200) { return Application.error(scriptResponse.status, scriptResponse.statusName, scriptResponse.statusDescription, ""); }
+		Script script = new Script(scriptResponse);
 
 		// Parse all arguments
 		List<Argument> arguments = new ArrayList<Argument>();
@@ -266,6 +269,7 @@ public class Jobs extends Controller {
 
 				Argument argument = null;
 				for (Argument arg : script.arguments) {
+					Logger.debug(arg.name+" equals "+name+" ?");
 					if (arg.name.equals(name)) {
 						argument = arg;
 						break;
@@ -443,14 +447,21 @@ public class Jobs extends Controller {
 		
 		
 		Pipeline2WSResponse job = pipeline2.Jobs.post(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), href, arguments, contextZipFile);
-
+		
 		if (job.status != 200 && job.status != 201) {
 			return Application.error(job.status, job.statusName, job.statusDescription, "");
 		}
+		
 		String jobId = XPath.selectText("/*/@id", job.asXml(), Pipeline2WS.ns);
 		Job webUiJob = new Job(jobId, user);
 		webUiJob.nicename = id;
+		webUiJob.started = new Date();
 		webUiJob.save();
+		for (Long uploadId : uploads.keySet()) {
+			// associate uploads with job
+			uploads.get(uploadId).job = jobId;
+			uploads.get(uploadId).save();
+		}
 		
 		webUiJob.pushNotifications();
 

@@ -99,21 +99,23 @@ public class Pipeline2WS {
 		String url = url(endpoint, path, username, secret, null);
 		
 		Logger.debug("URL: ["+url+"]");
+		Logger.debug(utils.XML.toString(xml));
+		
 		ClientResource resource = new ClientResource(url);
-		Logger.debug("-->"+utils.XML.toString(xml)+"<--");
-		Representation representation;
+		Representation representation = null;
 		try {
 			representation = resource.post(xml);
 		} catch (org.restlet.resource.ResourceException e) {
 			Logger.error(e.getMessage(), e);
-			return null;
 		}
 		
 		InputStream in = null;
-		try {
-			in = representation.getStream();
-		} catch (IOException e) {
-			e.printStackTrace();
+		if (representation != null) {
+			try {
+				in = representation.getStream();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		
 		Status status = resource.getStatus();

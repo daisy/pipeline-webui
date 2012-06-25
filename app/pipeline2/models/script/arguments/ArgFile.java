@@ -24,14 +24,14 @@ public class ArgFile extends Argument {
 			element.setAttribute("name", name);
 			
 			// new API
-//			Element item = document.createElement("item");
-//			item.setTextContent(href);
-//			element.appendChild(item);
+			Element item = document.createElement("item");
+			item.setAttribute("value", href);
+			element.appendChild(item);
 			
 			// old API
-			Element file = document.createElement("file");
-			file.setAttribute("src", href);
-			element.appendChild(file);
+//			Element file = document.createElement("file");
+//			file.setAttribute("src", href);
+//			element.appendChild(file);
 		}
 		return element;
 	}
