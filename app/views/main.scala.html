@@ -9,10 +9,12 @@
 	<meta name="author" content="DAISY Consortium">
 	
 	<!-- Styles -->
-	<link href="@routes.Assets.at("stylesheets/bootstrap.min.css")" rel="stylesheet" type="text/css"/>
-	<link href="@routes.Assets.at("stylesheets/main.min.css")" rel="stylesheet" type="text/css"/>
+	<link href="@routes.Application.theme("bootstrap.min.css")" rel="stylesheet" type="text/css"/>
+	<link href="@routes.Application.theme("bootstrap-responsive.min.css")" rel="stylesheet" type="text/css"/>
+	<link href="@routes.Application.theme("main.min.css")" rel="stylesheet" type="text/css"/>
+	
 	@for(style <- moreStyles) {
-		<link href="@routes.Assets.at("stylesheets/"+style)" rel="stylesheet"/>
+		<link href="@routes.Application.theme(style)" rel="stylesheet"/>
 	}
 	
 	<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
@@ -27,8 +29,8 @@
 	<link rel="apple-touch-icon" sizes="114x114" href="routes.Assets.at("images/apple-touch-icon-114x114.png")"/>-->
 	
   </head>
-
-  <body class="body">
+	
+  <body class="body" data-spy="scroll" data-target=".subnav" data-offset="50">
   	
 	<div class="navbar navbar-fixed-top">
 	   	<div class="navbar-inner">
@@ -90,6 +92,8 @@
 	
 	<!-- Scripts -->
 	<script src="@routes.Assets.at("javascripts/bootstrap.min.js")" type="text/javascript"></script>
+	<script src="@routes.Assets.at("javascripts/bootstrap-scrollspy.js")" type="text/javascript"></script>
+	<script src="@routes.Assets.at("javascripts/bootstrap-button.js")" type="text/javascript"></script>
 	<script src="@routes.Assets.at("javascripts/json2.js")" type="text/javascript"></script>
 	<script src="@routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
 	@for(script <- moreScripts) {

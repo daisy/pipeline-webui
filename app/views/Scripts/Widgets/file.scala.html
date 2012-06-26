@@ -2,7 +2,7 @@
 
 @if(arg.sequence){
 	
-	<div class="control-group">
+	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
 		<label class="control-label">@arg.nicename</label>
 		<!-- TODO: javascript to auto-populate the list -->
 		<!-- TODO: add drag'n'drop support for reordering items -->
@@ -141,7 +141,7 @@
 	
 }else{
 	
-	<div class="control-group">
+	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
 		<label class="control-label">@arg.nicename</label>
 		<!-- TODO: javascript to auto-populate the list -->
 		<div class="controls">

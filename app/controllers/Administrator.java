@@ -1,25 +1,21 @@
 package controllers;
 
 import java.io.File;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.Transient;
 
-import controllers.Administrator.SetJobCleanupForm;
-
-import models.Job;
 import models.Setting;
-import models.Upload;
 import models.User;
 import play.Logger;
 import play.data.Form;
 import play.data.format.Formats;
 import play.data.validation.Constraints;
-import play.data.validation.ValidationError;
 import play.data.validation.Constraints.Required;
+import play.data.validation.ValidationError;
 import play.mvc.*;
 
 public class Administrator extends Controller {
@@ -33,6 +29,7 @@ public class Administrator extends Controller {
 		public Form<GuestUser> guestForm = Administrator.guestForm;
 		public Form<GlobalPermissions> globalForm = Administrator.globalForm;
 		public Form<SetJobCleanupForm> setJobCleanupForm = Administrator.setJobCleanupForm;
+		public Form<SetVisualThemeForm> setVisualThemeForm = Administrator.setVisualThemeForm;
 	}
 	
 	public final static Form<CreateAdminForm> createAdminForm = form(CreateAdminForm.class);
@@ -123,6 +120,32 @@ public class Administrator extends Controller {
         }
     }
 	
+	public final static Form<SetVisualThemeForm> setVisualThemeForm = form(SetVisualThemeForm.class);
+	public static class SetVisualThemeForm {
+        @Required
+        public String theme;
+        
+        public static void validate(Form<SetVisualThemeForm> filledForm) {
+        	String theme = filledForm.field("theme").valueOr("");
+        	File themeDir = new File("public/stylesheets/themes/"+theme);
+        	if (!themeDir.exists() || !themeDir.isDirectory())
+        		filledForm.reject("theme", "The theme \""+theme+"\" does not exist.");
+        }
+        
+        public static List<String> themes = new ArrayList<String>();
+        public static void refreshList() {
+        	synchronized(themes) {
+	        	File themeDir = new File("public/stylesheets/themes/");
+	        	if (!themeDir.isDirectory())
+	        		return;
+	        	
+	        	themes = new ArrayList<String>();
+	        	for (String theme : themeDir.list())
+	        		themes.add(theme);
+        	}
+        }
+    }
+	
 	final static Form<User> userForm = form(User.class);
 	
 	final static Form<GuestUser> guestForm = form(GuestUser.class);
@@ -135,6 +158,7 @@ public class Administrator extends Controller {
 	final static Form<GlobalPermissions> globalForm = form(GlobalPermissions.class);
 	public static class GlobalPermissions {
 		public boolean allowGuests;
+		public boolean hideAdvancedOptions;
 	}
 	
 	public static Result getSettings() {
@@ -147,6 +171,7 @@ public class Administrator extends Controller {
 
 		List<User> users = User.find.orderBy("admin, name, email").findList();
 		AdminForms forms = new AdminForms();
+		SetVisualThemeForm.refreshList();
 		
 		return ok(views.html.Administrator.settings.render(forms, users));
 	}
@@ -178,10 +203,12 @@ public class Administrator extends Controller {
 			if (filledForm.hasErrors()) {
 				forms.globalForm = filledForm;
 				List<User> users = User.find.orderBy("admin, name, email").findList();
+				SetVisualThemeForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 				
 			} else {
 				Setting.set("guest.allowGuests", filledForm.field("allowGuests").valueOr("false"));
+				Setting.set("jobs.hideAdvancedOptions", filledForm.field("hideAdvancedOptions").valueOr("false"));
 				flash("success", "Global permissions was updated successfully!");
 				return redirect(routes.Administrator.getSettings());
 			}
@@ -196,6 +223,7 @@ public class Administrator extends Controller {
 			if (filledForm.hasErrors()) {
 				forms.guestForm = filledForm;
 				List<User> users = User.find.orderBy("admin, name, email").findList();
+				SetVisualThemeForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 				
 			} else {
@@ -229,6 +257,7 @@ public class Administrator extends Controller {
 			} else if (filledForm.hasErrors()) {
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.userForm = filledForm;
+				SetVisualThemeForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 
 			} else {
@@ -326,6 +355,7 @@ public class Administrator extends Controller {
 				flash("settings.usertab", "adduser");
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.userForm = filledForm;
+				SetVisualThemeForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 				
 			} else {
@@ -354,6 +384,7 @@ public class Administrator extends Controller {
 			if (filledForm.hasErrors()) {
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.setWSForm = filledForm;
+				SetVisualThemeForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
@@ -373,6 +404,7 @@ public class Administrator extends Controller {
 			if(filledForm.hasErrors()) {
 	        	List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.setUploadDirForm = filledForm;
+				SetVisualThemeForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
@@ -392,6 +424,7 @@ public class Administrator extends Controller {
 			if(filledForm.hasErrors()) {
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.configureEmailForm = filledForm;
+				SetVisualThemeForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 
 			} else {
@@ -414,6 +447,7 @@ public class Administrator extends Controller {
 			if(filledForm.hasErrors()) {
 	        	List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.setJobCleanupForm  = filledForm;
+				SetVisualThemeForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
@@ -424,9 +458,31 @@ public class Administrator extends Controller {
 	        }
 		}
 		
-//		if ("setUITemplate".equals(formName)) {
-//			
-//		}
+		if ("setVisualTheme".equals(formName)) {
+			Form<Administrator.SetVisualThemeForm> filledForm = setVisualThemeForm.bindFromRequest();
+			Administrator.SetVisualThemeForm.validate(filledForm);
+			
+			if(filledForm.hasErrors()) {
+				for (String key : filledForm.errors().keySet()) {
+					for (ValidationError error : filledForm.errors().get(key)) {
+						Logger.debug(key+": "+error.message());
+					}
+				}
+				
+	        	List<User> users = User.find.orderBy("admin, name, email").findList();
+				forms.setVisualThemeForm  = filledForm;
+				SetVisualThemeForm.refreshList();
+				return badRequest(views.html.Administrator.settings.render(forms, users));
+	        	
+	        } else {
+	        	String theme = filledForm.field("theme").valueOr("");
+	        	flash("success", "Theme changed to \""+theme+"\" !");
+	        	if (theme.length() > 0)
+	        		theme += "/";
+	        	Setting.set("theme", theme);
+	        	return redirect(routes.Administrator.getSettings());
+	        }
+		}
 		
 		flash("error", "Form not found. Submitted information ignored :(");
 		return redirect(routes.Administrator.getSettings());

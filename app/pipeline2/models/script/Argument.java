@@ -41,6 +41,11 @@ public class Argument {
 	/** Type of underlying argument. Either "input", "parameters", "option" or "output". */
 	public String kind;
 	
+	
+	/** For use when rendering the job creation form; not part of the script metadata */
+	public boolean hide;
+	
+	
 	public Argument() {
 		this.mediaTypes = new ArrayList<String>();
 	}

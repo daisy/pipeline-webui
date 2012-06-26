@@ -90,8 +90,12 @@ public class Global extends GlobalSettings {
 						List<Job> webUiJobs = Job.find.all();
 						
 						for (Job webUiJob : webUiJobs) {
+							boolean exists = false;
 							for (pipeline2.models.Job fwkJob : fwkJobs) {
-								if (webUiJob.id.equals(fwkJob.id)) {
+								if (webUiJob.id.equals(fwkJob.id))
+									exists = true;
+								
+								if (!exists) {
 									Logger.info("Deleting job that no longer exists in the Pipeline 2 framework: "+webUiJob.id+" ("+webUiJob.nicename+")");
 									webUiJob.delete();
 								}

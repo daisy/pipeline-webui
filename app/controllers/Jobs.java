@@ -455,6 +455,21 @@ public class Jobs extends Controller {
 		String jobId = XPath.selectText("/*/@id", job.asXml(), Pipeline2WS.ns);
 		Job webUiJob = new Job(jobId, user);
 		webUiJob.nicename = id;
+		if (uploads != null && uploads.size() > 0) {
+			String filenames = "";
+			int i = 0;
+			for (Long uploadId : uploads.keySet()) {
+				if (i > 0)
+					filenames += ", ";
+				if (i++ >= 3) {
+					filenames += "...";
+					break;
+				}
+				filenames += uploads.get(uploadId).getFile().getName();
+			}
+			if (filenames.length() > 0)
+				webUiJob.nicename = id + " ("+filenames+")";
+		}
 		webUiJob.started = new Date();
 		webUiJob.save();
 		for (Long uploadId : uploads.keySet()) {

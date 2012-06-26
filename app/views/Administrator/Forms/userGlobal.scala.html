@@ -3,7 +3,8 @@
 @helper.form(action = route) {
 	
 	<input type="hidden" name="formName" value="updateGlobalPermissions"/>
-	<input type="hidden" name="allowGuests" value="@{models.Setting.get("guest.allowGuests")}" id="allowGuests-value"/>
+	<input type="hidden" name="allowGuests" value="@{Setting.get("guest.allowGuests")}" id="allowGuests-value"/>
+	<input type="hidden" name="hideAdvancedOptions" value="@{Setting.get("jobs.hideAdvancedOptions")}" id="hideAdvancedOptions-value"/>
     
 	<fieldset>
 		<legend>Global permissions</legend>
@@ -14,22 +15,42 @@
 				<label class="control-label">Allow guest login</label>
 				<div class="controls">
 					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
-						<button type="button" name="admin-on" class="btn  @("active".when(globalForm.field("allowGuests").valueOr(models.Setting.get("guest.allowGuests"))=="true"))" id="allowGuests-on"
-							aria-role="radio"                             aria-checked="@(globalForm.field("allowGuests").valueOr(models.Setting.get("guest.allowGuests"))=="true")"
-							onclick="toggleRadio('allowGuests', true,                  '@(globalForm.field("allowGuests").valueOr(models.Setting.get("guest.allowGuests")))');">Yes</button>
-						<button type="button" name="admin-off" class="btn @("active".when(globalForm.field("allowGuests").valueOr(models.Setting.get("guest.allowGuests"))=="false"))" id="allowGuests-off"
-							aria-role="radio"                             aria-checked="@(globalForm.field("allowGuests").valueOr(models.Setting.get("guest.allowGuests"))=="false")"
-							onclick="toggleRadio('allowGuests', false,                 '@(globalForm.field("allowGuests").valueOr(models.Setting.get("guest.allowGuests")))');">No</button>
+						<button type="button" name="allowGuests-on" class="btn  @("active".when(globalForm.field("allowGuests").valueOr(Setting.get("guest.allowGuests"))=="true"))" id="allowGuests-on"
+							aria-role="radio"                             aria-checked="@(globalForm.field("allowGuests").valueOr(Setting.get("guest.allowGuests"))=="true")"
+							onclick="toggleRadio('allowGuests', true,                  '@(globalForm.field("allowGuests").valueOr(Setting.get("guest.allowGuests")))');">Yes</button>
+						<button type="button" name="allowGuests-off" class="btn @("active".when(globalForm.field("allowGuests").valueOr(Setting.get("guest.allowGuests"))=="false"))" id="allowGuests-off"
+							aria-role="radio"                             aria-checked="@(globalForm.field("allowGuests").valueOr(Setting.get("guest.allowGuests"))=="false")"
+							onclick="toggleRadio('allowGuests', false,                 '@(globalForm.field("allowGuests").valueOr(Setting.get("guest.allowGuests")))');">No</button>
 					</div>
 					@if(globalForm.field("allowGuests").errors().size() > 0){
-						<span class="help-inline">@globalForm.error("allowGuests").message</span>
+						<span class="help-block">@globalForm.error("allowGuests").message</span>
+					}
+				</div>
+			</div>
+			
+			<div class="control-group @("error".when(globalForm.error("hideAdvancedOptions") != null))" id="hideAdvancedOptionsGroup">
+				<label class="control-label">Hide advanced options</label>
+				<div class="controls">
+					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
+						<button type="button" name="hideAdvancedOptions-on" class="btn  @("active".when(globalForm.field("hideAdvancedOptions").valueOr(Setting.get("jobs.hideAdvancedOptions"))=="true"))" id="hideAdvancedOptions-on"
+							aria-role="radio"                             aria-checked="@(globalForm.field("hideAdvancedOptions").valueOr(Setting.get("jobs.hideAdvancedOptions"))=="true")"
+							onclick="toggleRadio('hideAdvancedOptions', true,                  '@(globalForm.field("hideAdvancedOptions").valueOr(Setting.get("jobs.hideAdvancedOptions")))');">Yes</button>
+						<button type="button" name="hideAdvancedOptions-off" class="btn @("active".when(globalForm.field("hideAdvancedOptions").valueOr(Setting.get("jobs.hideAdvancedOptions"))=="false"))" id="hideAdvancedOptions-off"
+							aria-role="radio"                             aria-checked="@(globalForm.field("hideAdvancedOptions").valueOr(Setting.get("jobs.hideAdvancedOptions"))=="false")"
+							onclick="toggleRadio('hideAdvancedOptions', false,                 '@(globalForm.field("hideAdvancedOptions").valueOr(Setting.get("jobs.hideAdvancedOptions")))');">No</button>
+					</div>
+					<span class="help-inline">Whether or not advanced script options will be hidden by default.</span>
+					@if(globalForm.field("hideAdvancedOptions").errors().size() > 0){
+						<span class="help-block">@globalForm.error("hideAdvancedOptions").message</span>
 					}
 				</div>
 			</div>
 			
 			<div class="form-actions">
-				<button type="submit" class="btn btn-primary" id="allowGuests-submit" name="submit">Save changes</button>
-				<button type="reset" class="btn" id="allowGuests-reset" name="reset" onclick="toggleRadio('allowGuests', @models.Setting.get("guest.allowGuests"), '@models.Setting.get("guest.allowGuests")')">Clear changes</button>
+				<button type="submit" class="btn btn-primary" id="global-submit" name="submit">Save changes</button>
+				<button type="reset" class="btn" id="allowGuests-reset" name="reset"
+						onclick="toggleRadio('allowGuests', @Setting.get("guest.allowGuests"), '@Setting.get("guest.allowGuests")');toggleRadio('hideAdvancedOptions', @Setting.get("jobs.hideAdvancedOptions"), '@Setting.get("jobs.hideAdvancedOptions")');"
+						>Clear changes</button>
 			</div>
 		</div>
 	</fieldset>

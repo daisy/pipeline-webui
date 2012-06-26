@@ -2,7 +2,7 @@
 
 @if(arg.sequence){
 	
-	<div class="control-group">
+	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
 		<!-- TODO: if ordered sequence; show up/down controls -->
 		<!-- TODO: allow drag'n'drop for reordering -->
 		<label class="control-label">@arg.nicename</label>
@@ -28,7 +28,7 @@
 	
 }else{
 	
-	<div class="control-group">
+	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
 		<label class="control-label">@arg.nicename</label>
 		<div class="controls">
 			<input name="@{arg.kind}-@{arg.name}" type="text"/>

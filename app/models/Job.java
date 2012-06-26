@@ -110,10 +110,10 @@ public class Job extends Model implements Comparable<Job> {
 						pipeline2.models.Job job = new pipeline2.models.Job(wsJob.asXml());
 						
 						if (job.status != pipeline2.models.Job.Status.RUNNING && job.status != pipeline2.models.Job.Status.IDLE) {
+							pushNotifier.cancel();
 							Job webUiJob = Job.findById(job.id);
 							webUiJob.finished = new Date();
 							webUiJob.save();
-							pushNotifier.cancel();
 						}
 						
 						Job webuiJob = Job.findById(job.id);

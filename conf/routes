@@ -6,6 +6,8 @@
 GET     /                                   controllers.Application.index()
 GET     /assets/img/*file                   controllers.Application.redirect(path="/assets/images/", file)
 GET     /about								controllers.Application.about()
+GET     /theme/*file						controllers.Application.theme(file)
+GET     /assets/stylesheets/themes/img/*file	controllers.Application.themeImage(file)
 
 # Login
 GET		/login/resetpassword				controllers.Login.resetPassword()

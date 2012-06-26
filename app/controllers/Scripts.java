@@ -55,11 +55,13 @@ public class Scripts extends Controller {
 		Script script = new Script(response);
 		
 		boolean uploadFiles = false;
+		script.hideAdvancedOptions = "true".equals(Setting.get("jobs.hideAdvancedOptions"));
 		for (Argument arg : script.arguments) {
 			if ("input".equals(arg.kind) || "anyFileURI".equals(arg.xsdType)) {
 				uploadFiles = true;
-				break;
 			}
+			if (script.hideAdvancedOptions && arg.required == false)
+				arg.hide = true;
 		}
 		
 		return ok(views.html.Scripts.getScript.render(script, uploadFiles));

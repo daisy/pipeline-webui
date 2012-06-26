@@ -16,6 +16,16 @@ Array("jquery.fileupload-ui.css")) {
 	@script.nicename<br /> <small>@script.desc</small>
 </h1>
 
+@if(script.hideAdvancedOptions){
+	<div class="pull-right well">
+		<label class="control-label">Show advanced options</label>
+		<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
+			<button type="button" name="showAdvancedOptions-on" class="btn" id="showAdvancedOptions-on" aria-role="radio" aria-checked="false" onclick="$('.advanced-argument').show('slow');">Yes</button>
+			<button type="button" name="showAdvancedOptions-off" class="btn active" id="showAdvancedOptions-off" aria-role="radio" aria-checked="true" onclick="$('.advanced-argument').hide('slow');">No</button>
+		</div>
+	</div>
+}
+
 @if(uploadFiles){
 	@Widgets.upload()
 }

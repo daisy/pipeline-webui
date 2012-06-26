@@ -15,7 +15,7 @@ function toggleRadio(idPrefix, state, defaultState) {
 
 function toggleChanged(idPrefix, value, defaultValue) {
 	if (value === defaultValue)
-		document.getElementById(idPrefix+'Group').style.backgroundColor='#FFF';
+		$('#'+idPrefix+'Group').removeClass("changed");//style.backgroundColor='#FFF';
 	else
-		document.getElementById(idPrefix+'Group').style.backgroundColor='#DDF';
+		$('#'+idPrefix+'Group').addClass("changed");//style.backgroundColor='#DDF';
 }

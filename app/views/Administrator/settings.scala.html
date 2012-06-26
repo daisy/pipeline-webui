@@ -2,9 +2,47 @@
 
 @main("Administrator settings", "admin") {
 
-<div class="page-header">
-    <h1>Administrator settings</h1>
-</div>
+<header class="page-header">
+  <h1>Administrator settings</h1>
+  <div class="subnav">
+    <ul class="nav nav-pills">
+      <li><a href="#usersAndPermissions">Users and Permissions</a></li>
+      <li><a href="#pipeline2WebServiceEndpoint">Pipeline 2 Web Service Endpoint</a></li>
+	  <li><a href="#temporaryDirectoryForUploads">Temporary directory for uploads</a></li>
+  	  <li><a href="#eMailSettings">E-mail settings</a></li>
+  	  <li><a href="#jobCleanup">Job Cleanup</a></li>
+	  <li><a href="#visualThemes">Visual Themes</a></li>
+    </ul>
+  </div>
+  <script type="text/javascript">
+	// http://twitter.github.com/bootstrap/assets/js/application.js
+	// fix sub nav on scroll
+	var $win = $(window)
+	  , $nav = $('.subnav')
+	  , navTop = $('.subnav').length && $('.subnav').offset().top - 40
+	  , isFixed = 0
+	
+	processScroll()
+	
+	// hack sad times - holdover until rewrite for Bootstrap 2.1
+	$nav.on('click', function () {
+	  if (!isFixed) setTimeout(function () {  $win.scrollTop($win.scrollTop() - 47) }, 10)
+	})
+	
+	$win.on('scroll', processScroll)
+	
+	function processScroll() {
+	  var i, scrollTop = $win.scrollTop()
+	  if (scrollTop >= navTop && !isFixed) {
+	    isFixed = 1
+	    $nav.addClass('subnav-fixed')
+	  } else if (scrollTop <= navTop && isFixed) {
+	    isFixed = 0
+	    $nav.removeClass('subnav-fixed')
+	  }
+	}
+	</script>
+</header>
 
 @if(forms.userForm != null && forms.userForm.hasGlobalErrors()
 	|| forms.guestForm != null && forms.guestForm.hasGlobalErrors()
@@ -34,7 +72,7 @@
     </div>
 }
 
-<div class="tabbable tabs-left">
+<section id="usersAndPermissions" class="tabbable tabs-left">
 	<h2>Users and permissions</h2>
 	<br/>
 	
@@ -70,47 +108,46 @@
 			@Forms.userAdd(forms.userForm, routes.Administrator.postSettings())
 		</div>
 	</div>
-</div>
+</section>
 <hr/>
 
 <br/><br/>
-<div>
+<section id="pipeline2WebServiceEndpoint">
 	<h2>Pipeline 2 Web Service endpoint</h2>
 	<br/>
   	@views.html.Administrator.Forms.setWS(forms.setWSForm, routes.Administrator.postSettings(), null)
-</div>
+</section>
 <hr/>
 
 <br/><br/>
-<div>
+<section id="temporaryDirectoryForUploads">
 	<h2>Temporary directory for uploads</h2>
 	<br/>
 	@views.html.Administrator.Forms.setUploadDir(forms.setUploadDirForm, routes.Administrator.postSettings(), null)
-</div>
+</section>
 <hr/>
 
 <br/><br/>
-<div>
+<section id="eMailSettings">
 	<h2>E-mail settings</h2>
 	<br/>
 	@views.html.Administrator.Forms.configureEmail(forms.configureEmailForm, routes.Administrator.postSettings(), null)
-</div>
+</section>
 <hr/>
 
 <br/><br/>
-<div>
+<section id="jobCleanup">
 	<h2>Job cleanup</h2>
 	<br/>
 	@views.html.Administrator.Forms.setJobCleanup(forms.setJobCleanupForm, routes.Administrator.postSettings(), null)
-</div>
+</section>
 <hr/>
 
-<!--
-<div>
+<section id="visualThemes">
 	<h2>Visual themes</h2>
-	TODO
-</div>
-<hr/>
--->
+	<br/>
+	@views.html.Administrator.Forms.setVisualTheme(forms.setVisualThemeForm, routes.Administrator.postSettings(), null)
+</section>
+<hr style="padding-bottom: 300px;"/>
 
 }
