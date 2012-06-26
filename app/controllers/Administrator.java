@@ -122,14 +122,16 @@ public class Administrator extends Controller {
 	
 	public final static Form<SetVisualThemeForm> setVisualThemeForm = form(SetVisualThemeForm.class);
 	public static class SetVisualThemeForm {
-        @Required
+        
         public String theme;
         
         public static void validate(Form<SetVisualThemeForm> filledForm) {
         	String theme = filledForm.field("theme").valueOr("");
-        	File themeDir = new File("public/stylesheets/themes/"+theme);
-        	if (!themeDir.exists() || !themeDir.isDirectory())
-        		filledForm.reject("theme", "The theme \""+theme+"\" does not exist.");
+        	if (!"".equals(theme)) {
+	        	File themeDir = new File("public/stylesheets/themes/"+theme);
+	        	if (!themeDir.exists() || !themeDir.isDirectory())
+	        		filledForm.reject("theme", "The theme \""+theme+"\" does not exist.");
+        	}
         }
         
         public static List<String> themes = new ArrayList<String>();
@@ -476,7 +478,7 @@ public class Administrator extends Controller {
 	        	
 	        } else {
 	        	String theme = filledForm.field("theme").valueOr("");
-	        	flash("success", "Theme changed to \""+theme+"\" !");
+	        	flash("success", "Theme changed to "+("".equals(theme)?"default":"\""+theme+"\"")+" !");
 	        	if (theme.length() > 0)
 	        		theme += "/";
 	        	Setting.set("theme", theme);
