@@ -112,8 +112,12 @@ public class Job extends Model implements Comparable<Job> {
 						if (job.status != pipeline2.models.Job.Status.RUNNING && job.status != pipeline2.models.Job.Status.IDLE) {
 							pushNotifier.cancel();
 							Job webUiJob = Job.findById(job.id);
-							webUiJob.finished = new Date();
-							webUiJob.save();
+							if (webUiJob.finished == null) {
+								// pushNotifier tends to fire multiple times after canceling it, so this if{} is just to fire the "finished" event exactly once
+								webUiJob.finished = new Date();
+								webUiJob.save();
+								User.push(webUiJob.user, new Notification("job-finished-"+job.id, webUiJob.finished.toString()));
+							}
 						}
 						
 						Job webuiJob = Job.findById(job.id);

@@ -55,8 +55,7 @@ public class Global extends GlobalSettings {
 				new Runnable() {
 					public void run() {
 						if (Setting.get("jobs.deleteAfterDuration") == null || "0".equals(Setting.get("jobs.deleteAfterDuration")))
-							Setting.set("jobs.deleteAfterDuration", ""+(10*60*1000));//TODO: use widget in admin settings instead
-//							return;
+							return;
 						
 						Date timeoutDate = new Date(new Date().getTime() - Long.parseLong(Setting.get("jobs.deleteAfterDuration")));
 						
@@ -79,12 +78,14 @@ public class Global extends GlobalSettings {
 				}
 				);
 		
-		// Clean up jobs that no longer exists in the Pipeline 2 framework. This typically happens if the framework is restarted.
+		// If jobs.deleteAfterDuration is not set; clean up jobs that no longer exists in the Pipeline 2 framework. This typically happens if the framework is restarted.
 		Akka.system().scheduler().schedule(
 				Duration.create(1, TimeUnit.MINUTES),
 				Duration.create(1, TimeUnit.HOURS),
 				new Runnable() {
 					public void run() {
+						if (Setting.get("jobs.deleteAfterDuration") != null && !"0".equals(Setting.get("jobs.deleteAfterDuration")))
+							return;
 						
 						List<pipeline2.models.Job> fwkJobs = pipeline2.models.Job.getJobs(pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret")));
 						List<Job> webUiJobs = Job.find.all();

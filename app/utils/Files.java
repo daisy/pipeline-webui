@@ -287,16 +287,19 @@ public class Files {
 	 */
 	public static void unzip(File zip, File dir) throws IOException {
 		if (!zip.exists()) {
-			Logger.error("ZIP file does not exist: "+(zip!=null?zip.getAbsolutePath():"[null]"));
-			return;
+			IOException e = new IOException("ZIP file does not exist: "+(zip!=null?zip.getAbsolutePath():"[null]"));
+			Logger.error("ZIP file does not exist: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
+			throw e;
 		}
 		if (!zip.isFile()) {
-			Logger.error("ZIP file is not a file: "+(zip!=null?zip.getAbsolutePath():"[null]"));
-			return;
+			IOException e = new IOException("ZIP file is not a file: "+(zip!=null?zip.getAbsolutePath():"[null]"));
+			Logger.error("ZIP file is not a file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
+			throw e;
 		}
 		if (dir.exists() && !dir.isDirectory()) {
-			Logger.error("ZIP output is not a directory: "+(dir!=null?dir.getAbsolutePath():"[null]"));
-			return;
+			IOException e = new IOException("ZIP output is not a directory: "+(dir!=null?dir.getAbsolutePath():"[null]"));
+			Logger.error("ZIP output is not a directory: "+(dir!=null?dir.getAbsolutePath():"[null]"), e);
+			throw e;
 		}
 		if (!dir.exists()) {
 			dir.mkdirs();
@@ -306,7 +309,7 @@ public class Files {
 		try { zipFile = new ZipFile(zip); }
 		catch (ZipException e) {
 			Logger.error("Error while opening ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
-			return;
+			throw e;
 		} catch (IOException e) {
 			Logger.error("Error while opening ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
 			throw e;
@@ -334,10 +337,11 @@ public class Files {
 				}
             	FileOutputStream fos;
             	File entryFile = new File(dir, entry.getName());
+            	entryFile.getParentFile().mkdirs();
 				try { fos = new FileOutputStream(entryFile); }
 				catch (FileNotFoundException e) {
 					Logger.error("Error while opening output file '"+(entryFile!=null?entryFile.getAbsolutePath():"[null]")+"' for ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
-					return;
+					throw e;
 				}
             	
             	int len;
@@ -379,6 +383,7 @@ public class Files {
 	 * @throws IOException 
 	 */
 	public static void zip(File dir, File zip) throws IOException {
+		zip.getParentFile().mkdirs();
 		ZipOutputStream zipOs = new ZipOutputStream(new FileOutputStream(zip));
 		
 		byte buff[]= new byte[4 * 1024 * 1024];
@@ -403,6 +408,7 @@ public class Files {
 	
 	public static void copy(File from, File to) throws IOException {
 	    if(!to.exists()) {
+	    	to.getParentFile().mkdirs();
 	    	to.createNewFile();
 	    }
 

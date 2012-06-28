@@ -9,11 +9,11 @@ $(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(
 <h1>Job: @uiJob.nicename <br/><small>(@fwkJob.id)</small></h1>
 
 <p>
-<ul>
-	<li>Created: @uiJob.created</li>
-	<li>Started: @uiJob.started</li>
-	<li>Finished: @uiJob.finished</li>
-</ul>
+<table>
+<!--<tr><td>Created:</td><td>@uiJob.created</td></tr>-->
+<tr><td>Started:</td><td id="job-started">@uiJob.started</td></tr>
+<tr><td>Finished:</td><td id="job-finished">@uiJob.finished</td></tr>
+</table>
 </p>
 
 <div class="row">
@@ -105,6 +105,8 @@ $(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(
 			}
 			$("#status-"+status.toLowerCase()).show();
 		});
+		Notifications.listen("job-created-@fwkJob.id", function(message){ $("#job-created").html(message); });
+		Notifications.listen("job-finished-@fwkJob.id", function(message){ $("#job-finished").html(message); });
 	});
 </script>
 

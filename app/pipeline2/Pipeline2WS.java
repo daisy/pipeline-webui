@@ -1,5 +1,6 @@
 package pipeline2;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,7 +77,12 @@ public class Pipeline2WS {
 				in = representation.getStream();
 			
 		} catch (ResourceException e) {
-			// Unauthorized etc. Silently ignore...
+			// Unauthorized etc.
+			try {
+				in = new ByteArrayInputStream("An unknown problem occured while communicating with the Pipeline 2 framework.".getBytes("utf-8"));
+	        } catch(UnsupportedEncodingException unsupportedEncodingException) {
+	            Logger.error("Unable to create body string as stream", new RuntimeException(e));
+	        }
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

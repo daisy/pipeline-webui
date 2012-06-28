@@ -1,4 +1,4 @@
-@(script: pipeline2.models.Script, uploadFiles: Boolean)
+@(script: pipeline2.models.Script, uploadFiles: Boolean, hideAdvancedOptions: Boolean)
 
 @main("Create job", "",
 Array("tmpl.js","jquery.ui.widget.js","jquery.iframe-transport.js","jquery.fileupload.js","jquery.fileupload-ui.js","notifications.js","createJob.js"),
@@ -16,7 +16,7 @@ Array("jquery.fileupload-ui.css")) {
 	@script.nicename<br /> <small>@script.desc</small>
 </h1>
 
-@if(script.hideAdvancedOptions){
+@if(hideAdvancedOptions){
 	<div class="pull-right well">
 		<label class="control-label">Show advanced options</label>
 		<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
@@ -50,7 +50,7 @@ Array("jquery.fileupload-ui.css")) {
 		}
 	
 		<div class="form-actions">
-			<button type="submit" value="Start job" class="btn btn-large btn-primary">Start job</button>
+			<button type="submit" value="Start job" data-loading-text="Starting job..." class="btn btn-large btn-primary" onclick="$(this).button('loading');">Start job</button>
 		</div>
 	
 	</fieldset>

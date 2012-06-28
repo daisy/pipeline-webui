@@ -1,6 +1,7 @@
 package controllers;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -12,10 +13,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.ZipException;
 
 import javax.management.RuntimeErrorException;
 
 import models.Job;
+import models.Notification;
 import models.Setting;
 import models.Upload;
 import models.User;
@@ -241,6 +244,8 @@ public class Jobs extends Controller {
 		// Get all referenced uploads from DB
 		Map<Long,Upload> uploads = new HashMap<Long,Upload>();
 		for (String uploadId : params.get("uploads")[0].split(",")) {
+			if ("".equals(uploadId))
+				continue;
 			Upload upload = Upload.findById(Long.parseLong(uploadId));
 			if (upload != null && upload.user == user.id)
 				uploads.put(upload.id, upload);
@@ -389,7 +394,7 @@ public class Jobs extends Controller {
 						utils.Files.unzip(upload.getFile(), contextDir);
 					} catch (IOException e) {
 						Logger.error("Unable to unzip files into context directory.", e);
-						throw new RuntimeErrorException(new Error(e), "Unable to unzip files into context directory.");
+						return Application.error(500, "Internal Server Error", "Unable to unzip uploaded ZIP file", "");
 					}
 				} else {
 					File from = upload.getFile();
@@ -444,7 +449,7 @@ public class Jobs extends Controller {
 		Pipeline2WSResponse job = pipeline2.Jobs.post(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), href, arguments, contextZipFile);
 		
 		if (job.status != 200 && job.status != 201) {
-			return Application.error(job.status, job.statusName, job.statusDescription, "");
+			return Application.error(job.status, job.statusName, job.statusDescription, job.asText());
 		}
 		
 		String jobId = XPath.selectText("/*/@id", job.asXml(), Pipeline2WS.ns);
@@ -467,6 +472,7 @@ public class Jobs extends Controller {
 		}
 		webUiJob.started = new Date();
 		webUiJob.save();
+		User.push(webUiJob.user, new Notification("job-started-"+webUiJob.id, webUiJob.started.toString()));
 		for (Long uploadId : uploads.keySet()) {
 			// associate uploads with job
 			uploads.get(uploadId).job = jobId;

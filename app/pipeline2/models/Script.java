@@ -31,9 +31,6 @@ public class Script {
 	/** List of mime types that are supported by multiple file arguments, and thus cannot be automatically assigned to a single argument. */
 	public List<String> mediaTypeBlacklist;
 	
-	/** For use when rendering the job creation form; not part of the script metadata */
-	public boolean hideAdvancedOptions;
-	
 	// ---------- Constructors ----------
 	
 	public Script() {
