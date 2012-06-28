@@ -89,7 +89,6 @@ public class Uploads extends Controller {
 //        Long uploadId = models.Upload.store(files.get(0));
         
 		response().setContentType("text/html");
-//		return ok("{\"success\":true,\"id\":"+uploadId+"}");
 		return ok(play.libs.Json.toJson(result));
 		
     }

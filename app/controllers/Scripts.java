@@ -30,7 +30,7 @@ public class Scripts extends Controller {
 		Pipeline2WSResponse response = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
 		
 		if (response.status != 200) {
-			return Application.error(response.status, response.statusName, response.statusDescription, "");
+			return Application.error(response.status, response.statusName, response.statusDescription, response.asText());
 		}
 		
 		List<Script> scripts = Script.getScripts(response);
@@ -49,7 +49,7 @@ public class Scripts extends Controller {
 		Pipeline2WSResponse response = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
 		
 		if (response.status != 200) {
-			return Application.error(response.status, response.statusName, response.statusDescription, "");
+			return Application.error(response.status, response.statusName, response.statusDescription, response.asText());
 		}
 		
 		Script script = new Script(response);

@@ -1,4 +1,4 @@
-@(job: pipeline2.models.Job, nicename: String)
+@(fwkJob: pipeline2.models.Job, uiJob: models.Job)
 
 @main("View job", "", Array("notifications.js")) {
 
@@ -6,14 +6,22 @@
 $(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(request)", "@routes.Notifications.xhr().absoluteURL(request)");});
 </script>
 
-<h1>Job: @nicename <br/><small>(@job.id)</small></h1>
+<h1>Job: @uiJob.nicename <br/><small>(@fwkJob.id)</small></h1>
+
+<p>
+<ul>
+	<li>Created: @uiJob.created</li>
+	<li>Started: @uiJob.started</li>
+	<li>Finished: @uiJob.finished</li>
+</ul>
+</p>
 
 <div class="row">
 	<div class="hero-unit" style="text-align:center">
 	
 	<div id="status-done" style="display:none;">
 		<h2 role="status">Job finished successfully!</h1>
-		<a class="btn btn-large btn-success" href="@routes.Jobs.getResult(job.id)"><i class="icon-download-alt icon-white"></i> Download results</a>
+		<a class="btn btn-large btn-success" href="@routes.Jobs.getResult(fwkJob.id)"><i class="icon-download-alt icon-white"></i> Download results</a>
 	</div>
 	
 	<div id="status-running" style="display:none;">
@@ -42,8 +50,8 @@ $(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(
 			</span>
 		</h2>
 		<br/>
-		@if(job.messages.size()>0){
-			<ul style="list-style-type:none;text-align:left;padding-top:20px;"><li id="message-latest"><pre>@job.messages.get(job.messages.size()-1).text</pre></li></ul>
+		@if(fwkJob.messages.size()>0){
+			<ul style="list-style-type:none;text-align:left;padding-top:20px;"><li id="message-latest"><pre>@fwkJob.messages.get(fwkJob.messages.size()-1).text</pre></li></ul>
 		} else {
 			<ul style="list-style-type:none;text-align:left;padding-top:20px;"><li id="message-latest"><pre>&nbsp;</pre></li></ul>
 		}
@@ -51,8 +59,8 @@ $(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(
 	
 	<div id="status-idle" style="display:none;">
 		<h2 role="status" style="color:#000080;">Job is idle</h2>
-		@if(job.messages.size()>0){
-			<ol start="@job.messages.get(job.messages.size()-1).sequence"><li><pre>@job.messages.get(job.messages.size()-1).text</pre></li></ol>
+		@if(fwkJob.messages.size()>0){
+			<ol start="@fwkJob.messages.get(fwkJob.messages.size()-1).sequence"><li><pre>@fwkJob.messages.get(fwkJob.messages.size()-1).text</pre></li></ol>
 		}
 	</div>
 	
@@ -62,7 +70,7 @@ $(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(
 	</div>
 	
 	<script type="text/javascript">
-		$("#status-@(job.status.toString().toLowerCase())").show();
+		$("#status-@(fwkJob.status.toString().toLowerCase())").show();
 	</script>
 	
 	</div>
@@ -71,27 +79,27 @@ $(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(
 <div class="well">
 	<h2>Other output</h2>
 	<br/>
-	<a class="btn btn-info" href="@routes.Jobs.getLog(job.id)"><i class="icon-eye-open"></i> Detailed log</a>
+	<a class="btn btn-info" href="@routes.Jobs.getLog(fwkJob.id)"><i class="icon-eye-open"></i> Detailed log</a>
 	<!-- Other outputs such as secondary output ports can be listed here -->
 </div>
 
 <h2>Messages</h2>
 
 <ol aria-live="polite" role="log" class="messagelist" id="message-list">
-	@for(message <- job.messages){
+	@for(message <- fwkJob.messages){
 		<li value="@message.sequence" class="message @("message-error".when(pipeline2.models.job.Message.Level.ERROR==message.level)) @("message-warn".when(pipeline2.models.job.Message.Level.WARNING==message.level))""><code>@message.text</code></li>
 	}
 </ol>
 
 <script type="text/javascript">
 	$(function(){
-		Notifications.listen("job-message-@job.id", function(message){
+		Notifications.listen("job-message-@fwkJob.id", function(message){
 			//if ($("#message-list li").filter(function(i){return $(this).attr("value")===message.sequence;}).size() === 0) {
 				$("#message-list").append('<li value="'+message.sequence+'" class="message '+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><code>'+message.text+'</code></li>');
 				$("#message-latest").html("<pre>"+message.text+"</pre>");
 			//}
 		});
-		Notifications.listen("job-status-@job.id", function(status){
+		Notifications.listen("job-status-@fwkJob.id", function(status){
 			@for(status <- pipeline2.models.Job.Status.values()){
 				$("#status-@(status.toString().toLowerCase())").hide();
 			}

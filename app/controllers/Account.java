@@ -215,7 +215,7 @@ public class Account extends Controller {
 			email.getMailSession().getProperties().put("mail.smtp.socketFactory.fallback", "false");
 			email.getMailSession().getProperties().put("mail.smtp.socketFactory.port", Setting.get("mail.smtp.port"));
 			email.setFrom(Setting.get("mail.from.email"), Setting.get("mail.from.name"));
-			email.setSubject("[DAISY Pipeline 2] "+subject);
+			email.setSubject("[DAISY Pipeline 2] "+subject); // TODO: customizable subject prefix
 			email.setHtmlMsg(html);
 			email.setTextMsg(text);
 			email.addTo(recipientEmail, recipientName);

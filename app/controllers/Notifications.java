@@ -18,7 +18,7 @@ public class Notifications extends Controller {
 	/**
 	 * Handle WebSocket pushing.
 	 */
-	public static WebSocket<JsonNode> websocket() {Logger.debug("websocket");
+	public static WebSocket<JsonNode> websocket() {
 		if (FirstUse.isFirstUse())
     		return null; // forbidden
 		
@@ -35,13 +35,13 @@ public class Notifications extends Controller {
 	 * Handle XHR polling.
 	 * @return
 	 */
-	public static Result xhr() {Logger.debug("xhr");
+	public static Result xhr() {
 		if (FirstUse.isFirstUse())
-    		return null; // forbidden
+			return forbidden();
 		
 		User user = User.authenticate(session("userid"), session("email"), session("password"));
 		if (user == null)
-			return null; // forbidden
+			return forbidden();
 		
 		User.notificationQueues.putIfAbsent(user.id, new ArrayList<Notification>());
 		

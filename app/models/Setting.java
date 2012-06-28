@@ -1,14 +1,13 @@
 package models;
 
+import java.util.Arrays;
 import java.util.List;
-
-import play.Logger;
 import play.db.ebean.Model;
 
 import javax.persistence.*;
 
-import play.data.format.*;
 import play.data.validation.*;
+import utils.ObfuscatedString;
 
 @Entity
 public class Setting extends Model {
@@ -19,6 +18,7 @@ public class Setting extends Model {
     
     public String value;
     
+    public static final List<String> obfuscatedSettings = Arrays.asList("dp2ws.secret", "mail.password");
     
     // -- Queries
     
@@ -27,7 +27,11 @@ public class Setting extends Model {
     /** Get the value of a setting */
     public static String get(String name) {
     	Setting setting = find.where().eq("name", name).findUnique();
-    	return setting != null ? setting.value : null;
+    	if (setting == null)
+    		return null;
+    	if (obfuscatedSettings.contains(name))
+    		return ObfuscatedString.unobfuscate(setting.value);
+    	return setting.value;
     }
     
     /** Set the value of a setting */
@@ -37,7 +41,10 @@ public class Setting extends Model {
     		setting = new Setting();
     		setting.name = name;
     	}
-    	setting.value = value;
+    	if (obfuscatedSettings.contains(name))
+    		setting.value = ObfuscatedString.obfuscate(value);
+    	else
+    		setting.value = value;
     	setting.save();
     }
     

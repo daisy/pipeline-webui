@@ -107,9 +107,7 @@ public class Login extends Controller {
     public static Result logout() {
         session().clear();
         flash("success", "You've been logged out");
-        return redirect(
-            routes.Login.login()
-        );
+        return redirect(routes.Login.login());
     }
 
 }

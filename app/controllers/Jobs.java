@@ -1,14 +1,7 @@
 package controllers;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.io.Writer;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -55,7 +48,7 @@ public class Jobs extends Controller {
 		Pipeline2WSResponse jobs = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
 		
 		if (jobs.status != 200) {
-			return Application.error(jobs.status, jobs.statusName, jobs.statusDescription, "");
+			return Application.error(jobs.status, jobs.statusName, jobs.statusDescription, jobs.asText());
 		}
 		
 		List<Job> jobList = new ArrayList<Job>();
@@ -65,7 +58,7 @@ public class Jobs extends Controller {
 			
 			Job job = Job.findById(XPath.selectText("@id", jobNode, Pipeline2WS.ns));
 			if (job == null) {
-				Logger.error("No job with id "+XPath.selectText("@id", jobNode, Pipeline2WS.ns)+" was found.");
+				Logger.warn("No job with id "+XPath.selectText("@id", jobNode, Pipeline2WS.ns)+" was found.");
 			} else {
 				job.href = XPath.selectText("@href", jobNode, Pipeline2WS.ns);
 				job.status = XPath.selectText("@status", jobNode, Pipeline2WS.ns);
@@ -104,7 +97,7 @@ public class Jobs extends Controller {
 		Pipeline2WSResponse response = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, null);
 
 		if (response.status != 200 && response.status != 201) {
-			return Application.error(response.status, response.statusName, response.statusDescription, "");
+			return Application.error(response.status, response.statusName, response.statusDescription, response.asText());
 		}
 		
 		pipeline2.models.Job job = new pipeline2.models.Job(response.asXml());
@@ -126,7 +119,7 @@ public class Jobs extends Controller {
 			Job.lastStatus.put(job.id, job.status);
 		}
 
-		return ok(views.html.Jobs.getJob.render(job, webuiJob.nicename));
+		return ok(views.html.Jobs.getJob.render(job, webuiJob));
 	}
 
 	public static Result getResult(String id) {
@@ -149,6 +142,8 @@ public class Jobs extends Controller {
 			return redirect(routes.Login.login());
 		
 		Pipeline2WSResponse result = pipeline2.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
+		
+		// TODO: check content type of incoming stream? Implement result.getContentType() ?
 		
 		response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
 		response().setContentType("application/zip");
@@ -176,46 +171,46 @@ public class Jobs extends Controller {
 			return redirect(routes.Login.login());
 
 		Pipeline2WSResponse jobLog = pipeline2.Jobs.getLog(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-		InputStream responseStream = jobLog.asStream();
-		String responseText = "";
-
-		if (responseStream != null) {
-			Writer writer = new StringWriter();
-			char[] buffer = new char[1024];
-			try {
-				Reader reader = new BufferedReader(new InputStreamReader(responseStream, "UTF-8"));
-				int n;
-				while ((n = reader.read(buffer)) != -1) {
-					writer.write(buffer, 0, n);
-				}
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} finally {
-				try {
-					responseStream.close();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			responseText = writer.toString();
-		} else {        
-			responseText = "";
-		}
+//		InputStream responseStream = jobLog.asStream();
+//		String responseText = "";
+//
+//		if (responseStream != null) {
+//			Writer writer = new StringWriter();
+//			char[] buffer = new char[1024];
+//			try {
+//				Reader reader = new BufferedReader(new InputStreamReader(responseStream, "UTF-8"));
+//				int n;
+//				while ((n = reader.read(buffer)) != -1) {
+//					writer.write(buffer, 0, n);
+//				}
+//			} catch (UnsupportedEncodingException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} finally {
+//				try {
+//					responseStream.close();
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//			}
+//			responseText = writer.toString();
+//		} else {        
+//			responseText = "";
+//		}
 
 		if (jobLog.status != 200 && jobLog.status != 201 && jobLog.status != 204) {
-			return Application.error(jobLog.status, jobLog.statusName, jobLog.statusDescription, responseText);
+			return Application.error(jobLog.status, jobLog.statusName, jobLog.statusDescription, jobLog.asText());
 		}
 
 		if (jobLog.status == 204) {
 			return ok(views.html.Jobs.emptyLog.render(id));
 
 		} else {
-			String[] lines = responseText.split("\n");
+			String[] lines = jobLog.asText().split("\n");
 			return ok(views.html.Jobs.getLog.render(id, Arrays.asList(lines)));
 		}
 	}
@@ -237,7 +232,7 @@ public class Jobs extends Controller {
 
 		Map<String, String[]> params = request().body().asFormUrlEncoded();
 		if (params == null) {
-			return internalServerError("Internal server error: could not read form data.");
+			return Application.error(500, "Internal Server Error", "Could not read form data", request().body().asText());
 		}
 
 		String id = params.get("id")[0];
@@ -253,7 +248,7 @@ public class Jobs extends Controller {
 
 		// Get a description of the script from Pipeline 2 Web Service
 		Pipeline2WSResponse scriptResponse = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-		if (scriptResponse.status != 200) { return Application.error(scriptResponse.status, scriptResponse.statusName, scriptResponse.statusDescription, ""); }
+		if (scriptResponse.status != 200) { return Application.error(scriptResponse.status, scriptResponse.statusName, scriptResponse.statusDescription, scriptResponse.asText()); }
 		Script script = new Script(scriptResponse);
 
 		// Parse all arguments
@@ -381,15 +376,15 @@ public class Jobs extends Controller {
 			Logger.debug("Created context directory: "+contextDir.getAbsolutePath());
 
 			// ---------- Copy or unzip all uploads to a common directory ----------
-			Logger.info("number of uploads: "+uploads.size());
+			Logger.debug("number of uploads: "+uploads.size());
 			for (Long uploadId : uploads.keySet()) {
 				Upload upload = uploads.get(uploadId);
 				if (upload.isZip()) {
 					//					if (contextZipUpload != null && contextZipUpload.id == upload.id) {
-					//						Logger.info("not unzipping context zip ("+upload.getFile().getAbsolutePath()+")");
+					//						Logger.debug("not unzipping context zip ("+upload.getFile().getAbsolutePath()+")");
 					//						continue;
 					//					}
-					Logger.info("unzipping "+upload.getFile()+" to contextDir");
+					Logger.debug("unzipping "+upload.getFile()+" to contextDir");
 					try {
 						utils.Files.unzip(upload.getFile(), contextDir);
 					} catch (IOException e) {
@@ -399,7 +394,7 @@ public class Jobs extends Controller {
 				} else {
 					File from = upload.getFile();
 					File to = new File(contextDir, from.getName());
-					Logger.info("copying "+from+" to "+to);
+					Logger.debug("copying "+from+" to "+to);
 					try {
 						utils.Files.copy(from, to); // We could do file.renameTo here to move it instead of making a copy, but copying makes it easier in case we need to re-run a job
 					} catch (IOException e) {
