@@ -23,15 +23,16 @@
 			@if(arg.desc.length > 0){
 				<span class="help-block">@arg.desc</span>
 			}
+			<span class="help-block"><em><!--TODO-->NOTE: Lists of strings are not yet supported in the Pipeline 2 Web UI. The input fields above are meant as a demonstration of how the string input widget will look like.</em></span>
 		</div>
 	</div>
 	
 }else{
 	
 	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
-		<label class="control-label">@arg.nicename</label>
+		<label class="control-label" for="@{arg.kind}-@{arg.name}">@arg.nicename</label>
 		<div class="controls">
-			<input name="@{arg.kind}-@{arg.name}" type="text"/>
+			<input name="@{arg.kind}-@{arg.name}" id="@{arg.kind}-@{arg.name}" type="text"/>
 			@if(arg.desc.length > 0){
 				<span class="help-block">@arg.desc</span>
 			}

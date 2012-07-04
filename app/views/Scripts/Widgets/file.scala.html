@@ -3,29 +3,29 @@
 @if(arg.sequence){
 	
 	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
-		<label class="control-label">@arg.nicename</label>
-		<!-- TODO: javascript to auto-populate the list -->
-		<!-- TODO: add drag'n'drop support for reordering items -->
+		<label class="control-label" id="@{arg.kind}-@{arg.name}-label">@arg.nicename</label>
+		<!-- TODO: add drag'n'drop support for reordering items? -->
 		<div class="controls">
-			<input type="hidden" id="@{arg.kind}-@{arg.name}" name="@{arg.kind}-@{arg.name}" value=""/>
-			<div class="row"></div>
+			<input type="hidden" name="@{arg.kind}-@{arg.name}" id="@{arg.kind}-@{arg.name}" value=""/>
 			<div class="row">
 				<div class="span">
-					<select style="width:auto;min-width:220px;" id="@{arg.kind}-@{arg.name}-all" multiple="multiple" size="10" class="all-files">
+					<label for="@{arg.kind}-@{arg.name}-all" id="@{arg.kind}-@{arg.name}-all-label">Available files</label>
+					<select style="width:auto;min-width:220px;" id="@{arg.kind}-@{arg.name}-all" multiple="multiple" size="10" class="all-files" aria-labelledby="@{arg.kind}-@{arg.name}-all-label @{arg.kind}-@{arg.name}-label">
 						<optgroup id="@{arg.kind}-@{arg.name}-suggested" label="Suggested files"></optgroup>
 						<optgroup id="@{arg.kind}-@{arg.name}-other" label="Other files"></optgroup>
 					</select>
 				</div>
-				<div class="span">
+				<div class="span" style="padding-top:50px;">
 					<button type="button" id="@{arg.kind}-@{arg.name}-add" class="btn" style="white-space:nowrap; width:120px;">Add <i class="icon-arrow-right"></i></button><br/>
 					<button type="button" id="@{arg.kind}-@{arg.name}-remove" class="btn" style="white-space:nowrap; width:120px;"><i class="icon-arrow-left"></i> Remove</button>
 				</div>
 				<div class="span scrollable">
-					<select style="width:auto;min-width:220px;" id="@{arg.kind}-@{arg.name}-selected" multiple="multiple" size="10">
+					<label for="@{arg.kind}-@{arg.name}-selected" id="@{arg.kind}-@{arg.name}-selected-label">Selected files</label>
+					<select style="width:auto;min-width:220px;" id="@{arg.kind}-@{arg.name}-selected" multiple="multiple" size="10" aria-labelledby="@{arg.kind}-@{arg.name}-selected-label @{arg.kind}-@{arg.name}-label">
 					</select>
 				</div>
 				@if(arg.ordered){
-					<div class="span">
+					<div class="span" style="padding-top:50px;">
 						<button type="button" id="@{arg.kind}-@{arg.name}-up" class="btn" style="white-space:nowrap; width:120px;"><i class="icon-arrow-up"></i> Move up</button><br/>
 						<button type="button" id="@{arg.kind}-@{arg.name}-down" class="btn" style="white-space:nowrap; width:120px;"><i class="icon-arrow-down"></i> Move down</button>
 					</div>
@@ -128,10 +128,13 @@
 					
 					/* Function called right before submitting the form. */
 					Job.onSubmit(function(){
+						console.log("calculating submit value for @{arg.kind}-@{arg.name}...");
 						var value = [];
+						console.log("for-each", $("#@{arg.kind}-@{arg.name}-selected option"));
 						$.each($("#@{arg.kind}-@{arg.name}-selected option"), function(i, e) {
 							value.push($(e).attr("value"));
 						});
+						console.log("value", value);
 						$('#@{arg.kind}-@{arg.name}').attr("value", value.join());
 					});
 				});
@@ -142,10 +145,9 @@
 }else{
 	
 	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
-		<label class="control-label">@arg.nicename</label>
-		<!-- TODO: javascript to auto-populate the list -->
+		<label class="control-label" for="@{arg.kind}-@{arg.name}">@arg.nicename</label>
 		<div class="controls">
-			<select name="@{arg.kind}-@{arg.name}">
+			<select name="@{arg.kind}-@{arg.name}" id="@{arg.kind}-@{arg.name}">
 				<optgroup id="@{arg.kind}-@{arg.name}-suggested" label="Supported files"></optgroup>
 				<optgroup id="@{arg.kind}-@{arg.name}-other" label="Other files"></optgroup>
 			</select>

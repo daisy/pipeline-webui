@@ -12,9 +12,9 @@
         
         <div class="form-horizontal">
 			<div class="control-group @("error".when(globalForm.error("allowGuests") != null))" id="allowGuestsGroup">
-				<label class="control-label">Allow guest login</label>
+				<label class="control-label" id="updateGlobalPermissions-allowGuests-label" for="updateGlobalPermissions-allowGuests" aria-label="updateGlobalPermissions-allowGuests">Allow guest login</label>
 				<div class="controls">
-					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
+					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="updateGlobalPermissions-allowGuests-label" id="updateGlobalPermissions-allowGuests">
 						<button type="button" name="allowGuests-on" class="btn  @("active".when(globalForm.field("allowGuests").valueOr(Setting.get("guest.allowGuests"))=="true"))" id="allowGuests-on"
 							aria-role="radio"                             aria-checked="@(globalForm.field("allowGuests").valueOr(Setting.get("guest.allowGuests"))=="true")"
 							onclick="toggleRadio('allowGuests', true,                  '@(globalForm.field("allowGuests").valueOr(Setting.get("guest.allowGuests")))');">Yes</button>
@@ -29,9 +29,9 @@
 			</div>
 			
 			<div class="control-group @("error".when(globalForm.error("hideAdvancedOptions") != null))" id="hideAdvancedOptionsGroup">
-				<label class="control-label">Hide advanced options</label>
+				<label class="control-label" id="updateGlobalPermissions-hideAdvancedOptions-label" for="updateGlobalPermissions-hideAdvancedOptions" aria-label="updateGlobalPermissions-hideAdvancedOptions">Hide advanced options</label>
 				<div class="controls">
-					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
+					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="updateGlobalPermissions-hideAdvancedOptions-label" id="updateGlobalPermissions-hideAdvancedOptions">
 						<button type="button" name="hideAdvancedOptions-on" class="btn  @("active".when(globalForm.field("hideAdvancedOptions").valueOr(Setting.get("jobs.hideAdvancedOptions"))=="true"))" id="hideAdvancedOptions-on"
 							aria-role="radio"                             aria-checked="@(globalForm.field("hideAdvancedOptions").valueOr(Setting.get("jobs.hideAdvancedOptions"))=="true")"
 							onclick="toggleRadio('hideAdvancedOptions', true,                  '@(globalForm.field("hideAdvancedOptions").valueOr(Setting.get("jobs.hideAdvancedOptions")))');">Yes</button>

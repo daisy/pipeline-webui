@@ -1,3 +1,7 @@
+# General temp files
+.DS_Store
+*.ser
+*.pyc
 logs
 project/project
 project/target
@@ -5,3 +9,20 @@ target
 tmp
 .history
 dist
+bin
+
+# Default uploads directory
+uploads
+
+# IDE and editors
+*~
+.idea
+nbproject
+eclipse
+.amateras
+.settings
+.classpath
+.project
+*.iml
+*.ipr
+*.iws

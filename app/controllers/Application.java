@@ -28,7 +28,7 @@ public class Application extends Controller {
 	
 	public static Result theme(String file) {
 		if (file.endsWith(".css")) {
-			String theme = Setting.get("theme");
+			String theme = Setting.get("branding.theme");
 			if (new File("public/stylesheets/themes/"+theme+file).exists())
 				return redirect(routes.Assets.at("stylesheets/themes/"+theme+file));
 			return redirect(routes.Assets.at("stylesheets/"+file));
@@ -37,7 +37,7 @@ public class Application extends Controller {
 	}
 	
 	public static Result themeImage(String file) {
-		String theme = Setting.get("theme");
+		String theme = Setting.get("branding.theme");
 		if (new File("public/images/themes/"+theme+file).exists())
 			return redirect(routes.Assets.at("images/themes/"+theme+file));
 		return redirect(routes.Assets.at("images/"+file));

@@ -11,7 +11,7 @@
 	  <li><a href="#temporaryDirectoryForUploads">Temporary directory for uploads</a></li>
   	  <li><a href="#eMailSettings">E-mail settings</a></li>
   	  <li><a href="#jobCleanup">Job Cleanup</a></li>
-	  <li><a href="#visualThemes">Visual Themes</a></li>
+	  <li><a href="#branding">Branding</a></li>
     </ul>
   </div>
   <script type="text/javascript">
@@ -143,10 +143,10 @@
 </section>
 <hr/>
 
-<section id="visualThemes">
-	<h2>Visual themes</h2>
+<section id="branding">
+	<h2>Branding</h2>
 	<br/>
-	@views.html.Administrator.Forms.setVisualTheme(forms.setVisualThemeForm, routes.Administrator.postSettings(), null)
+	@views.html.Administrator.Forms.configureBranding(forms.configureBrandingForm, routes.Administrator.postSettings(), null)
 </section>
 <hr style="padding-bottom: 300px;"/>
 

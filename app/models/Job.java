@@ -41,6 +41,7 @@ public class Job extends Model implements Comparable<Job> {
 	public Date started;
 	public Date finished;
 	public Long user;
+	public String guestEmail; // Guest users may enter an e-mail address to receive notifications
 
 	// Notification flags
 	public boolean notifiedCreated;
@@ -64,7 +65,10 @@ public class Job extends Model implements Comparable<Job> {
 		this.created = new Date();
 		this.notifiedCreated = false;
 		this.notifiedComplete = false;
-		this.userNicename = User.findById(user.id).name;
+		if (user.id < 0)
+			this.userNicename = Setting.get("guest.name");
+		else
+			this.userNicename = User.findById(user.id).name;
 	}
 
 	public int compareTo(Job other) {
@@ -100,8 +104,6 @@ public class Job extends Model implements Comparable<Job> {
 						Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) + 1 : 0;
 						
 						Pipeline2WSResponse wsJob = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, fromSequence);
-						
-						Logger.debug(utils.XML.toString(wsJob.asXml()));
 						
 						if (wsJob.status != 200 && wsJob.status != 201) {
 							return;

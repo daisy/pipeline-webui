@@ -9,6 +9,7 @@ import models.User;
 import play.Logger;
 import play.Play;
 import play.data.Form;
+import play.data.validation.ValidationError;
 import play.mvc.*;
 
 public class Account extends Controller {
@@ -69,7 +70,11 @@ public class Account extends Controller {
 			// Changed password
 			changedPassword = true;
 			
-			if (!filledForm.field("newPassword").valueOr("").equals(filledForm.field("repeatPassword").valueOr(""))) {
+			if (filledForm.field("newPassword") != null && filledForm.field("newPassword").valueOr("").length() < 6) {
+				// TODO: @Constraints.MinLength(6) doesn't seem to work for some reason, so checking it manually here for now
+				filledForm.reject("newPassword", "The password must be at least 6 characters long.");
+			
+			} else if (!filledForm.field("newPassword").valueOr("").equals(filledForm.field("repeatPassword").valueOr(""))) {
 				filledForm.reject("repeatPassword", "Passwords don't match.");
 			
 			} else if (filledForm.field("password").valueOr("").equals("")) {
@@ -83,7 +88,6 @@ public class Account extends Controller {
 			
 		} else if (filledForm.errors().containsKey("password")) {
 			filledForm.errors().get("password").clear(); // No need to check the old password if the user isn't trying to set a new password
-			Logger.debug("deleted all password error messages");
 		}
 		
 		if (!changedName && !changedEmail && !changedPassword) {
@@ -127,7 +131,7 @@ public class Account extends Controller {
 			return redirect(routes.Login.login());
 		
 		if (resetUid == null || !resetUid.equals(user.getActivationUid()))
-			return redirect(routes.Login.login());
+			return forbidden();
 		
 		return ok(views.html.Account.resetPassword.render(form(User.class), email, resetUid, user.active));
 	}
@@ -154,6 +158,10 @@ public class Account extends Controller {
 		
 		Form<User> filledForm = resetPasswordForm.bindFromRequest();
         
+		// TODO: @Constraints.MinLength(6) doesn't seem to work for some reason, so checking it manually here for now
+		if (filledForm.field("password").valueOr("").length() < 6)
+			filledForm.reject("password", "The password must be at least 6 characters long.");
+		
 		if (!filledForm.field("password").valueOr("").equals("") && !filledForm.field("password").valueOr("").equals(filledForm.field("repeatPassword").value()))
     		filledForm.reject("repeatPassword", "Password doesn't match.");
         

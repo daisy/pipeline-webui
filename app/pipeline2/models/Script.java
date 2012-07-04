@@ -166,7 +166,6 @@ public class Script {
 	private static List<String> parseTypeMediaTypes(String mediaTypesString) {
 		if (!(mediaTypesString instanceof String))
 			return new ArrayList<String>();
-		Logger.debug("mediaTypeString: '"+mediaTypesString+"'");
 		mediaTypesString = parseTypeString(mediaTypesString);
 		String[] mediaTypes = (mediaTypesString==null?"":mediaTypesString).split(" ");
 		List<String> mediaTypesList = new ArrayList<String>();

@@ -19,9 +19,9 @@
         		
        		}else{
 	        	<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.id && userForm.error("resetPassword") != null))" id="user-@{user.id}-resetPasswordGroup">
-					<label for="user-@{user.id}-resetPassword" class="control-label">Password</label>
+					<label for="user-@{user.id}-resetPassword" class="control-label" id="updateUser-@{user.id}-password-label">Password</label>
 					<div class="controls">
-						<button name="resetPassword" id="user-@{user.id}-resetPassword" class="btn" onclick="window.location='@{alternativeRoute}?formName=resetPassword&userid=@{user.id}';return false;"><i class="icon-envelope"></i> @if(user.active){Send password reset link}else{Send new activation link}</button>
+						<button name="resetPassword" id="user-@{user.id}-resetPassword" class="btn" onclick="window.location='@{alternativeRoute}?formName=resetPassword&userid=@{user.id}';return false;" aria-labelledby="updateUser-@{user.id}-password-label"><i class="icon-envelope"></i> @if(user.active){Send password reset link}else{Send new activation link}</button>
 						@if(user.active){
 							<span class="help-inline">An e-mail will be sent to @user.email, containing a link where @user.name can reset their password.</span>
 						}else{
@@ -67,9 +67,9 @@
 				</div>
 				
 				<div class="control-group @("error".when(userForm.field("userid").valueOr("") == (""+user.id) && userForm.error("admin") != null))" id="user-@{user.id}-adminGroup">
-					<label class="control-label">Administrator</label>
+					<label class="control-label" id="updateUser-@{user.id}-admin-label" for="user-@{user.id}-admin" aria-label="user-@{user.id}-admin">Administrator</label>
 					<div class="controls">
-						<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
+						<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="updateUser-@{user.id}-admin-label" id="user-@{user.id}-admin">
 							<button type="button" name="admin-on" class="btn @("active".when(user.admin))" id="user-@{user.id}-admin-on"
 								aria-role="radio" aria-checked="true"
 								onclick="toggleRadio('user-@{user.id}-admin', true, '@user.admin');">Yes</button>

@@ -21,6 +21,18 @@ public class Global extends GlobalSettings {
 	public synchronized void onStart(Application app) {
 		// Application has started...
 		
+		if (Setting.get("branding.title") == null)
+			Setting.set("branding.title", "DAISY Pipeline 2");
+		
+		if (Setting.get("branding.theme") == null)
+			Setting.set("branding.theme", "");
+		
+		if (Setting.get("jobs.hideAdvancedOptions") == null)
+			Setting.set("jobs.hideAdvancedOptions", "true");
+		
+		if (Setting.get("jobs.deleteAfterDuration") == null)
+			Setting.set("jobs.deleteAfterDuration", "0");
+		
 		User.notificationQueues = new ConcurrentHashMap<Long,List<Notification>>();
 		User.websockets = new ConcurrentHashMap<Long,List<WebSocket.Out<JsonNode>>>();
 		
@@ -54,7 +66,7 @@ public class Global extends GlobalSettings {
 				Duration.create(1, TimeUnit.MINUTES),
 				new Runnable() {
 					public void run() {
-						if (Setting.get("jobs.deleteAfterDuration") == null || "0".equals(Setting.get("jobs.deleteAfterDuration")))
+						if ("0".equals(Setting.get("jobs.deleteAfterDuration")))
 							return;
 						
 						Date timeoutDate = new Date(new Date().getTime() - Long.parseLong(Setting.get("jobs.deleteAfterDuration")));

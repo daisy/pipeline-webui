@@ -77,14 +77,20 @@ public class Jobs extends Controller {
 		
 		return ok(views.html.Jobs.getJobs.render(jobList));
 	}
-
+	
 	public static Result getJob(String id) {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
 		
-		if (request().queryString().containsKey("userid") && request().queryString().get("userid").length > 0) {
-			Long userId = Long.parseLong(request().queryString().get("userid")[0]);
+		if (id.startsWith("guest")) {
+			Logger.debug(">>> guest");
+			Long userId = Long.parseLong("-"+id.split("-", 3)[1]);
+			Logger.debug(">>> "+userId);
+			id = id.substring(6+(userId+"").length());
+			Logger.debug(">>> "+id);
 			if (userId < 0) {
+				Logger.debug(">>> "+userId+" < 0");
+				Logger.debug("userid parameter set; logging in as given guest user");
 				session("userid", ""+userId);
 		    	session("name", models.Setting.get("guest.name"));
 		    	session("email", "");
@@ -96,9 +102,9 @@ public class Jobs extends Controller {
 		User user = User.authenticate(session("userid"), session("email"), session("password"));
 		if (user == null)
 			return redirect(routes.Login.login());
-
+		
 		Pipeline2WSResponse response = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, null);
-
+		
 		if (response.status != 200 && response.status != 201) {
 			return Application.error(response.status, response.statusName, response.statusDescription, response.asText());
 		}
@@ -111,7 +117,7 @@ public class Jobs extends Controller {
 			Logger.debug("Job #"+job.id+" was not found.");
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
-		if (webuiJob.user != user.id)
+		if (!webuiJob.user.equals(user.id))
 			return forbidden();
 		
 		if (!Job.lastMessageSequence.containsKey(job.id) && job.messages.size() > 0) {
@@ -218,10 +224,6 @@ public class Jobs extends Controller {
 		}
 	}
 
-	//                                                          kind    position  part      name
-	private static final Pattern PARAM_NAME = Pattern.compile("^([A-Za-z]+)(\\d*)([A-Za-z]*?)-(.*)$");
-	private static final Pattern FILE_REFERENCE = Pattern.compile("^upload(\\d+)-file(\\d+)$");
-
 	@Transactional
 	public static Result postJob() {
 		if (FirstUse.isFirstUse())
@@ -239,107 +241,19 @@ public class Jobs extends Controller {
 		}
 
 		String id = params.get("id")[0];
-		String href = Setting.get("dp2ws.endpoint")+"/scripts/"+id; // TODO: will be unneccessary in next update of Web API ?
-
-		// Get all referenced uploads from DB
-		Map<Long,Upload> uploads = new HashMap<Long,Upload>();
-		for (String uploadId : params.get("uploads")[0].split(",")) {
-			if ("".equals(uploadId))
-				continue;
-			Upload upload = Upload.findById(Long.parseLong(uploadId));
-			if (upload != null && upload.user == user.id)
-				uploads.put(upload.id, upload);
-		}
 
 		// Get a description of the script from Pipeline 2 Web Service
 		Pipeline2WSResponse scriptResponse = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
 		if (scriptResponse.status != 200) { return Application.error(scriptResponse.status, scriptResponse.statusName, scriptResponse.statusDescription, scriptResponse.asText()); }
 		Script script = new Script(scriptResponse);
-
-		// Parse all arguments
-		List<Argument> arguments = new ArrayList<Argument>();
-		for (String param : params.keySet()) {
-			Matcher matcher = PARAM_NAME.matcher(param);
-			if (!matcher.find()) {
-				Logger.debug("Unable to parse argument parameter: "+param);
-			} else {
-				String kind = matcher.group(1);
-				String name = matcher.group(4);
-				Logger.debug(kind+": "+name);
-
-				Argument argument = null;
-				for (Argument arg : script.arguments) {
-					Logger.debug(arg.name+" equals "+name+" ?");
-					if (arg.name.equals(name)) {
-						argument = arg;
-						break;
-					}
-				}
-				if (argument == null) {
-					Logger.debug("'"+name+"' is not an argument for the script '"+id+"'; ignoring it");
-					continue;
-				}
-
-				if ("anyFileURI".equals(argument.xsdType)) {
-					if (argument.sequence) { // Multiple files
-						ArgFiles argFiles = new ArgFiles(argument);
-						for (int i = 0; i < params.get(param).length; i++) {
-							matcher = FILE_REFERENCE.matcher(params.get(param)[i]);
-							if (!matcher.find()) {
-								Logger.debug("Unable to parse file reference: "+params.get(param)[i]);
-							} else {
-								Long uploadId = Long.parseLong(matcher.group(1));
-								Integer fileNr = Integer.parseInt(matcher.group(2));
-								argFiles.hrefs.add(uploads.get(uploadId).listFiles().get(fileNr).href);
-							}
-						}
-						arguments.add(argFiles);
-
-					} else { // Single file
-						matcher = FILE_REFERENCE.matcher(params.get(param)[0]);
-						if (!matcher.find()) {
-							Logger.debug("Unable to parse file reference: "+params.get(param)[0]);
-						} else {
-							Long uploadId = Long.parseLong(matcher.group(1));
-							Integer fileNr = Integer.parseInt(matcher.group(2));
-							
-							if (uploads.containsKey(uploadId)) {
-								arguments.add( new ArgFile(argument, uploads.get(uploadId).listFiles().get(fileNr).href) );
-								
-							} else {
-								Logger.warn("No such upload: "+uploadId);
-							}
-							
-						}
-					}
-
-				} else if ("boolean".equals(argument.xsdType)) {
-					// Boolean
-					arguments.add( new ArgBoolean(argument, new Boolean(params.get(param)[0])) );
-
-				} else if ("parameters".equals(argument.xsdType)) {
-					// TODO: parameters are not implemented yet
-
-				} else { // Unknown types are treated like strings
-
-					if (argument.sequence) { // Multiple strings
-						ArgStrings argStrings = new ArgStrings(argument);
-						for (int i = 0; i < params.get(param).length; i++) {
-							argStrings.add(params.get(param)[i]);
-						}
-						arguments.add(argStrings);
-
-					} else { // Single string
-						arguments.add( new ArgString(argument, params.get(param)[0]) );
-					}
-
-				}
-			}
-		}
+		
+		// Parse and validate the submitted form
+		Scripts.ScriptForm scriptForm = new Scripts.ScriptForm(user.id, script, params);
+		scriptForm.validate();
 
 		File contextZipFile = null;
 
-		if (uploads.size() > 0) {
+		if (scriptForm.uploads.size() > 0) {
 
 			// ---------- See if there's an existing ZIP we can use as the context ----------
 			//	models.Upload contextZipUpload = null;
@@ -381,9 +295,9 @@ public class Jobs extends Controller {
 			Logger.debug("Created context directory: "+contextDir.getAbsolutePath());
 
 			// ---------- Copy or unzip all uploads to a common directory ----------
-			Logger.debug("number of uploads: "+uploads.size());
-			for (Long uploadId : uploads.keySet()) {
-				Upload upload = uploads.get(uploadId);
+			Logger.debug("number of uploads: "+scriptForm.uploads.size());
+			for (Long uploadId : scriptForm.uploads.keySet()) {
+				Upload upload = scriptForm.uploads.get(uploadId);
 				if (upload.isZip()) {
 					//					if (contextZipUpload != null && contextZipUpload.id == upload.id) {
 					//						Logger.debug("not unzipping context zip ("+upload.getFile().getAbsolutePath()+")");
@@ -445,8 +359,10 @@ public class Jobs extends Controller {
 		else
 			Logger.debug("Context ZIP file is present, submitting job with context ZIP file");
 		
-		
-		Pipeline2WSResponse job = pipeline2.Jobs.post(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), href, arguments, contextZipFile);
+		Pipeline2WSResponse job = pipeline2.Jobs.post(
+				Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"),
+				scriptForm.script.href, scriptForm.script.arguments, contextZipFile
+		);
 		
 		if (job.status != 200 && job.status != 201) {
 			return Application.error(job.status, job.statusName, job.statusDescription, job.asText());
@@ -455,17 +371,17 @@ public class Jobs extends Controller {
 		String jobId = XPath.selectText("/*/@id", job.asXml(), Pipeline2WS.ns);
 		Job webUiJob = new Job(jobId, user);
 		webUiJob.nicename = id;
-		if (uploads != null && uploads.size() > 0) {
+		if (scriptForm.uploads != null && scriptForm.uploads.size() > 0) {
 			String filenames = "";
 			int i = 0;
-			for (Long uploadId : uploads.keySet()) {
+			for (Long uploadId : scriptForm.uploads.keySet()) {
 				if (i > 0)
 					filenames += ", ";
 				if (i++ >= 3) {
 					filenames += "...";
 					break;
 				}
-				filenames += uploads.get(uploadId).getFile().getName();
+				filenames += scriptForm.uploads.get(uploadId).getFile().getName();
 			}
 			if (filenames.length() > 0)
 				webUiJob.nicename = id + " ("+filenames+")";
@@ -473,14 +389,27 @@ public class Jobs extends Controller {
 		webUiJob.started = new Date();
 		webUiJob.save();
 		User.push(webUiJob.user, new Notification("job-started-"+webUiJob.id, webUiJob.started.toString()));
-		for (Long uploadId : uploads.keySet()) {
+		for (Long uploadId : scriptForm.uploads.keySet()) {
 			// associate uploads with job
-			uploads.get(uploadId).job = jobId;
-			uploads.get(uploadId).save();
+			scriptForm.uploads.get(uploadId).job = jobId;
+			scriptForm.uploads.get(uploadId).save();
 		}
 		
 		webUiJob.pushNotifications();
-
+		
+		if (user.id < 0) {
+			jobId = "guest" + user.id + "-" + jobId;
+			if (scriptForm.guestEmail != null) {
+				Account.sendEmail(
+						"Job started: "+webUiJob.nicename,
+						"To view your Pipeline 2 job, go to this web address: <a href=\""+controllers.routes.Jobs.getJob(jobId).absoluteURL(request())+"\">"+controllers.routes.Jobs.getJob(jobId).absoluteURL(request())+"</a>.",
+						"To view your Pipeline 2 job, go to this web address: "+controllers.routes.Jobs.getJob(jobId).absoluteURL(request())+".",
+						scriptForm.guestEmail,
+						scriptForm.guestEmail
+				);
+			}
+		}
+		
 		return redirect(controllers.routes.Jobs.getJob(jobId));
 	}
 

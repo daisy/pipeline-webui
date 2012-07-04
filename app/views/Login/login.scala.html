@@ -92,24 +92,18 @@
 					
 			        <div class="form-actions" style="text-align: right;">
 						<span style="float: left;"><button type="submit" class="btn btn-primary btn-large" id="submit" name="submit">Login</button></span>
+						@if(Setting.get("guest.allowGuests") == "true"){
 						<span>
 							Don't have an account? &nbsp;&nbsp;&nbsp;
 							<button type="button" class="btn btn-large" id="guest-login" name="guest-login" onclick="window.location='@routes.Login.authenticateGuest()';return false;">Log in as guest <i class="icon-hand-right"></i></button>
 						</span>
+						}
 		          	</div>
 		          	
 	          	</fieldset>
 			</div>
 			
         }
-	    
-		<!--
-	        <h2>TODO: Login screen</h2>
-			<ul>
-				<li>Retrieve lost password</li>
-				<li>Log in as guest</li>
-			</ul>
-		-->
 	    
     </div>
   </body>

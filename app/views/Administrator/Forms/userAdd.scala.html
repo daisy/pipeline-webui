@@ -36,9 +36,9 @@
 			</div>
 			
 			<div class="control-group @("error".when("tab" == "new" && userForm != null && userForm.error("admin") != null))" id="user-new-adminGroup">
-				<label class="control-label">Administrator</label>
+				<label class="control-label" id="createUser-admin-label" for="user-new-admin" aria-label="user-new-admin">Administrator</label>
 				<div class="controls">
-					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup">
+					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="createUser-admin-label" id="user-new-admin">
 						<button type="button" name="admin-on" class="btn @("active".when(userForm != null && userForm.field("admin").valueOr("false")=="true"))" id="user-new-admin-on"
 							aria-role="radio" aria-checked="true"
 							onclick="toggleRadio('user-new-admin', true, 'true');return false;">Yes</button>

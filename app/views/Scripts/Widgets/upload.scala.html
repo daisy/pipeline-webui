@@ -23,7 +23,7 @@ window.locale = {
 @helper.form(action = routes.Uploads.postUpload(), 'enctype -> "multipart/form-data", 'id -> "fileupload", 'class -> "form-horizontal"){
 	<fieldset>
 		<div class="control-group">
-			<label class="control-label">Files</label>
+			<label class="control-label" for="upload-button">Files</label>
 			<div class="controls">
 			    <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
 			    <div class="row fileupload-buttonbar">
@@ -32,7 +32,7 @@ window.locale = {
 			            <span class="btn btn-success fileinput-button">
 			                <i class="icon-plus icon-white"></i>
 			                <span>Upload files from my computer</span>
-			                <input type="file" name="files" multiple=""/>
+			                <input type="file" name="files" multiple="" id="upload-button"/>
 			            </span>
 			        </div>
 			        
@@ -112,17 +112,17 @@ window.locale = {
 <script type="text/javascript">
 	/* Instantiate file upload button. */
 	$(function () {
-	    'use strict';
-	
-	    // Initialize the jQuery File Upload widget:
-	    $('#fileupload').fileupload();
-		
-        // Settings:
-        $('#fileupload').fileupload('option', {
-            url: '/uploads',
-            autoUpload: true
-            
-        });
-	    
+		$(function(){
+		    'use strict';
+		    
+		    // Initialize the jQuery File Upload widget:
+		    $('#fileupload').fileupload();
+			
+	        // Settings:
+	        $('#fileupload').fileupload('option', {
+	            url: '@routes.Uploads.postUpload().absoluteURL(request)',
+	            autoUpload: true
+	        });
+		});
 	});
 </script>

@@ -19,9 +19,9 @@
 				    <div class="form-horizontal">
 				    	
 			        	<div class="control-group @("error".when(configureEmailForm.error("smtp") != null))" id="configureEmail-smtp-addressGroup">
-							<label for="smtp" class="control-label">SMTP Address</label>
+							<label for="smtp-smtp" class="control-label" id="configureEmail-smtp-address-label">SMTP Address</label>
 							<div class="controls">
-								<input type="text" name="smtp" id="smtp-smtp" placeholder="IP or domain name" class="input-xlarge"
+								<input type="text" name="smtp" id="smtp-smtp" placeholder="IP or domain name" class="input-xlarge" aria-labelledby="configureEmail-smtp-address-label"
 										value="@configureEmailForm.field("smtp").valueOr(Setting.get("mail.smtp.host"))"
 										onkeyup="if(@{models.Setting.get("mail.smtp.host")==null} || this.value==='@models.Setting.get("mail.smtp.host")')document.getElementById('configureEmail-smtp-addressGroup').style.backgroundColor='#FFF';else document.getElementById('configureEmail-smtp-addressGroup').style.backgroundColor='#DDF';"
 								/>
@@ -32,9 +32,9 @@
 						</div>
 						
 						<div class="control-group @("error".when(configureEmailForm.error("username") != null))" id="configureEmail-smtp-usernameGroup">
-							<label for="username" class="control-label">Username</label>
+							<label for="smtp-username" class="control-label" id="configureEmail-smtp-username-label">Username</label>
 							<div class="controls">
-								<input type="text" autocomplete="off" name="username" id="smtp-username" placeholder="Username" class="input-xlarge"
+								<input type="text" autocomplete="off" name="username" id="smtp-username" placeholder="Username" class="input-xlarge" aria-labelledby="configureEmail-smtp-username-label"
 										value="@configureEmailForm.field("username").valueOr(Setting.get("mail.username"))"
 										onkeyup="if(@{models.Setting.get("mail.username")==null} || this.value==='@models.Setting.get("mail.username")')document.getElementById('configureEmail-smtp-usernameGroup').style.backgroundColor='#FFF';else document.getElementById('configureEmail-smtp-usernameGroup').style.backgroundColor='#DDF';"
 								/>
@@ -45,9 +45,9 @@
 						</div>
 						
 						<div class="control-group @("error".when(configureEmailForm.error("password") != null))" id="configureEmail-smtp-passwordGroup">
-							<label for="password" class="control-label">Password</label>
+							<label for="smtp-password" class="control-label" id="configureEmail-smtp-password-label">Password</label>
 							<div class="controls">
-								<input type="password" autocomplete="off" name="password" id="smtp-password" class="input-xlarge"
+								<input type="password" autocomplete="off" name="password" id="smtp-password" class="input-xlarge" aria-labelledby="configureEmail-smtp-password-label"
 										placeholder="@if(models.Setting.get("mail.password")==null){Password}else{**********}"
 										value="@configureEmailForm.field("password").valueOr("")"
 										onkeyup="if(@{models.Setting.get("mail.password")==null} || this.value==='')document.getElementById('configureEmail-smtp-passwordGroup').style.backgroundColor='#FFF';else document.getElementById('configureEmail-smtp-passwordGroup').style.backgroundColor='#DDF';"
@@ -80,9 +80,9 @@
 				    <div class="form-horizontal">
 						
 						<div class="control-group @("error".when(configureEmailForm.error("username") != null))" id="configureEmail-gmail-usernameGroup">
-							<label for="username" class="control-label">Username</label>
+							<label for="gmail-username" class="control-label" id="configureEmail-gmail-username-label">Username</label>
 							<div class="controls">
-								<input type="text" autocomplete="off" name="username" id="gmail-username" placeholder="Username" class="input-xlarge"
+								<input type="text" autocomplete="off" name="username" id="gmail-username" placeholder="Username" class="input-xlarge" aria-labelledby="configureEmail-gmail-username-label"
 										value="@configureEmailForm.field("username").valueOr(Setting.get("mail.username"))"
 										onkeyup="if(@{models.Setting.get("mail.username")==null} || this.value==='@models.Setting.get("mail.username")')document.getElementById('configureEmail-gmail-usernameGroup').style.backgroundColor='#FFF';else document.getElementById('configureEmail-gmail-usernameGroup').style.backgroundColor='#DDF';"
 								/>
@@ -93,9 +93,9 @@
 						</div>
 						
 						<div class="control-group @("error".when(configureEmailForm.error("password") != null))" id="configureEmail-gmail-passwordGroup">
-							<label for="password" class="control-label">Password</label>
+							<label for="gmail-password" class="control-label" id="configureEmail-gmail-password-label">Password</label>
 							<div class="controls">
-								<input type="password" autocomplete="off" name="password" id="gmail-password" class="input-xlarge"
+								<input type="password" autocomplete="off" name="password" id="gmail-password" class="input-xlarge" aria-labelledby="configureEmail-gmail-password-label"
 										placeholder="@if(models.Setting.get("mail.password")==null){Password}else{**********}"
 										value="@configureEmailForm.field("password").valueOr("")"
 										onkeyup="if(@{models.Setting.get("mail.password")==null} || this.value==='')document.getElementById('configureEmail-gmail-passwordGroup').style.backgroundColor='#FFF';else document.getElementById('configureEmail-gmail-passwordGroup').style.backgroundColor='#DDF';"

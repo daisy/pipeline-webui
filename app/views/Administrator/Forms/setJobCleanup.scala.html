@@ -13,7 +13,7 @@
 				<div class="controls">
 					<input type="number" name="jobcleanup" id="jobcleanup" placeholder="Number of minutes" class="input-xlarge"
 							value="@setJobCleanupForm.field("jobcleanup").valueOr(if (Setting.get("jobs.deleteAfterDuration") != null) (Long.parseLong(models.Setting.get("jobs.deleteAfterDuration"))/60000L)+"" else "0")"
-							onkeyup="if(@{models.Setting.get("jobs.deleteAfterDuration")==null} || this.value==='@{Long.parseLong(models.Setting.get("jobs.deleteAfterDuration"))/60000L}')document.getElementById('setJobCleanup-jobcleanupGroup').style.backgroundColor='#FFF';else document.getElementById('setJobCleanup-jobcleanupGroup').style.backgroundColor='#DDF';"
+							onkeyup="if(this.value==='@{if (models.Setting.get("jobs.deleteAfterDuration")==null) "0" else Long.parseLong(models.Setting.get("jobs.deleteAfterDuration"))/60000L}')document.getElementById('setJobCleanup-jobcleanupGroup').style.backgroundColor='#FFF';else document.getElementById('setJobCleanup-jobcleanupGroup').style.backgroundColor='#DDF';"
 					/> minutes before jobs are deleted.
 					@if(setJobCleanupForm.field("jobcleanup").errors().size() > 0){
 						<span class="help-inline">@setJobCleanupForm.field("jobcleanup").errors().get(0).message()</span>

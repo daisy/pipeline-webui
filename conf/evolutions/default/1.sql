@@ -10,6 +10,7 @@ create table job (
   started                   datetime,
   finished                  datetime,
   user                      bigint,
+  guest_email               varchar(255),
   notified_created          tinyint(1) default 0,
   notified_complete         tinyint(1) default 0,
   constraint pk_job primary key (id))

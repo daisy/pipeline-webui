@@ -26,7 +26,7 @@ import utils.XML;
 
 
 public class Jobs {
-
+	
 	/**
 	 * Get all jobs
 	 * 
@@ -36,7 +36,7 @@ public class Jobs {
 	public static Pipeline2WSResponse get(String endpoint, String username, String secret) {
 		return Pipeline2WS.get(endpoint, "/jobs", username, secret, null);
 	}
-
+	
 	/**
 	 * Helper method for the two post(...) methods that creates the job request document
 	 * 
@@ -58,7 +58,7 @@ public class Jobs {
 		
 		return jobRequestDocument;
 	}
-
+	
 	/**
 	 * Create a job with files
 	 * 
@@ -124,7 +124,7 @@ public class Jobs {
 			return Pipeline2WS.get(endpoint, "/jobs/"+id, username, secret, parameters);
 		}
 	}
-
+	
 	/**
 	 * Delete a single job
 	 * 
@@ -135,7 +135,7 @@ public class Jobs {
 	public static Pipeline2WSResponse delete(String endpoint, String username, String secret, String id) {
 		return null; //TODO Pipeline2WS.delete(endpoint, "/jobs/"+id, username, secret);
 	}
-
+	
 	/**
 	 * Get the result for a job
 	 * 
@@ -147,7 +147,7 @@ public class Jobs {
 	public static Pipeline2WSResponse getResult(String endpoint, String username, String secret, String id) {
 		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/result", username, secret, null);
 	}
-
+	
 	/**
 	 * Get the log file for a job
 	 * 
@@ -158,5 +158,5 @@ public class Jobs {
 	public static Pipeline2WSResponse getLog(String endpoint, String username, String secret, String id) {
 		return Pipeline2WS.get(endpoint, "/jobs/"+id+"/log", username, secret, null);
 	}
-
+	
 }
