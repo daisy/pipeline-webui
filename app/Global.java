@@ -99,7 +99,11 @@ public class Global extends GlobalSettings {
 						if (Setting.get("jobs.deleteAfterDuration") != null && !"0".equals(Setting.get("jobs.deleteAfterDuration")))
 							return;
 						
-						List<pipeline2.models.Job> fwkJobs = pipeline2.models.Job.getJobs(pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret")));
+						String endpoint = Setting.get("dp2ws.endpoint");
+						if (endpoint == null)
+							return;
+						
+						List<pipeline2.models.Job> fwkJobs = pipeline2.models.Job.getJobs(pipeline2.Jobs.get(endpoint, Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret")));
 						List<Job> webUiJobs = Job.find.all();
 						
 						for (Job webUiJob : webUiJobs) {
