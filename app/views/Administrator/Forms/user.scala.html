@@ -37,7 +37,7 @@
 		            <div class="controls">
 		        		<input type="text" name="name" id="user-@{user.id}-name" class="input-xlarge"
 		        			placeholder="&quot;@user.name&quot; is the users current name."
-		        			value="@{if (user.id==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("name").valueOr(""); else user.name;}"
+		        			value="@{if (user.id+""==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("name").valueOr(""); else user.name;}"
 		        			onkeyup="if(this.value==='@user.name')document.getElementById('user-@{user.id}-nameGroup').style.backgroundColor='#FFF';else document.getElementById('user-@{user.id}-nameGroup').style.backgroundColor='#DDF';"/>
 						@if(userForm.field("userid").valueOr("") == ""+user.id && userForm.field("user-@{user.id}-name").errors().size() > 0){
 							@if(userForm.error("name").message.startsWith("error.")){
@@ -54,7 +54,7 @@
 					<div class="controls">
 						<input type="email" name="email" id="user-@{user.id}-email" class="input-xlarge"
 							placeholder="&quot;@user.email&quot; is your current e-mail address."
-							value="@{if (user.id==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("email").valueOr(""); else user.email;}"
+							value="@{if (user.id+""==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("email").valueOr(""); else user.email;}"
 							onkeyup="toggleChanged('user-@{user.id}-email', this.value==='@user.email');"/>
 						@if(userForm.field("userid").valueOr("") == ""+user.id && userForm.field("email").errors().size() > 0){
 							@if(userForm.error("email").message.startsWith("error.")){
@@ -66,7 +66,7 @@
 					</div>
 				</div>
 				
-				<div class="control-group @("error".when(userForm.field("userid").valueOr("") == (""+user.id) && userForm.error("admin") != null))" id="user-@{user.id}-adminGroup">
+				<div class="control-group @("error".when(user.id.toString().equals(userForm.field("userid").valueOr("")) && userForm.error("admin") != null))" id="user-@{user.id}-adminGroup">
 					<label class="control-label" id="updateUser-@{user.id}-admin-label" for="user-@{user.id}-admin" aria-label="user-@{user.id}-admin">Administrator</label>
 					<div class="controls">
 						<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="updateUser-@{user.id}-admin-label" id="user-@{user.id}-admin">

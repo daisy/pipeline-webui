@@ -1,6 +1,5 @@
 package controllers;
 
-import play.Logger;
 import play.mvc.*;
 import play.data.*;
 import models.*;
@@ -45,10 +44,6 @@ public class FirstUse extends Controller {
 	
 	public static Result postFirstUse() {
 		String formName = request().body().asFormUrlEncoded().containsKey("formName") ? request().body().asFormUrlEncoded().get("formName")[0] : "";
-		for (String key : request().body().asFormUrlEncoded().keySet())
-			for (String value : request().body().asFormUrlEncoded().get(key))
-				Logger.debug(key+" : "+value);
-		Logger.debug("formName: "+formName);
 		
 		if ("createAdmin".equals(formName)) {
 			if (!isFirstUse())
