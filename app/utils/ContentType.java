@@ -148,6 +148,11 @@ public class ContentType {
 	public static Map<String, String> parseDocument(String head) {
 		Map<String, String> map = new HashMap<String,String>();
 		
+		if (head == null) {
+			Logger.warn("Document head string == null", new Exception());
+			return map;
+		}
+		
 		// Remove XML prolog
 		int removed = 1;
 		while (removed > 0) {
@@ -157,6 +162,11 @@ public class ContentType {
 			head = COMMENT.matcher(head).replaceFirst("");
 			head = WHITESPACE.matcher(head).replaceFirst("");
 			removed -= head.length();
+		}
+		
+		if (head.length() == 0) {
+			Logger.warn("Document head empty", new Exception());
+			return map;
 		}
 		
 		// Read XML document element name and attributes

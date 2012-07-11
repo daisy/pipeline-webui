@@ -89,6 +89,7 @@ public class Pipeline2WSResponse {
 			} finally {
             	try {
 					bodyStream.close();
+					bodyStream = null;
 				} catch (IOException e) {
 					Logger.error("Unable to close stream while reading response body", e);
 				}

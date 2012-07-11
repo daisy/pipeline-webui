@@ -53,6 +53,7 @@ public class Jobs extends Controller {
 		if (jobs.status != 200) {
 			return Application.error(jobs.status, jobs.statusName, jobs.statusDescription, jobs.asText());
 		}
+		Logger.debug(jobs.asText());
 		
 		List<Job> jobList = new ArrayList<Job>();
 		

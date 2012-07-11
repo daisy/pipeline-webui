@@ -206,6 +206,7 @@ public class Account extends Controller {
 	public static boolean sendEmail(String subject, String html, String text, String recipientName, String recipientEmail) {
 		try {
 			HtmlEmail email = new HtmlEmail();
+			Logger.debug("e-mail password: '"+Setting.get("mail.password")+"'");
 			email.setAuthenticator(new DefaultAuthenticator(Setting.get("mail.username"), Setting.get("mail.password")));
 			email.setDebug(Play.application().isDev());
 			email.setHostName(Setting.get("mail.smtp.host"));

@@ -128,13 +128,10 @@
 					
 					/* Function called right before submitting the form. */
 					Job.onSubmit(function(){
-						console.log("calculating submit value for @{arg.kind}-@{arg.name}...");
 						var value = [];
-						console.log("for-each", $("#@{arg.kind}-@{arg.name}-selected option"));
 						$.each($("#@{arg.kind}-@{arg.name}-selected option"), function(i, e) {
 							value.push($(e).attr("value"));
 						});
-						console.log("value", value);
 						$('#@{arg.kind}-@{arg.name}').attr("value", value.join());
 					});
 				});
