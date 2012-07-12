@@ -372,7 +372,11 @@ public class Jobs extends Controller {
 			}
 
 		}
-
+		
+		Map<String,String> callbacks = new HashMap<String,String>();
+		callbacks.put("messages", routes.Callbacks.postCallback("messages").absoluteURL(request()));
+		callbacks.put("status", routes.Callbacks.postCallback("status").absoluteURL(request()));
+		
 		if (contextZipFile == null)
 			Logger.debug("No files in context, submitting job without context ZIP file");
 		else
@@ -380,7 +384,7 @@ public class Jobs extends Controller {
 		
 		Pipeline2WSResponse job = pipeline2.Jobs.post(
 				Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"),
-				scriptForm.script.href, scriptForm.script.arguments, contextZipFile
+				scriptForm.script.href, scriptForm.script.arguments, contextZipFile, callbacks
 		);
 		
 		if (job.status != 200 && job.status != 201) {
@@ -431,5 +435,5 @@ public class Jobs extends Controller {
 		
 		return redirect(controllers.routes.Jobs.getJob(jobId));
 	}
-
+	
 }

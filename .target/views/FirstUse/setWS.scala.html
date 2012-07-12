@@ -1,0 +1,28 @@
+@(setWSForm: Form[controllers.Administrator.SetWSForm])
+
+@main("First use", "", Array(), Array(), Array()){
+
+  	<div class="page-header">
+       	<h1>Set the Pipeline 2 Web Service endpoint</h1>
+    </div>
+  	
+ 	<p>Please enter the address of the Pipeline 2 Web Service below, along with the authentication ID and secret text to use it.</p>
+ 	<p>You may skip this step now and change the address in the administrator settings at any time later; however you will not be able to use any of the Pipeline 2 scripts until the endpoint is configured. If you have not yet installed the Pipeline 2 framework, please download and install the latest version from the DAISY Pipeline 2 homepage: <a href="http://www.daisy.org/pipeline2" target="_blank">http://www.daisy.org/pipeline2</a>. If you know the address of the Pipeline 2 Web Service you want to connect to but don't have an authentication ID yet, then please check the <a href="http://code.google.com/p/daisy-pipeline/wiki/UserGuideIntro" target="_blank">Pipeline 2 User Guide</a> for more information.</p>
+ 	<p>If you are running the Pipeline 2 framework with the default settings on the same server as this Web UI, then the address is most likely <code>http://localhost:8182/ws</code>.</p>
+  	<hr/>
+  	
+    @if(flash.contains("error")) {
+        <div role="alert" class="alert alert-error">
+            @flash.get("error")
+        </div>
+    }
+    
+    @if(flash.contains("success")) {
+        <div role="alert" class="alert alert-success">
+            @flash.get("success")
+        </div>
+    }
+  	
+  	@views.html.Administrator.Forms.setWS(setWSForm, routes.FirstUse.postFirstUse(), routes.Application.index())
+
+}

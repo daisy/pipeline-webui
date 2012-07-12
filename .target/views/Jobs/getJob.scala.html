@@ -1,0 +1,113 @@
+@(fwkJob: pipeline2.models.Job, uiJob: models.Job)
+
+@main("View job", "", Array("notifications.js")) {
+
+<script type="text/javascript" charset="utf-8">
+$(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(request)", "@routes.Notifications.xhr().absoluteURL(request)");});
+</script>
+
+<h1>Job: @uiJob.nicename <br/><small>(@fwkJob.id)</small></h1>
+
+<p>
+<table>
+<!--<tr><td>Created:</td><td>@uiJob.created</td></tr>-->
+<tr><td>Started:</td><td id="job-started">@uiJob.started</td></tr>
+<tr><td>Finished:</td><td id="job-finished">@uiJob.finished</td></tr>
+</table>
+</p>
+
+<div class="row">
+	<div class="hero-unit" style="text-align:center">
+	
+	<div id="status-done" style="display:none;">
+		<h2 role="status">Job finished successfully!</h1>
+		<a class="btn btn-large btn-success" href="@routes.Jobs.getResult(fwkJob.id)"><i class="icon-download-alt icon-white"></i> Download results</a>
+	</div>
+	
+	<div id="status-running" style="display:none;">
+		<h2 role="status" style="color:#000080;">
+			Job is running
+			<span aria-live="none">
+				<span id="runningDot1"                       >&nbsp;.&nbsp; &nbsp; &nbsp;</span>
+				<span id="runningDot2" style="display: none;">&nbsp;.&nbsp;.&nbsp; &nbsp;</span>
+				<span id="runningDot3" style="display: none;">&nbsp;.&nbsp;.&nbsp;.&nbsp;</span>
+				<script type="text/javascript">
+					window.setInterval(function(){
+						if ($("#runningDot1").is(":visible")) {
+							$("#runningDot1").hide();
+							$("#runningDot2").show();
+							
+						} else if ($("#runningDot2").is(":visible")) {
+							$("#runningDot2").hide();
+							$("#runningDot3").show();
+							
+						} else {
+							$("#runningDot3").hide();
+							$("#runningDot1").show();
+						}
+					},1000);
+				</script>
+			</span>
+		</h2>
+		<br/>
+		@if(fwkJob.messages.size()>0){
+			<ul style="list-style-type:none;text-align:left;padding-top:20px;"><li id="message-latest"><pre>@fwkJob.messages.get(fwkJob.messages.size()-1).text</pre></li></ul>
+		} else {
+			<ul style="list-style-type:none;text-align:left;padding-top:20px;"><li id="message-latest"><pre>&nbsp;</pre></li></ul>
+		}
+	</div>
+	
+	<div id="status-idle" style="display:none;">
+		<h2 role="status" style="color:#000080;">Job is idle</h2>
+		@if(fwkJob.messages.size()>0){
+			<ol start="@fwkJob.messages.get(fwkJob.messages.size()-1).sequence"><li><pre>@fwkJob.messages.get(fwkJob.messages.size()-1).text</pre></li></ol>
+		}
+	</div>
+	
+	<div id="status-error" style="display:none;">
+		<h2 role="status" style="color:#800000;">Job failed</h2>
+		<p>See the message log for details.</p>
+	</div>
+	
+	<script type="text/javascript">
+		$("#status-@(fwkJob.status.toString().toLowerCase())").show();
+	</script>
+	
+	</div>
+</div>
+
+<div class="well">
+	<h2>Other output</h2>
+	<br/>
+	<a class="btn btn-info" href="@routes.Jobs.getLog(fwkJob.id)"><i class="icon-eye-open"></i> Detailed log</a>
+	<!-- Other outputs such as secondary output ports can be listed here -->
+</div>
+
+<h2>Messages</h2>
+
+<ol aria-live="polite" role="log" class="messagelist" id="message-list">
+	@for(message <- fwkJob.messages){
+		<li value="@message.sequence" class="message @("message-error".when(pipeline2.models.job.Message.Level.ERROR==message.level)) @("message-warn".when(pipeline2.models.job.Message.Level.WARNING==message.level))""><code>@message.text</code></li>
+	}
+</ol>
+
+<script type="text/javascript">
+	$(function(){
+		Notifications.listen("job-message-@fwkJob.id", function(message){
+			//if ($("#message-list li").filter(function(i){return $(this).attr("value")===message.sequence;}).size() === 0) {
+				$("#message-list").append('<li value="'+message.sequence+'" class="message '+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><code>'+message.text+'</code></li>');
+				$("#message-latest").html("<pre>"+message.text+"</pre>");
+			//}
+		});
+		Notifications.listen("job-status-@fwkJob.id", function(status){
+			@for(status <- pipeline2.models.Job.Status.values()){
+				$("#status-@(status.toString().toLowerCase())").hide();
+			}
+			$("#status-"+status.toLowerCase()).show();
+		});
+		Notifications.listen("job-created-@fwkJob.id", function(message){ $("#job-created").html(message); });
+		Notifications.listen("job-finished-@fwkJob.id", function(message){ $("#job-finished").html(message); });
+	});
+</script>
+
+}

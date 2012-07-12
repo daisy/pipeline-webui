@@ -1,0 +1,37 @@
+@(guestForm: Form[controllers.Administrator.GuestUser], route: play.api.mvc.Call)
+
+@helper.form(action = route) {
+	
+	<input type="hidden" name="formName" value="updateGuest"/>
+	
+	<fieldset>
+		<legend>Settings for guests</legend>
+        <br/>
+        
+        <div class="form-horizontal">
+        	
+        	<div class="control-group @("error".when(guestForm != null && guestForm.error("name") != null))" id="user-guest-nameGroup">
+        		<label for="user-guest-name" class="control-label">Name</label>
+	            <div class="controls">
+	        		<input type="text" name="name" id="user-guest-name" class="input-xlarge"
+	        			placeholder="&quot;@models.Setting.get("guest.name")&quot; is the users current name."
+	        			value="@{if (guestForm != null && guestForm.hasErrors()) guestForm.field("name").valueOr(""); else models.Setting.get("guest.name");}"
+	        			onkeyup="if(this.value==='@models.Setting.get("guest.name")')document.getElementById('user-guest-nameGroup').style.backgroundColor='#FFF';else document.getElementById('user-guest-nameGroup').style.backgroundColor='#DDF';"/>
+					@if(guestForm != null && guestForm.field("user-guest-name").errors().size() > 0){
+						@if(guestForm.error("name").message.startsWith("error.")){
+							<span class="help-inline">The guest user must have a name, and it must not consist of any special characters.</span>
+						}else{
+							<span class="help-inline">@guestForm.error("name").message</span>
+						}
+					}
+	            </div>
+			</div>
+			
+			<div class="form-actions">
+				<button type="submit" class="btn btn-primary" id="user-guest-submit" name="submit">Save changes</button>
+				<button type="reset" class="btn" id="user-guest-reset" name="reset" onclick="toggleChanged('user-guest-name', '@models.Setting.get("guest.name")', '@models.Setting.get("guest.name")');">Clear changes</button>
+			</div>
+			
+		</div>
+	</fieldset>
+}

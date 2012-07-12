@@ -1,0 +1,153 @@
+@(forms: controllers.Administrator.AdminForms, userList: List[User])
+
+@main("Administrator settings", "admin") {
+
+<header class="page-header">
+  <h1>Administrator settings</h1>
+  <div class="subnav">
+    <ul class="nav nav-pills">
+      <li><a href="#usersAndPermissions">Users and Permissions</a></li>
+      <li><a href="#pipeline2WebServiceEndpoint">Pipeline 2 Web Service Endpoint</a></li>
+	  <li><a href="#temporaryDirectoryForUploads">Temporary directory for uploads</a></li>
+  	  <li><a href="#eMailSettings">E-mail settings</a></li>
+  	  <li><a href="#jobCleanup">Job Cleanup</a></li>
+	  <li><a href="#branding">Branding</a></li>
+    </ul>
+  </div>
+  <script type="text/javascript">
+	// http://twitter.github.com/bootstrap/assets/js/application.js
+	// fix sub nav on scroll
+	var $win = $(window)
+	  , $nav = $('.subnav')
+	  , navTop = $('.subnav').length && $('.subnav').offset().top - 40
+	  , isFixed = 0
+	
+	processScroll()
+	
+	// hack sad times - holdover until rewrite for Bootstrap 2.1
+	$nav.on('click', function () {
+	  if (!isFixed) setTimeout(function () {  $win.scrollTop($win.scrollTop() - 47) }, 10)
+	})
+	
+	$win.on('scroll', processScroll)
+	
+	function processScroll() {
+	  var i, scrollTop = $win.scrollTop()
+	  if (scrollTop >= navTop && !isFixed) {
+	    isFixed = 1
+	    $nav.addClass('subnav-fixed')
+	  } else if (scrollTop <= navTop && isFixed) {
+	    isFixed = 0
+	    $nav.removeClass('subnav-fixed')
+	  }
+	}
+	</script>
+</header>
+
+@if(forms.userForm != null && forms.userForm.hasGlobalErrors()
+	|| forms.guestForm != null && forms.guestForm.hasGlobalErrors()
+	|| forms.globalForm != null && forms.globalForm.hasGlobalErrors()
+	|| Controller.flash("error") != null) {
+    <div role="alert" class="alert alert-error">
+    	<button class="close" data-dismiss="alert">×</button>
+    	@if(forms.userForm != null && forms.userForm.hasGlobalErrors) {
+        	<p>@forms.userForm.globalError.message</p>
+        }
+        @if(forms.guestForm != null && forms.guestForm.hasGlobalErrors) {
+        	<p>@forms.guestForm.globalError.message</p>
+        }
+        @if(forms.globalForm != null && forms.globalForm.hasGlobalErrors) {
+        	<p>@forms.globalForm.globalError.message</p>
+        }
+        @if(Controller.flash("error") != null) {
+        	<p>@Controller.flash("error")</p>
+        }
+    </div>
+}
+
+@if(flash.contains("success")) {
+    <div role="alert" class="alert alert-success">
+    	<button class="close" data-dismiss="alert">×</button>
+        @flash.get("success")
+    </div>
+}
+
+<section id="usersAndPermissions" class="tabbable tabs-left">
+	<h2>Users and permissions</h2>
+	<br/>
+	
+	<ul class="nav nav-tabs">
+		<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "global" || play.mvc.Controller.flash("settings.usertab") == null))"><a href="#usertab-global" data-toggle="tab"><i class="icon-globe"></i> <em>Global</em></a></li>
+		<hr/>
+		
+		<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))"><a href="#usertab-guest" data-toggle="tab"><i class="icon-user"></i> @models.Setting.get("guest.name")</a></li>
+		
+		@for(user <- userList) {
+			<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.id))"><a href="#usertab-@user.id" data-toggle="tab"><i class="icon-user"></i> @user.name</a></li>
+		}
+		
+		<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "adduser"))"><a href="#usertab-adduser" data-toggle="tab"><i class="icon-plus"></i> <em>Add user</em></a></li>
+	</ul>
+	
+	<div class="tab-content">
+		<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == "global" || play.mvc.Controller.flash("settings.usertab") == null))" id="usertab-global">
+			@Forms.userGlobal(forms.globalForm, routes.Administrator.postSettings())
+		</div>
+		
+		<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))" id="usertab-guest">
+			@Forms.userGuest(forms.guestForm, routes.Administrator.postSettings())
+		</div>
+		
+		@for(user <- userList) {
+			<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.id))" id="usertab-@user.id">
+				@Forms.user(forms.userForm, user, routes.Administrator.postSettings(), routes.Administrator.getPostSettings())
+			</div>
+		}
+		
+		<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == "adduser"))" id="usertab-adduser">
+			@Forms.userAdd(forms.userForm, routes.Administrator.postSettings())
+		</div>
+	</div>
+</section>
+<hr/>
+
+<br/><br/>
+<section id="pipeline2WebServiceEndpoint">
+	<h2>Pipeline 2 Web Service endpoint</h2>
+	<br/>
+  	@views.html.Administrator.Forms.setWS(forms.setWSForm, routes.Administrator.postSettings(), null)
+</section>
+<hr/>
+
+<br/><br/>
+<section id="temporaryDirectoryForUploads">
+	<h2>Temporary directory for uploads</h2>
+	<br/>
+	@views.html.Administrator.Forms.setUploadDir(forms.setUploadDirForm, routes.Administrator.postSettings(), null)
+</section>
+<hr/>
+
+<br/><br/>
+<section id="eMailSettings">
+	<h2>E-mail settings</h2>
+	<br/>
+	@views.html.Administrator.Forms.configureEmail(forms.configureEmailForm, routes.Administrator.postSettings(), null)
+</section>
+<hr/>
+
+<br/><br/>
+<section id="jobCleanup">
+	<h2>Job cleanup</h2>
+	<br/>
+	@views.html.Administrator.Forms.setJobCleanup(forms.setJobCleanupForm, routes.Administrator.postSettings(), null)
+</section>
+<hr/>
+
+<section id="branding">
+	<h2>Branding</h2>
+	<br/>
+	@views.html.Administrator.Forms.configureBranding(forms.configureBrandingForm, routes.Administrator.postSettings(), null)
+</section>
+<hr style="padding-bottom: 300px;"/>
+
+}

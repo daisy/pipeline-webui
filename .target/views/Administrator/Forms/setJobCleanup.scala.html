@@ -1,0 +1,36 @@
+@(setJobCleanupForm: Form[controllers.Administrator.SetJobCleanupForm], route: play.api.mvc.Call, skipRoute: play.api.mvc.Call)
+
+@helper.form(action = route) {
+	
+	<input type="hidden" name="formName" value="setJobCleanup"/>
+	
+   	<fieldset>
+   		
+   		<div class="form-horizontal">
+   			
+			<div class="control-group @("error".when(setJobCleanupForm.error("jobcleanup") != null))" id="setJobCleanup-jobcleanupGroup">
+				<label for="jobcleanup" class="control-label">Job persistence time</label>
+				<div class="controls">
+					<input type="number" name="jobcleanup" id="jobcleanup" placeholder="Number of minutes" class="input-xlarge"
+							value="@setJobCleanupForm.field("jobcleanup").valueOr(if (Setting.get("jobs.deleteAfterDuration") != null) (Long.parseLong(models.Setting.get("jobs.deleteAfterDuration"))/60000L)+"" else "0")"
+							onkeyup="if(this.value==='@{if (models.Setting.get("jobs.deleteAfterDuration")==null) "0" else Long.parseLong(models.Setting.get("jobs.deleteAfterDuration"))/60000L}')document.getElementById('setJobCleanup-jobcleanupGroup').style.backgroundColor='#FFF';else document.getElementById('setJobCleanup-jobcleanupGroup').style.backgroundColor='#DDF';"
+					/> minutes before jobs are deleted.
+					@if(setJobCleanupForm.field("jobcleanup").errors().size() > 0){
+						<span class="help-inline">@setJobCleanupForm.field("jobcleanup").errors().get(0).message()</span>
+					}
+				</div>
+			</div>
+			
+			<!-- TODO: add checkbox or on/off switch for enabling/disabling job cleanup. It can be done already by setting the cleanup time to 0 minutes, but it should be more obvious. -->
+			
+			<div class="form-actions">
+				<button class="btn btn-primary" id="submit" type="submit" name="submit">Ok, looks good</button>
+				@if(skipRoute != null){
+					<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Application.index()';return false;">I'll configure it later <i class="icon-hand-right"></i></button>
+				}
+			</div>
+			
+		</div>
+	
+	</fieldset>
+}

@@ -45,7 +45,7 @@ public class Jobs {
 	 * @param inputs
 	 * @return
 	 */
-	private static Document createJobRequestDocument(String href, List<Argument> arguments) {
+	private static Document createJobRequestDocument(String href, List<Argument> arguments, Map<String,String> callbacks) {
 		Document jobRequestDocument = utils.XML.getXml("<jobRequest xmlns='http://www.daisy.org/ns/pipeline/data'/>");
 		Element jobRequest = jobRequestDocument.getDocumentElement();
 
@@ -61,6 +61,16 @@ public class Jobs {
 			}
 		}
 		
+		if (callbacks != null) {
+			for (String callbackType : callbacks.keySet()) {
+				String callbackHref = callbacks.get(callbackType);
+				Element callback = jobRequestDocument.createElement("callback");
+				callback.setAttribute("type", callbackType);
+				callback.setAttribute("href", callbackHref);
+				jobRequest.appendChild(callback);
+			}
+		}
+		
 		return jobRequestDocument;
 	}
 	
@@ -72,9 +82,9 @@ public class Jobs {
 	 * HTTP 401 Unauthorized: Client was not authorized to perform request.
 	 * @return 
 	 */
-	public static Pipeline2WSResponse post(String endpoint, String username, String secret, String href, List<Argument> arguments, File contextZipFile) {
+	public static Pipeline2WSResponse post(String endpoint, String username, String secret, String href, List<Argument> arguments, File contextZipFile, Map<String,String> callbacks) {
 		
-		Document jobRequestDocument = createJobRequestDocument(href, arguments);
+		Document jobRequestDocument = createJobRequestDocument(href, arguments, callbacks);
 		Logger.debug(XML.toString(jobRequestDocument));
 		
 		if (contextZipFile == null) {

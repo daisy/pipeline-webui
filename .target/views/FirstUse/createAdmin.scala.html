@@ -1,0 +1,26 @@
+@(createAdminForm: Form[controllers.Administrator.CreateAdminForm])
+
+@main("First use", "", Array(), Array(), Array()){
+
+  	<div class="page-header">
+       	<h1>Create administrative user</h1>
+    </div>
+  	
+	<p>This seems to be the first time that you are using the Pipeline 2 Web UI. Please fill in the form below to create an administrator for this website.</p>
+  	<hr/>
+  	
+    @if(flash.contains("error")) {
+        <div role="alert" class="alert alert-error">
+            @flash.get("error")
+        </div>
+    }
+    
+    @if(flash.contains("success")) {
+        <div role="alert" class="alert alert-success">
+            @flash.get("success")
+        </div>
+    }
+    
+  	@views.html.Administrator.Forms.createAdmin(createAdminForm, routes.FirstUse.postFirstUse())
+
+}

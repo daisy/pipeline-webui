@@ -1,0 +1,79 @@
+@(script: pipeline2.models.Script, uploadFiles: Boolean, hideAdvancedOptions: Boolean)
+
+@main("Create job", "",
+Array("tmpl.js","jquery.ui.widget.js","jquery.iframe-transport.js","jquery.fileupload.js","jquery.fileupload-ui.js","notifications.js","createJob.js"),
+Array("jquery.fileupload-ui.css")) {
+
+<script type="text/javascript">
+	script = @Html(play.libs.Json.stringify(play.libs.Json.toJson(script)));
+	@if(play.Play.application().isDev()){
+		$(function(){Job.debug = true;});
+	}
+	$(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(request)", "@routes.Notifications.xhr().absoluteURL(request)");});
+</script>
+
+<h1>
+	@script.nicename<br /> <small>@script.desc</small>
+</h1>
+
+@if(hideAdvancedOptions){
+	<div class="pull-right well">
+		<label class="control-label" for="hideAdvancedOptions" aria-label="hideAdvancedOptions">Show advanced options</label>
+		<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" id="hideAdvancedOptions" aria-labelledby="hideAdvancedOptions-label">
+			<button type="button" name="showAdvancedOptions-on" class="btn" id="showAdvancedOptions-on" aria-role="radio" aria-checked="false" onclick="$('.advanced-argument').show('slow');">Yes</button>
+			<button type="button" name="showAdvancedOptions-off" class="btn active" id="showAdvancedOptions-off" aria-role="radio" aria-checked="true" onclick="$('.advanced-argument').hide('slow');">No</button>
+		</div>
+	</div>
+}
+
+@if(uploadFiles){
+	@Widgets.upload()
+}
+
+@helper.form(action = routes.Jobs.postJob(), 'id -> "job-form", 'class -> "form-horizontal", 'onsubmit -> "Job.submit();") {
+	<input type="hidden" id="id" name="id" value="@script.id" />
+	<input type="hidden" id="uploads" name="uploads" value=""/>
+	
+	<fieldset>
+	
+		@for(arg <- script.arguments){
+			@if(arg.output==null){
+				@if(arg.kind=="parameters"){
+					@Widgets.parameters(arg, script)
+				}else{
+					@defining(arg.xsdType){xsdType => @xsdType match{
+						case "string" => { @Widgets.string(arg, script) }
+						case "boolean" => { @Widgets.boolean(arg, script) }
+						case "anyFileURI" => { @Widgets.file(arg, script) }
+						case _ => { @Widgets.string(arg, script) }
+					}}
+				}
+			}
+		}
+		
+		@if(play.mvc.Controller.session("userid").startsWith("-")){
+			<div class="control-group">
+				<label class="control-label" for="guest-email">Your e-mail</label>
+				<div class="controls">
+					<input name="guest-email" id="guest-email" type="email"/>
+					<span class="help-block">Enter your e-mail address if you wish to receive a link to the job.</span>
+				</div>
+			</div>
+		}
+		
+		<div class="form-actions">
+			<button type="submit" value="Start job" data-loading-text="Starting job..." class="btn btn-large btn-primary" onclick="$(this).button('loading');">Start job</button>
+		</div>
+	
+	</fieldset>
+	
+}
+
+@if(script.homepage!=null && script.homepage.href!=null && script.homepage.href.length()>0){
+	<address style="text-align: center;">
+		Script homepage: <a href="@script.homepage.href" target="_blank">@script.homepage.href</a>.
+		@script.homepage.desc
+	</address>
+}
+
+}

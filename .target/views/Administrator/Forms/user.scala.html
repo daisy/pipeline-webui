@@ -1,0 +1,94 @@
+@(userForm: Form[User], user: User, route: play.api.mvc.Call, alternativeRoute: play.api.mvc.Call)
+
+@helper.form(action = route) {
+	
+	<input type="hidden" name="formName" value="updateUser"/>
+	<input type="hidden" name="userid" value="@user.id"/>
+	<input type="hidden" name="admin" value="@user.admin" id="user-@{user.id}-admin-value"/>
+    
+	<fieldset>
+		<legend>Settings for @user.name</legend>
+        <br/>
+        
+        <div class="form-horizontal">
+        	
+        	@if(play.mvc.Controller.session("userid") == user.id+""){
+        		<div class="control-group">
+        			<p>To change your own name or e-mail, go to your account settings. To delete your account, ask another administrator to do it for you.</p>
+        		</div>
+        		
+       		}else{
+	        	<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.id && userForm.error("resetPassword") != null))" id="user-@{user.id}-resetPasswordGroup">
+					<label for="user-@{user.id}-resetPassword" class="control-label" id="updateUser-@{user.id}-password-label">Password</label>
+					<div class="controls">
+						<button name="resetPassword" id="user-@{user.id}-resetPassword" class="btn" onclick="window.location='@{alternativeRoute}?formName=resetPassword&userid=@{user.id}';return false;" aria-labelledby="updateUser-@{user.id}-password-label"><i class="icon-envelope"></i> @if(user.active){Send password reset link}else{Send new activation link}</button>
+						@if(user.active){
+							<span class="help-inline">An e-mail will be sent to @user.email, containing a link where @user.name can reset their password.</span>
+						}else{
+							<span class="help-inline">An e-mail will be sent to @user.email, containing a link where @user.name can set their password.</span>
+						}
+					</div>
+				</div>
+				
+				<hr/>
+	        	
+	        	<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.id && userForm.error("name") != null))" id="user-@{user.id}-nameGroup">
+	        		<label for="user-@{user.id}-name" class="control-label">Name</label>
+		            <div class="controls">
+		        		<input type="text" name="name" id="user-@{user.id}-name" class="input-xlarge"
+		        			placeholder="&quot;@user.name&quot; is the users current name."
+		        			value="@{if (user.id+""==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("name").valueOr(""); else user.name;}"
+		        			onkeyup="if(this.value==='@user.name')document.getElementById('user-@{user.id}-nameGroup').style.backgroundColor='#FFF';else document.getElementById('user-@{user.id}-nameGroup').style.backgroundColor='#DDF';"/>
+						@if(userForm.field("userid").valueOr("") == ""+user.id && userForm.field("user-@{user.id}-name").errors().size() > 0){
+							@if(userForm.error("name").message.startsWith("error.")){
+								<span class="help-inline">Users must have a name, and it must not consist of any special characters.</span>
+							}else{
+								<span class="help-inline">@userForm.error("name").message</span>
+							}
+						}
+		            </div>
+				</div>
+				
+				<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.id && userForm.error("email") != null))" id="user-@{user.id}-emailGroup">
+					<label for="user-@{user.id}-email" class="control-label">E-mail</label>
+					<div class="controls">
+						<input type="email" name="email" id="user-@{user.id}-email" class="input-xlarge"
+							placeholder="&quot;@user.email&quot; is your current e-mail address."
+							value="@{if (user.id+""==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("email").valueOr(""); else user.email;}"
+							onkeyup="toggleChanged('user-@{user.id}-email', this.value==='@user.email');"/>
+						@if(userForm.field("userid").valueOr("") == ""+user.id && userForm.field("email").errors().size() > 0){
+							@if(userForm.error("email").message.startsWith("error.")){
+								<span class="help-inline">A valid e-mail address must be provided.</span>
+							}else{
+								<span class="help-inline">@userForm.error("email").message</span>
+							}
+						}
+					</div>
+				</div>
+				
+				<div class="control-group @("error".when(user.id.toString().equals(userForm.field("userid").valueOr("")) && userForm.error("admin") != null))" id="user-@{user.id}-adminGroup">
+					<label class="control-label" id="updateUser-@{user.id}-admin-label" for="user-@{user.id}-admin" aria-label="user-@{user.id}-admin">Administrator</label>
+					<div class="controls">
+						<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="updateUser-@{user.id}-admin-label" id="user-@{user.id}-admin">
+							<button type="button" name="admin-on" class="btn @("active".when(user.admin))" id="user-@{user.id}-admin-on"
+								aria-role="radio" aria-checked="true"
+								onclick="toggleRadio('user-@{user.id}-admin', true, '@user.admin');">Yes</button>
+							<button type="button" name="admin-off" class="btn @("active".when(!user.admin))" id="user-@{user.id}-admin-off"
+								aria-role="radio" aria-checked="false"
+								onclick="toggleRadio('user-@{user.id}-admin', false, '@user.admin');">No</button>
+						</div>
+						@if(userForm.field("userid").valueOr("") == ""+user.id && userForm.field("admin").errors().size() > 0){
+							<span class="help-inline">@userForm.error("admin").message</span>
+						}
+					</div>
+				</div>
+				
+				<div class="form-actions">
+					<button type="submit" class="btn btn-primary" id="user-@{user.id}-submit" name="submit">Save changes</button>
+					<button type="reset" class="btn" id="user-@{user.id}-reset" name="reset" onclick="toggleRadio('user-@{user.id}-admin', @user.admin, '@user.admin');toggleChanged('user-@{user.id}-name', '@user.name', '@user.name');toggleChanged('user-@{user.id}-email', '@user.email', '@user.email');">Clear changes</button>
+					<button name="delete" id="user-@{user.id}-delete" class="btn btn-danger" onclick="window.location='@{alternativeRoute}?formName=deleteUser&userid=@{user.id}';return false;"><i class="icon-trash icon-white"></i> Delete this user</button>
+				</div>
+			}
+		</div>
+	</fieldset>
+}

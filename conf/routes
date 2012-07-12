@@ -34,6 +34,9 @@ GET		/jobs/:id							controllers.Jobs.getJob(id: String)
 GET     /jobs                               controllers.Jobs.getJobs()
 POST    /jobs                               controllers.Jobs.postJob()
 
+# Callbacks
+POST	/callbacks/:callbackType            controllers.Callbacks.postCallback(callbackType: String)
+
 # Uploads
 GET		/uploads/:id                        controllers.Uploads.getUpload(id: Long)
 POST    /uploads                            controllers.Uploads.postUpload()

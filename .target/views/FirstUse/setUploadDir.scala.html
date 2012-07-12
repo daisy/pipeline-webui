@@ -1,0 +1,28 @@
+@(setUploadDirForm: Form[controllers.Administrator.SetUploadDirForm])
+
+@main("First use", "", Array(), Array(), Array()){
+      	
+  	<div class="page-header">
+       	<h1>Set the temporary directory for uploads</h1>
+    </div>
+    
+ 	<p>When users upload files to this web interface, they will have to be stored to disk somewhere. Depending on the number of users and the type of usage (especially if you're working a lot with audio), this folder might grow very large, so point it to someplace where there is at least a few gigabytes of storage.</p>
+ 	<p>This setting can be changed in the administrator settings at a later time. You can skip setting up this now, but you will not be able to upload files or start jobs before an upload directory is configured.</p>
+ 	<p>Suggested upload directory: <code>@{System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator")}</code></p>
+  	<hr/>
+      	
+    @if(flash.contains("error")) {
+        <div role="alert" class="alert alert-error">
+            @flash.get("error")
+        </div>
+    }
+    
+    @if(flash.contains("success")) {
+        <div role="alert" class="alert alert-success">
+            @flash.get("success")
+        </div>
+    }
+    
+	@views.html.Administrator.Forms.setUploadDir(setUploadDirForm, routes.FirstUse.postFirstUse(), routes.Application.index())
+	
+}

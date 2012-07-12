@@ -1,0 +1,23 @@
+@(id: String, log: List[String])
+
+@main("Empty log") {
+
+<ul class="pager">
+  <li>
+    <a href="@routes.Jobs.getJob(id)"><i class="icon-hand-left"></i> Back to job @id</a>
+  </li>
+</ul>
+
+<ol class="messagelist">
+@for(line <- log) {
+  <li class="message"><code>@line</code></li>
+}
+</ol>
+
+<ul class="pager">
+  <li>
+    <a href="@routes.Jobs.getJob(id)"><i class="icon-hand-left"></i> Back to job @id</a>
+  </li>
+</ul>
+
+}
