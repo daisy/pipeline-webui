@@ -110,7 +110,7 @@ public class Pipeline2WS {
 		ClientResource resource = new ClientResource(url);
 		Representation representation = null;
 		try {
-			representation = resource.post(xml);
+			representation = resource.post(utils.XML.toString(xml));
 		} catch (org.restlet.resource.ResourceException e) {
 			Logger.error(e.getMessage(), e);
 		}

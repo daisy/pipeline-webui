@@ -37,15 +37,17 @@ Array("jquery.fileupload-ui.css")) {
 	<fieldset>
 	
 		@for(arg <- script.arguments){
-			@if(arg.kind=="parameters"){
-				@Widgets.parameters(arg, script)
-			}else{
-				@defining(arg.xsdType){xsdType => @xsdType match{
-					case "string" => { @Widgets.string(arg, script) }
-					case "boolean" => { @Widgets.boolean(arg, script) }
-					case "anyFileURI" => { @Widgets.file(arg, script) }
-					case _ => { @Widgets.string(arg, script) }
-				}}
+			@if(arg.output==null){
+				@if(arg.kind=="parameters"){
+					@Widgets.parameters(arg, script)
+				}else{
+					@defining(arg.xsdType){xsdType => @xsdType match{
+						case "string" => { @Widgets.string(arg, script) }
+						case "boolean" => { @Widgets.boolean(arg, script) }
+						case "anyFileURI" => { @Widgets.file(arg, script) }
+						case _ => { @Widgets.string(arg, script) }
+					}}
+				}
 			}
 		}
 		

@@ -90,6 +90,15 @@ public class FirstUse extends Controller {
 	        	Setting.set("dp2ws.endpoint", filledForm.field("endpoint").valueOr(""));
 	        	Setting.set("dp2ws.authid", filledForm.field("authid").valueOr(""));
 	        	Setting.set("dp2ws.secret", filledForm.field("secret").valueOr(""));
+	        	String tempDir = filledForm.field("tempDir").valueOr("");
+	        	String resultDir = filledForm.field("resultDir").valueOr("");
+	        	if (tempDir.contains("/") && !tempDir.endsWith("/")) tempDir += "/";
+	        	if (tempDir.contains("\\") && !tempDir.endsWith("\\")) tempDir += "\\";
+	        	if (resultDir.contains("/") && !resultDir.endsWith("/")) resultDir += "/";
+	        	if (resultDir.contains("\\") && !resultDir.endsWith("\\")) resultDir += "\\";
+	        	Setting.set("dp2ws.tempDir", tempDir);
+	        	Setting.set("dp2ws.resultDir", resultDir);
+	        	Setting.set("dp2ws.sameFilesystem", filledForm.field("sameFilesystem").valueOr(""));
 	        	return redirect(routes.FirstUse.getFirstUse());
 	        }
 		}

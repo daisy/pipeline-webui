@@ -53,8 +53,13 @@ public class Jobs {
 		element.setAttribute("href", href);
 		jobRequest.appendChild(element);
 		
-		for (Argument arg : arguments)
-			jobRequest.appendChild(arg.asDocumentElement(jobRequestDocument));
+		for (Argument arg : arguments) {
+			try {
+				jobRequest.appendChild(arg.asDocumentElement(jobRequestDocument));
+			} catch (NullPointerException e) {
+				Logger.error("Tried to serialize generic argument", e);
+			}
+		}
 		
 		return jobRequestDocument;
 	}

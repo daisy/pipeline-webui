@@ -64,6 +64,12 @@ public class Administrator extends Controller {
         
         public String secret;
         
+        public String tempDir;
+        
+        public String resultDir;
+        
+        public boolean sameFilesystem;
+        
         public static void validate(Form<SetWSForm> filledForm) {
         	if (filledForm.field("endpoint").valueOr("").equals(""))
         		filledForm.reject("endpoint", "Invalid endpoint URL.");
@@ -400,6 +406,15 @@ public class Administrator extends Controller {
 	        	Setting.set("dp2ws.authid", filledForm.field("authid").valueOr(""));
 	        	if (Setting.get("dp2ws.secret") == null || !"".equals(filledForm.field("secret").value()))
 	        		Setting.set("dp2ws.secret", filledForm.field("secret").valueOr(""));
+	        	String tempDir = filledForm.field("tempDir").valueOr("");
+	        	String resultDir = filledForm.field("resultDir").valueOr("");
+	        	if (tempDir.contains("/") && !tempDir.endsWith("/")) tempDir += "/";
+	        	if (tempDir.contains("\\") && !tempDir.endsWith("\\")) tempDir += "\\";
+	        	if (resultDir.contains("/") && !resultDir.endsWith("/")) resultDir += "/";
+	        	if (resultDir.contains("\\") && !resultDir.endsWith("\\")) resultDir += "\\";
+	        	Setting.set("dp2ws.tempDir", tempDir);
+	        	Setting.set("dp2ws.resultDir", resultDir);
+	        	Setting.set("dp2ws.sameFilesystem", filledForm.field("sameFilesystem").valueOr(""));
 	        	flash("success", "Pipeline 2 Web Service endpoint changed successfully!");
 	        	return redirect(routes.Administrator.getSettings());
 	        }

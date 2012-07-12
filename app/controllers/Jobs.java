@@ -54,7 +54,6 @@ public class Jobs extends Controller {
 		if (jobs.status != 200) {
 			return Application.error(jobs.status, jobs.statusName, jobs.statusDescription, jobs.asText());
 		}
-		Logger.debug(jobs.asText());
 		
 		List<Job> jobList = new ArrayList<Job>();
 		
@@ -76,8 +75,6 @@ public class Jobs extends Controller {
 		Collections.reverse(jobList);
 		if (user.admin)
 			flash("showOwner", "true");
-		
-		Logger.debug(play.libs.Json.toJson(jobList)+"");
 		
 		return ok(views.html.Jobs.getJobs.render(jobList));
 	}
@@ -326,35 +323,53 @@ public class Jobs extends Controller {
 					}
 				}
 			}
-
-			//	if (contextZipUpload == null) {
-			if (contextDir.list().length == 0) {
-				contextZipFile = null;
+			
+			if ("true".equals(Setting.get("dp2ws.sameFilesystem"))) {
+				Logger.debug("Running the Web UI and fwk on the same filesystem, no need to ZIP files...");
+				for (Argument arg : script.arguments) {
+					if (arg.output != null)
+						continue;
+					if (arg instanceof ArgFile) {
+						((ArgFile)arg).href = contextDir.toURI().resolve(((ArgFile)arg).href).toString();
+					}
+					if (arg instanceof ArgFiles) {
+						for (String href : ((ArgFiles)arg).hrefs) {
+							href = contextDir.toURI().resolve(href).toString();
+						}
+					}
+				}
+				
 			} else {
-				try {
-					contextZipFile = File.createTempFile("jobContext", ".zip");
-					Logger.debug("Created job context zip file: "+contextZipFile);
-				} catch (IOException e) {
-					Logger.error("Unable to create temporary job context ZIP file.", e);
-					throw new RuntimeErrorException(new Error(e), "Unable to create temporary job context ZIP file.");
+			
+				//	if (contextZipUpload == null) {
+				if (contextDir.list().length == 0) {
+					contextZipFile = null;
+				} else {
+					try {
+						contextZipFile = File.createTempFile("jobContext", ".zip");
+						Logger.debug("Created job context zip file: "+contextZipFile);
+					} catch (IOException e) {
+						Logger.error("Unable to create temporary job context ZIP file.", e);
+						throw new RuntimeErrorException(new Error(e), "Unable to create temporary job context ZIP file.");
+					}
+					try {
+						utils.Files.zip(contextDir, contextZipFile);
+					} catch (IOException e) {
+						Logger.error("Unable to zip context directory.", e);
+						throw new RuntimeErrorException(new Error(e), "Unable to zip context directory.");
+					}
 				}
-				try {
-					utils.Files.zip(contextDir, contextZipFile);
-				} catch (IOException e) {
-					Logger.error("Unable to zip context directory.", e);
-					throw new RuntimeErrorException(new Error(e), "Unable to zip context directory.");
-				}
+				//	} else {
+				//		contextZipFile = contextZipUpload.getFile();
+				//		try {
+				//			Logger.debug("adding contents of '"+contextDir+"' to the ZIP '"+contextZipFile+"'");
+				//			utils.Files.addDirectoryContentsToZip(contextZipFile, contextDir);
+				//		} catch (IOException e) {
+				//			Logger.error("Unable to add files to existing context ZIP file.", e);
+				//			throw new RuntimeErrorException(new Error(e), "Unable to add files to existing context ZIP file.");
+				//		}
+				//	}
 			}
-			//	} else {
-			//		contextZipFile = contextZipUpload.getFile();
-			//		try {
-			//			Logger.debug("adding contents of '"+contextDir+"' to the ZIP '"+contextZipFile+"'");
-			//			utils.Files.addDirectoryContentsToZip(contextZipFile, contextDir);
-			//		} catch (IOException e) {
-			//			Logger.error("Unable to add files to existing context ZIP file.", e);
-			//			throw new RuntimeErrorException(new Error(e), "Unable to add files to existing context ZIP file.");
-			//		}
-			//	}
 
 		}
 

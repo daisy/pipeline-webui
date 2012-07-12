@@ -11,8 +11,10 @@ tmp
 dist
 bin
 
-# Default uploads directory
+# Default directories
 uploads
+local.results
+local.temp
 
 # IDE and editors
 *~

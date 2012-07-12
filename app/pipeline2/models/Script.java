@@ -73,7 +73,7 @@ public class Script {
 			if (arg.mediaTypes.size() == 0)
 				arg.mediaTypes.add("application/xml");
 			arg.xsdType = "anyFileURI";
-			arg.output = ""; // irrelevant, but let's give it a value
+			arg.output = null; // irrelevant, but let's give it a value
 			arg.kind = "input"; // TODO "parameters": is there a @kind attribute in the Web API?
 			
 			this.arguments.add(arg);
@@ -92,7 +92,7 @@ public class Script {
 			arg.ordered = parseTypeBoolean(XPath.selectText("@ordered", optionNode, Pipeline2WS.ns), true);
 			arg.mediaTypes = parseTypeMediaTypes(XPath.selectText("@mediaType", optionNode, Pipeline2WS.ns));
 			arg.xsdType = parseTypeString(XPath.selectText("@type", optionNode, Pipeline2WS.ns));
-			arg.output = parseTypeString(XPath.selectText("@output", optionNode, Pipeline2WS.ns));
+			arg.output = parseTypeString(XPath.selectText("@outputType", optionNode, Pipeline2WS.ns));
 			arg.kind = "option";
 			
 			this.arguments.add(arg);
@@ -113,7 +113,7 @@ public class Script {
 			if (arg.mediaTypes.size() == 0)
 				arg.mediaTypes.add("application/xml");
 			arg.xsdType = "anyFileURI";
-			arg.output = parseTypeString(XPath.selectText("@output", outputNode, Pipeline2WS.ns));
+			arg.output = parseTypeString(XPath.selectText("@outputType", outputNode, Pipeline2WS.ns));
 			arg.kind = "output";
 			
 			this.arguments.add(arg);

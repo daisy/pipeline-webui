@@ -18,13 +18,13 @@ public class ArgFile extends Argument {
 		if ("option".equals(kind)) {
 			element = document.createElement("option");
 			element.setAttribute("name", name);
-			element.setTextContent(href);
+			element.setTextContent(href+"");
 		} else {
 			element = document.createElement("input");
 			element.setAttribute("name", name);
 			
 			Element item = document.createElement("item");
-			item.setAttribute("value", href);
+			item.setAttribute("value", href+"");
 			element.appendChild(item);
 		}
 		return element;
