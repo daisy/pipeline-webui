@@ -31,6 +31,7 @@ import pipeline2.models.script.Argument;
 import pipeline2.models.script.arguments.*;
 import pipeline2.models.Script;
 import play.Logger;
+import play.api.libs.json.Json;
 import play.db.ebean.Transactional;
 import play.libs.XPath;
 import play.mvc.*;
@@ -75,6 +76,8 @@ public class Jobs extends Controller {
 		Collections.reverse(jobList);
 		if (user.admin)
 			flash("showOwner", "true");
+		
+		Logger.debug(play.libs.Json.toJson(jobList)+"");
 		
 		return ok(views.html.Jobs.getJobs.render(jobList));
 	}
