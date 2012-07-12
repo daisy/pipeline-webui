@@ -145,6 +145,7 @@
 		<label class="control-label" for="@{arg.kind}-@{arg.name}">@arg.nicename</label>
 		<div class="controls">
 			<select name="@{arg.kind}-@{arg.name}" id="@{arg.kind}-@{arg.name}">
+				<option value="" selected=""></option>
 				<optgroup id="@{arg.kind}-@{arg.name}-suggested" label="Supported files"></optgroup>
 				<optgroup id="@{arg.kind}-@{arg.name}-other" label="Other files"></optgroup>
 			</select>
@@ -157,7 +158,7 @@
 					/* Event handler for fileset changes. */
 					Job.onNewUpload(function(fileset, id){
 						var contentTypes = @Html(play.libs.Json.stringify(play.libs.Json.toJson(arg.mediaTypes)));
-						var selectedSomething = $("#@{arg.kind}-@{arg.name} option").size() > 0;
+						var selectedSomething = $("#@{arg.kind}-@{arg.name} optgroup option").filter(":selected").size() > 0;
 						for (var f = 0; f < fileset.length; f++) {
 							var file = fileset[f];
 							

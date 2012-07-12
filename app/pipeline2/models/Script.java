@@ -28,7 +28,9 @@ public class Script {
 	public Author author;
 	public List<Argument> arguments;
 	
-	/** List of mime types that are supported by multiple file arguments, and thus cannot be automatically assigned to a single argument. */
+	/** List of mime types that are supported by more than one file argument.
+	 * This is not part of the Web API, but are more of a convenience.
+	 * A user interface cannot automatically assign files of these media types to a file argument. */
 	public List<String> mediaTypeBlacklist;
 	
 	// ---------- Constructors ----------
