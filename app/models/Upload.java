@@ -36,10 +36,10 @@ public class Upload extends Model {
 	
 	public static Long store(FilePart upload, User user) {
 		Upload u = new Upload();
-		u.save(); // saving here generates the unique id for this row
+		u.save(); // saving here generates the unique id for this upload
 		
 		File uploadDir = new File(Setting.get("uploads")+u.id);
-		uploadDir.mkdir();
+		uploadDir.mkdirs();
 		u.absolutePath = uploadDir.getAbsolutePath();
 		
         File file = upload.getFile();

@@ -92,7 +92,6 @@ public class Scripts extends Controller {
 //		Logger.debug(play.libs.Json.toJson(script)+"");
 		
 		return ok(views.html.Scripts.getScript.render(script, uploadFiles, hideAdvancedOptions));
-
 	}
 	
 	public static class ScriptForm {
@@ -109,20 +108,6 @@ public class Scripts extends Controller {
 		
 		public ScriptForm(Long userId, Script script, Map<String, String[]> params) {
 			this.script = script;
-			
-			String timeString = new Date().getTime()+"";
-			for (Argument arg : script.arguments) {
-				if ("result".equals(arg.output)) {
-					File href = new File(Setting.get("dp2ws.resultDir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
-					href.mkdirs();
-					script.arguments.set(script.arguments.indexOf(arg), new ArgFile(arg, href.toURI().toString()));
-					
-				} else if ("temp".equals(arg.output)) {
-					File href = new File(Setting.get("dp2ws.tempDir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
-					href.mkdirs();
-					script.arguments.set(script.arguments.indexOf(arg), new ArgFile(arg, href.toURI().toString()));
-				}
-			}
 			
 			// Get all referenced uploads from DB
 			this.uploads = new HashMap<Long,Upload>();

@@ -181,36 +181,6 @@ public class Jobs extends Controller {
 			return redirect(routes.Login.login());
 
 		Pipeline2WSResponse jobLog = pipeline2.Jobs.getLog(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-//		InputStream responseStream = jobLog.asStream();
-//		String responseText = "";
-//
-//		if (responseStream != null) {
-//			Writer writer = new StringWriter();
-//			char[] buffer = new char[1024];
-//			try {
-//				Reader reader = new BufferedReader(new InputStreamReader(responseStream, "UTF-8"));
-//				int n;
-//				while ((n = reader.read(buffer)) != -1) {
-//					writer.write(buffer, 0, n);
-//				}
-//			} catch (UnsupportedEncodingException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			} finally {
-//				try {
-//					responseStream.close();
-//				} catch (IOException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-//			}
-//			responseText = writer.toString();
-//		} else {        
-//			responseText = "";
-//		}
 
 		if (jobLog.status != 200 && jobLog.status != 201 && jobLog.status != 204) {
 			return Application.error(jobLog.status, jobLog.statusName, jobLog.statusDescription, jobLog.asText());
@@ -248,8 +218,21 @@ public class Jobs extends Controller {
 		if (scriptResponse.status != 200) { return Application.error(scriptResponse.status, scriptResponse.statusName, scriptResponse.statusDescription, scriptResponse.asText()); }
 		Script script = new Script(scriptResponse);
 		
-		// Parse and validate the submitted form
+		// Parse and validate the submitted form (also create any necessary output directories in case of local mode)
 		Scripts.ScriptForm scriptForm = new Scripts.ScriptForm(user.id, script, params);
+		String timeString = new Date().getTime()+"";
+		for (Argument arg : script.arguments) {
+			if ("result".equals(arg.output)) {
+				File href = new File(Setting.get("dp2ws.resultDir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
+				href.mkdirs();
+				script.arguments.set(script.arguments.indexOf(arg), new ArgFile(arg, href.toURI().toString()));
+				
+			} else if ("temp".equals(arg.output)) {
+				File href = new File(Setting.get("dp2ws.tempDir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
+				href.mkdirs();
+				script.arguments.set(script.arguments.indexOf(arg), new ArgFile(arg, href.toURI().toString()));
+			}
+		}
 		scriptForm.validate();
 
 		File contextZipFile = null;

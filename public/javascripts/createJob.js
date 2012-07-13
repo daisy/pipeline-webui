@@ -2,14 +2,14 @@ var Job = {
 	debug: false,
 	uploads: {},
 	uploadListeners: [],
-	submitListeners: [],
+	validators: [],
 	
 	onNewUpload: function(listener) {
 		Job.uploadListeners.push(listener);
 	},
 	
-	onSubmit: function(listener) {
-		Job.submitListeners.push(listener);
+	onValidate: function(listener) {
+		Job.validators.push(listener);
 	},
 	
 	submit: function() {
@@ -17,9 +17,19 @@ var Job = {
 		for (var id in Job.uploads) uploads.push(Job.uploads[id].id);
 		$("#uploads").attr("value",uploads.join());
 		
-		for (var i = 0; i < Job.submitListeners.length; i++) {
-			Job.submitListeners[i]();
+		var result = {valid: true, messages: []};
+		
+		for (var i = 0; i < Job.validators.length; i++) {
+			var thisResult = Job.validators[i]();
+			result.valid = result.valid && thisResult.valid; 
+			for (var j = 0; j < thisResult.messages.length; j++) {
+				result.messages.push(thisResult.messages[j]);
+			}
 		}
+		
+		// TODO: display messages
+		
+		return result.valid;
 	}
 };
 

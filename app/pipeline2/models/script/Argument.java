@@ -29,9 +29,6 @@ public class Argument {
 	/** MIME types accepted (only relevant if type=anyDirURI or anyFileURI) */
 	public List<String> mediaTypes;
 	
-	/** Only relevant for file arguments. If mediaTypeBlacklist is defined, then all XML files are supported for this argument, except those listed in this list. */
-	public List<String> mediaTypeBlacklist;
-	
 	/** XSD type */
 	public String xsdType = "";
 	
@@ -41,8 +38,12 @@ public class Argument {
 	/** Type of underlying argument. Either "input", "parameters", "option" or "output". */
 	public String kind;
 	
+	// ---------- not part of the script metadata itself ----------
 	
-	/** For use when rendering the job creation form; not part of the script metadata */
+	/** Only relevant for file arguments. If mediaTypeBlacklist is defined, then all XML files are supported for this argument, except those listed in this list. */
+	public List<String> mediaTypeBlacklist;
+	
+	/** For use when rendering the job creation form */
 	public boolean hide;
 	
 	

@@ -126,14 +126,21 @@
 						}
 					});
 					
-					/* Function called right before submitting the form. */
-					Job.onSubmit(function(){
+					/* Prepare and validate widget */
+					var validator = function(){
 						var value = [];
 						$.each($("#@{arg.kind}-@{arg.name}-selected option"), function(i, e) {
 							value.push($(e).attr("value"));
 						});
 						$('#@{arg.kind}-@{arg.name}').attr("value", value.join());
-					});
+						
+						console.log("TODO: validate #@{arg.kind}-@{arg.name}");
+						/*
+						mediaType
+							$("@{arg.kind}-@{arg.name}-selected option") - WARN: check the media type of each option against supported types 
+						*/
+					}
+					Job.onValidate(validator);
 				});
 			</script>
 		</div>
@@ -198,6 +205,26 @@
 							// TODO: instead of append; insert in sorted order according to fileName
 						}
 					});
+					
+					/* Prepare and validate widget */
+					var validator = function(){
+						console.log("TODO: validate #@{arg.kind}-@{arg.name}");
+						
+						var result = {valid: true, messages: []};
+						
+						@if(arg.required){
+							if ($("#option-href option").filter(":selected").attr("value") === "") {
+								result.valid = false;
+								message.push({level: "error", text: "A file must be selected."});
+							}
+						}
+						if ($("#option-href option").filter(":selected").hasClass("wrongContentType")) {
+							message.push({level: "warning", text: "The file you selected is not supported. If you continue you may experience unexpected results."});
+						}
+						
+						return result;
+					}
+					Job.onValidate(validator);
 				});
 			</script>
 		</div>
