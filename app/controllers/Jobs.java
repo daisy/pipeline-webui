@@ -313,14 +313,19 @@ public class Jobs extends Controller {
 			if ("true".equals(Setting.get("dp2ws.sameFilesystem"))) {
 				Logger.debug("Running the Web UI and fwk on the same filesystem, no need to ZIP files...");
 				for (Argument arg : script.arguments) {
-					if (arg.output != null)
+					if (arg.output != null) {
+						Logger.debug(arg.name+" is output; don't resolve URI");
 						continue;
+					}
 					if (arg instanceof ArgFile) {
+						Logger.debug(arg.name+" is file; resolve URI");
 						((ArgFile)arg).href = contextDir.toURI().resolve(((ArgFile)arg).href).toString();
 					}
 					if (arg instanceof ArgFiles) {
-						for (String href : ((ArgFiles)arg).hrefs) {
-							href = contextDir.toURI().resolve(href).toString();
+						Logger.debug(arg.name+" is files; resolve URIs");
+						List<String> hrefs = ((ArgFiles)arg).hrefs;
+						for (int i = 0; i < hrefs.size(); i++) {
+							hrefs.set(i, contextDir.toURI().resolve(hrefs.get(i)).toString());
 						}
 					}
 				}
@@ -411,13 +416,11 @@ public class Jobs extends Controller {
 		if (user.id < 0) {
 			jobId = "guest" + user.id + "-" + jobId;
 			if (scriptForm.guestEmail != null) {
-				Account.sendEmail(
-						"Job started: "+webUiJob.nicename,
-						"To view your Pipeline 2 job, go to this web address: <a href=\""+controllers.routes.Jobs.getJob(jobId).absoluteURL(request())+"\">"+controllers.routes.Jobs.getJob(jobId).absoluteURL(request())+"</a>.",
-						"To view your Pipeline 2 job, go to this web address: "+controllers.routes.Jobs.getJob(jobId).absoluteURL(request())+".",
-						scriptForm.guestEmail,
-						scriptForm.guestEmail
-				);
+				String jobUrl = routes.Jobs.getJob(jobId).absoluteURL(request());
+				String html = views.html.Account.emailJobCreated.render(jobUrl, webUiJob.nicename).body();
+				String text = "To view your Pipeline 2 job, go to this web address: " + jobUrl;
+				if (!Account.sendEmail("Job started: "+webUiJob.nicename, html, text, scriptForm.guestEmail, scriptForm.guestEmail))
+					flash("error", "Was unable to send the e-mail.");
 			}
 		}
 		
