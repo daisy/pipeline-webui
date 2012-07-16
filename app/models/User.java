@@ -22,12 +22,12 @@ import play.mvc.WebSocket;
 public class User extends Model {
 
 	// ---------- Static stuff ----------
+
+	/** Key is user ID; value is a map with browser window IDs as key, mapped to a websocket output for that user. */
+	public static ConcurrentMap<Long,Map<Long,WebSocket.Out<JsonNode>>> websockets;
 	
-	/** Key is user ID; value is a list of open websocket outputs for that user. */
-	public static ConcurrentMap<Long,List<WebSocket.Out<JsonNode>>> websockets;
-	
-	/** Key is user ID; value is a list of notifications waiting to be sent to the user. */
-	public static ConcurrentMap<Long,List<Notification>> notificationQueues;
+	/** Key is user ID; value is a map with browser window IDs as key, mapped to a list of notifications waiting to be sent to the user. */
+	public static ConcurrentMap<Long,Map<Long,List<Notification>>> notificationQueues;
 	
 	public static final Long LINK_TIMEOUT = 24*3600*1000L; // TODO: make as admin setting instead
 
@@ -174,10 +174,10 @@ public class User extends Model {
 	}
 
 	/**
-	 * Creates and returns a WebSocket connection
+	 * Creates and returns a WebSocket connection for the browser window `browserId`
 	 * @return
 	 */
-	public WebSocket<JsonNode> addWebSocket() {
+	public WebSocket<JsonNode> addWebSocket(final Long browserId) {
 
 		// Create WebSocket
 		WebSocket<JsonNode> ws = new WebSocket<JsonNode>() {
@@ -197,16 +197,16 @@ public class User extends Model {
 					public void invoke() {
 						synchronized (websockets) {
 							websockets.get(id).remove(out);
-							Logger.debug("Disconnected (websockets.get("+id+").size()="+websockets.get(id).size()+")");
+							Logger.debug("WebSocket: user #"+id+" disconnected browser window #"+browserId);
 						}
 					}
 				});
 
 				// Remember socket
-				websockets.putIfAbsent(id, new ArrayList<WebSocket.Out<JsonNode>>());
 				synchronized (websockets) {
-					websockets.get(id).add(out);
-					Logger.debug("Connected (websockets.get("+id+").size()="+websockets.get(id).size()+")");
+					websockets.putIfAbsent(id, new HashMap<Long,WebSocket.Out<JsonNode>>());
+					websockets.get(id).put(browserId, out);
+					Logger.debug("WebSocket: user #"+id+" connected browser window #"+browserId);
 				}
 
 			}
@@ -220,22 +220,23 @@ public class User extends Model {
 	 * @param notification
 	 */
 	public static void push(Long userId, Notification notification) {
-		notificationQueues.putIfAbsent(userId, new ArrayList<Notification>());
-		websockets.putIfAbsent(userId, new ArrayList<WebSocket.Out<JsonNode>>());
-		
 		synchronized (notificationQueues) {
-			notificationQueues.get(userId).add(notification);
-			
 			synchronized (websockets) {
+				notificationQueues.putIfAbsent(userId, new HashMap<Long,List<Notification>>());
+				websockets.putIfAbsent(userId, new HashMap<Long,WebSocket.Out<JsonNode>>());
+				
+				for (List<Notification> browser : notificationQueues.get(userId).values())
+					browser.add(notification);
+				
 				// if the user has any open WebSockets, push the notification(s) right away
 				if (websockets.get(userId).size() > 0) {
-					for (Notification n : notificationQueues.get(userId)) {
-						JsonNode jsonNotification = n.toJson();
-						for (WebSocket.Out<JsonNode> out : websockets.get(userId)) {
-							out.write(jsonNotification);
+					for (Long browserId : websockets.get(userId).keySet()) {
+						for (Notification n : notificationQueues.get(userId).get(browserId)) {
+							JsonNode jsonNotification = n.toJson();
+							websockets.get(userId).get(browserId).write(jsonNotification);
 						}
+						notificationQueues.get(userId).get(browserId).clear();
 					}
-					notificationQueues.get(userId).clear();
 				}
 			}
 		}

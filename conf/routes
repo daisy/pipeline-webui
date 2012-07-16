@@ -20,8 +20,8 @@ GET     /login/guest                        controllers.Login.authenticateGuest(
 GET     /logout                             controllers.Login.logout()
 
 # Notifications
-GET     /notifications/websocket            controllers.Notifications.websocket()
-GET     /notifications/xhr                  controllers.Notifications.xhr()
+GET     /notifications/:browser/websocket   controllers.Notifications.websocket(browser: Long)
+GET     /notifications/:browser/xhr         controllers.Notifications.xhr(browser: Long)
 
 # Scripts
 GET		/scripts/:id                        controllers.Scripts.getScript(id: String)

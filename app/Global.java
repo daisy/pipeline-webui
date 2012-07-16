@@ -1,5 +1,6 @@
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -33,32 +34,44 @@ public class Global extends GlobalSettings {
 		if (Setting.get("jobs.deleteAfterDuration") == null)
 			Setting.set("jobs.deleteAfterDuration", "0");
 		
-		User.notificationQueues = new ConcurrentHashMap<Long,List<Notification>>();
-		User.websockets = new ConcurrentHashMap<Long,List<WebSocket.Out<JsonNode>>>();
+		User.notificationQueues = new ConcurrentHashMap<Long,Map<Long,List<Notification>>>();
+		User.websockets = new ConcurrentHashMap<Long,Map<Long,WebSocket.Out<JsonNode>>>();
 		
-		// Push "heartbeat" notifications (keeping the push notification connections alive). Not sure how well this scales...
+		// Push "heartbeat" notifications (keeping the push notification connections alive). Hopefully this scales...
 		Akka.system().scheduler().schedule(
 				Duration.create(0, TimeUnit.SECONDS),
 				Duration.create(1, TimeUnit.SECONDS),
 				new Runnable() {
 					public void run() {
-						Date timeoutDate = new Date(new Date().getTime()-10*60*1000);
+						Date timeoutDate = new Date(new Date().getTime()-60*1000);
 						synchronized (User.notificationQueues) {
 							for (Long userId : User.notificationQueues.keySet()) {
-								while (User.notificationQueues.get(userId).size() > 0 && User.notificationQueues.get(userId).get(0).getTime().before(timeoutDate)) {
-									User.notificationQueues.get(userId).remove(0);
-								}
-								
-								// TODO: Heartbeats keeps pumping even when the user is not logged in. Could be a problem if there are many users.
-								List<Notification> notificationQueue = User.notificationQueues.get(userId);
-								if (notificationQueue.isEmpty()) {
-									User.push(userId, new Notification("heartbeat", null));
+								for (Long browserId : User.notificationQueues.get(userId).keySet()) {
+									List<Notification> browser = User.notificationQueues.get(userId).get(browserId);
+									
+									boolean timeout = false;
+									for (Notification n : browser) {
+										if (n.getTime().before(timeoutDate)) {
+											timeout = true;
+											break;
+										}
+									}
+									
+									if (timeout) {
+										browser.clear();
+										User.notificationQueues.get(userId).remove(browserId);
+										
+									} else {
+										if (browser.isEmpty()) {
+											User.push(userId, new Notification("heartbeat", null));
+										}
+									}
 								}
 							}
 						}
 					}
 				}
-				);
+			);
 		
 		// Delete jobs and uploads after a certain time. Configurable by administrators.
 		Akka.system().scheduler().schedule(
@@ -109,25 +122,24 @@ public class Global extends GlobalSettings {
 						for (Job webUiJob : webUiJobs) {
 							boolean exists = false;
 							for (pipeline2.models.Job fwkJob : fwkJobs) {
-								if (webUiJob.id.equals(fwkJob.id))
+								if (webUiJob.id.equals(fwkJob.id)) {
 									exists = true;
-								
-								if (!exists) {
-									Logger.info("Deleting job that no longer exists in the Pipeline 2 framework: "+webUiJob.id+" ("+webUiJob.nicename+")");
-									webUiJob.delete();
+									break;
 								}
+							}
+							if (!exists) {
+								Logger.info("Deleting job that no longer exists in the Pipeline 2 framework: "+webUiJob.id+" ("+webUiJob.nicename+")");
+								webUiJob.delete();
 							}
 						}
 					}
 				}
-				);
-	}  
+			);
+	}
 
 	@Override
 	public void onStop(Application app) {
 		// Application shutdown...
 	}
-
-
 
 }

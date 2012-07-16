@@ -1,13 +1,11 @@
 @(activateLink: String)
 
-@views.html.Account.email("Activate your Pipeline 2 account", "Activate your account") {
+@views.html.Account.email("Activate your Pipeline 2 account", "Activate your account", null, null) {
 
-<div>
-	
-	<p>An account has been created with your e-mail address. If you do not wish to use Pipeline 2, you may ignore this e-mail.</p>
-	
-	<p><a href="@activateLink" >Click here to activate your account!</a></p>
-	
-</div>
+An account has been created with your e-mail address. If you do not wish to use Pipeline 2, you may ignore this e-mail.
+<br/>
+<br/>
+@views.html.Account.emailButton(activateLink,"Click here to activate your account!")
+<br/>
 
 }

@@ -3,7 +3,7 @@
 @main("Jobs", "jobs", Array("notifications.js")) {
 
 <script type="text/javascript" charset="utf-8">
-$(function(){Notifications.init("@routes.Notifications.websocket().webSocketURL(request)", "@routes.Notifications.xhr().absoluteURL(request)");});
+$(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
 </script>
 
 <h1>Jobs</h1>

@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipException;
@@ -76,6 +77,7 @@ public class Jobs extends Controller {
 		if (user.admin)
 			flash("showOwner", "true");
 		
+		flash("browserId",""+new Random().nextLong());
 		return ok(views.html.Jobs.getJobs.render(jobList));
 	}
 	
@@ -128,7 +130,8 @@ public class Jobs extends Controller {
 		if (!Job.lastStatus.containsKey(job.id)) {
 			Job.lastStatus.put(job.id, job.status);
 		}
-
+		
+		flash("browserId",""+new Random().nextLong());
 		return ok(views.html.Jobs.getJob.render(job, webuiJob));
 	}
 
@@ -357,8 +360,10 @@ public class Jobs extends Controller {
 		}
 		
 		Map<String,String> callbacks = new HashMap<String,String>();
-		callbacks.put("messages", routes.Callbacks.postCallback("messages").absoluteURL(request()));
-		callbacks.put("status", routes.Callbacks.postCallback("status").absoluteURL(request()));
+		if (play.Play.isDev()) { // TODO: only in dev until the callback API is fully implemented
+			callbacks.put("messages", routes.Callbacks.postCallback("messages").absoluteURL(request()));
+			callbacks.put("status", routes.Callbacks.postCallback("status").absoluteURL(request()));
+		}
 		
 		if (contextZipFile == null)
 			Logger.debug("No files in context, submitting job without context ZIP file");

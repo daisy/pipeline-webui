@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,6 +50,7 @@ public class Scripts extends Controller {
 		
 		List<Script> scripts = Script.getScripts(response);
 		
+		flash("browserId",""+new Random().nextLong());
 		return ok(views.html.Scripts.getScripts.render(scripts));
 	}
 	
@@ -91,6 +93,7 @@ public class Scripts extends Controller {
 		
 //		Logger.debug(play.libs.Json.toJson(script)+"");
 		
+		flash("browserId",""+new Random().nextLong());
 		return ok(views.html.Scripts.getScript.render(script, uploadFiles, hideAdvancedOptions));
 	}
 	

@@ -26,6 +26,13 @@
 	<link rel="apple-touch-icon" sizes="72x72" href="routes.Assets.at("images/apple-touch-icon-72x72.png")"/>
 	<link rel="apple-touch-icon" sizes="114x114" href="routes.Assets.at("images/apple-touch-icon-114x114.png")"/>-->
 	
+	<!-- Load jQuery before the content (so other templates may use jQuery) -->
+	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+	<script type="text/javascript">
+		if (typeof jQuery == 'undefined') {
+			document.write(unescape("%3Cscript src='@routes.Assets.at("javascripts/jquery-1.7.2.min.js")' type='text/javascript'%3E%3C/script%3E"));
+		}
+	</script>
   </head>
 	
   <body class="body" data-spy="scroll" data-target=".subnav" data-offset="50">
@@ -78,14 +85,6 @@
 		</div>
 	</div>
 </div>
-	
-	<!-- Load jQuery before the content (so other templates may use jQuery) -->
-	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-	<script type="text/javascript">
-		if (typeof jQuery == 'undefined') {
-			document.write(unescape("%3Cscript src='@routes.Assets.at("javascripts/jquery-1.7.2.min.js")' type='text/javascript'%3E%3C/script%3E"));
-		}
-	</script>
 	
 	<div class="container">
    	

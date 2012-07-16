@@ -150,6 +150,7 @@ public class Job extends Model implements Comparable<Job> {
 		List<Upload> uploads = getUploads();
 		for (Upload upload : uploads)
 			upload.delete();
+		pipeline2.Jobs.delete(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), this.id);
 		super.delete();
 	}
 
