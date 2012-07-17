@@ -80,10 +80,10 @@
 				<label class="control-label" id="setWS-sameFilesystem-label" for="sameFilesystem" aria-label="sameFilesystem">Same filesystem</label>
 				<div class="controls">
 					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="setWS-sameFilesystem-label" id="sameFilesystem">
-						<button type="button" name="setWS-sameFilesystem-on" class="btn @("active".when(setWSForm != null && setWSForm.field("sameFilesystem").valueOr("false")=="true"))" id="setWS-sameFilesystem-on"
+						<button type="button" name="setWS-sameFilesystem-on" class="btn @("active".when(setWSForm != null && setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))=="true"))" id="setWS-sameFilesystem-on"
 							aria-role="radio" aria-checked="true"
 							onclick="toggleRadio('setWS-sameFilesystem', true, 'true');return false;">Yes</button>
-						<button type="button" name="setWS-sameFilesystem-off" class="btn @("active".when(setWSForm != null && setWSForm.field("sameFilesystem").valueOr("false")=="false"))" id="setWS-sameFilesystem-off"
+						<button type="button" name="setWS-sameFilesystem-off" class="btn @("active".when(setWSForm != null && setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))=="false"))" id="setWS-sameFilesystem-off"
 							aria-role="radio" aria-checked="false"
 							onclick="toggleRadio('setWS-sameFilesystem', false, 'false');return false;">No</button>
 					</div>

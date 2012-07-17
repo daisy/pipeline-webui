@@ -1,24 +1,19 @@
 package controllers;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import models.Notification;
 import models.Setting;
 import models.Upload;
 import models.User;
 
-import org.w3c.dom.Node;
-
-import pipeline2.Pipeline2WS;
 import pipeline2.Pipeline2WSResponse;
 import pipeline2.models.Script;
 import pipeline2.models.script.*;
@@ -28,9 +23,7 @@ import pipeline2.models.script.arguments.ArgFiles;
 import pipeline2.models.script.arguments.ArgString;
 import pipeline2.models.script.arguments.ArgStrings;
 import play.Logger;
-import play.libs.XPath;
 import play.mvc.*;
-import utils.XML;
 
 public class Scripts extends Controller {
 	
@@ -50,7 +43,13 @@ public class Scripts extends Controller {
 		
 		List<Script> scripts = Script.getScripts(response);
 		
-		flash("browserId",""+new Random().nextLong());
+		Long browserId = new Random().nextLong();
+		synchronized (User.notificationQueues) {
+			User.notificationQueues.putIfAbsent(user.id, new ConcurrentHashMap<Long,List<Notification>>());
+			User.notificationQueues.get(user.id).putIfAbsent(browserId, new ArrayList<Notification>());
+			Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
+		}
+		flash("browserId",""+browserId);
 		return ok(views.html.Scripts.getScripts.render(scripts));
 	}
 	
@@ -91,9 +90,13 @@ public class Scripts extends Controller {
 				hideAdvancedOptions = false; // don't show "hide advanced options" control, if there are no advanced options
 		}
 		
-//		Logger.debug(play.libs.Json.toJson(script)+"");
-		
-		flash("browserId",""+new Random().nextLong());
+		Long browserId = new Random().nextLong();
+		synchronized (User.notificationQueues) {
+			User.notificationQueues.putIfAbsent(user.id, new ConcurrentHashMap<Long,List<Notification>>());
+			User.notificationQueues.get(user.id).putIfAbsent(browserId, new ArrayList<Notification>());
+			Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
+		}
+		flash("browserId",""+browserId);
 		return ok(views.html.Scripts.getScript.render(script, uploadFiles, hideAdvancedOptions));
 	}
 	

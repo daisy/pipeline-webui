@@ -9,6 +9,7 @@ import javax.persistence.*;
 import org.codehaus.jackson.JsonNode;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import play.data.Form;
@@ -27,7 +28,7 @@ public class User extends Model {
 	public static ConcurrentMap<Long,Map<Long,WebSocket.Out<JsonNode>>> websockets;
 	
 	/** Key is user ID; value is a map with browser window IDs as key, mapped to a list of notifications waiting to be sent to the user. */
-	public static ConcurrentMap<Long,Map<Long,List<Notification>>> notificationQueues;
+	public static ConcurrentMap<Long, ConcurrentMap<Long, List<Notification>>> notificationQueues;
 	
 	public static final Long LINK_TIMEOUT = 24*3600*1000L; // TODO: make as admin setting instead
 
@@ -220,9 +221,10 @@ public class User extends Model {
 	 * @param notification
 	 */
 	public static void push(Long userId, Notification notification) {
+		Logger.debug("pushing message to user #"+userId+": "+notification.toString());
 		synchronized (notificationQueues) {
 			synchronized (websockets) {
-				notificationQueues.putIfAbsent(userId, new HashMap<Long,List<Notification>>());
+				notificationQueues.putIfAbsent(userId, new ConcurrentHashMap<Long,List<Notification>>());
 				websockets.putIfAbsent(userId, new HashMap<Long,WebSocket.Out<JsonNode>>());
 				
 				for (List<Notification> browser : notificationQueues.get(userId).values())

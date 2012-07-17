@@ -77,7 +77,7 @@ public class Job extends Model implements Comparable<Job> {
 
 	// -- Queries
 
-	public static Model.Finder<String,Job> find = new Model.Finder(String.class, Job.class);
+	public static Model.Finder<String,Job> find = new Model.Finder<String, Job>(String.class, Job.class);
 
 	/** Retrieve a Job by its id. */
 	public static Job findById(String id) {

@@ -2,6 +2,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import org.codehaus.jackson.JsonNode;
@@ -34,7 +35,7 @@ public class Global extends GlobalSettings {
 		if (Setting.get("jobs.deleteAfterDuration") == null)
 			Setting.set("jobs.deleteAfterDuration", "0");
 		
-		User.notificationQueues = new ConcurrentHashMap<Long,Map<Long,List<Notification>>>();
+		User.notificationQueues = new ConcurrentHashMap<Long,ConcurrentMap<Long,List<Notification>>>();
 		User.websockets = new ConcurrentHashMap<Long,Map<Long,WebSocket.Out<JsonNode>>>();
 		
 		// Push "heartbeat" notifications (keeping the push notification connections alive). Hopefully this scales...
@@ -60,6 +61,7 @@ public class Global extends GlobalSettings {
 									if (timeout) {
 										browser.clear();
 										User.notificationQueues.get(userId).remove(browserId);
+										Logger.debug("Browser: user #"+userId+" timed out browser window #"+browserId);
 										
 									} else {
 										if (browser.isEmpty()) {

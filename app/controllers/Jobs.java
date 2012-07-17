@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipException;
@@ -77,7 +78,13 @@ public class Jobs extends Controller {
 		if (user.admin)
 			flash("showOwner", "true");
 		
-		flash("browserId",""+new Random().nextLong());
+		Long browserId = new Random().nextLong();
+		synchronized (User.notificationQueues) {
+			User.notificationQueues.putIfAbsent(user.id, new ConcurrentHashMap<Long,List<Notification>>());
+			User.notificationQueues.get(user.id).putIfAbsent(browserId, new ArrayList<Notification>());
+			Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
+		}
+		flash("browserId",""+browserId);
 		return ok(views.html.Jobs.getJobs.render(jobList));
 	}
 	
@@ -131,7 +138,13 @@ public class Jobs extends Controller {
 			Job.lastStatus.put(job.id, job.status);
 		}
 		
-		flash("browserId",""+new Random().nextLong());
+		Long browserId = new Random().nextLong();
+		synchronized (User.notificationQueues) {
+			User.notificationQueues.putIfAbsent(user.id, new ConcurrentHashMap<Long,List<Notification>>());
+			User.notificationQueues.get(user.id).putIfAbsent(browserId, new ArrayList<Notification>());
+			Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
+		}
+		flash("browserId",""+browserId);
 		return ok(views.html.Jobs.getJob.render(job, webuiJob));
 	}
 

@@ -125,8 +125,8 @@ public class Upload extends Model {
     @Override
     public void delete() {
     	File file = getFile();
-    	if (file.exists())
-    		getFile().delete();
+    	if (file != null && file.exists())
+    		file.delete();
     	super.delete();
     }
 }
