@@ -3,7 +3,6 @@ package models;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.codehaus.jackson.JsonNode;
 
 /**
@@ -31,4 +30,5 @@ public class Notification {
 	public Date getTime() {
 		return (Date)notification.get("time");
 	}
+		
 }

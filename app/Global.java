@@ -9,6 +9,7 @@ import org.codehaus.jackson.JsonNode;
 
 import akka.util.Duration;
 import models.Job;
+import models.NotificationConnection;
 import models.Setting;
 import models.Upload;
 import models.User;
@@ -35,8 +36,7 @@ public class Global extends GlobalSettings {
 		if (Setting.get("jobs.deleteAfterDuration") == null)
 			Setting.set("jobs.deleteAfterDuration", "0");
 		
-		User.notificationQueues = new ConcurrentHashMap<Long,ConcurrentMap<Long,List<Notification>>>();
-		User.websockets = new ConcurrentHashMap<Long,Map<Long,WebSocket.Out<JsonNode>>>();
+		NotificationConnection.notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>();
 		
 		// Push "heartbeat" notifications (keeping the push notification connections alive). Hopefully this scales...
 		Akka.system().scheduler().schedule(
@@ -44,29 +44,21 @@ public class Global extends GlobalSettings {
 				Duration.create(1, TimeUnit.SECONDS),
 				new Runnable() {
 					public void run() {
-						Date timeoutDate = new Date(new Date().getTime()-60*1000);
-						synchronized (User.notificationQueues) {
-							for (Long userId : User.notificationQueues.keySet()) {
-								for (Long browserId : User.notificationQueues.get(userId).keySet()) {
-									List<Notification> browser = User.notificationQueues.get(userId).get(browserId);
-									
-									boolean timeout = false;
-									for (Notification n : browser) {
-										if (n.getTime().before(timeoutDate)) {
-											timeout = true;
-											break;
-										}
+						synchronized (NotificationConnection.notificationConnections) {
+							for (Long userId : NotificationConnection.notificationConnections.keySet()) {
+								List<NotificationConnection> browsers = NotificationConnection.notificationConnections.get(userId);
+								
+								for (int c = browsers.size()-1; c >= 0; c--) {
+									if (!browsers.get(c).isAlive()) {
+										Logger.debug("Browser: user #"+userId+" timed out browser window #"+browsers.get(c).browserId+" (last read: "+browsers.get(c).lastRead+")");
+										browsers.remove(c);
 									}
-									
-									if (timeout) {
-										browser.clear();
-										User.notificationQueues.get(userId).remove(browserId);
-										Logger.debug("Browser: user #"+userId+" timed out browser window #"+browserId);
-										
-									} else {
-										if (browser.isEmpty()) {
-											User.push(userId, new Notification("heartbeat", null));
-										}
+								}
+								
+								for (NotificationConnection c : browsers) {
+									if (c.notifications.size() == 0) {
+//										Logger.debug("*heartbeat* for user #"+userId+" and browser window #"+c.browserId);
+										c.push(new Notification("heartbeat", null));
 									}
 								}
 							}

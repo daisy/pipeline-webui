@@ -21,6 +21,7 @@ import javax.management.RuntimeErrorException;
 
 import models.Job;
 import models.Notification;
+import models.NotificationConnection;
 import models.Setting;
 import models.Upload;
 import models.User;
@@ -68,7 +69,7 @@ public class Jobs extends Controller {
 			} else {
 				job.href = XPath.selectText("@href", jobNode, Pipeline2WS.ns);
 				job.status = XPath.selectText("@status", jobNode, Pipeline2WS.ns);
-				if (user.admin || user.id == job.user)
+				if (user.admin || user.id.equals(job.user))
 					jobList.add(job);
 			}
 		}
@@ -79,11 +80,8 @@ public class Jobs extends Controller {
 			flash("showOwner", "true");
 		
 		Long browserId = new Random().nextLong();
-		synchronized (User.notificationQueues) {
-			User.notificationQueues.putIfAbsent(user.id, new ConcurrentHashMap<Long,List<Notification>>());
-			User.notificationQueues.get(user.id).putIfAbsent(browserId, new ArrayList<Notification>());
-			Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
-		}
+		NotificationConnection.createBrowserIfAbsent(user.id, browserId);
+		Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
 		flash("browserId",""+browserId);
 		return ok(views.html.Jobs.getJobs.render(jobList));
 	}
@@ -139,11 +137,8 @@ public class Jobs extends Controller {
 		}
 		
 		Long browserId = new Random().nextLong();
-		synchronized (User.notificationQueues) {
-			User.notificationQueues.putIfAbsent(user.id, new ConcurrentHashMap<Long,List<Notification>>());
-			User.notificationQueues.get(user.id).putIfAbsent(browserId, new ArrayList<Notification>());
-			Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
-		}
+		NotificationConnection.createBrowserIfAbsent(user.id, browserId);
+		Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
 		flash("browserId",""+browserId);
 		return ok(views.html.Jobs.getJob.render(job, webuiJob));
 	}
@@ -417,7 +412,7 @@ public class Jobs extends Controller {
 		}
 		webUiJob.started = new Date();
 		webUiJob.save();
-		User.push(webUiJob.user, new Notification("job-started-"+webUiJob.id, webUiJob.started.toString()));
+		NotificationConnection.push(webUiJob.user, new Notification("job-started-"+webUiJob.id, webUiJob.started.toString()));
 		for (Long uploadId : scriptForm.uploads.keySet()) {
 			// associate uploads with job
 			scriptForm.uploads.get(uploadId).job = jobId;

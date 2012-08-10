@@ -24,12 +24,6 @@ public class User extends Model {
 
 	// ---------- Static stuff ----------
 
-	/** Key is user ID; value is a map with browser window IDs as key, mapped to a websocket output for that user. */
-	public static ConcurrentMap<Long,Map<Long,WebSocket.Out<JsonNode>>> websockets;
-	
-	/** Key is user ID; value is a map with browser window IDs as key, mapped to a list of notifications waiting to be sent to the user. */
-	public static ConcurrentMap<Long, ConcurrentMap<Long, List<Notification>>> notificationQueues;
-	
 	public static final Long LINK_TIMEOUT = 24*3600*1000L; // TODO: make as admin setting instead
 
 
@@ -175,76 +169,6 @@ public class User extends Model {
 	}
 
 	/**
-	 * Creates and returns a WebSocket connection for the browser window `browserId`
-	 * @return
-	 */
-	public WebSocket<JsonNode> addWebSocket(final Long browserId) {
-
-		// Create WebSocket
-		WebSocket<JsonNode> ws = new WebSocket<JsonNode>() {
-			// Called when the Websocket Handshake is done.
-			public void onReady(WebSocket.In<JsonNode> in, final WebSocket.Out<JsonNode> out){
-
-				// For each event received on the socket
-				in.onMessage(new Callback<JsonNode>() {
-					public void invoke(JsonNode event) {
-						// Log events to the console
-						Logger.debug(event.asText());
-					}
-				});
-
-				// When the socket is closed
-				in.onClose(new Callback0() {
-					public void invoke() {
-						synchronized (websockets) {
-							websockets.get(id).remove(out);
-							Logger.debug("WebSocket: user #"+id+" disconnected browser window #"+browserId);
-						}
-					}
-				});
-
-				// Remember socket
-				synchronized (websockets) {
-					websockets.putIfAbsent(id, new HashMap<Long,WebSocket.Out<JsonNode>>());
-					websockets.get(id).put(browserId, out);
-					Logger.debug("WebSocket: user #"+id+" connected browser window #"+browserId);
-				}
-
-			}
-		};
-
-		return ws;
-	}
-	
-	/**
-	 * Push a notification to the users browser
-	 * @param notification
-	 */
-	public static void push(Long userId, Notification notification) {
-		Logger.debug("pushing message to user #"+userId+": "+notification.toString());
-		synchronized (notificationQueues) {
-			synchronized (websockets) {
-				notificationQueues.putIfAbsent(userId, new ConcurrentHashMap<Long,List<Notification>>());
-				websockets.putIfAbsent(userId, new HashMap<Long,WebSocket.Out<JsonNode>>());
-				
-				for (List<Notification> browser : notificationQueues.get(userId).values())
-					browser.add(notification);
-				
-				// if the user has any open WebSockets, push the notification(s) right away
-				if (websockets.get(userId).size() > 0) {
-					for (Long browserId : websockets.get(userId).keySet()) {
-						for (Notification n : notificationQueues.get(userId).get(browserId)) {
-							JsonNode jsonNotification = n.toJson();
-							websockets.get(userId).get(browserId).write(jsonNotification);
-						}
-						notificationQueues.get(userId).get(browserId).clear();
-					}
-				}
-			}
-		}
-	}
-	
-	/**
 	 * Validate a new user.
 	 * @param filledForm
 	 */
@@ -264,8 +188,9 @@ public class User extends Model {
 	/**
 	 * Validate changes for a user.
 	 * @param filledForm
+	 * @param user 
 	 */
-	public void validateChange(Form<User> filledForm) {
+	public void validateChange(Form<User> filledForm, User user) {
 		if (!this.email.equals(filledForm.field("email").value()) && User.findByEmail(filledForm.field("email").valueOr("")) != null)
 			filledForm.reject("email", "That e-mail address is already taken");
 		
@@ -274,7 +199,7 @@ public class User extends Model {
 			if (!adminString.equals("true") && !adminString.equals("false"))
 				filledForm.reject("admin", "The user must either *be* an admin, or *not be* an admin");
 			
-			if (Long.valueOf(filledForm.field("userid").value()) == this.id)
+			if (this.id.equals(user.id))
 				filledForm.reject("admin", "Only other admins can demote you to a normal user, you cannot do it yourself");
 		}
 	}

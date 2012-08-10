@@ -128,6 +128,8 @@
 					
 					/* Prepare and validate widget */
 					var validator = function(){
+						var result = {valid: true, messages: []};
+						
 						var value = [];
 						$.each($("#@{arg.kind}-@{arg.name}-selected option"), function(i, e) {
 							value.push($(e).attr("value"));
@@ -139,6 +141,8 @@
 						mediaType
 							$("@{arg.kind}-@{arg.name}-selected option") - WARN: check the media type of each option against supported types 
 						*/
+						
+						return result;
 					}
 					Job.onValidate(validator);
 				});

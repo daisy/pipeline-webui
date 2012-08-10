@@ -193,7 +193,7 @@ public class Administrator extends Controller {
 	public static Result postSettings() {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
-
+		
 		User user = User.authenticate(session("userid"), session("email"), session("password"));
 		if (user == null || !user.admin)
 			return redirect(routes.Login.login());
@@ -260,7 +260,7 @@ public class Administrator extends Controller {
 				return redirect(routes.Administrator.getSettings());
 			}
 			
-			updateUser.validateChange(filledForm);
+			updateUser.validateChange(filledForm, user);
 
 			filledForm.errors().remove("password"); // admin does not require the users password to edit the user
 			
@@ -292,7 +292,7 @@ public class Administrator extends Controller {
 				}
 				
 				updateUser.save();
-				if (updateUser.id == user.id) {
+				if (updateUser.id.equals(user.id)) {
 					session("name", user.name);
 					session("email", user.email);
 				}
@@ -350,7 +350,7 @@ public class Administrator extends Controller {
 				return redirect(routes.Administrator.getSettings());
 			}
 			
-			if (deleteUser.id == user.id) {
+			if (deleteUser.id.equals(user.id)) {
 				flash("error", "Only other admins can delete you, you cannot do it yourself");
 				return redirect(routes.Administrator.getSettings());
 			}

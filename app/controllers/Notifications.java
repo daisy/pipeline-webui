@@ -1,16 +1,10 @@
 package controllers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-
-import models.Notification;
+import models.NotificationConnection;
 import models.User;
 
 import org.codehaus.jackson.JsonNode;
 
-import play.Logger;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.WebSocket;
@@ -28,12 +22,7 @@ public class Notifications extends Controller {
 		if (user == null)
 			return null; // forbidden
 		
-		synchronized (User.notificationQueues) {
-			User.notificationQueues.putIfAbsent(user.id, new ConcurrentHashMap<Long,List<Notification>>());
-			User.notificationQueues.get(user.id).putIfAbsent(browserId, new ArrayList<Notification>());
-		}
-		
-		return user.addWebSocket(browserId);
+		return NotificationConnection.createWebSocket(user.id, browserId);
 	}
 	
 	/**
@@ -48,18 +37,7 @@ public class Notifications extends Controller {
 		if (user == null)
 			return forbidden();
 		
-		List<JsonNode> result = new ArrayList<JsonNode>();
-		synchronized (User.notificationQueues) {
-			User.notificationQueues.putIfAbsent(user.id, new ConcurrentHashMap<Long,List<Notification>>());
-			User.notificationQueues.get(user.id).putIfAbsent(browserId, new ArrayList<Notification>());
-			
-			for (Notification n : User.notificationQueues.get(user.id).get(browserId)) {
-				result.add(n.toJson());
-			}
-			User.notificationQueues.get(user.id).get(browserId).clear();
-		}
-		
-		return ok(play.libs.Json.toJson(result));
+		return ok(NotificationConnection.pullJson(user.id, browserId));
 	}
-
+	
 }

@@ -102,6 +102,7 @@ public class Job extends Model implements Comparable<Job> {
 				new Runnable() {
 					public void run() {
 						Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) + 1 : 0;
+						Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
 						
 						Pipeline2WSResponse wsJob = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, fromSequence);
 						
@@ -118,19 +119,19 @@ public class Job extends Model implements Comparable<Job> {
 								// pushNotifier tends to fire multiple times after canceling it, so this if{} is just to fire the "finished" event exactly once
 								webUiJob.finished = new Date();
 								webUiJob.save();
-								User.push(webUiJob.user, new Notification("job-finished-"+job.id, webUiJob.finished.toString()));
+								NotificationConnection.push(webUiJob.user, new Notification("job-finished-"+job.id, webUiJob.finished.toString()));
 							}
 						}
 						
 						Job webuiJob = Job.findById(job.id);
 						for (pipeline2.models.job.Message message : job.messages) {
 							Notification notification = new Notification("job-message-"+job.id, message);
-							User.push(webuiJob.user, notification);
+							NotificationConnection.push(webuiJob.user, notification);
 						}
 						
 						if (!job.status.equals(lastStatus.get(job.id))) {
 							lastStatus.put(job.id, job.status);
-							User.push(webuiJob.user, new Notification("job-status-"+job.id, job.status));
+							NotificationConnection.push(webuiJob.user, new Notification("job-status-"+job.id, job.status));
 						}
 						
 						if (job.messages.size() > 0) {

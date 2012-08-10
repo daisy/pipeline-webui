@@ -210,8 +210,8 @@ public class Account extends Controller {
 			email.setAuthenticator(new DefaultAuthenticator(Setting.get("mail.username"), Setting.get("mail.password")));
 			email.setDebug(Play.application().isDev());
 			email.setHostName(Setting.get("mail.smtp.host"));
-			email.getMailSession().getProperties().put("mail.debug", Play.application().isDev() ? "true" : "false");
-			email.getMailSession().getProperties().put("mail.smtp.debug", Play.application().isDev() ? "true" : "false");
+//			email.getMailSession().getProperties().put("mail.debug", Play.application().isDev() ? "true" : "false");
+//			email.getMailSession().getProperties().put("mail.smtp.debug", Play.application().isDev() ? "true" : "false");
 			email.getMailSession().getProperties().put("mail.smtps.auth", "true");
 			email.getMailSession().getProperties().put("mail.smtps.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 			email.getMailSession().getProperties().put("mail.smtps.socketFactory.fallback", "false");

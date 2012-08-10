@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import models.Notification;
+import models.NotificationConnection;
 import models.User;
 
 import play.Logger;
@@ -83,7 +84,7 @@ public class Uploads extends Controller {
         	
         	Long uploadId = models.Upload.store(file, user);
         	
-        	User.push(user.id, new Notification("uploads", getUploadInfo(uploadId)));
+        	NotificationConnection.push(user.id, new Notification("uploads", getUploadInfo(uploadId)));
         }
         
 //        Long uploadId = models.Upload.store(files.get(0));

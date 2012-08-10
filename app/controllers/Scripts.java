@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import models.Notification;
+import models.NotificationConnection;
 import models.Setting;
 import models.Upload;
 import models.User;
@@ -43,13 +44,6 @@ public class Scripts extends Controller {
 		
 		List<Script> scripts = Script.getScripts(response);
 		
-		Long browserId = new Random().nextLong();
-		synchronized (User.notificationQueues) {
-			User.notificationQueues.putIfAbsent(user.id, new ConcurrentHashMap<Long,List<Notification>>());
-			User.notificationQueues.get(user.id).putIfAbsent(browserId, new ArrayList<Notification>());
-			Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
-		}
-		flash("browserId",""+browserId);
 		return ok(views.html.Scripts.getScripts.render(scripts));
 	}
 	
@@ -91,11 +85,8 @@ public class Scripts extends Controller {
 		}
 		
 		Long browserId = new Random().nextLong();
-		synchronized (User.notificationQueues) {
-			User.notificationQueues.putIfAbsent(user.id, new ConcurrentHashMap<Long,List<Notification>>());
-			User.notificationQueues.get(user.id).putIfAbsent(browserId, new ArrayList<Notification>());
-			Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
-		}
+		NotificationConnection.createBrowserIfAbsent(user.id, browserId);
+		Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
 		flash("browserId",""+browserId);
 		return ok(views.html.Scripts.getScript.render(script, uploadFiles, hideAdvancedOptions));
 	}
