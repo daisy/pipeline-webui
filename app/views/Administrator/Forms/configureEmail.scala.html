@@ -2,15 +2,16 @@
 
 <div class="tabbable tabs-left">
 	<ul class="nav nav-tabs">
-		<li class="@("active".when(configureEmailForm.field("emailService").valueOr("smtp") == "smtp"))"><a href="#mailtab-smtp" data-toggle="tab"><img src="@routes.Assets.at("images/mail_icon_32.png")" alt=""/> SMTP</a></li>
-		<li class="@("active".when(configureEmailForm.field("emailService").valueOr("") == "gmail"))"><a href="#mailtab-gmail" data-toggle="tab"><img src="@routes.Assets.at("images/gmail_icon_32.png")" alt=""/> GMail</a></li>
+		<li class="@("active".when(configureEmailForm.field("emailService").valueOr(Setting.get("mail.provider")) == "smtp"))"><a href="#mailtab-smtp" data-toggle="tab"><img src="@routes.Assets.at("images/mail_icon_32.png")" alt=""/> SMTP</a></li>
+		<li class="@("active".when(configureEmailForm.field("emailService").valueOr(Setting.get("mail.provider")) == "gmail"))"><a href="#mailtab-gmail" data-toggle="tab"><img src="@routes.Assets.at("images/gmail_icon_32.png")" alt=""/> GMail</a></li>
 	</ul>
 	<div class="tab-content">
-		<div class="tab-pane @("active".when(configureEmailForm.field("emailService").valueOr("smtp") == "smtp"))" id="mailtab-smtp">
+		<div class="tab-pane @("active".when(configureEmailForm.field("emailService").valueOr(Setting.get("mail.provider")) == "smtp"))" id="mailtab-smtp">
 			@helper.form(action = route) {
 				
 				<input type="hidden" name="formName" value="configureEmail"/>
 				<input type="hidden" name="emailService" value="smtp"/>
+				<input type="hidden" name="ssl" value="@Setting.get("mail.smtp.ssl")" id="configureEmail-smtp-ssl-value"/>
 	
 				<fieldset>
 					<legend>Generic SMTP Server</legend>
@@ -26,10 +27,42 @@
 										onkeyup="if(@{models.Setting.get("mail.smtp.host")==null} || this.value==='@models.Setting.get("mail.smtp.host")')document.getElementById('configureEmail-smtp-addressGroup').style.backgroundColor='#FFF';else document.getElementById('configureEmail-smtp-addressGroup').style.backgroundColor='#DDF';"
 								/>
 								@if(configureEmailForm.field("smtp").errors().size() > 0){
-									<span class="help-inline">A valid IP or domain name must be provided.</span>
+									<span class="help-inline">@configureEmailForm.error("smtp").message</span>
 								}
 							</div>
 						</div>
+						
+						<div class="control-group @("error".when(configureEmailForm.error("port") != null))" id="configureEmail-smtp-portGroup">
+							<label for="smtp-smtp" class="control-label" id="configureEmail-smtp-port-label">SMTP Port</label>
+							<div class="controls">
+								<input type="number" name="port" id="smtp-port" placeholder="Port number" class="input-xlarge" aria-labelledby="configureEmail-smtp-port-label"
+										value="@configureEmailForm.field("port").valueOr(Setting.get("mail.smtp.port"))"
+										onkeyup="if(@{models.Setting.get("mail.smtp.port")==null} || this.value==='@models.Setting.get("mail.smtp.port")')document.getElementById('configureEmail-smtp-portGroup').style.backgroundColor='#FFF';else document.getElementById('configureEmail-smtp-portGroup').style.backgroundColor='#DDF';"
+								/>
+								@if(configureEmailForm.field("port").errors().size() > 0){
+									<span class="help-inline">@configureEmailForm.error("port").message</span>
+								}
+							</div>
+						</div>
+						
+						<div class="control-group @("error".when(configureEmailForm.error("ssl") != null))" id="configureEmail-smtp-sslGroup">
+							<label class="control-label" id="configureEmail-smtp-ssl-label" for="configureEmail-smtp-ssl" aria-label="configureEmail-smtp-ssl">Use SSL/TLS</label>
+							<div class="controls">
+								<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="configureEmail-smtp-ssl-label" id="configureEmail-smtp-ssl">
+									<button type="button" name="ssl-on" class="btn @("active".when(Setting.get("mail.smtp.ssl")=="true"))" id="configureEmail-smtp-ssl-on"
+										aria-role="radio" aria-checked="true"
+										onclick="toggleRadio('configureEmail-smtp-ssl', true, '@Setting.get("mail.smtp.ssl")');">Yes</button>
+									<button type="button" name="ssl-off" class="btn @("active".when(Setting.get("mail.smtp.ssl")=="false"))" id="configureEmail-smtp-ssl-off"
+										aria-role="radio" aria-checked="false"
+										onclick="toggleRadio('configureEmail-smtp-ssl', false, '@Setting.get("mail.smtp.ssl")');">No</button>
+								</div>
+								@if(configureEmailForm.field("ssl").errors().size() > 0){
+									<span class="help-inline">@configureEmailForm.error("ssl").message</span>
+								}
+							</div>
+						</div>
+						
+						<!-- TODO: Use authentication -- yes/no -->
 						
 						<div class="control-group @("error".when(configureEmailForm.error("username") != null))" id="configureEmail-smtp-usernameGroup">
 							<label for="smtp-username" class="control-label" id="configureEmail-smtp-username-label">Username</label>
@@ -66,12 +99,14 @@
 				</fieldset>
 	        }
 		</div>
-		<div class="tab-pane @("active".when(configureEmailForm.field("emailService").valueOr("") == "gmail"))" id="mailtab-gmail">
+		<div class="tab-pane @("active".when(configureEmailForm.field("emailService").valueOr(Setting.get("mail.provider")) == "gmail"))" id="mailtab-gmail">
 			@helper.form(action = route) {
 				
 				<input type="hidden" name="formName" value="configureEmail"/>
 				<input type="hidden" name="emailService" value="gmail"/>
 				<input type="hidden" name="smtp" id="gmail-smtp" value="smtp.gmail.com"/>
+				<input type="hidden" name="port" id="gmail-port" value="465"/>
+				<input type="hidden" name="ssl" id="gmail-ssl" value="true"/>
 				
 				<fieldset>
 					<legend>GMail</legend>

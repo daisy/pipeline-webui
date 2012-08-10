@@ -98,6 +98,10 @@ public class Administrator extends Controller {
 		@Required
 		public String smtp;
 		
+		public int port;
+		
+		public boolean ssl;
+		
 		public String username;
 		
 		public String password;
@@ -105,6 +109,13 @@ public class Administrator extends Controller {
 		public static void validate(Form<ConfigureEmailForm> filledForm) {
 			if (filledForm.field("smtp").valueOr("").equals(""))
 	    		filledForm.reject("smtp", "Invalid SMTP IP / domain name.");
+			try {
+				int port = Integer.parseInt(filledForm.field("port").valueOr(""));
+				if (port < 0 || port > 65535)
+					filledForm.reject("port", "The port must be a valid number between 0 and 65535.");
+			} catch (NumberFormatException e) {
+				filledForm.reject("port", "The port must be a valid number between 0 and 65535.");
+			}
 		}
 	}
 	
@@ -454,9 +465,10 @@ public class Administrator extends Controller {
 				Setting.set("mail.username", filledForm.field("username").valueOr(""));
 				if (Setting.get("mail.password") == null || !"".equals(filledForm.field("password").value()))
 	        		Setting.set("mail.password", filledForm.field("password").valueOr(""));
+				Setting.set("mail.provider", filledForm.field("emailService").valueOr(""));
 				Setting.set("mail.smtp.host", filledForm.field("smtp").valueOr(""));
-				Setting.set("mail.smtp.port", "465"); // TODO: make configurable like the host
-				Setting.set("mail.smtp.ssl", "true"); // TODO: make configurable like the host
+				Setting.set("mail.smtp.port", filledForm.field("port").valueOr(""));
+				Setting.set("mail.smtp.ssl", filledForm.field("ssl").valueOr(""));
 				Setting.set("mail.from.name", "Pipeline 2");
 				Setting.set("mail.from.email", user.email);
 				flash("success", "Successfully changed e-mail settings!");

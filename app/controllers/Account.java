@@ -206,30 +206,37 @@ public class Account extends Controller {
 	public static boolean sendEmail(String subject, String html, String text, String recipientName, String recipientEmail) {
 		try {
 			HtmlEmail email = new HtmlEmail();
-			Logger.debug("e-mail password: '"+Setting.get("mail.password")+"'");
-			email.setAuthenticator(new DefaultAuthenticator(Setting.get("mail.username"), Setting.get("mail.password")));
-			email.setDebug(Play.application().isDev());
 			email.setHostName(Setting.get("mail.smtp.host"));
-//			email.getMailSession().getProperties().put("mail.debug", Play.application().isDev() ? "true" : "false");
-//			email.getMailSession().getProperties().put("mail.smtp.debug", Play.application().isDev() ? "true" : "false");
-			email.getMailSession().getProperties().put("mail.smtps.auth", "true");
-			email.getMailSession().getProperties().put("mail.smtps.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-			email.getMailSession().getProperties().put("mail.smtps.socketFactory.fallback", "false");
-			email.getMailSession().getProperties().put("mail.smtp.starttls.enable", Setting.get("mail.smtp.ssl"));
-			email.getMailSession().getProperties().put("mail.smtp.user", Setting.get("mail.from.email"));
-			email.getMailSession().getProperties().put("mail.smtp.host", Setting.get("mail.smtp.host"));
-			email.getMailSession().getProperties().put("mail.smtp.port", Setting.get("mail.smtp.port"));
-			email.getMailSession().getProperties().put("mail.smtp.auth", "true");
-			email.getMailSession().getProperties().put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-			email.getMailSession().getProperties().put("mail.smtp.socketFactory.fallback", "false");
-			email.getMailSession().getProperties().put("mail.smtp.socketFactory.port", Setting.get("mail.smtp.port"));
+			email.setDebug(Play.application().isDev());
 			email.setFrom(Setting.get("mail.from.email"), Setting.get("mail.from.name"));
 			email.setSubject("[DAISY Pipeline 2] "+subject); // TODO: customizable subject prefix
 			email.setHtmlMsg(html);
 			email.setTextMsg(text);
 			email.addTo(recipientEmail, recipientName);
-			email.setSSL(true);
-			email.setTLS(true);
+			
+			String prefix = "true".equals(Setting.get("mail.smtp.ssl")) ? "mail.smtps" : "mail.smtp";
+			email.setSSL("true".equals(Setting.get("mail.smtp.ssl")));
+			email.setTLS("true".equals(Setting.get("mail.smtp.ssl")));
+			
+			// AUTH
+			if (Setting.get("mail.username").length() > 0) {
+				email.setAuthenticator(new DefaultAuthenticator(Setting.get("mail.username"), Setting.get("mail.password")));
+				email.getMailSession().getProperties().put(prefix+".auth", "true");
+			} else {
+				email.getMailSession().getProperties().put(prefix+".auth", "false");
+			}
+			
+			email.getMailSession().getProperties().put(prefix+".starttls.enable", Setting.get("mail.smtp.ssl"));
+			
+			email.getMailSession().getProperties().put("mail.debug", Play.application().isDev()+"");
+			email.getMailSession().getProperties().put(prefix+".debug", Play.application().isDev()+"");
+			
+			email.getMailSession().getProperties().put(prefix+".user", Setting.get("mail.username"));
+			email.getMailSession().getProperties().put(prefix+".host", Setting.get("mail.smtp.host"));
+			email.getMailSession().getProperties().put(prefix+".port", Setting.get("mail.smtp.port"));
+			email.getMailSession().getProperties().put(prefix+".socketFactory.port", Setting.get("mail.smtp.port"));
+			email.getMailSession().getProperties().put(prefix+".socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+			email.getMailSession().getProperties().put(prefix+".socketFactory.fallback", "false");
 			email.send();
 			return true;
 		} catch (EmailException e) {
