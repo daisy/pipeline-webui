@@ -1,6 +1,34 @@
 @(configureEmailForm: Form[controllers.Administrator.ConfigureEmailForm], route: play.api.mvc.Call, skipRoute: play.api.mvc.Call)
 
 <div class="tabbable tabs-left">
+	
+	@helper.form(action = route, 'id -> "configureEmail-enable-form") {
+		
+		<input type="hidden" name="formName" value="configureEmail"/>
+		
+		<fieldset>
+		    <div class="form-horizontal">
+				<div class="control-group @("error".when(configureEmailForm.error("enable") != null))" id="configureEmail-enableGroup">
+					<label class="control-label" id="configureEmail-enable-label" for="configureEmail-enable" aria-label="configureEmail-enable">Use e-mail</label>
+					<div class="controls">
+						<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="configureEmail-enable-label" id="configureEmail-enable">
+							<button type="submit" name="enable" value="true" class="btn @("active".when(Setting.get("mail.enable")=="true"))"
+								aria-role="radio" aria-checked="@{Setting.get("mail.enable")=="true"}">Yes</button>
+							<button type="submit" name="enable" value="false" class="btn @("active".when(Setting.get("mail.enable")=="false"))"
+								aria-role="radio" aria-checked="@{Setting.get("mail.enable")=="false"}">No</button>
+						</div>
+						@if(configureEmailForm.field("enable").errors().size() > 0){
+							<span class="help-inline">@configureEmailForm.error("enable").message</span>
+						}
+						<span class="help-block">If you disable e-mails, then users cannot retrieve lost passwords automatically.</span>
+					</div>
+				</div>
+			</div>
+		</fieldset>
+	}
+	
+	<br/><br/>
+	
 	<ul class="nav nav-tabs">
 		<li class="@("active".when(configureEmailForm.field("emailService").valueOr(Setting.get("mail.provider")) == "smtp"))"><a href="#mailtab-smtp" data-toggle="tab"><img src="@routes.Assets.at("images/mail_icon_32.png")" alt=""/> SMTP</a></li>
 		<li class="@("active".when(configureEmailForm.field("emailService").valueOr(Setting.get("mail.provider")) == "gmail"))"><a href="#mailtab-gmail" data-toggle="tab"><img src="@routes.Assets.at("images/gmail_icon_32.png")" alt=""/> GMail</a></li>
@@ -61,8 +89,6 @@
 								}
 							</div>
 						</div>
-						
-						<!-- TODO: Use authentication -- yes/no -->
 						
 						<div class="control-group @("error".when(configureEmailForm.error("username") != null))" id="configureEmail-smtp-usernameGroup">
 							<label for="smtp-username" class="control-label" id="configureEmail-smtp-username-label">Username</label>

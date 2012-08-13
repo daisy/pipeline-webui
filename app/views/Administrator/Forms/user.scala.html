@@ -66,6 +66,18 @@
 					</div>
 				</div>
 				
+				@if(Setting.get("mail.enable") == "false") {
+					<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.id && userForm.error("password") != null))">
+		           		<label for="password" class="control-label">Password</label>
+						<div class="controls">
+							<input type="password" name="password" id="password" placeholder="A password must be at least 6 characters." class="input-xlarge" value=""/>
+							@if(userForm.field("password").value() != null && userForm.field("password").valueOr("").length() < 6){
+								<span class="help-inline">The password must contain at least 6 characters.</span>
+							}
+						</div>
+					</div>
+				}
+				
 				<div class="control-group @("error".when(user.id.toString().equals(userForm.field("userid").valueOr("")) && userForm.error("admin") != null))" id="user-@{user.id}-adminGroup">
 					<label class="control-label" id="updateUser-@{user.id}-admin-label" for="user-@{user.id}-admin" aria-label="user-@{user.id}-admin">Administrator</label>
 					<div class="controls">

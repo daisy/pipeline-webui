@@ -24,9 +24,10 @@
 			<div class="control-group @("error".when(userForm != null && userForm.error("email") != null))">
 				<label for="email" class="control-label">E-mail</label>
 				<div class="controls">
-					<input type="email" name="email" id="email" placeholder="Valid e-mail address required." class="input-xlarge" value="@(if(userForm!=null)userForm.field("email").valueOr("") else "")"/>
+					<input type="email" name="email" placeholder="Valid e-mail address required." class="input-xlarge"
+							value="@(if(userForm!=null)userForm.field("email").valueOr("") else "")"/>
 					@if(userForm != null && userForm.field("email").errors().size() > 0){
-						@if(userForm.error("email").message.startsWith("error.")){
+						@if(userForm.error("email").message.startsWith("error.required")){
 							<span class="help-inline">A valid e-mail address must be provided.</span>
 						}else{
 							<span class="help-inline">@userForm.error("email").message</span>
@@ -34,6 +35,18 @@
 					}
 				</div>
 			</div>
+			
+			@if(Setting.get("mail.enable") == "false") {
+				<div class="control-group @("error".when(userForm != null && userForm.error("password") != null))">
+	           		<label for="password" class="control-label">Password</label>
+					<div class="controls">
+						<input type="password" name="password" placeholder="A password must be at least 6 characters." class="input-xlarge" value=""/>
+						@if(userForm.field("password").value() != null && userForm.field("password").valueOr("").length() < 6){
+							<span class="help-inline">The password must contain at least 6 characters.</span>
+						}
+					</div>
+				</div>
+			}
 			
 			<div class="control-group @("error".when("tab" == "new" && userForm != null && userForm.error("admin") != null))" id="user-new-adminGroup">
 				<label class="control-label" id="createUser-admin-label" for="user-new-admin" aria-label="user-new-admin">Administrator</label>

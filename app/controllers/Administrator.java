@@ -272,34 +272,40 @@ public class Administrator extends Controller {
 			}
 			
 			updateUser.validateChange(filledForm, user);
-
-			filledForm.errors().remove("password"); // admin does not require the users password to edit the user
 			
 			if (!updateUser.hasChanges(filledForm)) {
 				flash("success", "You did not submit any changes. No changes were made.");
 				return redirect(routes.Administrator.getSettings());
-
+				
 			} else if (filledForm.hasErrors()) {
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.userForm = filledForm;
 				ConfigureBrandingForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
-
+				
 			} else {
 				updateUser.name = filledForm.field("name").valueOr("");
 				updateUser.admin = filledForm.field("admin").valueOr("").equals("true");
 				
-				if (!filledForm.field("email").valueOr("").equals(updateUser.email)) {
-					updateUser.email = filledForm.field("email").valueOr("");
-					updateUser.active = false;
-					updateUser.makeNewActivationUid();
+				String oldEmail = updateUser.email;
+				updateUser.email = filledForm.field("email").valueOr("");
+				
+				if ("true".equals(Setting.get("mail.enable"))) {
+					if (!updateUser.email.equals(oldEmail)) {
+						updateUser.active = false;
+						updateUser.makeNewActivationUid();
 
-					String activateUrl = routes.Account.showActivateForm(updateUser.email, updateUser.getActivationUid()).absoluteURL(request());
-					String html = views.html.Account.emailActivate.render(activateUrl).body();
-					String text = "Go to this link to activate your account: " + activateUrl;
-					if (!Account.sendEmail("Activate your account", html, text, updateUser.name, updateUser.email))
-						flash("error", "Was unable to send the e-mail.");
-
+						String activateUrl = routes.Account.showActivateForm(updateUser.email, updateUser.getActivationUid()).absoluteURL(request());
+						String html = views.html.Account.emailActivate.render(activateUrl).body();
+						String text = "Go to this link to activate your account: " + activateUrl;
+						if (!Account.sendEmail("Activate your account", html, text, updateUser.name, updateUser.email))
+							flash("error", "Was unable to send the e-mail.");
+					}
+					
+				} else {
+					String newPassword = filledForm.field("password").valueOr("");
+					if (newPassword.length() > 0)
+						updateUser.setPassword(newPassword);
 				}
 				
 				updateUser.save();
@@ -384,17 +390,23 @@ public class Administrator extends Controller {
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 				
 			} else {
-				User newUser = new User(filledForm.field("email").valueOr(""), filledForm.field("name").valueOr(""), "", filledForm.field("admin").valueOr("").equals("true"));
+				User newUser = new User(filledForm.field("email").valueOr(""),
+										filledForm.field("name").valueOr(""),
+										"true".equals(Setting.get("mail.enable")) ? "" : filledForm.field("password").valueOr(""),
+										filledForm.field("admin").valueOr("").equals("true"));
 				newUser.makeNewActivationUid();
 				newUser.save();
 				
-				String activateUrl = routes.Account.showActivateForm(newUser.email, newUser.getActivationUid()).absoluteURL(request());
-				String html = views.html.Account.emailActivate.render(activateUrl).body();
-				String text = "Go to this link to activate your account: " + activateUrl;
-	
-				if (!Account.sendEmail("Activate your account", html, text, newUser.name, newUser.email))
-					flash("error", "Was unable to send the e-mail. :(");
-	
+				if ("true".equals(Setting.get("mail.enable"))) {
+					String activateUrl = routes.Account.showActivateForm(newUser.email, newUser.getActivationUid()).absoluteURL(request());
+					String html = views.html.Account.emailActivate.render(activateUrl).body();
+					String text = "Go to this link to activate your account: " + activateUrl;
+		
+					if (!Account.sendEmail("Activate your account", html, text, newUser.name, newUser.email))
+						flash("error", "Was unable to send the e-mail. :(");
+					
+				}
+				
 				flash("settings.usertab", newUser.id + "");
 				flash("success", "User " + newUser.name + " created successfully!");
 				
@@ -455,24 +467,30 @@ public class Administrator extends Controller {
 			Form<Administrator.ConfigureEmailForm> filledForm = configureEmailForm.bindFromRequest();
 			Administrator.ConfigureEmailForm.validate(filledForm);
 			
-			if(filledForm.hasErrors()) {
-				List<User> users = User.find.orderBy("admin, name, email").findList();
-				forms.configureEmailForm = filledForm;
-				ConfigureBrandingForm.refreshList();
-				return badRequest(views.html.Administrator.settings.render(forms, users));
-
+			if (filledForm.field("enable").value() != null) {
+				Setting.set("mail.enable", filledForm.field("enable").valueOr(""));
+				return redirect(routes.Administrator.getSettings());
+				
 			} else {
-				Setting.set("mail.username", filledForm.field("username").valueOr(""));
-				if (Setting.get("mail.password") == null || !"".equals(filledForm.field("password").value()))
-	        		Setting.set("mail.password", filledForm.field("password").valueOr(""));
-				Setting.set("mail.provider", filledForm.field("emailService").valueOr(""));
-				Setting.set("mail.smtp.host", filledForm.field("smtp").valueOr(""));
-				Setting.set("mail.smtp.port", filledForm.field("port").valueOr(""));
-				Setting.set("mail.smtp.ssl", filledForm.field("ssl").valueOr(""));
-				Setting.set("mail.from.name", "Pipeline 2");
-				Setting.set("mail.from.email", user.email);
-				flash("success", "Successfully changed e-mail settings!");
-	        	return redirect(routes.Administrator.getSettings());
+				if(filledForm.hasErrors()) {
+					List<User> users = User.find.orderBy("admin, name, email").findList();
+					forms.configureEmailForm = filledForm;
+					ConfigureBrandingForm.refreshList();
+					return badRequest(views.html.Administrator.settings.render(forms, users));
+	
+				} else {
+					Setting.set("mail.username", filledForm.field("username").valueOr(""));
+					if (Setting.get("mail.password") == null || !"".equals(filledForm.field("password").value()))
+		        		Setting.set("mail.password", filledForm.field("password").valueOr(""));
+					Setting.set("mail.provider", filledForm.field("emailService").valueOr(""));
+					Setting.set("mail.smtp.host", filledForm.field("smtp").valueOr(""));
+					Setting.set("mail.smtp.port", filledForm.field("port").valueOr(""));
+					Setting.set("mail.smtp.ssl", filledForm.field("ssl").valueOr(""));
+					Setting.set("mail.from.name", "Pipeline 2");
+					Setting.set("mail.from.email", user.email);
+					flash("success", "Successfully changed e-mail settings!");
+		        	return redirect(routes.Administrator.getSettings());
+				}
 			}
 		}
 		

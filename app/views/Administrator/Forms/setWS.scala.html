@@ -32,6 +32,7 @@
 					@if(setWSForm.field("authid").errors().size() > 0){
 						<span class="help-inline">A valid authentication id must be provided.</span>
 					}
+					<span class="help-block">When communicating with the Pipeline 2 framework, the Web UI needs to authenticate. This authentication id is not to be confused with the user accounts listed under "Users and Permissions".</span>
 				</div>
 			</div>
 			
@@ -45,6 +46,7 @@
 					@if(setWSForm.field("secret").errors().size() > 0){
 						<span class="help-inline">A valid secret text must be provided.</span>
 					}
+					<span class="help-block">The password corresponding to the authentication id.</span>
 				</div>
 			</div>
 			
@@ -58,7 +60,7 @@
 					@if(setWSForm.field("resultDir").errors().size() > 0){
 						<span class="help-inline">A valid result directory path must be provided.</span>
 					}
-					<span class="help-block"><em>If Pipeline 2 is running in remote mode you can ignore this setting.</em> If Pipeline 2 is running in local mode then you need to provide a filesystem path where the results (the output of a job) will be stored. The path is relative to the filesystem of the Pipeline 2 framework which might be different than the filesystem of the Web UI if the Pipeline 2 framework and the Web UI are running on different servers.</span>
+					<span class="help-block">If Pipeline 2 is running in local mode then you need to provide a filesystem path where the results (the output of a job) will be stored. The path is relative to the filesystem of the Pipeline 2 framework which might be different than the filesystem of the Web UI if the Pipeline 2 framework and the Web UI are running on different servers. <em>If Pipeline 2 is running in remote mode you can ignore this setting.</em></span>
 				</div>
 			</div>
 			
@@ -72,7 +74,7 @@
 					@if(setWSForm.field("tempDir").errors().size() > 0){
 						<span class="help-inline">A valid temporary directory path must be provided.</span>
 					}
-					<span class="help-block"><em>If Pipeline 2 is running in remote mode you can ignore this setting.</em> This is a directory similar to the temporary directory above, but are used for temporary files. Jobs may need to store some temporary files here while running. The temporary files are deleted automatically when the job is finished. This directory is also relative to the Pipeline 2 frameworks filesystem.</span>
+					<span class="help-block">This is a directory similar to the temporary directory above, but are used for temporary files. Jobs may need to store some temporary files here while running. The temporary files are deleted automatically when the job is finished. This directory is also relative to the Pipeline 2 frameworks filesystem. <em>If Pipeline 2 is running in remote mode you can ignore this setting.</em></span>
 				</div>
 			</div>
 			
@@ -90,7 +92,7 @@
 					@if("tab" == "new" && setWSForm != null && setWSForm.field("sameFilesystem").errors().size() > 0){
 						<span class="help-inline">@setWSForm.error("sameFilesystem").message</span>
 					}
-					<span class="help-block"><em>If Pipeline 2 is running in remote mode you can ignore this setting.</em> Whether or not the Pipeline 2 framework is running on the same server as the Web UI. If they are running on the same server, then the uploaded files are handed over more efficiently to the Pipeline 2 framework.</span>
+					<span class="help-block">Whether or not the Pipeline 2 framework is running on the same server as the Web UI. If they are running on the same server, then the uploaded files are handed over more efficiently to the Pipeline 2 framework. <em>If Pipeline 2 is running in remote mode then this setting must be set to false.</em></span>
 				</div>
 			</div>
 			

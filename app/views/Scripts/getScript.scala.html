@@ -51,7 +51,7 @@ Array("jquery.fileupload-ui.css")) {
 			}
 		}
 		
-		@if(play.mvc.Controller.session("userid").startsWith("-")){
+		@if(play.mvc.Controller.session("userid").startsWith("-") && Setting.get("mail.enable") == "true"){
 			<div class="control-group">
 				<label class="control-label" for="guest-email">Your e-mail</label>
 				<div class="controls">

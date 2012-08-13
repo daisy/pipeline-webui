@@ -180,8 +180,17 @@ public class User extends Model {
 		if (!adminString.equals("true") && !adminString.equals("false"))
 			filledForm.reject("admin", "The user must either *be* an admin, or *not be* an admin");
 		
-		// only "name", "email" and "admin" are set during user creation
-		filledForm.errors().remove("password");
+		String password = filledForm.field("password").valueOr("");
+		if ("true".equals(Setting.get("mail.enable"))) {
+			// "password" are not set by the administrator when e-mails are enabled
+			filledForm.errors().remove("password");
+			
+		} else {
+			if (0 <= password.length() && password.length() < 6) {
+				filledForm.reject("password", "The password must be at least 6 characters long");
+			}
+		}
+		
 		filledForm.errors().remove("active");
 	}
 	
@@ -194,6 +203,12 @@ public class User extends Model {
 		if (!this.email.equals(filledForm.field("email").value()) && User.findByEmail(filledForm.field("email").valueOr("")) != null)
 			filledForm.reject("email", "That e-mail address is already taken");
 		
+		String password = filledForm.field("password").valueOr("");
+		if (password.length() == 0 && this.password != null && this.password.length() > 0
+				|| 0 < password.length() && password.length() < 6) {
+			filledForm.reject("password", "The password must be at least 6 characters long");
+		}
+		
 		if (!(this.admin + "").equals(filledForm.field("admin").valueOr(""))) {
 			String adminString = filledForm.field("admin").valueOr("");
 			if (!adminString.equals("true") && !adminString.equals("false"))
@@ -204,17 +219,23 @@ public class User extends Model {
 		}
 	}
 	
+	/**
+	 * Whether the form contains changes to the user.
+	 * @param filledForm
+	 * @return
+	 */
 	public boolean hasChanges(Form<User> filledForm) {
 		if (!this.name.equals(filledForm.field("name").valueOr("")))
 			return true;
 		
 		if (!this.email.equals(filledForm.field("email").valueOr("")))
 			return true;
+		
+		if (filledForm.field("password").valueOr("").length() != 0 && !this.password.equals(Crypto.sign(filledForm.field("password").valueOr(""))))
+			return true;
 
 		if (!(this.admin + "").equals(filledForm.field("admin").valueOr("")))
 			return true;
-		
-		// "password" and "active" are not changed directly so they are not checked.
 		
 		return false;
 	}
