@@ -234,9 +234,11 @@ public class Account extends Controller {
 			email.getMailSession().getProperties().put(prefix+".user", Setting.get("mail.username"));
 			email.getMailSession().getProperties().put(prefix+".host", Setting.get("mail.smtp.host"));
 			email.getMailSession().getProperties().put(prefix+".port", Setting.get("mail.smtp.port"));
-			email.getMailSession().getProperties().put(prefix+".socketFactory.port", Setting.get("mail.smtp.port"));
-			email.getMailSession().getProperties().put(prefix+".socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-			email.getMailSession().getProperties().put(prefix+".socketFactory.fallback", "false");
+			if ("true".equals(Setting.get("mail.smtp.ssl"))) {
+				email.getMailSession().getProperties().put(prefix+".socketFactory.port", Setting.get("mail.smtp.port"));
+				email.getMailSession().getProperties().put(prefix+".socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+				email.getMailSession().getProperties().put(prefix+".socketFactory.fallback", "false");
+			}
 			email.send();
 			return true;
 		} catch (EmailException e) {
