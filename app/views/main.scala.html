@@ -48,8 +48,10 @@
 	   			<a class="brand" href="@routes.Login.login()">@Setting.get("branding.title")</a>
 	   			<nav class="nav-collapse">
 		   			<ul class="nav">
-	   					@if(navs.contains("scripts")){
-		   					<li class="@("active".when(nav == "scripts"))"><a href="@routes.Scripts.getScripts()"><i class="icon-home icon-white"></i> Scripts</a></li>
+		   				@if(Controller.session("userid") != null){
+		   					@if(navs.contains("scripts")){
+			   					<li class="@("active".when(nav == "scripts"))"><a href="@routes.Scripts.getScripts()"><i class="icon-home icon-white"></i> Scripts</a></li>
+			   				}
 		   				}
 		   				@if(Controller.session("userid") != null && Long.parseLong(Controller.session("userid")) >= 0){
 			   				@if(navs.contains("jobs")){
@@ -61,16 +63,18 @@
 	  					}
 		   			</ul>
 		   			<ul class="nav pull-right">
-		   				@if(navs.contains("scripts") && session.get("admin")=="true"){
+		   				@if(session.get("admin")=="true"){
 		 					<li class="@("active".when(nav == "admin"))"><a href="@routes.Administrator.getSettings()"><i class="icon-wrench icon-white"></i> Admin settings</a></li>
 		 				}
-		 				@if(navs.contains("account")){
-		 					@if(Controller.session("userid") != null && Long.parseLong(Controller.session("userid")) >= 0){
-			 					<li class="@("active".when(nav == "account"))"><a href="@routes.Account.overview()"><i class="icon-user icon-white"></i> @session.get("name")</a></li>
-			 				}else{
-			 					<li class="@("active".when(nav == "account"))"><a href="#"><i class="icon-user icon-white"></i> @session.get("name")</a></li>
-		 					}
-		 				}
+		 				@if(Controller.session("userid") != null){
+	 						@if(navs.contains("account")){
+		 						@if(Long.parseLong(Controller.session("userid")) >= 0){
+			 						<li class="@("active".when(nav == "account"))"><a href="@routes.Account.overview()"><i class="icon-user icon-white"></i> @session.get("name")</a></li>
+			 					}else{
+			 						<li class="@("active".when(nav == "account"))"><a href="#"><i class="icon-user icon-white"></i> @session.get("name")</a></li>
+		 						}
+	 						}
+	 					}
 		 				@if(navs.contains("login")){
 		 					<li class="@("active".when(nav == "login"))">
 		 						@if(session.get("email")==null){
@@ -82,9 +86,9 @@
 	  					}
 	  				</ul>
 				</nav>
+			</div>
 		</div>
 	</div>
-</div>
 	
 	<div class="container">
    	

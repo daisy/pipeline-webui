@@ -1,110 +1,60 @@
 @(form: Form[controllers.Login.LoginForm])
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>Sign in</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Web interface for Pipeline 2">
-    <meta name="author" content="DAISY Consortium">
-
-    <!-- Styles -->
-    <link href="@routes.Assets.at("stylesheets/bootstrap.css")" rel="stylesheet">
-    <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
-    </style>
-    <link rel="stylesheet/css" media="screen" type="text/css" href="@routes.Assets.at("stylesheets/main.css")">
+@main("Sign in", "login") {
 	
-	<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-    <!-- Icons -->
-    <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
-    <!--<link rel="apple-touch-icon" href="routes.Assets.at("images/apple-touch-icon.png")">
-    <link rel="apple-touch-icon" sizes="72x72" href="routes.Assets.at("images/apple-touch-icon-72x72.png")">
-    <link rel="apple-touch-icon" sizes="114x114" href="routes.Assets.at("images/apple-touch-icon-114x114.png")">-->
-    
-  </head>
-
-  <body class="body">
-  	
-    <div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="brand" href="@routes.Login.login()">Pipeline 2</a>
-        </div>
-      </div>
-    </div>
-	
-	<!-- Load jQuery before the content (so other templates may use jQuery) -->
-	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-	<script type="text/javascript">
-	if (typeof jQuery == 'undefined') {
-		document.write(unescape("%3Cscript src='@routes.Assets.at("javascripts/jquery-1.7.2.min.js")' type='text/javascript'%3E%3C/script%3E"));
-	}
-	</script>
-	
-	<div class="container">
-
-   		@helper.form(action = routes.Login.authenticate()) {
-            
-            @if(flash.contains("success")) {
-                <div role="alert" class="alert alert-success">
-                    @flash.get("success")
-                </div>
-            }
-            
-            @if(flash.contains("error")) {
-                <div role="alert" class="alert alert-error">
-                    @flash.get("error")
-                </div>
-            }
-            
-	        @if(!flash.contains("error") && !flash.contains("success") && form.hasGlobalErrors) {
-                <div role="alert" class="alert alert-error">
-                    @form.globalError.message
-                </div>
-            }
-            
-            <div class="form-horizontal">
-		        <fieldset>
-		        	<legend>Sign in</legend>
-	           
-		            <div class="control-group">
-		            	<label for="email" class="control-label">E-mail</label>
-						<div class="controls">
-							<input type="email" name="email" id="email" placeholder="e-mail" class="input-xlarge" value="@form("email").value"/>
-						</div>
+	@helper.form(action = routes.Login.authenticate()) {
+		
+		@if(flash.contains("success")) {
+			<div role="alert" class="alert alert-success">
+				<button class="close" data-dismiss="alert">×</button>
+				@flash.get("success")
+			</div>
+		}
+		
+		@if(flash.contains("error")) {
+			<div role="alert" class="alert alert-error">
+				<button class="close" data-dismiss="alert">×</button>
+				@flash.get("error")
+			</div>
+		}
+		
+		@if(!flash.contains("error") && !flash.contains("success") && form.hasGlobalErrors) {
+			<div role="alert" class="alert alert-error">
+				<button class="close" data-dismiss="alert">×</button>
+				@form.globalError.message
+			</div>
+		}
+		
+		<div class="form-horizontal">
+			<fieldset>
+				<legend>Sign in</legend>
+				<div class="control-group">
+					<label for="email" class="control-label">E-mail</label>
+					<div class="controls">
+						<input type="email" name="email" id="email" placeholder="e-mail" class="input-xlarge" value="@form("email").value"/>
 					</div>
-					
-					<div class="control-group">	
-	            		<label for="password" class="control-label">Password</label>
-						<div class="controls">
-							<input type="password" name="password" id="password" placeholder="Password" class="input-xlarge"/>
-							<span class="help-inline">Forgot your password?
-								<button type="button" class="btn" id="submitLostPassword" name="submitLostPassword" onclick="window.location='@routes.Login.resetPassword()?email='+$('#email').val();return false;">Get a new one!</button></span>
-						</div>
+				</div>
+				
+				<div class="control-group">	
+					<label for="password" class="control-label">Password</label>
+					<div class="controls">
+						<input type="password" name="password" id="password" placeholder="Password" class="input-xlarge"/>
+						<span class="help-inline">Forgot your password?
+							<button type="button" class="btn" id="submitLostPassword" name="submitLostPassword" onclick="window.location='@routes.Login.resetPassword()?email='+$('#email').val();return false;">Get a new one!</button></span>
 					</div>
-					
-			        <div class="form-actions" style="text-align: right;">
-						<span style="float: left;"><button type="submit" class="btn btn-primary btn-large" id="submit" name="submit">Login</button></span>
-						@if(Setting.get("guest.allowGuests") == "true"){
+				</div>
+				
+				<div class="form-actions" style="text-align: right;">
+					<span style="float: left;"><button type="submit" class="btn btn-primary btn-large" id="submit" name="submit">Login</button></span>
+					@if(Setting.get("guest.allowGuests") == "true"){
 						<span>
 							Don't have an account? &nbsp;&nbsp;&nbsp;
 							<button type="button" class="btn btn-large" id="guest-login" name="guest-login" onclick="window.location='@routes.Login.authenticateGuest()';return false;">Log in as guest <i class="icon-hand-right"></i></button>
 						</span>
-						}
-		          	</div>
-		          	
-	          	</fieldset>
-			</div>
-			
-        }
-	    
-    </div>
-  </body>
-</html>
+					}
+			 	</div>
+				
+			</fieldset>
+		</div>
+	}
+}

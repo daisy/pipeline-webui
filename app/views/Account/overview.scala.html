@@ -10,12 +10,14 @@
             
 	@if(editDetailsForm.hasGlobalErrors) {
 	    <div role="alert" class="alert alert-error">
+	    	<button class="close" data-dismiss="alert">×</button>
 	        @editDetailsForm.globalError.message
 	    </div>
 	}
 	
 	@if(flash.contains("success")) {
 	    <div role="alert" class="alert alert-success">
+	    	<button class="close" data-dismiss="alert">×</button>
 	        @flash.get("success")
 	    </div>
 	}
