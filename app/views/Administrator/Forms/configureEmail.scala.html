@@ -78,10 +78,10 @@
 							<div class="controls">
 								<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="configureEmail-smtp-ssl-label" id="configureEmail-smtp-ssl">
 									<button type="button" name="ssl-on" class="btn @("active".when(Setting.get("mail.smtp.ssl")=="true"))" id="configureEmail-smtp-ssl-on"
-										aria-role="radio" aria-checked="true"
+										aria-role="radio" aria-checked="@(Setting.get("mail.smtp.ssl")=="true")"
 										onclick="toggleRadio('configureEmail-smtp-ssl', true, '@Setting.get("mail.smtp.ssl")');">Yes</button>
 									<button type="button" name="ssl-off" class="btn @("active".when(Setting.get("mail.smtp.ssl")=="false"))" id="configureEmail-smtp-ssl-off"
-										aria-role="radio" aria-checked="false"
+										aria-role="radio" aria-checked="@(Setting.get("mail.smtp.ssl")=="false")"
 										onclick="toggleRadio('configureEmail-smtp-ssl', false, '@Setting.get("mail.smtp.ssl")');">No</button>
 								</div>
 								@if(configureEmailForm.field("ssl").errors().size() > 0){

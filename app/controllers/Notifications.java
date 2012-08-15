@@ -18,7 +18,7 @@ public class Notifications extends Controller {
 		if (FirstUse.isFirstUse())
     		return null; // forbidden
 		
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null)
 			return null; // forbidden
 		
@@ -33,7 +33,7 @@ public class Notifications extends Controller {
 		if (FirstUse.isFirstUse())
 			return forbidden();
 		
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null)
 			return forbidden();
 		

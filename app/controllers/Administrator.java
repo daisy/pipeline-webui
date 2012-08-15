@@ -175,14 +175,21 @@ public class Administrator extends Controller {
 	
 	final static Form<GuestUser> guestForm = form(GuestUser.class);
 	public static class GuestUser {
+		
+		public boolean allowGuests;
+		public boolean automaticLogin;
+		
 		@Constraints.MinLength(1)
 		@Constraints.Pattern("[^{}\\[\\]();:'\"<>]+") // Avoid breaking JavaScript code in templates
 		public String name;
+		
+		public boolean shareJobs;
+		public boolean showEmailBox;
+		public boolean showGuestName;
 	}
 	
 	final static Form<GlobalPermissions> globalForm = form(GlobalPermissions.class);
 	public static class GlobalPermissions {
-		public boolean allowGuests;
 		public boolean hideAdvancedOptions;
 	}
 	
@@ -190,7 +197,7 @@ public class Administrator extends Controller {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
 
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null || !user.admin)
 			return redirect(routes.Login.login());
 
@@ -205,7 +212,7 @@ public class Administrator extends Controller {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
 		
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null || !user.admin)
 			return redirect(routes.Login.login());
 		
@@ -232,7 +239,6 @@ public class Administrator extends Controller {
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 				
 			} else {
-				Setting.set("guest.allowGuests", filledForm.field("allowGuests").valueOr("false"));
 				Setting.set("jobs.hideAdvancedOptions", filledForm.field("hideAdvancedOptions").valueOr("false"));
 				flash("success", "Global permissions was updated successfully!");
 				return redirect(routes.Administrator.getSettings());
@@ -252,7 +258,24 @@ public class Administrator extends Controller {
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 				
 			} else {
-				Setting.set("guest.name", filledForm.field("name").valueOr("Guest"));
+				String login = filledForm.field("login").valueOr("deny");
+				if ("automatic".equals(login)) {
+					Setting.set("users.guest.allowGuests", "true");
+					Setting.set("users.guest.automaticLogin", "true");
+					
+				} else if ("allow".equals(login)) {
+					Setting.set("users.guest.allowGuests", "true");
+					Setting.set("users.guest.automaticLogin", "false");
+					
+				} else {
+					Setting.set("users.guest.allowGuests", "false");
+					Setting.set("users.guest.automaticLogin", "false");
+				}
+				
+				Setting.set("users.guest.name", filledForm.field("name").valueOr("Guest"));
+				Setting.set("users.guest.showGuestName", filledForm.field("showGuestName").valueOr("false"));
+				Setting.set("users.guest.shareJobs", filledForm.field("shareJobs").valueOr("false"));
+				Setting.set("users.guest.showEmailBox", filledForm.field("showEmailBox").valueOr("true"));
 				flash("success", "Guest was updated successfully!");
 				return redirect(routes.Administrator.getSettings());
 			}

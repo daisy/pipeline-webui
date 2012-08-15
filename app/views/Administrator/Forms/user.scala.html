@@ -83,10 +83,10 @@
 					<div class="controls">
 						<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="updateUser-@{user.id}-admin-label" id="user-@{user.id}-admin">
 							<button type="button" name="admin-on" class="btn @("active".when(user.admin))" id="user-@{user.id}-admin-on"
-								aria-role="radio" aria-checked="true"
+								aria-role="radio" aria-checked="@(user.admin)"
 								onclick="toggleRadio('user-@{user.id}-admin', true, '@user.admin');">Yes</button>
 							<button type="button" name="admin-off" class="btn @("active".when(!user.admin))" id="user-@{user.id}-admin-off"
-								aria-role="radio" aria-checked="false"
+								aria-role="radio" aria-checked="@(!user.admin)"
 								onclick="toggleRadio('user-@{user.id}-admin', false, '@user.admin');">No</button>
 						</div>
 						@if(userForm.field("userid").valueOr("") == ""+user.id && userForm.field("admin").errors().size() > 0){

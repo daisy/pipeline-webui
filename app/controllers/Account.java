@@ -27,7 +27,7 @@ public class Account extends Controller {
 		if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());
 		
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null || user.id < 0)
 			return redirect(routes.Login.login());
     	
@@ -43,7 +43,7 @@ public class Account extends Controller {
 		if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());
 		
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null || user.id < 0)
 			return redirect(routes.Login.login());
 		
@@ -81,7 +81,7 @@ public class Account extends Controller {
 				filledForm.reject("password", "You must enter your existing password, just so that we're extra sure that you are you.");
 				
 			} else {
-				User oldUser = User.authenticateUnencrypted(user.email, filledForm.field("password").valueOr(""));
+				User oldUser = User.authenticateUnencrypted(user.email, filledForm.field("password").valueOr(""), session());
 				if (oldUser == null)
 					filledForm.reject("password", "The password you entered is wrong, please correct it and try again.");
 			}
@@ -105,9 +105,7 @@ public class Account extends Controller {
         	if (changedPassword)
         		user.setPassword(filledForm.field("newPassword").valueOr(""));
         	user.save();
-        	session("name", user.name);
-        	session("email", user.email);
-        	session("password", user.password);
+        	user.login(session());
         	flash("success", "Your changes were saved successfully!");
         	return redirect(routes.Account.overview());
         }
@@ -173,11 +171,8 @@ public class Account extends Controller {
         	user.active = true;
         	user.passwordLinkSent = null;
         	user.save();
-        	session("name", user.name);
-        	session("email", user.email);
-        	session("password", user.password);
-        	session("admin", user.admin+"");
-        	return redirect(routes.Login.login());
+        	user.login(session());
+        	return redirect(routes.Application.index());
         }
 	}
 	

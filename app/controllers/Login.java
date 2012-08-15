@@ -17,7 +17,7 @@ public class Login extends Controller {
         public String password;
         
         public String validate() {
-            if (User.authenticateUnencrypted(email, password) == null) {
+            if (User.authenticateUnencrypted(email, password, session()) == null) {
                 return "Invalid e-mail address or password";
             }
             return null;
@@ -28,15 +28,10 @@ public class Login extends Controller {
      * Login page.
      */
     public static Result login() {
-    	if (FirstUse.isFirstUse()) {
+    	if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());
-    		
-    	} else if (User.authenticate(session("userid"), session("email"), session("password")) == null) {
-    		return ok(views.html.Login.login.render(form(LoginForm.class)));
-    		
-    	} else {
-    		return redirect(routes.Application.index());
-    	}
+    	
+		return ok(views.html.Login.login.render(form(LoginForm.class)));
     }
     
     /**
@@ -45,32 +40,24 @@ public class Login extends Controller {
     public static Result authenticate() {
         Form<LoginForm> loginForm = form(LoginForm.class).bindFromRequest();
         
-    	User user = User.authenticateUnencrypted(loginForm.field("email").valueOr(""), loginForm.field("password").valueOr(""));
+    	User user = User.authenticateUnencrypted(loginForm.field("email").valueOr(""), loginForm.field("password").valueOr(""), session());
         if (loginForm.hasErrors()) {
             return badRequest(views.html.Login.login.render(loginForm));
         } else {
-        	session("userid", user.id+"");
-        	session("name", user.name);
-        	session("email", user.email);
-        	session("password", user.password);
-        	session("admin", user.admin+"");
+        	user.login(Controller.session());
             return redirect(routes.Scripts.getScripts());
         }
     }
     
-    private static Random randomGuestUserId = new Random();
     /**
      * Handle login form submission for guest logins.
      */
     public static Result authenticateGuest() {
-    	if (!"true".equals(models.Setting.get("guest.allowGuests")))
+    	if (!"true".equals(models.Setting.get("users.guest.allowGuests")))
     		return badRequest(views.html.Login.login.render(form(LoginForm.class)));
     	
-    	session("userid", ""+(-1-randomGuestUserId.nextInt(2147483640)));
-    	session("name", models.Setting.get("guest.name"));
-    	session("email", "");
-    	session("password", "");
-    	session("admin", "false");
+    	User.loginAsGuest(Controller.session());
+    	
         return redirect(routes.Scripts.getScripts());
     }
     

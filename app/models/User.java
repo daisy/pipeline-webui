@@ -17,6 +17,8 @@ import play.data.format.*;
 import play.data.validation.*;
 import play.libs.F.Callback;
 import play.libs.F.Callback0;
+import play.mvc.Http.Request;
+import play.mvc.Http.Session;
 import play.mvc.WebSocket;
 
 @Entity
@@ -133,39 +135,83 @@ public class User extends Model {
 	}
 
 	/** Authenticate a user. */
-	public static User authenticate(String userid, String email, String password) {
+	public static User authenticate(Request request, Session session) {
+		User user;
+		
+		String idString = session.get("userid"); // login with session variables
+		if (idString == null && request.queryString().containsKey("guestid") && request.queryString().get("guestid").length > 0)
+			idString = "-"+request.queryString().get("guestid")[0]; // resume guest session
 		
 		Long id = null;
-		try {
-			id = Long.parseLong(userid);
-		} catch (NumberFormatException e) {
-			// unparseable id; continue as if nothing happened
-		}
+		try { id = Long.parseLong(session.get("userid")); }
+		catch (NumberFormatException e) { } // do nothing
 		
-		if (id == null || id >= 0) {
+		if (id == null) { // no userid; try automatic login
+			if ("true".equals(Setting.get("users.guest.automaticLogin")))
+				return loginAsGuest(session);
+			else
+				return null;
+			
+		} else if (id >= 0) { // normal or admin user
 			try {
-				return find.where()
-						.eq("email", email)
-						.eq("password", password)
+				user = find.where()
+						.eq("id", id)
+						.eq("email", session.get("email"))
+						.eq("password", session.get("password"))
 						.findUnique();
+				user.login(session);
+				return user;
+				
 			} catch (NullPointerException e) {
-				// Not found
+				// Not found or wrong credentials
 				return null;
 			}
 			
-		} else {
-			if (!"true".equals(models.Setting.get("guest.allowGuests")))
-				return null;
+		} else if ("true".equals(models.Setting.get("users.guest.allowGuests"))) { // guest user
+			user = new User("", models.Setting.get("users.guest.name"), "", false);
+			user.id = id;
+			return user;
 			
-			User guest = new User("", models.Setting.get("guest.name"), "", false);
-			guest.id = id;
-			return guest;
+		} else {
+			// trying to log in as guest, but guest login is not allowed
+			return null;
 		}
+	}
+	
+	private static Random randomGuestUserId = new Random();
+	public static User loginAsGuest(Session session) {
+		if (!"true".equals(models.Setting.get("users.guest.allowGuests")))
+			return null;
+		
+		User guest = new User("", models.Setting.get("users.guest.name"), "", false);
+		guest.id = -1-(long)randomGuestUserId.nextInt(2147483640);
+		guest.login(session);
+		
+		return guest;
+	}
+
+	public void login(Session session) {
+		session.put("userid", id+"");
+    	session.put("name", name);
+    	session.put("email", email);
+    	session.put("password", password);
+    	session.put("admin", admin+"");
 	}
 
 	/** Authenticate a user with an unencrypted password */
-	public static User authenticateUnencrypted(String email, String password) {
-		return authenticate(null, email, Crypto.sign(password));
+	public static User authenticateUnencrypted(String email, String password, Session session) {
+		try {
+			User user = find.where()
+					.eq("email", email)
+					.eq("password", Crypto.sign(password))
+					.findUnique();
+			user.login(session);
+			return user;
+			
+		} catch (NullPointerException e) {
+			// Not found or wrong credentials
+			return null;
+		}
 	}
 
 	/**
@@ -251,5 +297,5 @@ public class User extends Model {
 			job.delete();
 		super.delete();
 	}
-	
+
 }

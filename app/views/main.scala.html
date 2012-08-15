@@ -45,7 +45,7 @@
 	                <span class="icon-bar"></span>
 	                <span class="icon-bar"></span>
 	            </a>
-	   			<a class="brand" href="@routes.Login.login()">@Setting.get("branding.title")</a>
+	   			<a class="brand" href="@routes.Application.index()">@Setting.get("branding.title")</a>
 	   			<nav class="nav-collapse">
 		   			<ul class="nav">
 		   				@if(Controller.session("userid") != null){
@@ -53,7 +53,7 @@
 			   					<li class="@("active".when(nav == "scripts"))"><a href="@routes.Scripts.getScripts()"><i class="icon-home icon-white"></i> Scripts</a></li>
 			   				}
 		   				}
-		   				@if(Controller.session("userid") != null && Long.parseLong(Controller.session("userid")) >= 0){
+		   				@if(Controller.session("userid") != null && (Long.parseLong(Controller.session("userid")) >= 0 || Setting.get("users.guest.shareJobs") == "true")){
 			   				@if(navs.contains("jobs")){
 			 					<li class="@("active".when(nav == "jobs"))"><a href="@routes.Jobs.getJobs()"><i class="icon-tasks icon-white"></i> Jobs</a></li>
 			 				}
@@ -71,14 +71,16 @@
 		 						@if(Long.parseLong(Controller.session("userid")) >= 0){
 			 						<li class="@("active".when(nav == "account"))"><a href="@routes.Account.overview()"><i class="icon-user icon-white"></i> @session.get("name")</a></li>
 			 					}else{
-			 						<li class="@("active".when(nav == "account"))"><a href="#"><i class="icon-user icon-white"></i> @session.get("name")</a></li>
+			 						@if(Setting.get("users.guest.showGuestName") == "true"){
+			 							<li class="@("active".when(nav == "account"))"><a href="#"><i class="icon-user icon-white"></i> @session.get("name")</a></li>
+			 						}
 		 						}
 	 						}
 	 					}
 		 				@if(navs.contains("login")){
 		 					<li class="@("active".when(nav == "login"))">
-		 						@if(session.get("email")==null){
-		 							<a href="@routes.Login.login()"><i class="icon-lock icon-white"></i>Log in</a>
+		 						@if(session.get("email")==null || Long.parseLong(Controller.session("userid")) < 0){
+		 							<a href="@routes.Login.login()"><i class="icon-lock icon-white"></i> Log in</a>
 		 						}else{
 		 							<a href="@routes.Login.logout()"><i class="icon-remove icon-white"></i> Log out</a>
 		 						}

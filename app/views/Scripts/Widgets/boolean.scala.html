@@ -1,14 +1,18 @@
 @(arg: pipeline2.models.script.Argument, script: pipeline2.models.Script)
 
+<input type="hidden" name="@{arg.kind}-@{arg.name}" value="true" id="@{arg.kind}-@{arg.name}-value"/>
+
 <div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
-	<label class="control-label">@arg.nicename</label>
+	<label class="control-label" id="@{arg.kind}-@{arg.name}-label" for="@{arg.kind}-@{arg.name}" aria-label="@{arg.kind}-@{arg.name}">@arg.nicename</label>
 	<div class="controls">
-		<label class="radio">
-			<input type="radio" name="@{arg.kind}-@{arg.name}" value="true" checked=""> Yes
-		</label>
-		<label class="radio">
-			<input type="radio" name="@{arg.kind}-@{arg.name}" value="false"> No
-		</label>
+		<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="@{arg.kind}-@{arg.name}-label" id="@{arg.kind}-@{arg.name}">
+			<button type="button" name="@{arg.kind}-@{arg.name}-on" class="btn active" id="@{arg.kind}-@{arg.name}-on"
+				aria-role="radio" aria-checked="true"
+				onclick="toggleRadio('@{arg.kind}-@{arg.name}', true, 'true');return false;">Yes</button>
+			<button type="button" name="@{arg.kind}-@{arg.name}-off" class="btn" id="@{arg.kind}-@{arg.name}-off"
+				aria-role="radio" aria-checked="false"
+				onclick="toggleRadio('@{arg.kind}-@{arg.name}', false, 'false');return false;">No</button>
+		</div>
 		@if(arg.desc.length > 0){
 			<span class="help-block">@arg.desc</span>
 		}

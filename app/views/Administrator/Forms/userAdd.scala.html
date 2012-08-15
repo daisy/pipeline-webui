@@ -53,10 +53,10 @@
 				<div class="controls">
 					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="createUser-admin-label" id="user-new-admin">
 						<button type="button" name="admin-on" class="btn @("active".when(userForm != null && userForm.field("admin").valueOr("false")=="true"))" id="user-new-admin-on"
-							aria-role="radio" aria-checked="true"
+							aria-role="radio" aria-checked="@(userForm != null && userForm.field("admin").valueOr("false")=="true")"
 							onclick="toggleRadio('user-new-admin', true, 'true');return false;">Yes</button>
 						<button type="button" name="admin-off" class="btn @("active".when(userForm != null && userForm.field("admin").valueOr("false")=="false"))" id="user-new-admin-off"
-							aria-role="radio" aria-checked="false"
+							aria-role="radio" aria-checked="@(userForm == null || userForm.field("admin").valueOr("false")=="false")"
 							onclick="toggleRadio('user-new-admin', false, 'false');return false;">No</button>
 					</div>
 					@if("tab" == "new" && userForm != null && userForm.field("admin").errors().size() > 0){

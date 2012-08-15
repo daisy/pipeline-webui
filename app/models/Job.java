@@ -66,7 +66,7 @@ public class Job extends Model implements Comparable<Job> {
 		this.notifiedCreated = false;
 		this.notifiedComplete = false;
 		if (user.id < 0)
-			this.userNicename = Setting.get("guest.name");
+			this.userNicename = Setting.get("users.guest.name");
 		else
 			this.userNicename = User.findById(user.id).name;
 	}
@@ -86,6 +86,8 @@ public class Job extends Model implements Comparable<Job> {
 			User user = User.findById(job.user);
 			if (user != null)
 				job.userNicename = user.name;
+			else if (job.user < 0)
+				job.userNicename = "Guest #"+-job.user;
 			else
 				job.userNicename = "User #"+job.user;
 		}

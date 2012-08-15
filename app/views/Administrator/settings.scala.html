@@ -80,7 +80,7 @@
 		<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "global" || play.mvc.Controller.flash("settings.usertab") == null))"><a href="#usertab-global" data-toggle="tab"><i class="icon-globe"></i> <em>Global</em></a></li>
 		<hr/>
 		
-		<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))"><a href="#usertab-guest" data-toggle="tab"><i class="icon-user"></i> @models.Setting.get("guest.name")</a></li>
+		<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))"><a href="#usertab-guest" data-toggle="tab"><i class="icon-user"></i> @models.Setting.get("users.guest.name")</a></li>
 		
 		@for(user <- userList) {
 			<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.id))"><a href="#usertab-@user.id" data-toggle="tab"><i class="icon-user"></i> @user.name</a></li>

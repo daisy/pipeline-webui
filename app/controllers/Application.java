@@ -4,6 +4,7 @@ import java.io.File;
 
 import models.Setting;
 import models.User;
+import play.Logger;
 import play.mvc.*;
 
 public class Application extends Controller {
@@ -12,7 +13,7 @@ public class Application extends Controller {
 		if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());
 		
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null)
 			return redirect(routes.Login.login());
 		

@@ -47,9 +47,9 @@ public class Jobs extends Controller {
 	public static Result getJobs() {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
-
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
-		if (user == null || user.id < 0)
+		
+		User user = User.authenticate(request(), session());
+		if (user == null || (user.id < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
 			return redirect(routes.Login.login());
 		
 		Pipeline2WSResponse jobs = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
@@ -69,7 +69,7 @@ public class Jobs extends Controller {
 			} else {
 				job.href = XPath.selectText("@href", jobNode, Pipeline2WS.ns);
 				job.status = XPath.selectText("@status", jobNode, Pipeline2WS.ns);
-				if (user.admin || user.id.equals(job.user))
+				if (user.admin || user.id >= 0 && user.id.equals(job.user) || user.id < 0 && job.user < 0 && "true".equals(Setting.get("users.guest.shareJobs")))
 					jobList.add(job);
 			}
 		}
@@ -90,24 +90,7 @@ public class Jobs extends Controller {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
 		
-		if (id.startsWith("guest")) {
-			Logger.debug(">>> guest");
-			Long userId = Long.parseLong("-"+id.split("-", 3)[1]);
-			Logger.debug(">>> "+userId);
-			id = id.substring(6+(userId+"").length());
-			Logger.debug(">>> "+id);
-			if (userId < 0) {
-				Logger.debug(">>> "+userId+" < 0");
-				Logger.debug("userid parameter set; logging in as given guest user");
-				session("userid", ""+userId);
-		    	session("name", models.Setting.get("guest.name"));
-		    	session("email", "");
-		    	session("password", "");
-		    	session("admin", "false");
-			}
-		}
-		
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null)
 			return redirect(routes.Login.login());
 		
@@ -125,8 +108,11 @@ public class Jobs extends Controller {
 			Logger.debug("Job #"+job.id+" was not found.");
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
-		if (!webuiJob.user.equals(user.id))
-			return forbidden();
+		if (!(	user.admin
+			||	webuiJob.user.equals(user.id)
+			||	webuiJob.user < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+				))
+			return forbidden("You are not allowed to view this job.");
 		
 		if (!Job.lastMessageSequence.containsKey(job.id) && job.messages.size() > 0) {
 			Collections.sort(job.messages);
@@ -147,20 +133,20 @@ public class Jobs extends Controller {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
 		
-		if (request().queryString().containsKey("userid") && request().queryString().get("userid").length > 0) {
-			Long userId = Long.parseLong(request().queryString().get("userid")[0]);
-			if (userId < 0) {
-				session("userid", ""+userId);
-		    	session("name", models.Setting.get("guest.name"));
-		    	session("email", "");
-		    	session("password", "");
-		    	session("admin", "false");
-			}
-		}
-		
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null)
 			return redirect(routes.Login.login());
+		
+		Job webuiJob = Job.findById(id);
+		if (webuiJob == null) {
+			Logger.debug("Job #"+id+" was not found.");
+			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
+		}
+		if (!(	user.admin
+				||	webuiJob.user.equals(user.id)
+				||	webuiJob.user < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+					))
+				return forbidden("You are not allowed to view this job.");
 		
 		Pipeline2WSResponse result = pipeline2.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
 		
@@ -176,21 +162,21 @@ public class Jobs extends Controller {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
 		
-		if (request().queryString().containsKey("userid") && request().queryString().get("userid").length > 0) {
-			Long userId = Long.parseLong(request().queryString().get("userid")[0]);
-			if (userId < 0) {
-				session("userid", ""+userId);
-		    	session("name", models.Setting.get("guest.name"));
-		    	session("email", "");
-		    	session("password", "");
-		    	session("admin", "false");
-			}
-		}
-		
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null)
 			return redirect(routes.Login.login());
-
+		
+		Job webuiJob = Job.findById(id);
+		if (webuiJob == null) {
+			Logger.debug("Job #"+id+" was not found.");
+			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
+		}
+		if (!(	user.admin
+				||	webuiJob.user.equals(user.id)
+				||	webuiJob.user < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+					))
+				return forbidden("You are not allowed to view this job.");
+		
 		Pipeline2WSResponse jobLog = pipeline2.Jobs.getLog(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
 
 		if (jobLog.status != 200 && jobLog.status != 201 && jobLog.status != 204) {
@@ -211,7 +197,7 @@ public class Jobs extends Controller {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
 
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null)
 			return redirect(routes.Login.login());
 
@@ -421,15 +407,12 @@ public class Jobs extends Controller {
 		
 		webUiJob.pushNotifications();
 		
-		if (user.id < 0) {
-			jobId = "guest" + user.id + "-" + jobId;
-			if (scriptForm.guestEmail != null) {
-				String jobUrl = routes.Jobs.getJob(jobId).absoluteURL(request());
-				String html = views.html.Account.emailJobCreated.render(jobUrl, webUiJob.nicename).body();
-				String text = "To view your Pipeline 2 job, go to this web address: " + jobUrl;
-				if (!Account.sendEmail("Job started: "+webUiJob.nicename, html, text, scriptForm.guestEmail, scriptForm.guestEmail))
-					flash("error", "Was unable to send the e-mail.");
-			}
+		if (user.id < 0 && scriptForm.guestEmail != null) {
+			String jobUrl = routes.Jobs.getJob(jobId).absoluteURL(request())+"?guestid="+-Long.parseLong(session("userid"));
+			String html = views.html.Account.emailJobCreated.render(jobUrl, webUiJob.nicename).body();
+			String text = "To view your Pipeline 2 job, go to this web address: " + jobUrl;
+			if (!Account.sendEmail("Job started: "+webUiJob.nicename, html, text, scriptForm.guestEmail, scriptForm.guestEmail))
+				flash("error", "Was unable to send the e-mail.");
 		}
 		
 		return redirect(controllers.routes.Jobs.getJob(jobId));

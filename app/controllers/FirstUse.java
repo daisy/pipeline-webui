@@ -22,7 +22,7 @@ public class FirstUse extends Controller {
 			return ok(views.html.FirstUse.createAdmin.render(form(Administrator.CreateAdminForm.class)));
 		}
 		
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null || !user.admin) {
 			return redirect(routes.Login.login());
 		}
@@ -58,22 +58,18 @@ public class FirstUse extends Controller {
 			} else {
 				User admin = new User(filledForm.field("email").valueOr(""), "Administrator", filledForm.field("password").valueOr(""), true);
 				admin.save();
-				session("userid", admin.id+"");
-				session("name", admin.name);
-				session("email", admin.email);
-				session("password", admin.password);
-				session("admin", admin.admin+"");
+				admin.login(session());
 				session("setws", "true");
 				
 				// Create the guest user (might as well do it here)
-				Setting.set("guest.name", "Guest");
-				Setting.set("guest.allowGuests", "false");
+				Setting.set("users.guest.name", "Guest");
+				Setting.set("users.guest.allowGuests", "false");
 				
 				return redirect(routes.FirstUse.getFirstUse());
 			}
 		}
 		
-		User user = User.authenticate(session("userid"), session("email"), session("password"));
+		User user = User.authenticate(request(), session());
 		if (user == null || !user.admin) {
 			return redirect(routes.Login.login());
 		}
