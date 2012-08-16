@@ -18,19 +18,21 @@
         		</div>
         		
        		}else{
-	        	<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.id && userForm.error("resetPassword") != null))" id="user-@{user.id}-resetPasswordGroup">
-					<label for="user-@{user.id}-resetPassword" class="control-label" id="updateUser-@{user.id}-password-label">Password</label>
-					<div class="controls">
-						<button name="resetPassword" id="user-@{user.id}-resetPassword" class="btn" onclick="window.location='@{alternativeRoute}?formName=resetPassword&userid=@{user.id}';return false;" aria-labelledby="updateUser-@{user.id}-password-label"><i class="icon-envelope"></i> @if(user.active){Send password reset link}else{Send new activation link}</button>
-						@if(user.active){
-							<span class="help-inline">An e-mail will be sent to @user.email, containing a link where @user.name can reset their password.</span>
-						}else{
-							<span class="help-inline">An e-mail will be sent to @user.email, containing a link where @user.name can set their password.</span>
-						}
+       		
+       			@if(Setting.get("mail.enable") == "true") {
+		        	<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.id && userForm.error("resetPassword") != null))" id="user-@{user.id}-resetPasswordGroup">
+						<label for="user-@{user.id}-resetPassword" class="control-label" id="updateUser-@{user.id}-password-label">Password</label>
+						<div class="controls">
+							<button name="resetPassword" id="user-@{user.id}-resetPassword" class="btn" onclick="window.location='@{alternativeRoute}?formName=resetPassword&userid=@{user.id}';return false;" aria-labelledby="updateUser-@{user.id}-password-label"><i class="icon-envelope"></i> @if(user.active){Send password reset link}else{Send new activation link}</button>
+							@if(user.active){
+								<span class="help-inline">An e-mail will be sent to @user.email, containing a link where @user.name can reset their password.</span>
+							}else{
+								<span class="help-inline">An e-mail will be sent to @user.email, containing a link where @user.name can set their password.</span>
+							}
+						</div>
 					</div>
-				</div>
-				
-				<hr/>
+					<hr/>
+				}
 	        	
 	        	<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.id && userForm.error("name") != null))" id="user-@{user.id}-nameGroup">
 	        		<label for="user-@{user.id}-name" class="control-label">Name</label>

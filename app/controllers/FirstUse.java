@@ -7,7 +7,7 @@ import models.*;
 /**
  * Helps with configuring the Web UI for the first time.
  * 
- * Configure database -> create admin account -> set webservice endpoint -> set upload directory -> configure SMTP -> welcome page!
+ * Configure database -> create admin account -> set webservice endpoint -> set upload directory -> welcome page!
  * 
  * @author jostein
  */
@@ -33,10 +33,6 @@ public class FirstUse extends Controller {
 		
 		if (Setting.get("uploads") == null) {
 			return ok(views.html.FirstUse.setUploadDir.render(form(Administrator.SetUploadDirForm.class)));
-		}
-		
-		if (Setting.get("mail.from.email") == null) {
-			return ok(views.html.FirstUse.configureEmail.render(form(Administrator.ConfigureEmailForm.class)));
 		}
 		
 		return ok(views.html.FirstUse.welcome.render());
@@ -104,19 +100,6 @@ public class FirstUse extends Controller {
 	        	Administrator.SetUploadDirForm.save(filledForm);
 	        	return redirect(routes.FirstUse.getFirstUse());
 	        }
-		}
-		
-		if ("configureEmail".equals(formName)) {
-			Form<Administrator.ConfigureEmailForm> filledForm = form(Administrator.ConfigureEmailForm.class).bindFromRequest();
-			Administrator.ConfigureEmailForm.validate(filledForm);
-			
-			if(filledForm.hasErrors()) {
-				return badRequest(views.html.FirstUse.configureEmail.render(filledForm));
-
-			} else {
-				Administrator.ConfigureEmailForm.save(filledForm);
-				return redirect(routes.FirstUse.getFirstUse());
-			}
 		}
 		
 		return getFirstUse();
