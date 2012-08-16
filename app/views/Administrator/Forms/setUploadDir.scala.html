@@ -15,6 +15,9 @@
 							value="@setUploadDirForm.field("uploaddir").valueOr(if (Setting.get("uploads") != null) Setting.get("uploads") else System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"))"
 							onkeyup="if(@{models.Setting.get("uploads")==null} || this.value==='@models.Setting.get("uploads")')document.getElementById('setUploadDir-uploaddirGroup').style.backgroundColor='#FFF';else document.getElementById('setUploadDir-uploaddirGroup').style.backgroundColor='#DDF';"
 					/>
+					@if(models.Setting.get("uploads")==null){
+						<span class="help-inline">The upload directory is not set, a suggestion is provided.</span>
+					}
 					@if(setUploadDirForm.field("uploaddir").errors().size() > 0){
 						@if(setUploadDirForm.field("uploaddir").errors().get(0).message().startsWith("error.")){
 							<span class="help-inline">A valid filesystem path must be provided.</span>

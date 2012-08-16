@@ -59,11 +59,16 @@ public class FirstUse extends Controller {
 				User admin = new User(filledForm.field("email").valueOr(""), "Administrator", filledForm.field("password").valueOr(""), true);
 				admin.save();
 				admin.login(session());
-				session("setws", "true");
 				
-				// Create the guest user (might as well do it here)
+				// Set some default configuration options
 				Setting.set("users.guest.name", "Guest");
 				Setting.set("users.guest.allowGuests", "false");
+				Setting.set("users.guest.showGuestName", "true");
+				Setting.set("users.guest.showEmailBox", "true");
+				Setting.set("users.guest.shareJobs", "false");
+				Setting.set("users.guest.automaticLogin", "false");
+				Setting.set("dp2ws.sameFilesystem", "false");
+				Setting.set("mail.enable", "false");
 				
 				return redirect(routes.FirstUse.getFirstUse());
 			}
@@ -83,18 +88,7 @@ public class FirstUse extends Controller {
 	        	return badRequest(views.html.FirstUse.setWS.render(filledForm));
 	        	
 	        } else {
-	        	Setting.set("dp2ws.endpoint", filledForm.field("endpoint").valueOr(""));
-	        	Setting.set("dp2ws.authid", filledForm.field("authid").valueOr(""));
-	        	Setting.set("dp2ws.secret", filledForm.field("secret").valueOr(""));
-	        	String tempDir = filledForm.field("tempDir").valueOr("");
-	        	String resultDir = filledForm.field("resultDir").valueOr("");
-	        	if (tempDir.contains("/") && !tempDir.endsWith("/")) tempDir += "/";
-	        	if (tempDir.contains("\\") && !tempDir.endsWith("\\")) tempDir += "\\";
-	        	if (resultDir.contains("/") && !resultDir.endsWith("/")) resultDir += "/";
-	        	if (resultDir.contains("\\") && !resultDir.endsWith("\\")) resultDir += "\\";
-	        	Setting.set("dp2ws.tempDir", tempDir);
-	        	Setting.set("dp2ws.resultDir", resultDir);
-	        	Setting.set("dp2ws.sameFilesystem", filledForm.field("sameFilesystem").valueOr(""));
+	        	Administrator.SetWSForm.save(filledForm);
 	        	return redirect(routes.FirstUse.getFirstUse());
 	        }
 		}
@@ -104,14 +98,10 @@ public class FirstUse extends Controller {
 			Administrator.SetUploadDirForm.validate(filledForm);
 			
 			if(filledForm.hasErrors()) {
-	        	session("setws", "true");
 	        	return badRequest(views.html.FirstUse.setUploadDir.render(filledForm));
 	        	
 	        } else {
-	        	String uploadPath = filledForm.field("uploaddir").valueOr("");
-	        	if (!uploadPath.endsWith(System.getProperty("file.separator")))
-	        		uploadPath += System.getProperty("file.separator");
-	        	Setting.set("uploads", uploadPath);
+	        	Administrator.SetUploadDirForm.save(filledForm);
 	        	return redirect(routes.FirstUse.getFirstUse());
 	        }
 		}
@@ -124,13 +114,7 @@ public class FirstUse extends Controller {
 				return badRequest(views.html.FirstUse.configureEmail.render(filledForm));
 
 			} else {
-				Setting.set("mail.username", filledForm.field("username").valueOr(""));
-				Setting.set("mail.password", filledForm.field("password").valueOr(""));
-				Setting.set("mail.smtp.host", filledForm.field("smtp").valueOr(""));
-				Setting.set("mail.smtp.port", "465"); // TODO: make configurable like the host
-				Setting.set("mail.smtp.ssl", "true"); // TODO: make configurable like the host
-				Setting.set("mail.from.name", "Pipeline 2");
-				Setting.set("mail.from.email", user.email);
+				Administrator.ConfigureEmailForm.save(filledForm);
 				return redirect(routes.FirstUse.getFirstUse());
 			}
 		}

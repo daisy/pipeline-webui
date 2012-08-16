@@ -20,43 +20,49 @@ window.locale = {
 };
 </script>
 
-@helper.form(action = routes.Uploads.postUpload(), 'enctype -> "multipart/form-data", 'id -> "fileupload", 'class -> "form-horizontal"){
-	<fieldset>
-		<div class="control-group">
-			<label class="control-label" for="upload-button">Files</label>
-			<div class="controls">
-			    <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
-		        <div class="fileupload-buttonbar">
-		            <!-- The fileinput-button span is used to style the file input field as button -->
-		            <span class="btn btn-success fileinput-button">
-		                <i class="icon-plus icon-white"></i>
-		                <span>Upload files from my computer</span>
-		                <input type="file" name="files" multiple="" id="upload-button"/>
-		            </span>
-		        </div>
+@if(Setting.get("uploads")==null){
+	<div class="hero-unit" style="text-align:center">
+		<h2>We're sorry, but files cannot be uploaded until the upload directory is configured.</h2>
+	</div>
+}else{
+	@helper.form(action = routes.Uploads.postUpload(), 'enctype -> "multipart/form-data", 'id -> "fileupload", 'class -> "form-horizontal"){
+		<fieldset>
+			<div class="control-group">
+				<label class="control-label" for="upload-button">Files</label>
+				<div class="controls">
+				    <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
+			        <div class="fileupload-buttonbar">
+			            <!-- The fileinput-button span is used to style the file input field as button -->
+			            <span class="btn btn-success fileinput-button">
+			                <i class="icon-plus icon-white"></i>
+			                <span>Upload files from my computer</span>
+			                <input type="file" name="files" multiple="" id="upload-button"/>
+			            </span>
+			        </div>
+			    </div>
 		    </div>
-	    </div>
-	    <div class="control-group">
-	    	<div class="controls">
-		        <!-- The global progress information -->
-		        <div aria-live="polite" class="fileupload-progress fade">
-		            <!-- The global progress bar -->
-		            <div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-		                <div class="bar" style="width:0%;"></div>
-		            </div>
-		            <!-- The extended global progress information -->
-		            <div class="progress-extended">&nbsp;</div>
-		        </div>
-	    		<p class="help-block">
-					If you need to upload lots of files or if you need to preserve the folder structure of your fileset, please compress your files as a ZIP archive before uploading them. ZIP files will be unzipped on the server.
-					<!--<br/>Tip: in modern browsers you can drag and drop files from your desktop into the browser window. TODO:re-implement drag'n'drop-->
-				</p>
-			    
-			    <!-- The table listing the files available for upload/download -->
-			    <table aria-live="off" class="table table-striped" role="presentation"><tbody class="files"></tbody></table>
+		    <div class="control-group">
+		    	<div class="controls">
+			        <!-- The global progress information -->
+			        <div aria-live="polite" class="fileupload-progress fade">
+			            <!-- The global progress bar -->
+			            <div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+			                <div class="bar" style="width:0%;"></div>
+			            </div>
+			            <!-- The extended global progress information -->
+			            <div class="progress-extended">&nbsp;</div>
+			        </div>
+		    		<p class="help-block">
+						If you need to upload lots of files or if you need to preserve the folder structure of your fileset, please compress your files as a ZIP archive before uploading them. ZIP files will be unzipped on the server.
+						<!--<br/>Tip: in modern browsers you can drag and drop files from your desktop into the browser window. TODO:re-implement drag'n'drop-->
+					</p>
+				    
+				    <!-- The table listing the files available for upload/download -->
+				    <table aria-live="off" class="table table-striped" role="presentation"><tbody class="files"></tbody></table>
+			    </div>
 		    </div>
-	    </div>
-	</fieldset>
+		</fieldset>
+	}
 }
 
 <!-- The template to display files available for upload -->

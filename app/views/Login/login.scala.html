@@ -39,8 +39,11 @@
 					<label for="password" class="control-label">Password</label>
 					<div class="controls">
 						<input type="password" name="password" id="password" placeholder="Password" class="input-xlarge"/>
-						<span class="help-inline">Forgot your password?
-							<button type="button" class="btn" id="submitLostPassword" name="submitLostPassword" onclick="window.location='@routes.Login.resetPassword()?email='+$('#email').val();return false;">Get a new one!</button></span>
+						@if(Setting.get("email.enable")=="true"){
+							<span class="help-inline">Forgot your password?
+								<button type="button" class="btn" id="submitLostPassword" name="submitLostPassword" onclick="window.location='@routes.Login.resetPassword()?email='+$('#email').val();return false;">Get a new one!</button>
+							</span>
+						}
 					</div>
 				</div>
 				
@@ -49,7 +52,7 @@
 					@if(Setting.get("users.guest.allowGuests") == "true" && (Controller.session("userid") == null || Long.parseLong(Controller.session("userid")) >= 0)){
 						<span>
 							Don't have an account? &nbsp;&nbsp;&nbsp;
-							<button type="button" class="btn btn-large" id="guest-login" name="guest-login" onclick="window.location='@routes.Login.authenticateGuest()';return false;">Log in as guest <i class="icon-hand-right"></i></button>
+							<button type="button" class="btn btn-large" id="guest-login" name="guest-login" onclick="window.location='@routes.Login.authenticateGuest()';return false;">Try it out as a guest <i class="icon-hand-right"></i></button>
 						</span>
 					}
 					@if(Controller.session("userid") != null && Long.parseLong(Controller.session("userid")) < 0){

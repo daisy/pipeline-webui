@@ -8,6 +8,9 @@ import java.util.List;
 
 import javax.persistence.Transient;
 
+import controllers.Administrator.SetUploadDirForm;
+import controllers.Administrator.SetWSForm;
+
 import models.Setting;
 import models.User;
 import play.Logger;
@@ -74,6 +77,22 @@ public class Administrator extends Controller {
         	if (filledForm.field("endpoint").valueOr("").equals(""))
         		filledForm.reject("endpoint", "Invalid endpoint URL.");
         }
+
+		public static void save(Form<SetWSForm> filledForm) {
+			Setting.set("dp2ws.endpoint", filledForm.field("endpoint").valueOr(""));
+        	Setting.set("dp2ws.authid", filledForm.field("authid").valueOr(""));
+        	if (Setting.get("dp2ws.secret") == null || !"".equals(filledForm.field("secret").value()))
+        		Setting.set("dp2ws.secret", filledForm.field("secret").valueOr(""));
+        	String tempDir = filledForm.field("tempDir").valueOr("");
+        	String resultDir = filledForm.field("resultDir").valueOr("");
+        	if (tempDir.contains("/") && !tempDir.endsWith("/")) tempDir += "/";
+        	if (tempDir.contains("\\") && !tempDir.endsWith("\\")) tempDir += "\\";
+        	if (resultDir.contains("/") && !resultDir.endsWith("/")) resultDir += "/";
+        	if (resultDir.contains("\\") && !resultDir.endsWith("\\")) resultDir += "\\";
+        	Setting.set("dp2ws.tempDir", tempDir);
+        	Setting.set("dp2ws.resultDir", resultDir);
+        	Setting.set("dp2ws.sameFilesystem", filledForm.field("sameFilesystem").valueOr(""));
+		}
     }
 	
 	public final static Form<SetUploadDirForm> setUploadDirForm = form(SetUploadDirForm.class);
@@ -91,6 +110,13 @@ public class Administrator extends Controller {
         	if (!dir.isDirectory())
         		filledForm.reject("uploaddir", "The path does not point to a directory.");
         }
+
+		public static void save(Form<SetUploadDirForm> filledForm) {
+			String uploadPath = filledForm.field("uploaddir").valueOr("");
+        	if (!uploadPath.endsWith(System.getProperty("file.separator")))
+        		uploadPath += System.getProperty("file.separator");
+        	Setting.set("uploads", uploadPath);
+		}
     }
 	
 	public final static Form<ConfigureEmailForm> configureEmailForm = form(ConfigureEmailForm.class);
@@ -117,6 +143,18 @@ public class Administrator extends Controller {
 				filledForm.reject("port", "The port must be a valid number between 0 and 65535.");
 			}
 		}
+
+		public static void save(Form<ConfigureEmailForm> filledForm) {
+			Setting.set("mail.username", filledForm.field("username").valueOr(""));
+			if (Setting.get("mail.password") == null || !"".equals(filledForm.field("password").value()))
+        		Setting.set("mail.password", filledForm.field("password").valueOr(""));
+			Setting.set("mail.provider", filledForm.field("emailService").valueOr(""));
+			Setting.set("mail.smtp.host", filledForm.field("smtp").valueOr(""));
+			Setting.set("mail.smtp.port", filledForm.field("port").valueOr(""));
+			Setting.set("mail.smtp.ssl", filledForm.field("ssl").valueOr(""));
+			Setting.set("mail.from.name", "Pipeline 2");
+			Setting.set("mail.from.email", session("email")); // TODO: make configurable
+		}
 	}
 	
 	public final static Form<SetJobCleanupForm> setJobCleanupForm = form(SetJobCleanupForm.class);
@@ -135,6 +173,11 @@ public class Administrator extends Controller {
         	if (jobCleanup != null && jobCleanup < 0)
         		filledForm.reject("jobcleanup", "Please enter a positive number.");
         }
+
+		public static void save(Form<SetJobCleanupForm> filledForm) {
+			long jobCleanupTime = Long.parseLong(filledForm.field("jobcleanup").valueOr("0")) * 60000L;
+        	Setting.set("jobs.deleteAfterDuration", jobCleanupTime+"");
+		}
     }
 	
 	public final static Form<ConfigureBrandingForm> configureBrandingForm = form(ConfigureBrandingForm.class);
@@ -169,6 +212,13 @@ public class Administrator extends Controller {
 	        		themes.add(theme);
         	}
         }
+		public static void save(Form<ConfigureBrandingForm> filledForm) {
+			String theme = filledForm.field("theme").valueOr("");
+        	if (theme.length() > 0)
+        		theme += "/";
+        	Setting.set("branding.theme", theme);
+        	Setting.set("branding.title", filledForm.field("title").valueOr(Setting.get("branding.title")));
+		}
     }
 	
 	final static Form<User> userForm = form(User.class);
@@ -448,19 +498,7 @@ public class Administrator extends Controller {
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
-	        	Setting.set("dp2ws.endpoint", filledForm.field("endpoint").valueOr(""));
-	        	Setting.set("dp2ws.authid", filledForm.field("authid").valueOr(""));
-	        	if (Setting.get("dp2ws.secret") == null || !"".equals(filledForm.field("secret").value()))
-	        		Setting.set("dp2ws.secret", filledForm.field("secret").valueOr(""));
-	        	String tempDir = filledForm.field("tempDir").valueOr("");
-	        	String resultDir = filledForm.field("resultDir").valueOr("");
-	        	if (tempDir.contains("/") && !tempDir.endsWith("/")) tempDir += "/";
-	        	if (tempDir.contains("\\") && !tempDir.endsWith("\\")) tempDir += "\\";
-	        	if (resultDir.contains("/") && !resultDir.endsWith("/")) resultDir += "/";
-	        	if (resultDir.contains("\\") && !resultDir.endsWith("\\")) resultDir += "\\";
-	        	Setting.set("dp2ws.tempDir", tempDir);
-	        	Setting.set("dp2ws.resultDir", resultDir);
-	        	Setting.set("dp2ws.sameFilesystem", filledForm.field("sameFilesystem").valueOr(""));
+	        	Administrator.SetWSForm.save(filledForm);
 	        	flash("success", "Pipeline 2 Web Service endpoint changed successfully!");
 	        	return redirect(routes.Administrator.getSettings());
 	        }
@@ -477,10 +515,7 @@ public class Administrator extends Controller {
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
-	        	String uploadPath = filledForm.field("uploaddir").valueOr("");
-	        	if (!uploadPath.endsWith(System.getProperty("file.separator")))
-	        		uploadPath += System.getProperty("file.separator");
-	        	Setting.set("uploads", uploadPath);
+	        	Administrator.SetUploadDirForm.save(filledForm);
 	        	flash("success", "Uploads directory changed successfully!");
 	        	return redirect(routes.Administrator.getSettings());
 	        }
@@ -502,15 +537,7 @@ public class Administrator extends Controller {
 					return badRequest(views.html.Administrator.settings.render(forms, users));
 	
 				} else {
-					Setting.set("mail.username", filledForm.field("username").valueOr(""));
-					if (Setting.get("mail.password") == null || !"".equals(filledForm.field("password").value()))
-		        		Setting.set("mail.password", filledForm.field("password").valueOr(""));
-					Setting.set("mail.provider", filledForm.field("emailService").valueOr(""));
-					Setting.set("mail.smtp.host", filledForm.field("smtp").valueOr(""));
-					Setting.set("mail.smtp.port", filledForm.field("port").valueOr(""));
-					Setting.set("mail.smtp.ssl", filledForm.field("ssl").valueOr(""));
-					Setting.set("mail.from.name", "Pipeline 2");
-					Setting.set("mail.from.email", user.email);
+					Administrator.ConfigureEmailForm.save(filledForm);
 					flash("success", "Successfully changed e-mail settings!");
 		        	return redirect(routes.Administrator.getSettings());
 				}
@@ -528,8 +555,7 @@ public class Administrator extends Controller {
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
-	        	long jobCleanupTime = Long.parseLong(filledForm.field("jobcleanup").valueOr("0")) * 60000L;
-	        	Setting.set("jobs.deleteAfterDuration", jobCleanupTime+"");
+	        	Administrator.SetJobCleanupForm.save(filledForm);
 	        	flash("success", "Job cleanup time changed successfully!");
 	        	return redirect(routes.Administrator.getSettings());
 	        }
@@ -552,18 +578,17 @@ public class Administrator extends Controller {
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
-	        	String theme = filledForm.field("theme").valueOr("");
-	        	String title = filledForm.field("title").valueOr("");
+	        	String theme = Setting.get("branding.theme");
+	        	String title = Setting.get("branding.title");
+	        	
+	        	Administrator.ConfigureBrandingForm.save(filledForm);
+	        	
 	        	String successString = "";
 	        	if (!theme.equals(Setting.get("branding.theme")))
-	        		successString += "Theme changed to "+("".equals(theme)?"default":"\""+theme+"\"")+" !";
+	        		successString += "Theme changed to "+("".equals(Setting.get("branding.theme"))?"default":"\""+Setting.get("branding.theme").substring(0, Setting.get("branding.theme").length()-1)+"\"")+" !";
 	        	if (!title.equals(Setting.get("branding.title")))
-	        		successString += " Title changed to \""+title+"\" !";
+	        		successString += " Title changed to \""+Setting.get("branding.title")+"\" !";
 	        	flash("success", successString);
-	        	if (theme.length() > 0)
-	        		theme += "/";
-	        	Setting.set("branding.theme", theme);
-	        	Setting.set("branding.title", title);
 	        	return redirect(routes.Administrator.getSettings());
 	        }
 		}

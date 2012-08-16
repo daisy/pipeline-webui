@@ -85,8 +85,8 @@
 						<button type="button" name="setWS-sameFilesystem-on" class="btn @("active".when(setWSForm != null && setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))=="true"))" id="setWS-sameFilesystem-on"
 							aria-role="radio" aria-checked="@((setWSForm != null && setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))=="true"))"
 							onclick="toggleRadio('setWS-sameFilesystem', true, 'true');return false;">Yes</button>
-						<button type="button" name="setWS-sameFilesystem-off" class="btn @("active".when(setWSForm != null && setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))=="false"))" id="setWS-sameFilesystem-off"
-							aria-role="radio" aria-checked="@((setWSForm == null || setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))=="false"))"
+						<button type="button" name="setWS-sameFilesystem-off" class="btn @("active".when(setWSForm != null && setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))=="false" || setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))==null))" id="setWS-sameFilesystem-off"
+							aria-role="radio" aria-checked="@((setWSForm == null || setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))=="false" || setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))==null))"
 							onclick="toggleRadio('setWS-sameFilesystem', false, 'false');return false;">No</button>
 					</div>
 					@if("tab" == "new" && setWSForm != null && setWSForm.field("sameFilesystem").errors().size() > 0){
@@ -99,7 +99,7 @@
 			<div class="form-actions">
 				<button class="btn btn-primary" id="submit" type="submit" name="submit">Ok, looks good</button>
 				@if(skipRoute != null){
-					<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Application.index()';return false;">I'll configure it later <i class="icon-hand-right"></i></button>
+					<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Administrator.getSettings()';return false;">I'll configure it later <i class="icon-hand-right"></i></button>
 				}
 			</div>
 			
