@@ -17,6 +17,8 @@ import java.util.*;
 @Entity
 public class Upload extends Model {
 	
+	private static final long serialVersionUID = 1L;
+
 	@Id
 	public Long id;
 	

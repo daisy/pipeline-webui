@@ -4,7 +4,6 @@ import java.io.File;
 
 import models.Setting;
 import models.User;
-import play.Logger;
 import play.mvc.*;
 
 public class Application extends Controller {

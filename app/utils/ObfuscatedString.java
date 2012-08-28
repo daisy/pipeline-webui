@@ -121,18 +121,18 @@ public final class ObfuscatedString {
         return l;
     }
     
-    /**
-      * Convenience wrapper for toLong(byte[] bytes, int off).
-      */
-    private static final long toLong(String hex) {
-        final byte[] bytes;
-        try {
-            bytes = hex.getBytes(UTF8);
-        } catch (UnsupportedEncodingException ex) {
-            throw new AssertionError(ex); // UTF8 is always supported
-        }
-        return toLong(bytes, 0);
-    }
+//    /**
+//      * Convenience wrapper for toLong(byte[] bytes, int off).
+//      */
+//    private static final long toLong(String hex) {
+//        final byte[] bytes;
+//        try {
+//            bytes = hex.getBytes(UTF8);
+//        } catch (UnsupportedEncodingException ex) {
+//            throw new AssertionError(ex); // UTF8 is always supported
+//        }
+//        return toLong(bytes, 0);
+//    }
 
     /**
      * Encodes a long value to eight bytes in little endian order,

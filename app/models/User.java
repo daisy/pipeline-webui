@@ -1,30 +1,24 @@
 package models;
 
-import play.Logger;
 import play.api.libs.Crypto;
 import play.db.ebean.Model;
 
 import javax.persistence.*;
 
-import org.codehaus.jackson.JsonNode;
-
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import play.data.Form;
 import play.data.format.*;
 import play.data.validation.*;
-import play.libs.F.Callback;
-import play.libs.F.Callback0;
 import play.mvc.Http.Request;
 import play.mvc.Http.Session;
-import play.mvc.WebSocket;
 
 @Entity
 public class User extends Model {
 
 	// ---------- Static stuff ----------
+
+	private static final long serialVersionUID = 1L;
+
 
 	public static final Long LINK_TIMEOUT = 24*3600*1000L; // TODO: make as admin setting instead
 

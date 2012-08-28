@@ -1,22 +1,17 @@
 package controllers;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipException;
-
 import javax.management.RuntimeErrorException;
 
 import models.Job;
@@ -26,19 +21,19 @@ import models.Setting;
 import models.Upload;
 import models.User;
 
+import org.daisy.pipeline.client.Pipeline2WS;
+import org.daisy.pipeline.client.Pipeline2WSException;
+import org.daisy.pipeline.client.Pipeline2WSResponse;
+import org.daisy.pipeline.client.models.Script;
+import org.daisy.pipeline.client.models.script.Argument;
+import org.daisy.pipeline.client.models.script.arguments.ArgFile;
+import org.daisy.pipeline.client.models.script.arguments.ArgFiles;
 import org.w3c.dom.Node;
 
-import pipeline2.Pipeline2WS;
-import pipeline2.Pipeline2WSResponse;
-import pipeline2.models.script.Argument;
-import pipeline2.models.script.arguments.*;
-import pipeline2.models.Script;
 import play.Logger;
-import play.api.libs.json.Json;
 import play.db.ebean.Transactional;
 import play.libs.XPath;
 import play.mvc.*;
-import scala.actors.threadpool.Arrays;
 
 public class Jobs extends Controller {
 
@@ -52,15 +47,23 @@ public class Jobs extends Controller {
 		if (user == null || (user.id < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
 			return redirect(routes.Login.login());
 		
-		Pipeline2WSResponse jobs = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
-		
-		if (jobs.status != 200) {
-			return Application.error(jobs.status, jobs.statusName, jobs.statusDescription, jobs.asText());
+		Pipeline2WSResponse jobs;
+		List<Node> jobNodes;
+		try {
+			jobs = org.daisy.pipeline.client.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
+			
+			if (jobs.status != 200) {
+				return Application.error(jobs.status, jobs.statusName, jobs.statusDescription, jobs.asText());
+			}
+			
+			jobNodes = XPath.selectNodes("//d:job", jobs.asXml(), Pipeline2WS.ns);
+			
+		} catch (Pipeline2WSException e) {
+			Logger.error(e.getMessage(), e);
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
 		}
 		
 		List<Job> jobList = new ArrayList<Job>();
-		
-		List<Node> jobNodes = XPath.selectNodes("//d:job", jobs.asXml(), Pipeline2WS.ns);
 		for (Node jobNode : jobNodes) {
 			
 			Job job = Job.findById(XPath.selectText("@id", jobNode, Pipeline2WS.ns));
@@ -94,14 +97,22 @@ public class Jobs extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 		
-		Pipeline2WSResponse response = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, null);
-		
-		if (response.status != 200 && response.status != 201) {
-			return Application.error(response.status, response.statusName, response.statusDescription, response.asText());
+		Pipeline2WSResponse response;
+		org.daisy.pipeline.client.models.Job job;
+		try {
+			response = org.daisy.pipeline.client.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, null);
+			
+			if (response.status != 200 && response.status != 201) {
+				return Application.error(response.status, response.statusName, response.statusDescription, response.asText());
+			}
+			
+			job = new org.daisy.pipeline.client.models.Job(response.asXml());
+			Logger.debug(utils.XML.toString(response.asXml()));
+			
+		} catch (Pipeline2WSException e) {
+			Logger.error(e.getMessage(), e);
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
 		}
-		
-		pipeline2.models.Job job = new pipeline2.models.Job(response.asXml());
-		Logger.debug(utils.XML.toString(response.asXml()));
 		
 		Job webuiJob = Job.findById(job.id);
 		if (webuiJob == null) {
@@ -148,14 +159,20 @@ public class Jobs extends Controller {
 					))
 				return forbidden("You are not allowed to view this job.");
 		
-		Pipeline2WSResponse result = pipeline2.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-		
-		// TODO: check content type of incoming stream? Implement result.getContentType() ?
-		
-		response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
-		response().setContentType("application/zip");
+		try {
+			Pipeline2WSResponse result = org.daisy.pipeline.client.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
+			
+			// TODO: check content type of incoming stream? Implement result.getContentType() ?
+			
+			response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
+			response().setContentType("application/zip");
 
-		return ok(result.asStream());
+			return ok(result.asStream());
+			
+		} catch (Pipeline2WSException e) {
+			Logger.error(e.getMessage(), e);
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
+		}
 	}
 
 	public static Result getLog(final String id) {
@@ -177,18 +194,25 @@ public class Jobs extends Controller {
 					))
 				return forbidden("You are not allowed to view this job.");
 		
-		Pipeline2WSResponse jobLog = pipeline2.Jobs.getLog(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-
-		if (jobLog.status != 200 && jobLog.status != 201 && jobLog.status != 204) {
-			return Application.error(jobLog.status, jobLog.statusName, jobLog.statusDescription, jobLog.asText());
-		}
-
-		if (jobLog.status == 204) {
-			return ok(views.html.Jobs.emptyLog.render(id));
-
-		} else {
-			String[] lines = jobLog.asText().split("\n");
-			return ok(views.html.Jobs.getLog.render(id, Arrays.asList(lines)));
+		Pipeline2WSResponse jobLog;
+		try {
+			jobLog = org.daisy.pipeline.client.Jobs.getLog(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
+	
+			if (jobLog.status != 200 && jobLog.status != 201 && jobLog.status != 204) {
+				return Application.error(jobLog.status, jobLog.statusName, jobLog.statusDescription, jobLog.asText());
+			}
+	
+			if (jobLog.status == 204) {
+				return ok(views.html.Jobs.emptyLog.render(id));
+	
+			} else {
+				String[] lines = jobLog.asText().split("\n");
+				return ok(views.html.Jobs.getLog.render(id, Arrays.asList(lines)));
+			}
+			
+		} catch (Pipeline2WSException e) {
+			Logger.error(e.getMessage(), e);
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
 		}
 	}
 
@@ -211,9 +235,17 @@ public class Jobs extends Controller {
 		String id = params.get("id")[0];
 
 		// Get a description of the script from Pipeline 2 Web Service
-		Pipeline2WSResponse scriptResponse = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-		if (scriptResponse.status != 200) { return Application.error(scriptResponse.status, scriptResponse.statusName, scriptResponse.statusDescription, scriptResponse.asText()); }
-		Script script = new Script(scriptResponse);
+		Pipeline2WSResponse scriptResponse;
+		Script script;
+		try {
+			scriptResponse = org.daisy.pipeline.client.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
+			if (scriptResponse.status != 200) { return Application.error(scriptResponse.status, scriptResponse.statusName, scriptResponse.statusDescription, scriptResponse.asText()); }
+			script = new Script(scriptResponse);
+			
+		} catch (Pipeline2WSException e) {
+			Logger.error(e.getMessage(), e);
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
+		}
 		
 		// Parse and validate the submitted form (also create any necessary output directories in case of local mode)
 		Scripts.ScriptForm scriptForm = new Scripts.ScriptForm(user.id, script, params);
@@ -369,16 +401,25 @@ public class Jobs extends Controller {
 		else
 			Logger.debug("Context ZIP file is present, submitting job with context ZIP file");
 		
-		Pipeline2WSResponse job = pipeline2.Jobs.post(
-				Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"),
-				scriptForm.script.href, scriptForm.script.arguments, contextZipFile, callbacks
-		);
-		
-		if (job.status != 200 && job.status != 201) {
-			return Application.error(job.status, job.statusName, job.statusDescription, job.asText());
+		Pipeline2WSResponse job;
+		String jobId;
+		try {
+			job = org.daisy.pipeline.client.Jobs.post(
+					Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"),
+					scriptForm.script.href, scriptForm.script.arguments, contextZipFile, callbacks
+			);
+			
+			if (job.status != 200 && job.status != 201) {
+				return Application.error(job.status, job.statusName, job.statusDescription, job.asText());
+			}
+			
+			jobId = XPath.selectText("/*/@id", job.asXml(), Pipeline2WS.ns);
+			
+		} catch (Pipeline2WSException e) {
+			Logger.error(e.getMessage(), e);
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
 		}
 		
-		String jobId = XPath.selectText("/*/@id", job.asXml(), Pipeline2WS.ns);
 		Job webUiJob = new Job(jobId, user);
 		webUiJob.nicename = id;
 		if (scriptForm.uploads != null && scriptForm.uploads.size() > 0) {

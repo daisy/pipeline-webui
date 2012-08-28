@@ -11,7 +11,8 @@ import utils.ObfuscatedString;
 
 @Entity
 public class Setting extends Model {
-    
+	private static final long serialVersionUID = 1L;
+
 	@Id
     @Constraints.Required
     public String name;

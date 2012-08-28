@@ -1,26 +1,24 @@
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import org.codehaus.jackson.JsonNode;
+import org.daisy.pipeline.client.Pipeline2WSException;
+
+import controllers.Application;
 
 import akka.util.Duration;
 import models.Job;
 import models.NotificationConnection;
 import models.Setting;
 import models.Upload;
-import models.User;
 import models.Notification;
 import play.*;
 import play.libs.Akka;
-import play.mvc.WebSocket;
 
 public class Global extends GlobalSettings {
 
-	@Override
+//	@Override
 	public synchronized void onStart(Application app) {
 		// Application has started...
 		
@@ -110,12 +108,20 @@ public class Global extends GlobalSettings {
 						if (endpoint == null)
 							return;
 						
-						List<pipeline2.models.Job> fwkJobs = pipeline2.models.Job.getJobs(pipeline2.Jobs.get(endpoint, Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret")));
+						List<org.daisy.pipeline.client.models.Job> fwkJobs;
+						try {
+							fwkJobs = org.daisy.pipeline.client.models.Job.getJobs(org.daisy.pipeline.client.Jobs.get(endpoint, Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret")));
+							
+						} catch (Pipeline2WSException e) {
+							Logger.error(e.getMessage(), e);
+							return;
+						}
+						
 						List<Job> webUiJobs = Job.find.all();
 						
 						for (Job webUiJob : webUiJobs) {
 							boolean exists = false;
-							for (pipeline2.models.Job fwkJob : fwkJobs) {
+							for (org.daisy.pipeline.client.models.Job fwkJob : fwkJobs) {
 								if (webUiJob.id.equals(fwkJob.id)) {
 									exists = true;
 									break;
@@ -131,7 +137,7 @@ public class Global extends GlobalSettings {
 			);
 	}
 
-	@Override
+//	@Override
 	public void onStop(Application app) {
 		// Application shutdown...
 	}

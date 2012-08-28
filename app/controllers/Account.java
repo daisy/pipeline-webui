@@ -9,7 +9,6 @@ import models.User;
 import play.Logger;
 import play.Play;
 import play.data.Form;
-import play.data.validation.ValidationError;
 import play.mvc.*;
 
 public class Account extends Controller {
