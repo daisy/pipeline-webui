@@ -35,9 +35,9 @@ Array("jquery.fileupload-ui.css")) {
 	<input type="hidden" id="uploads" name="uploads" value=""/>
 	
 	<fieldset>
-	
+		
 		@for(arg <- script.arguments){
-			@if(arg.output==null){
+			@if(arg.output!=true){
 				@if(arg.kind=="parameters"){
 					@Widgets.parameters(arg, script)
 				}else{

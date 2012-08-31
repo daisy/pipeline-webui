@@ -105,6 +105,15 @@ public class Scripts extends Controller {
 		NotificationConnection.createBrowserIfAbsent(user.id, browserId);
 		Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
 		flash("browserId",""+browserId);
+		{
+			Logger.debug(script.id+": "+script.nicename);
+			Logger.debug(script.arguments.size()+" arguments");
+			for (Argument arg : script.arguments) {
+				Logger.debug(arg.name+": "+arg.nicename);
+				Logger.debug("      xsdType kind output hide ordered required sequence");
+				Logger.debug("      "+arg.xsdType+" "+arg.kind+" "+arg.output+" "+arg.hide+" "+arg.ordered+" "+arg.required+" "+arg.sequence);
+			}
+		}
 		return ok(views.html.Scripts.getScript.render(script, uploadFiles, hideAdvancedOptions));
 	}
 	
