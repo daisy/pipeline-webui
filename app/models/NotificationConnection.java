@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.codehaus.jackson.JsonNode;
 
-import play.Logger;
 import play.libs.F.Callback;
 import play.libs.F.Callback0;
 import play.mvc.WebSocket;
