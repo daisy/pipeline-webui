@@ -11,6 +11,7 @@ tmp
 .history
 dist
 bin
+lib
 
 # Default directories
 uploads

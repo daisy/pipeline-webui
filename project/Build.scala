@@ -4,16 +4,19 @@ import PlayProject._
 
 object ApplicationBuild extends Build {
 
-    val appName         = "pipeline2-web-ui"
+    val appName         = "pipeline2-webui"
     val appVersion      = "1.0-SNAPSHOT"
 
     val appDependencies = Seq(
-      // Add your project dependencies here,
-      "mysql" % "mysql-connector-java" % "5.1.18"
+      // project dependencies
+      "mysql" % "mysql-connector-java" % "5.1.18",
+      "org.daisy.pipeline" % "pipeline2-clientlib" % "1.0-SNAPSHOT"
     )
 
     val main = PlayProject(appName, appVersion, appDependencies, mainLang = JAVA).settings(
-      // Add your own project settings here      
+      // project settings
+      resolvers += ("Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"),
+      resolvers += ("Public online Restlet repository" at "http://maven.restlet.org")
     )
 
 }
