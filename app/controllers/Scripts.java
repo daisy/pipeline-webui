@@ -5,24 +5,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import models.Notification;
+import org.daisy.pipeline.client.Pipeline2WSException;
+import org.daisy.pipeline.client.Pipeline2WSResponse;
+import org.daisy.pipeline.client.models.Script;
+import org.daisy.pipeline.client.models.script.Argument;
+import org.daisy.pipeline.client.models.script.arguments.ArgBoolean;
+import org.daisy.pipeline.client.models.script.arguments.ArgFile;
+import org.daisy.pipeline.client.models.script.arguments.ArgFiles;
+import org.daisy.pipeline.client.models.script.arguments.ArgString;
+import org.daisy.pipeline.client.models.script.arguments.ArgStrings;
+
 import models.NotificationConnection;
 import models.Setting;
 import models.Upload;
 import models.User;
 
-import pipeline2.Pipeline2WSResponse;
-import pipeline2.models.Script;
-import pipeline2.models.script.*;
-import pipeline2.models.script.arguments.ArgBoolean;
-import pipeline2.models.script.arguments.ArgFile;
-import pipeline2.models.script.arguments.ArgFiles;
-import pipeline2.models.script.arguments.ArgString;
-import pipeline2.models.script.arguments.ArgStrings;
 import play.Logger;
 import play.mvc.*;
 
@@ -36,13 +36,22 @@ public class Scripts extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 		
-		Pipeline2WSResponse response = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
+		Pipeline2WSResponse response;
+		List<Script> scripts;
 		
-		if (response.status != 200) {
-			return Application.error(response.status, response.statusName, response.statusDescription, response.asText());
+		try {
+			response = org.daisy.pipeline.client.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
+			
+			if (response.status != 200) {
+				return Application.error(response.status, response.statusName, response.statusDescription, response.asText());
+			}
+			
+			scripts = Script.getScripts(response);
+			
+		} catch (Pipeline2WSException e) {
+			Logger.error(e.getMessage(), e);
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
 		}
-		
-		List<Script> scripts = Script.getScripts(response);
 		
 		return ok(views.html.Scripts.getScripts.render(scripts));
 	}
@@ -55,13 +64,21 @@ public class Scripts extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 		
-		Pipeline2WSResponse response = pipeline2.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-		
-		if (response.status != 200) {
-			return Application.error(response.status, response.statusName, response.statusDescription, response.asText());
+		Pipeline2WSResponse response;
+		Script script;
+		try {
+			response = org.daisy.pipeline.client.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
+			
+			if (response.status != 200) {
+				return Application.error(response.status, response.statusName, response.statusDescription, response.asText());
+			}
+			
+			script = new Script(response);
+			
+		} catch (Pipeline2WSException e) {
+			Logger.error(e.getMessage(), e);
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
 		}
-		
-		Script script = new Script(response);
 		
 		boolean uploadFiles = false;
 		boolean hideAdvancedOptions = "true".equals(Setting.get("jobs.hideAdvancedOptions"));
@@ -88,12 +105,21 @@ public class Scripts extends Controller {
 		NotificationConnection.createBrowserIfAbsent(user.id, browserId);
 		Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
 		flash("browserId",""+browserId);
+		{
+			Logger.debug(script.id+": "+script.nicename);
+			Logger.debug(script.arguments.size()+" arguments");
+			for (Argument arg : script.arguments) {
+				Logger.debug(arg.name+": "+arg.nicename);
+				Logger.debug("      xsdType kind output hide ordered required sequence");
+				Logger.debug("      "+arg.xsdType+" "+arg.kind+" "+arg.output+" "+arg.hide+" "+arg.ordered+" "+arg.required+" "+arg.sequence);
+			}
+		}
 		return ok(views.html.Scripts.getScript.render(script, uploadFiles, hideAdvancedOptions));
 	}
 	
 	public static class ScriptForm {
 		
-		public pipeline2.models.Script script;
+		public org.daisy.pipeline.client.models.Script script;
 		public Map<Long,Upload> uploads;
 		public Map<String,List<String>> errors;
 		

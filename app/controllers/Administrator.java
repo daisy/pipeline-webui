@@ -2,14 +2,7 @@ package controllers;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-
-import javax.persistence.Transient;
-
-import controllers.Administrator.SetUploadDirForm;
-import controllers.Administrator.SetWSForm;
 
 import models.Setting;
 import models.User;
@@ -433,12 +426,13 @@ public class Administrator extends Controller {
 					: 0L;
 			
 			User deleteUser = User.findById(userId);
-			flash("settings.usertab", deleteUser.id + "");
 			
 			if (deleteUser == null) {
 				flash("success", "Hmm, that's weird. The user was not found; nothing was changed...");
 				return redirect(routes.Administrator.getSettings());
 			}
+			
+			flash("settings.usertab", deleteUser.id + "");
 			
 			if (deleteUser.id.equals(user.id)) {
 				flash("error", "Only other admins can delete you, you cannot do it yourself");

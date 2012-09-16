@@ -7,15 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import pipeline2.Pipeline2WSResponse;
-import pipeline2.models.job.Message;
 import play.Logger;
 import play.db.ebean.Model;
 
 import javax.persistence.*;
 
-import controllers.Application;
-import controllers.Jobs;
+import org.daisy.pipeline.client.Pipeline2WSException;
+import org.daisy.pipeline.client.Pipeline2WSResponse;
 
 import akka.actor.Cancellable;
 import akka.util.Duration;
@@ -25,10 +23,11 @@ import play.libs.Akka;
 
 @Entity
 public class Job extends Model implements Comparable<Job> {
+	private static final long serialVersionUID = 1L;
 	
 	/** Key is the job ID; value is the sequence number of the last message read from the Pipeline 2 Web Service. */ 
 	public static Map<String,Integer> lastMessageSequence = Collections.synchronizedMap(new HashMap<String,Integer>());
-	public static Map<String,pipeline2.models.Job.Status> lastStatus = Collections.synchronizedMap(new HashMap<String,pipeline2.models.Job.Status>());
+	public static Map<String,org.daisy.pipeline.client.models.Job.Status> lastStatus = Collections.synchronizedMap(new HashMap<String,org.daisy.pipeline.client.models.Job.Status>());
 	
 	
 	@Id
@@ -106,15 +105,24 @@ public class Job extends Model implements Comparable<Job> {
 						Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) + 1 : 0;
 						Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
 						
-						Pipeline2WSResponse wsJob = pipeline2.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, fromSequence);
+						Pipeline2WSResponse wsJob;
+						org.daisy.pipeline.client.models.Job job;
 						
-						if (wsJob.status != 200 && wsJob.status != 201) {
+						try {
+							wsJob = org.daisy.pipeline.client.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, fromSequence);
+							
+							if (wsJob.status != 200 && wsJob.status != 201) {
+								return;
+							}
+							
+							job = new org.daisy.pipeline.client.models.Job(wsJob.asXml());
+							
+						} catch (Pipeline2WSException e) {
+							Logger.error(e.getMessage(), e);
 							return;
 						}
 						
-						pipeline2.models.Job job = new pipeline2.models.Job(wsJob.asXml());
-						
-						if (job.status != pipeline2.models.Job.Status.RUNNING && job.status != pipeline2.models.Job.Status.IDLE) {
+						if (job.status != org.daisy.pipeline.client.models.Job.Status.RUNNING && job.status != org.daisy.pipeline.client.models.Job.Status.IDLE) {
 							pushNotifier.cancel();
 							Job webUiJob = Job.findById(job.id);
 							if (webUiJob.finished == null) {
@@ -126,7 +134,7 @@ public class Job extends Model implements Comparable<Job> {
 						}
 						
 						Job webuiJob = Job.findById(job.id);
-						for (pipeline2.models.job.Message message : job.messages) {
+						for (org.daisy.pipeline.client.models.job.Message message : job.messages) {
 							Notification notification = new Notification("job-message-"+job.id, message);
 							NotificationConnection.push(webuiJob.user, notification);
 						}
@@ -153,7 +161,7 @@ public class Job extends Model implements Comparable<Job> {
 		List<Upload> uploads = getUploads();
 		for (Upload upload : uploads)
 			upload.delete();
-		pipeline2.Jobs.delete(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), this.id);
+//		org.daisy.pipeline.client.Jobs.delete(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), this.id);
 		super.delete();
 	}
 

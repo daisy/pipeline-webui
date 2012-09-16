@@ -18,8 +18,6 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
-import play.Logger;
-
 public class XML {
 	
 	/**

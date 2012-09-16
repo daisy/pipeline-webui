@@ -1,4 +1,4 @@
-@(fwkJob: pipeline2.models.Job, uiJob: models.Job)
+@(fwkJob: org.daisy.pipeline.client.models.Job, uiJob: models.Job)
 
 @main("View job", "", Array("notifications.js")) {
 
@@ -87,7 +87,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 
 <ol aria-live="polite" role="log" class="messagelist" id="message-list">
 	@for(message <- fwkJob.messages){
-		<li value="@message.sequence" class="message @("message-error".when(pipeline2.models.job.Message.Level.ERROR==message.level)) @("message-warn".when(pipeline2.models.job.Message.Level.WARNING==message.level))""><code>@message.text</code></li>
+		<li value="@message.sequence" class="message @("message-error".when(org.daisy.pipeline.client.models.job.Message.Level.ERROR==message.level)) @("message-warn".when(org.daisy.pipeline.client.models.job.Message.Level.WARNING==message.level))""><code>@message.text</code></li>
 	}
 </ol>
 
@@ -100,7 +100,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 			//}
 		});
 		Notifications.listen("job-status-@fwkJob.id", function(status){
-			@for(status <- pipeline2.models.Job.Status.values()){
+			@for(status <- org.daisy.pipeline.client.models.Job.Status.values()){
 				$("#status-@(status.toString().toLowerCase())").hide();
 			}
 			$("#status-"+status.toLowerCase()).show();

@@ -1,4 +1,4 @@
-@(script: pipeline2.models.Script, uploadFiles: Boolean, hideAdvancedOptions: Boolean)
+@(script: org.daisy.pipeline.client.models.Script, uploadFiles: Boolean, hideAdvancedOptions: Boolean)
 
 @main("Create job", "",
 Array("tmpl.js","jquery.ui.widget.js","jquery.iframe-transport.js","jquery.fileupload.js","jquery.fileupload-ui.js","notifications.js","createJob.js"),
@@ -35,9 +35,9 @@ Array("jquery.fileupload-ui.css")) {
 	<input type="hidden" id="uploads" name="uploads" value=""/>
 	
 	<fieldset>
-	
+		
 		@for(arg <- script.arguments){
-			@if(arg.output==null){
+			@if(arg.output!=true){
 				@if(arg.kind=="parameters"){
 					@Widgets.parameters(arg, script)
 				}else{

@@ -1,7 +1,5 @@
 package utils;
 
-import java.io.File;
-
 public class FileInfo {
 	
 	public String href;

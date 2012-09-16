@@ -1,8 +1,5 @@
 package controllers;
 
-import java.util.Random;
-
-import play.Logger;
 import play.mvc.*;
 import play.data.*;
 

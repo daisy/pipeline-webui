@@ -11,7 +11,8 @@ import utils.ObfuscatedString;
 
 @Entity
 public class Setting extends Model {
-    
+	private static final long serialVersionUID = 1L;
+
 	@Id
     @Constraints.Required
     public String name;
@@ -22,7 +23,7 @@ public class Setting extends Model {
     
     // -- Queries
     
-    public static Model.Finder<String,Setting> find = new Model.Finder(String.class, Setting.class);
+    public static Model.Finder<String,Setting> find = new Model.Finder<String, Setting>(String.class, Setting.class);
     
     /** Get the value of a setting */
     public static String get(String name) {
