@@ -18,6 +18,9 @@ uploads
 local.results
 local.temp
 
+# Derby database
+dp2webui
+
 # IDE and editors
 *~
 .idea
