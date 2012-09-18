@@ -6,6 +6,8 @@ import play.db.ebean.Model;
 
 import javax.persistence.*;
 
+import controllers.Application;
+
 import play.data.validation.*;
 import utils.ObfuscatedString;
 
@@ -23,7 +25,7 @@ public class Setting extends Model {
     
     // -- Queries
     
-    public static Model.Finder<String,Setting> find = new Model.Finder<String, Setting>(String.class, Setting.class);
+    public static Model.Finder<String,Setting> find = new Model.Finder<String, Setting>(Application.datasource, String.class, Setting.class);
     
     /** Get the value of a setting */
     public static String get(String name) {
@@ -46,7 +48,7 @@ public class Setting extends Model {
     		setting.value = ObfuscatedString.obfuscate(value);
     	else
     		setting.value = value;
-    	setting.save();
+    	setting.save(Application.datasource);
     }
     
 }

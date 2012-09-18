@@ -25,8 +25,15 @@ public class Login extends Controller {
      * Login page.
      */
     public static Result login() {
+    	
     	if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());
+    	
+    	try {
+    		Long.parseLong(Controller.session("userid"));
+    	} catch(NumberFormatException e) {
+    		Controller.session("userid", null);
+    	}
     	
 		return ok(views.html.Login.login.render(form(LoginForm.class)));
     }
@@ -72,7 +79,7 @@ public class Login extends Controller {
     		
     	} else {
     		user.makeNewActivationUid();
-    		user.save();
+    		user.save(Application.datasource);
 			String resetUrl = routes.Account.showResetPasswordForm(user.email, user.getActivationUid()).absoluteURL(request());
 			String html = views.html.Account.emailResetPassword.render(resetUrl).body();
 			String text = "Go to this link to change your password: "+resetUrl;

@@ -1,9 +1,11 @@
 package models;
 
 import play.api.libs.Crypto;
-import play.db.ebean.Model;
+import play.db.ebean.*;
 
 import javax.persistence.*;
+
+import controllers.Application;
 
 import java.util.*;
 import play.data.Form;
@@ -12,7 +14,8 @@ import play.data.validation.*;
 import play.mvc.Http.Request;
 import play.mvc.Http.Session;
 
-@Entity
+@Entity(name="users")
+@Table(name="users")
 public class User extends Model {
 
 	// ---------- Static stuff ----------
@@ -111,7 +114,7 @@ public class User extends Model {
 
 	// -- Queries
 
-	public static Model.Finder<String,User> find = new Model.Finder<String, User>(String.class, User.class);
+	public static Model.Finder<String,User> find = new Model.Finder<String, User>(Application.datasource, String.class, User.class);
 
 	/** Retrieve all users. */
 	public static List<User> findAll() {
@@ -285,11 +288,24 @@ public class User extends Model {
 	}
 	
 	@Override
-	public void delete() {
+	public void delete(String datasource) {
 		List<Job> jobs = getJobs();
 		for (Job job : jobs)
-			job.delete();
-		super.delete();
+			job.delete(datasource);
+		super.delete(datasource);
+	}
+	
+	@Override
+	public void save(String datasource) {
+		super.save(datasource);
+		
+		// refresh id after save
+		if (this.id == null) {
+			User user = User.findByEmail(this.email);
+			if (user != null) {
+				this.id = user.id;
+			}
+		}
 	}
 
 }

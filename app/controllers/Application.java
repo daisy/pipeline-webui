@@ -4,9 +4,12 @@ import java.io.File;
 
 import models.Setting;
 import models.User;
+import play.Configuration;
 import play.mvc.*;
 
 public class Application extends Controller {
+	
+	public static final String datasource = Configuration.root().getString("dp2.datasource");
 	
 	public static Result index() {
 		if (FirstUse.isFirstUse())

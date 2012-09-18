@@ -79,7 +79,7 @@
 	 					}
 		 				@if(navs.contains("login")){
 		 					<li class="@("active".when(nav == "login"))">
-		 						@if(session.get("email")==null || Long.parseLong(Controller.session("userid")) < 0){
+		 						@if(session.get("email")==null || Controller.session("userid") != null && Long.parseLong(Controller.session("userid")) < 0){
 		 							<a href="@routes.Login.login()"><i class="icon-lock icon-white"></i> Log in</a>
 		 						}else{
 		 							<a href="@routes.Login.logout()"><i class="icon-remove icon-white"></i> Log out</a>

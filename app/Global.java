@@ -1,3 +1,6 @@
+import play.*;
+import models.*;
+
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -5,22 +8,20 @@ import java.util.concurrent.TimeUnit;
 
 import org.daisy.pipeline.client.Pipeline2WSException;
 
-import controllers.Application;
-
 import akka.util.Duration;
-import models.Job;
-import models.NotificationConnection;
-import models.Setting;
-import models.Upload;
-import models.Notification;
-import play.*;
 import play.libs.Akka;
 
 public class Global extends GlobalSettings {
+	
+	public synchronized void beforeStart(Application app) {
+		Logger.debug("Application is about to start...");
 
+	}
+	
 //	@Override
 	public synchronized void onStart(Application app) {
 		// Application has started...
+		final String datasource = Configuration.root().getString("dp2.datasource");
 		
 		if (Setting.get("branding.title") == null)
 			Setting.set("branding.title", "DAISY Pipeline 2");
@@ -80,7 +81,7 @@ public class Global extends GlobalSettings {
 						for (Job job : jobs) {
 							if (job.finished != null && job.finished.before(timeoutDate)) {
 								Logger.info("Deleting old job: "+job.id+" ("+job.nicename+")");
-								job.delete();
+								job.delete(datasource);
 							}
 						}
 						
@@ -88,7 +89,7 @@ public class Global extends GlobalSettings {
 						for (Upload upload : uploads) {
 							if (upload.job == null && upload.uploaded.before(timeoutDate)) {
 								Logger.info("Deleting old upload: "+upload.id+(upload.getFile()!=null?" ("+upload.getFile().getName()+")":""));
-								upload.delete();
+								upload.delete(datasource);
 							}
 						}
 					}
@@ -129,7 +130,7 @@ public class Global extends GlobalSettings {
 							}
 							if (!exists) {
 								Logger.info("Deleting job that no longer exists in the Pipeline 2 framework: "+webUiJob.id+" ("+webUiJob.nicename+")");
-								webUiJob.delete();
+								webUiJob.delete(datasource);
 							}
 						}
 					}

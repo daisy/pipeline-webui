@@ -1,13 +1,15 @@
 package models;
 
-import play.*;
-import play.db.ebean.Model;
+import play.Logger;
+import play.db.ebean.*;
 import play.mvc.Http.MultipartFormData.FilePart;
 import utils.ContentType;
 import utils.FileInfo;
 import utils.Files;
 
 import javax.persistence.*;
+
+import controllers.Application;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,6 +28,7 @@ public class Upload extends Model {
 	public String contentType;
 	public Date uploaded;
 	
+	@Column(name="user_id")
 	public Long user;
 	public String job;
 	
@@ -38,7 +41,7 @@ public class Upload extends Model {
 	
 	public static Long store(FilePart upload, User user) {
 		Upload u = new Upload();
-		u.save(); // saving here generates the unique id for this upload
+		u.save(Application.datasource); // saving here generates the unique id for this upload
 		
 		File uploadDir = new File(Setting.get("uploads")+u.id);
 		uploadDir.mkdirs();
@@ -58,7 +61,7 @@ public class Upload extends Model {
 		
 		u.user = user.id;
 		
-		u.save();
+		u.save(Application.datasource);
 		
 		return u.id;
 	}
@@ -110,7 +113,7 @@ public class Upload extends Model {
 	
 	// -- Queries
 	
-	public static Finder<Long,Upload> find = new Finder<Long,Upload>(Long.class, Upload.class);
+	public static Finder<Long,Upload> find = new Finder<Long,Upload>(Application.datasource, Long.class, Upload.class);
 	
 	/** Retrieve a Upload by its id. */
     public static Upload findById(Long id) {
@@ -120,15 +123,28 @@ public class Upload extends Model {
 //    /** Delete all Uploads belonging to a user */
 //	public static void deleteUserUploads(User user) {
 //		for (Upload upload : find.where().eq("user", user.id).findList()) {
-//			upload.delete();
+//			upload.delete(Application.datasource);
 //		}
 //	}
     
     @Override
-    public void delete() {
+    public void delete(String datasource) {
     	File file = getFile();
     	if (file != null && file.exists())
     		file.delete();
-    	super.delete();
+    	super.delete(datasource);
     }
+    
+    @Override
+	public void save(String datasource) {
+		super.save(datasource);
+		
+		// refresh id after save
+		if (this.id == null) {
+			User user = User.find.where().eq("uploaded", this.uploaded).eq("absolutePath", this.absolutePath).findUnique();
+			if (user != null) {
+				this.id = user.id;
+			}
+		}
+	}
 }

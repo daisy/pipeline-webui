@@ -8,16 +8,17 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import play.Logger;
-import play.db.ebean.Model;
+import play.db.ebean.*;
 
 import javax.persistence.*;
 
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 
+import controllers.Application;
+
 import akka.actor.Cancellable;
 import akka.util.Duration;
-
 import play.data.validation.*;
 import play.libs.Akka;
 
@@ -39,7 +40,7 @@ public class Job extends Model implements Comparable<Job> {
 	public Date created;
 	public Date started;
 	public Date finished;
-	public Long user;
+	@Column(name="user_id") public Long user;
 	public String guestEmail; // Guest users may enter an e-mail address to receive notifications
 
 	// Notification flags
@@ -76,7 +77,7 @@ public class Job extends Model implements Comparable<Job> {
 
 	// -- Queries
 
-	public static Model.Finder<String,Job> find = new Model.Finder<String, Job>(String.class, Job.class);
+	public static Model.Finder<String,Job> find = new Model.Finder<String, Job>(Application.datasource, String.class, Job.class);
 
 	/** Retrieve a Job by its id. */
 	public static Job findById(String id) {
@@ -128,7 +129,7 @@ public class Job extends Model implements Comparable<Job> {
 							if (webUiJob.finished == null) {
 								// pushNotifier tends to fire multiple times after canceling it, so this if{} is just to fire the "finished" event exactly once
 								webUiJob.finished = new Date();
-								webUiJob.save();
+								webUiJob.save(Application.datasource);
 								NotificationConnection.push(webUiJob.user, new Notification("job-finished-"+job.id, webUiJob.finished.toString()));
 							}
 						}
@@ -157,12 +158,12 @@ public class Job extends Model implements Comparable<Job> {
 	}
 	
 	@Override
-	public void delete() {
+	public void delete(String datasource) {
 		List<Upload> uploads = getUploads();
 		for (Upload upload : uploads)
-			upload.delete();
+			upload.delete(datasource);
 //		org.daisy.pipeline.client.Jobs.delete(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), this.id);
-		super.delete();
+		super.delete(datasource);
 	}
 
 }

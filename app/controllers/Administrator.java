@@ -374,7 +374,7 @@ public class Administrator extends Controller {
 						updateUser.setPassword(newPassword);
 				}
 				
-				updateUser.save();
+				updateUser.save(Application.datasource);
 				if (updateUser.id.equals(user.id)) {
 					session("name", user.name);
 					session("email", user.email);
@@ -395,7 +395,7 @@ public class Administrator extends Controller {
 
 			if (resetUser.active) {
 				resetUser.makeNewActivationUid();
-				resetUser.save();
+				resetUser.save(Application.datasource);
 				String resetUrl = routes.Account.showResetPasswordForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
 				String html = views.html.Account.emailResetPassword.render(resetUrl).body();
 				String text = "Go to this link to change your password: " + resetUrl;
@@ -406,7 +406,7 @@ public class Administrator extends Controller {
 				
 			} else {
 				resetUser.makeNewActivationUid();
-				resetUser.save();
+				resetUser.save(Application.datasource);
 				String activateUrl = routes.Account.showActivateForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
 				String html = views.html.Account.emailActivate.render(activateUrl).body();
 				String text = "Go to this link to activate your account: " + activateUrl;
@@ -439,7 +439,7 @@ public class Administrator extends Controller {
 				return redirect(routes.Administrator.getSettings());
 			}
 			
-			deleteUser.delete();
+			deleteUser.delete(Application.datasource);
 			flash("settings.usertab", "global");
 			flash("success", deleteUser.name + " was deleted");
 			return redirect(routes.Administrator.getSettings());
@@ -462,7 +462,7 @@ public class Administrator extends Controller {
 										"true".equals(Setting.get("mail.enable")) ? "" : filledForm.field("password").valueOr(""),
 										filledForm.field("admin").valueOr("").equals("true"));
 				newUser.makeNewActivationUid();
-				newUser.save();
+				newUser.save(Application.datasource);
 				
 				if ("true".equals(Setting.get("mail.enable"))) {
 					String activateUrl = routes.Account.showActivateForm(newUser.email, newUser.getActivationUid()).absoluteURL(request());

@@ -1,18 +1,16 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>pipeline2-webui</name>
-	<comment></comment>
-	<projects>
-	</projects>
-	<buildSpec>
-		<buildCommand>
-			<name>org.eclipse.jdt.core.javabuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
-	</buildSpec>
-	<natures>
-		<nature></nature>
-		<nature>org.eclipse.jdt.core.javanature</nature>
-	</natures>
+  <name>pipeline2-webui</name>
+  <buildSpec>
+    <buildCommand>
+      <name>
+        <name>org.eclipse.jdt.core.javabuilder</name>
+      </name>
+    </buildCommand>
+  </buildSpec>
+  <natures>
+    <nature>
+      <name></name>
+    </nature>
+    <nature>org.eclipse.jdt.core.javanature</nature>
+  </natures>
 </projectDescription>

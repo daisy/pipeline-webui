@@ -18,7 +18,9 @@ public class FirstUse extends Controller {
 	 * @return
 	 */
 	public static Result getFirstUse() {
+		
 		if (isFirstUse()) {
+			session("userid", null);
 			return ok(views.html.FirstUse.createAdmin.render(form(Administrator.CreateAdminForm.class)));
 		}
 		
@@ -53,7 +55,7 @@ public class FirstUse extends Controller {
 			
 			} else {
 				User admin = new User(filledForm.field("email").valueOr(""), "Administrator", filledForm.field("password").valueOr(""), true);
-				admin.save();
+				admin.save(Application.datasource);
 				admin.login(session());
 				
 				// Set some default configuration options
