@@ -141,9 +141,9 @@ public class Upload extends Model {
 		
 		// refresh id after save
 		if (this.id == null) {
-			User user = User.find.where().eq("uploaded", this.uploaded).eq("absolutePath", this.absolutePath).findUnique();
-			if (user != null) {
-				this.id = user.id;
+			Upload upload = Upload.find.where().eq("uploaded", this.uploaded).eq("absolutePath", this.absolutePath).findUnique();
+			if (upload != null) {
+				this.id = upload.id;
 			}
 		}
 	}

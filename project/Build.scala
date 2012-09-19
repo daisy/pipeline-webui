@@ -9,7 +9,7 @@ object ApplicationBuild extends Build {
 
     val appDependencies = Seq(
       // project dependencies
-      /*"org.apache.derby" % "derby" % "10.9.1.0",*/
+      "org.apache.derby" % "derby" % "10.9.1.0",
       "mysql" % "mysql-connector-java" % "5.1.18",
       "org.daisy.pipeline" % "pipeline2-clientlib" % "1.0-SNAPSHOT",
       "org.apache.commons" % "commons-compress" % "1.4.1",

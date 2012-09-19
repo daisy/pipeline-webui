@@ -20,6 +20,7 @@ local.temp
 
 # Derby database
 dp2webui
+derby.log
 
 # IDE and editors
 *~
