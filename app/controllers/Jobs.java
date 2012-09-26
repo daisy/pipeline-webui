@@ -277,12 +277,12 @@ public class Jobs extends Controller {
 			if ("result".equals(arg.output)) {
 				File href = new File(Setting.get("dp2ws.resultDir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
 				href.mkdirs();
-				script.arguments.set(script.arguments.indexOf(arg), new ArgFile(arg, href.toURI().toString()));
+//				script.arguments.set(script.arguments.indexOf(arg), new ArgFile(arg, href.toURI().toString()));
 				
 			} else if ("temp".equals(arg.output)) {
 				File href = new File(Setting.get("dp2ws.tempDir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
 				href.mkdirs();
-				script.arguments.set(script.arguments.indexOf(arg), new ArgFile(arg, href.toURI().toString()));
+//				script.arguments.set(script.arguments.indexOf(arg), new ArgFile(arg, href.toURI().toString()));
 			}
 		}
 		scriptForm.validate();

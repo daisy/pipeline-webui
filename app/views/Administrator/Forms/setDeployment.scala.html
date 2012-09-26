@@ -1,0 +1,22 @@
+@(setDeploymentForm: Form[controllers.Administrator.SetDeploymentForm], route: play.api.mvc.Call)
+
+@helper.form(action = route) {
+	
+	<input type="hidden" name="formName" value="setDeployment"/>
+    
+    <div style="text-align:center;">
+		  <button type="submit" name="deployment" href="assets/bootstrap.zip" class="btn btn-primary btn-large" value="desktop" style="text-align:center; width: 150px;">
+		  	<span style="font-size:2em;">Desktop</span><br/>
+		  	<br/>
+		  	<img src="@routes.Assets.at("images/1348144787_laptop-64x64.png")"/>
+		  </button>
+		  <span style="padding-left:50px;">&nbsp;</span>
+		  <button type="submit" name="deployment" href="assets/bootstrap.zip" class="btn btn-primary btn-large" value="server" style="text-align:center; width: 150px;">
+		  	<span style="font-size:2em;">Server</span><br/>
+		  	<br/>
+		  	<img src="@routes.Assets.at("images/1348144684_data-center-px-png-64x64.png")"/>
+		  </button>
+		</div>
+    </div>
+    
+}

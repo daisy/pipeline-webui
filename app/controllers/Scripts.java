@@ -12,12 +12,6 @@ import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.script.Argument;
-import org.daisy.pipeline.client.models.script.arguments.ArgBoolean;
-import org.daisy.pipeline.client.models.script.arguments.ArgFile;
-import org.daisy.pipeline.client.models.script.arguments.ArgFiles;
-import org.daisy.pipeline.client.models.script.arguments.ArgString;
-import org.daisy.pipeline.client.models.script.arguments.ArgStrings;
-
 import models.NotificationConnection;
 import models.Setting;
 import models.Upload;
@@ -105,15 +99,6 @@ public class Scripts extends Controller {
 		NotificationConnection.createBrowserIfAbsent(user.id, browserId);
 		Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
 		flash("browserId",""+browserId);
-		{
-			Logger.debug(script.id+": "+script.nicename);
-			Logger.debug(script.arguments.size()+" arguments");
-			for (Argument arg : script.arguments) {
-				Logger.debug(arg.name+": "+arg.nicename);
-				Logger.debug("      xsdType kind output hide ordered required sequence");
-				Logger.debug("      "+arg.xsdType+" "+arg.kind+" "+arg.output+" "+arg.hide+" "+arg.ordered+" "+arg.required+" "+arg.sequence);
-			}
-		}
 		return ok(views.html.Scripts.getScript.render(script, uploadFiles, hideAdvancedOptions));
 	}
 	
@@ -152,22 +137,30 @@ public class Scripts extends Controller {
 					String name = matcher.group(4);
 					Logger.debug(kind+": "+name);
 					
-					Argument argument = null;
-					for (Argument arg : script.arguments) {
-						Logger.debug(arg.name+" equals "+name+" ?");
-						if (arg.name.equals(name)) {
-							argument = arg;
-							break;
-						}
-					}
+					Argument argument = script.getArgument(name, kind);
+//					for (Argument arg : script.arguments) {
+//						Logger.debug(arg.name+" equals "+name+" ?");
+//						if (arg.name.equals(name)) {
+//							argument = arg;
+//							break;
+//						}
+//					}
 					if (argument == null) {
 						Logger.debug("'"+name+"' is not an argument for the script '"+script.id+"'; ignoring it");
 						continue;
 					}
 					
+//					if (argument instanceof ArgFile) {
+//						
+//					} else if (argument instanceof ArgFiles) {
+//						
+//					} else if (argument instanceof ArgBoolean) {
+//						
+//					} else if (argument instanceof )
+					
 					if ("anyFileURI".equals(argument.xsdType)) {
 						if (argument.sequence) { // Multiple files
-							ArgFiles argFiles = new ArgFiles(argument);
+//							ArgFiles argFiles = new ArgFiles(argument);
 							for (int i = 0; i < params.get(param).length; i++) {
 								matcher = FILE_REFERENCE.matcher(params.get(param)[i]);
 								if (!matcher.find()) {
@@ -175,10 +168,10 @@ public class Scripts extends Controller {
 								} else {
 									Long uploadId = Long.parseLong(matcher.group(1));
 									Integer fileNr = Integer.parseInt(matcher.group(2));
-									argFiles.hrefs.add(uploads.get(uploadId).listFiles().get(fileNr).href);
+//									argFiles.hrefs.add(uploads.get(uploadId).listFiles().get(fileNr).href);
 								}
 							}
-							script.arguments.set(script.arguments.indexOf(argument), argFiles);
+//							script.arguments.set(script.arguments.indexOf(argument), argFiles);
 
 						} else { // Single file
 							matcher = FILE_REFERENCE.matcher(params.get(param)[0]);
@@ -189,7 +182,7 @@ public class Scripts extends Controller {
 								Integer fileNr = Integer.parseInt(matcher.group(2));
 								
 								if (uploads.containsKey(uploadId)) {
-									script.arguments.set(script.arguments.indexOf(argument), new ArgFile(argument, uploads.get(uploadId).listFiles().get(fileNr).href));
+//									script.arguments.set(script.arguments.indexOf(argument), new ArgFile(argument, uploads.get(uploadId).listFiles().get(fileNr).href));
 									
 								} else {
 									Logger.warn("No such upload: "+uploadId);
@@ -200,7 +193,7 @@ public class Scripts extends Controller {
 
 					} else if ("boolean".equals(argument.xsdType)) {
 						// Boolean
-						script.arguments.set(script.arguments.indexOf(argument), new ArgBoolean(argument, new Boolean(params.get(param)[0])));
+//						script.arguments.set(script.arguments.indexOf(argument), new ArgBoolean(argument, new Boolean(params.get(param)[0])));
 
 					} else if ("parameters".equals(argument.xsdType)) {
 						// TODO: parameters are not implemented yet
@@ -208,14 +201,14 @@ public class Scripts extends Controller {
 					} else { // Unknown types are treated like strings
 
 						if (argument.sequence) { // Multiple strings
-							ArgStrings argStrings = new ArgStrings(argument);
+//							ArgStrings argStrings = new ArgStrings(argument);
 							for (int i = 0; i < params.get(param).length; i++) {
-								argStrings.add(params.get(param)[i]);
+//								argStrings.add(params.get(param)[i]);
 							}
-							script.arguments.set(script.arguments.indexOf(argument), argStrings);
+//							script.arguments.set(script.arguments.indexOf(argument), argStrings);
 
 						} else { // Single string
-							script.arguments.set(script.arguments.indexOf(argument), new ArgString(argument, params.get(param)[0]));
+//							script.arguments.set(script.arguments.indexOf(argument), new ArgString(argument, params.get(param)[0]));
 						}
 
 					}

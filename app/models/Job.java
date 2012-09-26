@@ -57,7 +57,7 @@ public class Job extends Model implements Comparable<Job> {
 
 	@Transient
 	private Cancellable pushNotifier;
-
+	
 	public Job(String id, User user) {
 		this.id = id;
 		this.user = user.id;

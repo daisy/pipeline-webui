@@ -1,5 +1,9 @@
 package controllers;
 
+import java.util.Random;
+
+import controllers.Administrator.SetLocalDP2DirForm;
+import play.Logger;
 import play.mvc.*;
 import play.data.*;
 import models.*;
@@ -13,6 +17,8 @@ import models.*;
  */
 public class FirstUse extends Controller {
 	
+	private static String deployment = null;
+	
 	/**
 	 * GET /firstuse
 	 * @return
@@ -21,12 +27,25 @@ public class FirstUse extends Controller {
 		
 		if (isFirstUse()) {
 			session("userid", null);
-			return ok(views.html.FirstUse.createAdmin.render(form(Administrator.CreateAdminForm.class)));
+			if (!"desktop".equals(deployment()) && !"server".equals(deployment()))
+				return ok(views.html.FirstUse.setDeployment.render(form(Administrator.SetDeploymentForm.class)));
+			else if ("server".equals(deployment())) {
+				return ok(views.html.FirstUse.createAdmin.render(form(Administrator.CreateAdminForm.class)));
+			}
 		}
 		
 		User user = User.authenticate(request(), session());
 		if (user == null || !user.admin) {
 			return redirect(routes.Login.login());
+		}
+		
+		if ("desktop".equals(deployment()) && (Setting.get("dp2ws.endpoint") == null || "".equals(Setting.get("dp2ws.endpoint")))) {
+			Long browserId = new Random().nextLong();
+			NotificationConnection.createBrowserIfAbsent(user.id, browserId);
+			Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
+			flash("browserId",""+browserId);
+			SetLocalDP2DirForm.startDP2Locator(user.id, browserId);
+			return ok(views.html.FirstUse.setLocalDP2Dir.render(form(SetLocalDP2DirForm.class)));
 		}
 		
 		if (Setting.get("dp2ws.endpoint") == null) {
@@ -42,6 +61,60 @@ public class FirstUse extends Controller {
 	
 	public static Result postFirstUse() {
 		String formName = request().body().asFormUrlEncoded().containsKey("formName") ? request().body().asFormUrlEncoded().get("formName")[0] : "";
+		
+		if ("setDeployment".equals(formName)) {
+			if (!isFirstUse())
+				return redirect(routes.FirstUse.getFirstUse());
+			
+			Form<Administrator.SetDeploymentForm> filledForm = form(Administrator.SetDeploymentForm.class).bindFromRequest();
+			Administrator.SetDeploymentForm.validate(filledForm);
+			
+			if (filledForm.hasErrors()) {
+				return badRequest(views.html.FirstUse.setDeployment.render(filledForm));
+			
+			} else {
+				String deployment = filledForm.field("deployment").valueOr("unknown");
+				Setting.set("deployment", deployment);
+				
+				if ("desktop".equals(deployment)) {
+					User admin = new User("email@example.com", "Administrator", "password", true);
+					admin.save(Application.datasource);
+					admin.login(session());
+					
+					// Set some default configuration options
+					Setting.set("users.guest.name", "Guest");
+					Setting.set("users.guest.allowGuests", "true");
+					Setting.set("users.guest.showGuestName", "false");
+					Setting.set("users.guest.showEmailBox", "false");
+					Setting.set("users.guest.shareJobs", "true");
+					Setting.set("users.guest.automaticLogin", "true");
+					Setting.set("dp2ws.sameFilesystem", "true");
+					Setting.set("mail.enable", "false");
+					Setting.set("uploads", System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"));
+				}
+				
+				return redirect(routes.FirstUse.getFirstUse());
+			}
+		}
+		
+		if ("setLocalDP2Dir".equals(formName)) {
+			Form<Administrator.SetLocalDP2DirForm> filledForm = form(Administrator.SetLocalDP2DirForm.class).bindFromRequest();
+			Administrator.SetLocalDP2DirForm.validate(filledForm);
+			
+			if (filledForm.hasErrors()) {
+	        	return badRequest(views.html.FirstUse.setLocalDP2Dir.render(filledForm));
+	        	
+	        } else {
+	        	// Set some more default configuration options
+//				Setting.set("dp2ws.endpoint", "http://localhost:9000/");
+//				Setting.set("dp2ws.authid", "");
+//				Setting.set("dp2ws.secret", "");
+//	        	Setting.set("dp2ws.tempDir", System.getProperty("user.dir") + System.getProperty("file.separator") + "local.temp" + System.getProperty("file.separator"));
+//	        	Setting.set("dp2ws.resultDir", System.getProperty("user.dir") + System.getProperty("file.separator") + "local.results" + System.getProperty("file.separator"));
+	        	Administrator.SetLocalDP2DirForm.save(filledForm);
+	        	return redirect(routes.FirstUse.getFirstUse());
+	        }
+		}
 		
 		if ("createAdmin".equals(formName)) {
 			if (!isFirstUse())
@@ -78,7 +151,6 @@ public class FirstUse extends Controller {
 		}
 		
 		if ("setWS".equals(formName)) {
-			
 			Form<Administrator.SetWSForm> filledForm = form(Administrator.SetWSForm.class).bindFromRequest();
 			Administrator.SetWSForm.validate(filledForm);
 			
@@ -112,7 +184,15 @@ public class FirstUse extends Controller {
 	 * @return
 	 */
 	public static boolean isFirstUse() {
-		return User.findAll().size() == 0;
+		return User.findAll().size() == 0 || "desktop".equals(deployment()) && Setting.get("dp2ws.endpoint") == null;
+	}
+	
+	/**
+	 * Returns a buffered value of the deployment type instead of having to check the DB each time using Setting.get("deployment").
+	 * @return
+	 */
+	public static String deployment() {
+		return deployment != null ? deployment : Setting.get("deployment");
 	}
 
 }

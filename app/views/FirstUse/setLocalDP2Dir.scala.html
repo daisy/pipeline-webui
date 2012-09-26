@@ -1,0 +1,48 @@
+@(setLocalDP2DirForm: Form[controllers.Administrator.SetLocalDP2DirForm])
+
+@main("First use", "", Array("notifications.js"), Array(), Array()){
+
+<script type="text/javascript" charset="utf-8">
+$(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
+</script>
+
+<div class="page-header">
+  <h1 id="h1" aria-live="polite">
+  	Configuring DAISY Pipeline 2
+  	<span aria-live="none">
+		<span id="runningDot1"                       >&nbsp;.&nbsp; &nbsp; &nbsp;</span>
+		<span id="runningDot2" style="display: none;">&nbsp;.&nbsp;.&nbsp; &nbsp;</span>
+		<span id="runningDot3" style="display: none;">&nbsp;.&nbsp;.&nbsp;.&nbsp;</span>
+		<script type="text/javascript">
+			window.setInterval(function(){
+				if ($("#runningDot1").is(":visible")) {
+					$("#runningDot1").hide();
+					$("#runningDot2").show();
+					
+				} else if ($("#runningDot2").is(":visible")) {
+					$("#runningDot2").hide();
+					$("#runningDot3").show();
+					
+				} else {
+					$("#runningDot3").hide();
+					$("#runningDot1").show();
+				}
+			},1000);
+		</script>
+	</span>
+  	<!-- if dp2 not found: Set the full path to the "daisy-pipeline" directory -->
+  </h1>
+  <!-- if dp2 not found: <p>This will allow the Web UI to start and stop the framework automatically.</p>-->
+</div>
+
+<pre id="dbg"></pre>
+
+<script type="text/javascript">
+	$(function(){
+		Notifications.listen("dp2locator", function(message){ console.log(message); $("#dbg").html(message); });
+	});
+</script>
+
+TODO
+
+}

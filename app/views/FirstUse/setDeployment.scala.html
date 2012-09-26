@@ -1,0 +1,30 @@
+@(setDeploymentForm: Form[controllers.Administrator.SetDeploymentForm])
+
+@main("First use", "", Array(), Array(), Array()){
+    
+    <div class="hero-unit">
+	    
+	    <div class="page-header">
+	      <h1>Choose a deployment type</h1>
+	      <p style="text-align:center;">Are you installing Pipeline 2 and the Web UI on your own computer or will it be running on a server?</p>
+	    </div>
+	    
+	    @if(flash.contains("error")) {
+	        <div role="alert" class="alert alert-error">
+	            <button class="close" data-dismiss="alert">×</button>
+	            @flash.get("error")
+	        </div>
+	    }
+	    
+	    @if(flash.contains("success")) {
+	        <div role="alert" class="alert alert-success">
+	            <button class="close" data-dismiss="alert">×</button>
+	            @flash.get("success")
+	        </div>
+	    }
+	          
+	    @views.html.Administrator.Forms.setDeployment(setDeploymentForm, routes.FirstUse.postFirstUse())
+	    
+    </div>
+    
+}

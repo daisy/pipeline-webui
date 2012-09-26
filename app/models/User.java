@@ -180,11 +180,17 @@ public class User extends Model {
 		if (!"true".equals(models.Setting.get("users.guest.allowGuests")))
 			return null;
 		
-		User guest = new User("", models.Setting.get("users.guest.name"), "", false);
-		guest.id = -1-(long)randomGuestUserId.nextInt(2147483640);
-		guest.login(session);
-		
-		return guest;
+		if ("desktop".equals(models.Setting.get("deployment"))) {
+			User admin = find.where().eq("admin", true).findList().get(0);
+			admin.login(session);
+			return admin;
+			
+		} else {
+			User guest = new User("", models.Setting.get("users.guest.name"), "", false);
+			guest.id = -1-(long)randomGuestUserId.nextInt(2147483640);
+			guest.login(session);
+			return guest;
+		}
 	}
 
 	public void login(Session session) {

@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.codehaus.jackson.JsonNode;
 
+import play.Logger;
 import play.libs.F.Callback;
 import play.libs.F.Callback0;
 import play.mvc.WebSocket;
@@ -113,10 +114,10 @@ public class NotificationConnection {
 	 * @param notification
 	 */
 	public static void push(Long userId, Long browserId, Notification notification) {
-//		Logger.debug("pushing message to user #"+userId+" (browser #"+browserId+"): "+notification.toString());
+		Logger.debug("pushing message to user #"+userId+" (browser #"+browserId+"): "+notification.toString());
 		synchronized (notificationConnections) {
 			if (!notificationConnections.containsKey(userId)) {
-//				Logger.debug("Can't push notification to user #"+userId+": no such user connected.");
+				Logger.debug("Can't push notification to user #"+userId+": no such user connected.");
 				return;
 			}
 			
