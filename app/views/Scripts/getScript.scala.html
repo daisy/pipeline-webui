@@ -37,7 +37,7 @@ Array("jquery.fileupload-ui.css")) {
 	<fieldset>
 		
 		@for(arg <- script.arguments){
-			@if(arg.output!=true){
+			@if(arg.output!="result" && arg.output!="temp"){
 				@if(arg.kind=="parameters"){
 					@Widgets.parameters(arg, script)
 				}else{

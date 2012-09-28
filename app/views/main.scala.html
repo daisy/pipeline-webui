@@ -64,7 +64,9 @@
 		   			</ul>
 		   			<ul class="nav pull-right">
 		   				@if(session.get("admin")=="true"){
-		 					<li class="@("active".when(nav == "admin"))"><a href="@routes.Administrator.getSettings()"><i class="icon-wrench icon-white"></i> Admin settings</a></li>
+		   					@if(navs.contains("admin")){
+		 						<li class="@("active".when(nav == "admin"))"><a href="@routes.Administrator.getSettings()"><i class="icon-wrench icon-white"></i> Admin settings</a></li>
+		 					}
 		 				}
 		 				@if(Controller.session("userid") != null){
 	 						@if(navs.contains("account")){

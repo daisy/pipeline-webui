@@ -93,6 +93,18 @@ public class NotificationConnection {
 	public static ConcurrentMap<Long, List<NotificationConnection>> notificationConnections;
 	
 	/**
+	 * Push a notification to all of the users
+	 * @param notification
+	 */
+	public static void pushAll(Notification notification) {
+		synchronized (notificationConnections) {
+			for (Long userId : notificationConnections.keySet())
+				for (NotificationConnection connection : notificationConnections.get(userId))
+					connection.push(notification);
+		}
+	}
+	
+	/**
 	 * Push a notification to all the users browser windows
 	 * @param notification
 	 */

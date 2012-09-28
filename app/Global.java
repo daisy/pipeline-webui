@@ -1,17 +1,29 @@
 import play.*;
 import models.*;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+import org.daisy.pipeline.client.Alive;
 import org.daisy.pipeline.client.Pipeline2WSException;
+
+import controllers.FirstUse;
 
 import akka.util.Duration;
 import play.libs.Akka;
+import utils.CommandExecutor;
 
 public class Global extends GlobalSettings {
+	
+	// Note: These are mirrored in FirstUse.java
+	public static final String DEFAULT_DP2_ENDPOINT_LOCAL = "http://localhost:8181/ws";
+	public static final String DEFAULT_DP2_ENDPOINT_REMOTE = "http://localhost:8182/ws";
+	public static final String SLASH = System.getProperty("file.separator");
+	public static final String DP2_START = "/".equals(SLASH) ? "cli/dp2 help 1>/dev/null 2>&1" : "start cmd /c cli\\dp2.exe help > NUL 2> NUL";
+	public static final String DP2_HALT = "/".equals(SLASH) ? "cli/dp2 halt 1>/dev/null 2>&1" : "start cmd /c cli\\dp2.exe halt > NUL 2> NUL";
 	
 	public synchronized void beforeStart(Application app) {
 		Logger.debug("Application is about to start...");
@@ -136,6 +148,31 @@ public class Global extends GlobalSettings {
 					}
 				}
 			);
+		
+		// If running in desktop mode; restart DP2 automatically if it crashes
+		Akka.system().scheduler().schedule(
+				Duration.create(1, TimeUnit.SECONDS),
+				Duration.create(1, TimeUnit.MINUTES),
+				new Runnable() {
+					public void run() {
+						if ("server".equals(FirstUse.deployment()))
+							return;
+						
+						String dp2fwkDir = Setting.get("dp2fwk.dir");
+						
+						if (dp2fwkDir == null || "".equals(dp2fwkDir))
+							return;
+						
+						if (!Alive.isAlive(DEFAULT_DP2_ENDPOINT_LOCAL)) {
+							int exitValue = CommandExecutor.executeCommandWithWorker(DP2_START, new File(dp2fwkDir), 20000L);
+							if (exitValue != 0) {
+								Logger.info("Started the DAISY Pipeline 2 framework");
+								return;
+							}
+						}
+					}
+				}
+				);
 	}
 
 //	@Override

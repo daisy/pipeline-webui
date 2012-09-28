@@ -1,34 +1,16 @@
 package controllers;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import org.daisy.pipeline.client.Pipeline2WSException;
-import org.daisy.pipeline.client.Pipeline2WSResponse;
-
-import akka.actor.Cancellable;
-import akka.util.Duration;
-
-import models.Job;
-import models.Notification;
-import models.NotificationConnection;
 import models.Setting;
 import models.User;
 import play.Logger;
-import play.Play;
 import play.data.Form;
 import play.data.format.Formats;
 import play.data.validation.Constraints;
 import play.data.validation.Constraints.Required;
 import play.data.validation.ValidationError;
-import play.libs.Akka;
 import play.mvc.*;
 
 public class Administrator extends Controller {
@@ -57,96 +39,6 @@ public class Administrator extends Controller {
 				filledForm.reject("deployment", "You must choose whether you're using the Web UI on your own computer or on a server.");
 		}
 	}
-	
-	public final static Form<SetLocalDP2DirForm> setLocalDP2DirForm = form(SetLocalDP2DirForm.class);
-	public static class SetLocalDP2DirForm {
-        @Required
-        public String localDP2dir;
-        
-        public static void validate(Form<SetLocalDP2DirForm> filledForm) {
-        	String localDP2Path = filledForm.field("localDP2dir").valueOr("");
-        	if (!localDP2Path.endsWith(System.getProperty("file.separator")))
-        		localDP2Path += System.getProperty("file.separator");
-        	File dir = new File(localDP2Path);
-        	if (!dir.exists())
-        		filledForm.reject("localDP2dir", "The directory does not exist.");
-        	if (!dir.isDirectory())
-        		filledForm.reject("localDP2dir", "The path does not point to a directory.");
-        }
-
-		public static void save(Form<SetLocalDP2DirForm> filledForm) {
-			String localDP2Path = filledForm.field("localDP2dir").valueOr("");
-        	if (!localDP2Path.endsWith(System.getProperty("file.separator")))
-        		localDP2Path += System.getProperty("file.separator");
-        	Logger.debug("localDP2dir: "+localDP2Path);
-//        	Setting.set("localDP2dir", localDP2Path);
-		}
-		
-		public static boolean isDP2Dir(File dir) {
-			return true;//TODO
-		}
-		
-		public static void startDP2Locator(final Long userId, final Long browserId) {
-			Akka.system().scheduler().scheduleOnce(
-				Duration.create(0, TimeUnit.SECONDS),
-				new Runnable() {
-					public void run() {
-						
-						File dp2dirFile = null;
-						try {
-							dp2dirFile = Play.application().getFile("").getParentFile();
-							if (dp2dirFile == null || !dp2dirFile.isDirectory()) {
-								dp2dirFile = null;
-							} else if (!"daisy-pipeline".equals(dp2dirFile.getName())) {
-								dp2dirFile = new File(Play.application().getFile("").getParentFile(), "daisy-pipeline");
-								if (dp2dirFile == null || !dp2dirFile.isDirectory() || !"daisy-pipeline".equals(dp2dirFile.getName()))
-									dp2dirFile = null;
-							}
-						} catch (NullPointerException e) {
-							// directory not found
-						}
-						
-						dp2dirFile = new File("/home/jostein/Skrivebord/daisy-pipeline");
-						
-						Map<String, Object> result = new HashMap<String,Object>();
-						if (dp2dirFile != null) {
-							result.put("found", Boolean.TRUE);
-							result.put("path", dp2dirFile.getAbsolutePath() + System.getProperty("file.separator"));
-						} else {
-							result.put("found", Boolean.TRUE);
-							result.put("path", System.getProperty("user.dir") + System.getProperty("file.separator"));
-						}
-						NotificationConnection.push(userId, browserId, new Notification("dp2locator", result));
-						
-						
-						// end of async process, move the following to a separate class or method:
-						if (dp2dirFile == null) return;
-						
-						String cmd = "/".equals(System.getProperty("file.separator"))
-								? "cli/dp2 help 1>/dev/null 2>&1"
-								: "start cmd /c cli\\dp2.exe > NUL 2> NUL";
-						String dp2dir = dp2dirFile.getAbsolutePath() + System.getProperty("file.separator");
-						
-						try {
-							Logger.debug("running: "+dp2dir+" $ "+cmd);
-							Process p = Runtime.getRuntime().exec(cmd, null, dp2dirFile);
-							Akka.system().scheduler().schedule(
-									Duration.create(0, TimeUnit.SECONDS),
-									Duration.create(1, TimeUnit.SECONDS),
-									new Runnable() {
-										public void run() {
-//											org.daisy.pipeline.client.Alive.isAlive("http://localhost:8181/");
-										}
-									});
-						} catch (IOException e) {
-							Logger.debug("could not start pb...");
-							e.printStackTrace();
-						}
-					}
-				}
-				);
-		}
-    }
 	
 	public final static Form<CreateAdminForm> createAdminForm = form(CreateAdminForm.class);
 	public static class CreateAdminForm {
