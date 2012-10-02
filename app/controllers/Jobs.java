@@ -1,6 +1,7 @@
 package controllers;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -11,7 +12,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import javax.management.RuntimeErrorException;
 
@@ -27,14 +27,12 @@ import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.script.Argument;
-import org.daisy.pipeline.client.models.script.arguments.ArgFile;
-import org.daisy.pipeline.client.models.script.arguments.ArgFiles;
 import org.w3c.dom.Node;
 
 import play.Logger;
-import play.db.ebean.Transactional;
 import play.libs.XPath;
 import play.mvc.*;
+import utils.Files;
 
 public class Jobs extends Controller {
 
@@ -83,10 +81,7 @@ public class Jobs extends Controller {
 		if (user.admin)
 			flash("showOwner", "true");
 		
-		Long browserId = new Random().nextLong();
-		NotificationConnection.createBrowserIfAbsent(user.id, browserId);
-		Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
-		flash("browserId",""+browserId);
+		user.flashBrowserId();
 		return ok(views.html.Jobs.getJobs.render(jobList));
 	}
 	
@@ -134,10 +129,7 @@ public class Jobs extends Controller {
 			Job.lastStatus.put(job.id, job.status);
 		}
 		
-		Long browserId = new Random().nextLong();
-		NotificationConnection.createBrowserIfAbsent(user.id, browserId);
-		Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
-		flash("browserId",""+browserId);
+		user.flashBrowserId();
 		return ok(views.html.Jobs.getJob.render(job, webuiJob));
 	}
 
@@ -160,19 +152,38 @@ public class Jobs extends Controller {
 					))
 				return forbidden("You are not allowed to view this job.");
 		
-		try {
-			Pipeline2WSResponse result = org.daisy.pipeline.client.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
+		if ("true".equals(Setting.get("dp2ws.sameFilesystem"))) {
+			try {
+				File resultDir = new File(Setting.get("dp2ws.resultDir")+webuiJob.localDirName);
+				File tempZip;
+				tempZip = File.createTempFile("dp2result", "zip");
+				Logger.debug("zipping result directory: "+resultDir.getAbsolutePath());
+				Files.zip(resultDir, tempZip);
+				
+				response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
+				response().setContentType("application/zip");
+				return ok(new FileInputStream(tempZip));
+				
+			} catch (IOException e) {
+				Logger.error("Unable to zip result directory", e);
+				return internalServerError("Unable to zip result directory");
+			}
 			
-			// TODO: check content type of incoming stream? Implement result.getContentType() ?
-			
-			response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
-			response().setContentType("application/zip");
-
-			return ok(result.asStream());
-			
-		} catch (Pipeline2WSException e) {
-			Logger.error(e.getMessage(), e);
-			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
+		} else {
+			try {
+				Pipeline2WSResponse result = org.daisy.pipeline.client.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
+				
+				// TODO: check content type of incoming stream? Implement result.getContentType() ?
+				
+				response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
+				response().setContentType("application/zip");
+	
+				return ok(result.asStream());
+				
+			} catch (Pipeline2WSException e) {
+				Logger.error(e.getMessage(), e);
+				return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
+			}
 		}
 	}
 
@@ -277,12 +288,12 @@ public class Jobs extends Controller {
 			if ("result".equals(arg.output)) {
 				File href = new File(Setting.get("dp2ws.resultDir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
 				href.mkdirs();
-//				script.arguments.set(script.arguments.indexOf(arg), new ArgFile(arg, href.toURI().toString()));
+				arg.set(href.toURI().toString());
 				
 			} else if ("temp".equals(arg.output)) {
 				File href = new File(Setting.get("dp2ws.tempDir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
 				href.mkdirs();
-//				script.arguments.set(script.arguments.indexOf(arg), new ArgFile(arg, href.toURI().toString()));
+				arg.set(href.toURI().toString());
 			}
 		}
 		scriptForm.validate();
@@ -363,18 +374,13 @@ public class Jobs extends Controller {
 				Logger.debug("Running the Web UI and fwk on the same filesystem, no need to ZIP files...");
 				for (Argument arg : script.arguments) {
 					if (arg.output != null) {
-						Logger.debug(arg.name+" is output; don't resolve URI");
+						Logger.debug(arg.name+" is output (\""+arg.output+"\"); don't resolve URI");
 						continue;
 					}
-					if (arg instanceof ArgFile) {
-						Logger.debug(arg.name+" is file; resolve URI");
-						((ArgFile)arg).href = contextDir.toURI().resolve(((ArgFile)arg).href).toString();
-					}
-					if (arg instanceof ArgFiles) {
-						Logger.debug(arg.name+" is files; resolve URIs");
-						List<String> hrefs = ((ArgFiles)arg).hrefs;
-						for (int i = 0; i < hrefs.size(); i++) {
-							hrefs.set(i, contextDir.toURI().resolve(hrefs.get(i)).toString());
+					if ("anyFileURI".equals(arg.xsdType)) {
+						Logger.debug(arg.name+" is file(s); resolve URI(s)");
+						for (int i = 0; i < arg.size(); i++) {
+							arg.set(i, contextDir.toURI().resolve(arg.get(i)));
 						}
 					}
 				}
@@ -445,6 +451,7 @@ public class Jobs extends Controller {
 		
 		Job webUiJob = new Job(jobId, user);
 		webUiJob.nicename = id;
+		webUiJob.localDirName = timeString;
 		if (scriptForm.uploads != null && scriptForm.uploads.size() > 0) {
 			String filenames = "";
 			int i = 0;

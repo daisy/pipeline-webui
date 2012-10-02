@@ -1,5 +1,6 @@
 package models;
 
+import play.Logger;
 import play.api.libs.Crypto;
 import play.db.ebean.*;
 
@@ -8,9 +9,11 @@ import javax.persistence.*;
 import controllers.Application;
 
 import java.util.*;
+
 import play.data.Form;
 import play.data.format.*;
 import play.data.validation.*;
+import play.mvc.Controller;
 import play.mvc.Http.Request;
 import play.mvc.Http.Session;
 
@@ -111,7 +114,15 @@ public class User extends Model {
 	public void setPassword(String password) {
 		this.password = Crypto.sign(password);
 	}
-
+	
+	public Long flashBrowserId() {
+		Long browserId = new Random().nextLong();
+		NotificationConnection.createBrowserIfAbsent(id, browserId);
+		Logger.debug("Browser: user #"+id+" opened browser window #"+browserId);
+		Controller.flash("browserId",""+browserId);
+		return browserId;
+	}
+	
 	// -- Queries
 
 	public static Model.Finder<String,User> find = new Model.Finder<String, User>(Application.datasource, String.class, User.class);

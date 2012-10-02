@@ -1,31 +1,95 @@
-@(scripts: List[org.daisy.pipeline.client.models.Script])
+@()
 
-@main("Scripts", "scripts") {
+@main("Scripts", "scripts", Array("notifications.js"), Array()){
+
+<script type="text/javascript" charset="utf-8">
+$(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
+</script>
 
 <h1>Scripts</h1>
 
-@if(scripts.size() > 0) {
-
-	<table class="table scriptlist">
-	<tr>
-		<th>Script</th>
-		<th>Description</th>
-	</tr>
-	@for(script <- scripts) {
+<div class="INITIAL" style="text-align:center;display:none;">
+	<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/>
+</div>
+<div class="RUNNING" style="display:none;">
+	<table id="scriptTable" class="oneOrMoreScripts table scriptlist" style="display:none;">
 		<tr>
-			<td><a href="@routes.Scripts.getScript(script.id)">@script.nicename</td>
-			<td>@script.desc</td>
+			<th>Script</th>
+			<th>Description</th>
 		</tr>
-	}
 	</table>
-
-}else {
-
-	<div role="alert" class="alert alert-info">
+	<div role="alert" class="noScripts alert alert-info" style="display:none;">
 		<p>There are no scripts installed.</p>
 	</div>
+</div>
+<div role="alert" class="STARTING alert alert-info" style="text-align:center; display:none;">
+	<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/>
+	<p>Starting the Pipeline 2 framework...</p>
+</div>
+<div role="alert" class="STOPPED alert alert-info" style="display:none;">
+	<p>The Pipeline 2 framework is not running.</p>
+</div>
 
-}
+<script type="text/javascript">
+	$(function(){
+		Notifications.listen("dp2fwk.state", function(state){
+			$(".INITIAL").hide();
+			if (state === "RUNNING") {
+				$(".STOPPED").hide();
+				$(".STARTING").hide();
+				$(".RUNNING").show();
+			} else if (state === "STARTING") {
+				$(".STOPPED").hide();
+				$(".STARTING").show();
+				$(".RUNNING").hide();
+			} else if (state === "STOPPED") {
+				$(".STOPPED").show();
+				$(".STARTING").hide();
+				$(".RUNNING").hide();
+			}
+		});
+		var scriptHrefBase = "@routes.Scripts.getScript("")";
+		var checkForScripts = function() {
+			$.ajax({
+				url: "@routes.Scripts.getScriptsJson()",
+				error: function(jqXHR, textStatus, errorThrown) {
+					//$(".INITIAL").hide();
+					//$(".ERROR").hide();
+					setTimeout(checkForScripts,5000);
+				},
+				success: function(scripts, textStatus, jqXHR) {
+					$(".INITIAL").hide();
+					$(".STOPPED").hide();
+					$(".STARTING").hide();
+					$(".RUNNING").show();
+					if (scripts.length === 0) {
+						$(".oneOrMoreScripts").hide();
+						$(".noScripts").show();
+					}
+					else {
+						$(".oneOrMoreScripts").show();
+						$(".noScripts").hide();
+						var table = $("#scriptTable");
+						for (var s = 0; s < scripts.length; s++) {
+							$(table).append(
+								"	<tr>\n"+
+								"		<td><a href=\"@routes.Scripts.getScript("")"+scripts[s].id+"\">"+scripts[s].nicename+"</td>\n"+
+								"		<td>"+scripts[s].desc+"</td>\n"+
+								"	</tr>\n");
+						}
+					}
+				}
+			});
+		}
+		checkForScripts();
+		setTimeout(function(){
+			// show spinning gif after one second of waiting
+			if (!$(".STOPPED, .STARTING, .RUNNING, .ERROR").is(":visible")) {
+				$(".INITIAL").show();
+			}
+		},1000);
+	});
+</script>
 
 
 }

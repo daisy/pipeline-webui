@@ -216,7 +216,7 @@
 						
 						var result = {valid: true, messages: []};
 						
-						@if(arg.required){
+						@if(arg.required==Boolean.TRUE){
 							if ($("#option-href option").filter(":selected").attr("value") === "") {
 								result.valid = false;
 								message.push({level: "error", text: "A file must be selected."});

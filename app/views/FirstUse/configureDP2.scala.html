@@ -67,7 +67,6 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 	var lastMessage = {time:0};
 	$(function(){
 		Notifications.listen("dp2locator", function(message){
-			console.log(message);
 			if (typeof message.time === "number" && message.time < lastMessage.time)
 				return;
 			if (typeof message === "number") {

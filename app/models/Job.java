@@ -42,7 +42,8 @@ public class Job extends Model implements Comparable<Job> {
 	public Date finished;
 	@Column(name="user_id") public Long user;
 	public String guestEmail; // Guest users may enter an e-mail address to receive notifications
-
+	public String localDirName;
+	
 	// Notification flags
 	public boolean notifiedCreated;
 	public boolean notifiedComplete;

@@ -26,6 +26,7 @@ GET     /notifications/:browser/xhr         controllers.Notifications.xhr(browse
 # Scripts
 GET		/scripts/:id                        controllers.Scripts.getScript(id: String)
 GET     /scripts                            controllers.Scripts.getScripts()
+GET     /scripts.json                       controllers.Scripts.getScriptsJson()
 
 # Jobs
 GET		/jobs/:id/result                    controllers.Jobs.getResult(id: String)

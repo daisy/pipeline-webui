@@ -13,6 +13,8 @@ dist
 bin
 lib
 
+refreshclientlib.sh
+
 # Default directories
 uploads
 local.results

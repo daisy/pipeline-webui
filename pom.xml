@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>org.daisy</groupId>
+        <artifactId>daisy</artifactId>
+        <version>2</version>
+        <relativePath/>
+    </parent>
+    
+    <groupId>org.daisy.pipeline</groupId>
+    <artifactId>pipeline2-webui</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>play2</packaging>
+    
+    <name>DAISY Pipeline 2 :: Web User Interface</name>
+    <description>A web-based user interface for the DAISY Pipeline 2.</description>
+    <url>https://github.com/daisy-consortium/pipeline-webui</url>
+    <inceptionYear>2012</inceptionYear>
+    <organization>
+    	<name>The DAISY Consortium</name>
+    	<url>http://www.daisy.org/</url>
+    </organization>
+    <licenses>
+    	<license>
+      		<name>GNU Lesser General Public License, Version 3</name>
+	      	<url>http://www.gnu.org/copyleft/lesser.html</url>
+      		<distribution>manual</distribution>
+    	</license>
+  	</licenses>
+    
+    <mailingLists>
+    	<mailingList>
+      		<name>DAISY Pipeline Developers</name>
+	      	<subscribe>http://groups.google.com/group/daisy-pipeline-dev/subscribe</subscribe>
+      		<unsubscribe>daisy-pipeline-dev+unsubscribe@googlegroups.com</unsubscribe>
+	      	<post>daisy-pipeline-dev@googlegroups.com</post>
+	      	<archive>http://groups.google.com/group/daisy-pipeline-dev</archive>
+	   	</mailingList>
+  	</mailingLists>
+  	
+  	<issueManagement>
+    	<system>Google Code Issue Tracker</system>
+	    <url>http://code.google.com/p/daisy-pipeline/issues/list</url>
+  	</issueManagement>
+    
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>de.akquinet.innovation.play2</groupId>
+                    <artifactId>play2-maven-plugin</artifactId>
+                    <version>1.2.0</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>de.akquinet.innovation.play2</groupId>
+                <artifactId>play2-maven-plugin</artifactId>
+                <version>1.2.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <buildJar>false</buildJar>
+                </configuration>
+            </plugin>
+            <plugin>
+			    <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-antrun-plugin</artifactId>
+			    <version>1.6</version>
+			    <executions>
+			        <execution>
+			            <id>prepare</id>
+			            <phase>package</phase>
+			            <configuration>
+			                <tasks>
+			                    <echo message="prepare phase" />
+			                    <!--<unzip src="zips/archive.zip" dest="output/" />
+			                    <unzip src="output/inner.zip" dest="output/" />-->
+			                </tasks>
+			            </configuration>
+			            <goals>
+			                <goal>run</goal>
+			            </goals>
+			        </execution>
+			    </executions>
+			</plugin>
+        </plugins>
+    </build>
+    
+    <dependencies>
+        <!--<dependency>
+            <groupId>de.akquinet.innovation.play2</groupId>
+            <artifactId>play2-maven-plugin</artifactId>
+            <version>1.2.0</version>
+        </dependency>-->
+    </dependencies>
+    <repositories>
+        <!-- 
+        Restlet is not on Maven Central
+        https://github.com/restlet/restlet-framework-java/issues/481
+        -->
+        <!--<repository>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>http://repo.maven.apache.org/maven2/</url>
+        </repository>
+        <repository>
+            <id>restlet-repo</id>
+            <name>Public online Restlet repository</name>
+            <url>http://maven.restlet.org</url>
+        </repository>-->
+    </repositories>
+    
+</project>

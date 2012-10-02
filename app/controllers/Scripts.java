@@ -4,15 +4,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.codehaus.jackson.JsonNode;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.script.Argument;
-import models.NotificationConnection;
+
 import models.Setting;
 import models.Upload;
 import models.User;
@@ -30,24 +30,38 @@ public class Scripts extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 		
+		user.flashBrowserId();
+		return ok(views.html.Scripts.getScripts.render());
+	}
+	
+	public static Result getScriptsJson() {
 		Pipeline2WSResponse response;
-		List<Script> scripts;
+		List<Script> scripts = null;
+		String error = null;
+		
+		int status = 200;
 		
 		try {
 			response = org.daisy.pipeline.client.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
-			
 			if (response.status != 200) {
-				return Application.error(response.status, response.statusName, response.statusDescription, response.asText());
+				status = response.status;
+				error = response.asText();
+				
+			} else {
+				scripts = Script.getScripts(response);
 			}
-			
-			scripts = Script.getScripts(response);
-			
 		} catch (Pipeline2WSException e) {
 			Logger.error(e.getMessage(), e);
-			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
+			status = 500;
+			error = e.getMessage();
 		}
 		
-		return ok(views.html.Scripts.getScripts.render(scripts));
+		if (status == 200) {
+			JsonNode scriptsJson = play.libs.Json.toJson(scripts);
+			return ok(scriptsJson);
+		} else {
+			return status(status,error);
+		}
 	}
 	
 	public static Result getScript(String id) {
@@ -80,7 +94,7 @@ public class Scripts extends Controller {
 			if ("input".equals(arg.kind) || "anyFileURI".equals(arg.xsdType)) {
 				uploadFiles = true;
 			}
-			if (hideAdvancedOptions && arg.required == false)
+			if (hideAdvancedOptions && arg.required == Boolean.FALSE)
 				arg.hide = true;
 		}
 		if (hideAdvancedOptions) {
@@ -95,10 +109,7 @@ public class Scripts extends Controller {
 				hideAdvancedOptions = false; // don't show "hide advanced options" control, if there are no advanced options
 		}
 		
-		Long browserId = new Random().nextLong();
-		NotificationConnection.createBrowserIfAbsent(user.id, browserId);
-		Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
-		flash("browserId",""+browserId);
+		user.flashBrowserId();
 		return ok(views.html.Scripts.getScript.render(script, uploadFiles, hideAdvancedOptions));
 	}
 	
@@ -150,17 +161,8 @@ public class Scripts extends Controller {
 						continue;
 					}
 					
-//					if (argument instanceof ArgFile) {
-//						
-//					} else if (argument instanceof ArgFiles) {
-//						
-//					} else if (argument instanceof ArgBoolean) {
-//						
-//					} else if (argument instanceof )
-					
 					if ("anyFileURI".equals(argument.xsdType)) {
 						if (argument.sequence) { // Multiple files
-//							ArgFiles argFiles = new ArgFiles(argument);
 							for (int i = 0; i < params.get(param).length; i++) {
 								matcher = FILE_REFERENCE.matcher(params.get(param)[i]);
 								if (!matcher.find()) {
@@ -168,10 +170,9 @@ public class Scripts extends Controller {
 								} else {
 									Long uploadId = Long.parseLong(matcher.group(1));
 									Integer fileNr = Integer.parseInt(matcher.group(2));
-//									argFiles.hrefs.add(uploads.get(uploadId).listFiles().get(fileNr).href);
+									argument.add(uploads.get(uploadId).listFiles().get(fileNr).href);
 								}
 							}
-//							script.arguments.set(script.arguments.indexOf(argument), argFiles);
 
 						} else { // Single file
 							matcher = FILE_REFERENCE.matcher(params.get(param)[0]);
@@ -182,7 +183,7 @@ public class Scripts extends Controller {
 								Integer fileNr = Integer.parseInt(matcher.group(2));
 								
 								if (uploads.containsKey(uploadId)) {
-//									script.arguments.set(script.arguments.indexOf(argument), new ArgFile(argument, uploads.get(uploadId).listFiles().get(fileNr).href));
+									argument.set(uploads.get(uploadId).listFiles().get(fileNr).href);
 									
 								} else {
 									Logger.warn("No such upload: "+uploadId);
@@ -190,27 +191,14 @@ public class Scripts extends Controller {
 								
 							}
 						}
-
-					} else if ("boolean".equals(argument.xsdType)) {
-						// Boolean
-//						script.arguments.set(script.arguments.indexOf(argument), new ArgBoolean(argument, new Boolean(params.get(param)[0])));
-
+						
 					} else if ("parameters".equals(argument.xsdType)) {
 						// TODO: parameters are not implemented yet
-
-					} else { // Unknown types are treated like strings
-
-						if (argument.sequence) { // Multiple strings
-//							ArgStrings argStrings = new ArgStrings(argument);
-							for (int i = 0; i < params.get(param).length; i++) {
-//								argStrings.add(params.get(param)[i]);
-							}
-//							script.arguments.set(script.arguments.indexOf(argument), argStrings);
-
-						} else { // Single string
-//							script.arguments.set(script.arguments.indexOf(argument), new ArgString(argument, params.get(param)[0]));
+						
+					} else { // All other types are treated the same name
+						for (int i = 0; i < params.get(param).length; i++) {
+							argument.add(params.get(param)[i]);
 						}
-
 					}
 				}
 			}

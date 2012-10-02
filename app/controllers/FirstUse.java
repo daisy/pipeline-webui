@@ -58,10 +58,7 @@ public class FirstUse extends Controller {
 		}
 		
 		if ("desktop".equals(deployment()) && (Setting.get("dp2fwk.dir") == null || "".equals(Setting.get("dp2fwk.dir")))) {
-			Long browserId = new Random().nextLong();
-			NotificationConnection.createBrowserIfAbsent(user.id, browserId);
-			Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
-			flash("browserId",""+browserId);
+			Long browserId = user.flashBrowserId();
 			startDP2Configurator(user.id, browserId);
 			return ok(views.html.FirstUse.configureDP2.render());
 		}

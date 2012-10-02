@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.daisy.pipeline.client.Alive;
+import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 
 import controllers.FirstUse;
@@ -22,12 +23,11 @@ public class Global extends GlobalSettings {
 	public static final String DEFAULT_DP2_ENDPOINT_LOCAL = "http://localhost:8181/ws";
 	public static final String DEFAULT_DP2_ENDPOINT_REMOTE = "http://localhost:8182/ws";
 	public static final String SLASH = System.getProperty("file.separator");
-	public static final String DP2_START = "/".equals(SLASH) ? "cli/dp2 help 1>/dev/null 2>&1" : "start cmd /c cli\\dp2.exe help > NUL 2> NUL";
-	public static final String DP2_HALT = "/".equals(SLASH) ? "cli/dp2 halt 1>/dev/null 2>&1" : "start cmd /c cli\\dp2.exe halt > NUL 2> NUL";
+	public static final String DP2_START = "/".equals(SLASH) ? "cli/dp2 help" : "start cmd /c cli\\dp2.exe help";
+	public static final String DP2_HALT = "/".equals(SLASH) ? "cli/dp2 halt" : "start cmd /c cli\\dp2.exe halt";
 	
 	public synchronized void beforeStart(Application app) {
 		Logger.debug("Application is about to start...");
-
 	}
 	
 //	@Override
@@ -46,6 +46,9 @@ public class Global extends GlobalSettings {
 		
 		if (Setting.get("jobs.deleteAfterDuration") == null)
 			Setting.set("jobs.deleteAfterDuration", "0");
+		
+		if (Play.isDev())
+			Pipeline2WS.debug = true;
 		
 		NotificationConnection.notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>();
 		
@@ -150,12 +153,15 @@ public class Global extends GlobalSettings {
 			);
 		
 		// If running in desktop mode; restart DP2 automatically if it crashes
+		if ("server".equals(FirstUse.deployment())) Setting.set("dp2fwk.state","RUNNING"); // assume that it is running when in server mode
+		else Setting.set("dp2fwk.state","STOPPED");
 		Akka.system().scheduler().schedule(
-				Duration.create(1, TimeUnit.SECONDS),
+				Duration.create(0, TimeUnit.SECONDS),
 				Duration.create(1, TimeUnit.MINUTES),
 				new Runnable() {
 					public void run() {
-						if ("server".equals(FirstUse.deployment()))
+						Logger.debug("checking if the fwk is online");
+						if (!"desktop".equals(FirstUse.deployment()))
 							return;
 						
 						String dp2fwkDir = Setting.get("dp2fwk.dir");
@@ -164,11 +170,19 @@ public class Global extends GlobalSettings {
 							return;
 						
 						if (!Alive.isAlive(DEFAULT_DP2_ENDPOINT_LOCAL)) {
+							Logger.debug("Attempting to start the DAISY Pipeline 2 framework...");
+							Setting.set("dp2fwk.state","STARTING");
+							NotificationConnection.pushAll(new Notification("dp2fwk.state", "STARTING"));
 							int exitValue = CommandExecutor.executeCommandWithWorker(DP2_START, new File(dp2fwkDir), 20000L);
 							if (exitValue != 0) {
+								Setting.set("dp2fwk.state","RUNNING");
+								NotificationConnection.pushAll(new Notification("dp2fwk.state", "RUNNING"));
 								Logger.info("Started the DAISY Pipeline 2 framework");
-								return;
+							} else {
+								Setting.set("dp2fwk.state","STOPPED");
+								Logger.debug("Failed to start the DAISY Pipeline 2 framework");
 							}
+							return;
 						}
 					}
 				}
@@ -178,6 +192,17 @@ public class Global extends GlobalSettings {
 //	@Override
 	public void onStop(Application app) {
 		// Application shutdown...
+		if ("server".equals(FirstUse.deployment()))
+			return;
+		
+		String dp2fwkDir = Setting.get("dp2fwk.dir");
+		
+		if (dp2fwkDir == null || "".equals(dp2fwkDir))
+			return;
+		
+		if (Alive.isAlive(DEFAULT_DP2_ENDPOINT_LOCAL)) {
+			CommandExecutor.executeCommandWithWorker(DP2_HALT, new File(dp2fwkDir), 20000L);
+		}
 	}
 
 }
