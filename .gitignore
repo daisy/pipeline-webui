@@ -12,23 +12,29 @@ tmp
 dist
 bin
 lib
+webui/target
+webui/logs
+webui/dist
+webui/bin
+webui/lib
 
 refreshclientlib.sh
 
 # Default directories
-uploads
-local.results
-local.temp
+webui/uploads
+webui/local.results
+webui/local.temp
 
 # Derby database
-dp2webui
-derby.log
+webui/dp2webui
+webui/derby.log
 
 # IDE and editors
 *~
 .idea
 nbproject
 eclipse
+webui/eclipse
 .amateras
 .settings
 .classpath
