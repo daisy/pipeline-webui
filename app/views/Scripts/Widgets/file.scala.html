@@ -1,6 +1,6 @@
 @(arg: org.daisy.pipeline.client.models.script.Argument, script: org.daisy.pipeline.client.models.Script)
 
-@if(arg.sequence){
+@if(arg.sequence==Boolean.TRUE){
 	
 	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
 		<label class="control-label" id="@{arg.kind}-@{arg.name}-label">@arg.nicename</label>
@@ -24,7 +24,7 @@
 					<select style="width:auto;min-width:220px;" id="@{arg.kind}-@{arg.name}-selected" multiple="multiple" size="10" aria-labelledby="@{arg.kind}-@{arg.name}-selected-label @{arg.kind}-@{arg.name}-label">
 					</select>
 				</div>
-				@if(arg.ordered){
+				@if(arg.ordered==Boolean.TRUE){
 					<div class="span" style="padding-top:50px;">
 						<button type="button" id="@{arg.kind}-@{arg.name}-up" class="btn" style="white-space:nowrap; width:120px;"><i class="icon-arrow-up"></i> Move up</button><br/>
 						<button type="button" id="@{arg.kind}-@{arg.name}-down" class="btn" style="white-space:nowrap; width:120px;"><i class="icon-arrow-down"></i> Move down</button>
@@ -38,7 +38,7 @@
 			
 			<script type="text/javascript">
 				$(function(){
-					@if(arg.ordered){
+					@if(arg.ordered==Boolean.TRUE){
 						/* Event handler for "move up"-button. */
 						$("#@{arg.kind}-@{arg.name}-up").click(function() {
 							var options = "#@{arg.kind}-@{arg.name}-selected option";

@@ -1,6 +1,6 @@
 @(arg: org.daisy.pipeline.client.models.script.Argument, script: org.daisy.pipeline.client.models.Script)
 
-@if(arg.sequence){
+@if(arg.sequence==Boolean.TRUE){
 	
 	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
 		<!-- TODO: if ordered sequence; show up/down controls -->

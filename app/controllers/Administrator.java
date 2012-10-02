@@ -199,7 +199,7 @@ public class Administrator extends Controller {
         	
         	String theme = filledForm.field("theme").valueOr("");
         	if (!"".equals(theme)) {
-	        	File themeDir = new File("public/stylesheets/themes/"+theme);
+	        	File themeDir = new File("themes/"+theme);
 	        	if (!themeDir.exists() || !themeDir.isDirectory())
 	        		filledForm.reject("theme", "The theme \""+theme+"\" does not exist.");
         	}
@@ -208,7 +208,7 @@ public class Administrator extends Controller {
         public static List<String> themes = new ArrayList<String>();
         public static void refreshList() {
         	synchronized(themes) {
-	        	File themeDir = new File("public/stylesheets/themes/");
+        		File themeDir = new File("themes/");
 	        	if (!themeDir.isDirectory())
 	        		return;
 	        	

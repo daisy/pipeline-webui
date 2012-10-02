@@ -37,10 +37,12 @@ public class Setting extends Model {
     	return setting.value;
     }
     
-    /** Set the value of a setting */
+    /** Set the value of a setting. If value is null, the setting is deleted. */
     public static void set(String name, String value) {
     	Setting setting = find.where().eq("name", name).findUnique();
     	if (setting == null) {
+    		if (value == null)
+    			return;
     		setting = new Setting();
     		setting.name = name;
     	}
@@ -48,7 +50,10 @@ public class Setting extends Model {
     		setting.value = ObfuscatedString.obfuscate(value);
     	else
     		setting.value = value;
-    	setting.save(Application.datasource);
+    	if (value == null)
+    		setting.delete(Application.datasource);
+    	else
+    		setting.save(Application.datasource);
     }
     
 }

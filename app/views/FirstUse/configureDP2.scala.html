@@ -1,6 +1,6 @@
 @()
 
-@main("First use", "", Array("notifications.js"), Array(), Array()){
+@main("Starting Pipeline 2", "", Array("notifications.js"), Array(), Array()){
 
 <script type="text/javascript" charset="utf-8">
 $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
@@ -8,11 +8,11 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 
 <div class="page-header">
   <h1 id="h1" aria-live="polite">
-  	<span class="state">Configuring DAISY Pipeline 2</span>
+  	<span class="state">Starting DAISY Pipeline 2</span>
   	<span class="FWK_NOT_FOUND state" style="display:none;">Framework not found</span>
   	<span class="PLEASE_STOP_FWK state" style="display:none;">Please stop the framework</span>
   	<span class="UNABLE_TO_START_FWK state" style="display:none;">Unable to start the framework</span>
-  	<span class="SUCCESS state" style="display:none;">Successfully configured the framework!</span>
+  	<span class="SUCCESS state" style="display:none;">Successfully started the framework!</span>
   </h1>
   <div class="progress progress-striped active" id="configurationProgress">
     <div class="bar" style="width: 0%;" id="configurationProgressBar"></div>

@@ -4,6 +4,7 @@
 
 <header class="page-header">
   <h1>Administrator settings</h1>
+  @if(controllers.FirstUse.deployment()=="server"){
   <div class="subnav">
     <ul class="nav nav-pills">
       <li><a href="#usersAndPermissions">Users and Permissions</a></li>
@@ -14,6 +15,7 @@
 	  <li><a href="#branding">Branding</a></li>
     </ul>
   </div>
+  }
   <script type="text/javascript">
 	// http://twitter.github.com/bootstrap/assets/js/application.js
 	// fix sub nav on scroll
@@ -72,76 +74,80 @@
     </div>
 }
 
-<section id="usersAndPermissions" class="tabbable tabs-left">
-	<h2>Users and permissions</h2>
-	<br/>
+@if(controllers.FirstUse.deployment()=="server"){
 	
-	<ul class="nav nav-tabs">
-		<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "global" || play.mvc.Controller.flash("settings.usertab") == null))"><a href="#usertab-global" data-toggle="tab"><i class="icon-globe"></i> <em>Global</em></a></li>
-		<hr/>
+	<section id="usersAndPermissions" class="tabbable tabs-left">
+		<h2>Users and permissions</h2>
+		<br/>
 		
-		<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))"><a href="#usertab-guest" data-toggle="tab"><i class="icon-user"></i> @models.Setting.get("users.guest.name")</a></li>
+		<ul class="nav nav-tabs">
+			<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "global" || play.mvc.Controller.flash("settings.usertab") == null))"><a href="#usertab-global" data-toggle="tab"><i class="icon-globe"></i> <em>Global</em></a></li>
+			<hr/>
+			
+			<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))"><a href="#usertab-guest" data-toggle="tab"><i class="icon-user"></i> @models.Setting.get("users.guest.name")</a></li>
+			
+			@for(user <- userList) {
+				<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.id))"><a href="#usertab-@user.id" data-toggle="tab"><i class="icon-user"></i> @user.name</a></li>
+			}
+			
+			<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "adduser"))"><a href="#usertab-adduser" data-toggle="tab"><i class="icon-plus"></i> <em>Add user</em></a></li>
+		</ul>
 		
-		@for(user <- userList) {
-			<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.id))"><a href="#usertab-@user.id" data-toggle="tab"><i class="icon-user"></i> @user.name</a></li>
-		}
-		
-		<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "adduser"))"><a href="#usertab-adduser" data-toggle="tab"><i class="icon-plus"></i> <em>Add user</em></a></li>
-	</ul>
-	
-	<div class="tab-content">
-		<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == "global" || play.mvc.Controller.flash("settings.usertab") == null))" id="usertab-global">
-			@Forms.userGlobal(forms.globalForm, routes.Administrator.postSettings())
-		</div>
-		
-		<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))" id="usertab-guest">
-			@Forms.userGuest(forms.guestForm, routes.Administrator.postSettings())
-		</div>
-		
-		@for(user <- userList) {
-			<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.id))" id="usertab-@user.id">
-				@Forms.user(forms.userForm, user, routes.Administrator.postSettings(), routes.Administrator.getPostSettings())
+		<div class="tab-content">
+			<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == "global" || play.mvc.Controller.flash("settings.usertab") == null))" id="usertab-global">
+				@Forms.userGlobal(forms.globalForm, routes.Administrator.postSettings())
 			</div>
-		}
-		
-		<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == "adduser"))" id="usertab-adduser">
-			@Forms.userAdd(forms.userForm, routes.Administrator.postSettings())
+			
+			<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))" id="usertab-guest">
+				@Forms.userGuest(forms.guestForm, routes.Administrator.postSettings())
+			</div>
+			
+			@for(user <- userList) {
+				<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.id))" id="usertab-@user.id">
+					@Forms.user(forms.userForm, user, routes.Administrator.postSettings(), routes.Administrator.getPostSettings())
+				</div>
+			}
+			
+			<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == "adduser"))" id="usertab-adduser">
+				@Forms.userAdd(forms.userForm, routes.Administrator.postSettings())
+			</div>
 		</div>
-	</div>
-</section>
-<hr/>
+	</section>
+	<hr/>
+	
+	<br/><br/>
+	<section id="pipeline2WebServiceEndpoint">
+		<h2>Pipeline 2 Web Service endpoint</h2>
+		<br/>
+	  	@views.html.Administrator.Forms.setWS(forms.setWSForm, routes.Administrator.postSettings(), null)
+	</section>
+	<hr/>
+	
+	<br/><br/>
+	<section id="temporaryDirectoryForUploads">
+		<h2>Temporary directory for uploads</h2>
+		<br/>
+		@views.html.Administrator.Forms.setUploadDir(forms.setUploadDirForm, routes.Administrator.postSettings(), null)
+	</section>
+	<hr/>
+	
+	<br/><br/>
+	<section id="eMailSettings">
+		<h2>E-mail settings</h2>
+		<br/>
+		@views.html.Administrator.Forms.configureEmail(forms.configureEmailForm, routes.Administrator.postSettings(), null)
+	</section>
+	<hr/>
+	
+	<br/><br/>
+	<section id="jobCleanup">
+		<h2>Job cleanup</h2>
+		<br/>
+		@views.html.Administrator.Forms.setJobCleanup(forms.setJobCleanupForm, routes.Administrator.postSettings(), null)
+	</section>
+	<hr/>
 
-<br/><br/>
-<section id="pipeline2WebServiceEndpoint">
-	<h2>Pipeline 2 Web Service endpoint</h2>
-	<br/>
-  	@views.html.Administrator.Forms.setWS(forms.setWSForm, routes.Administrator.postSettings(), null)
-</section>
-<hr/>
-
-<br/><br/>
-<section id="temporaryDirectoryForUploads">
-	<h2>Temporary directory for uploads</h2>
-	<br/>
-	@views.html.Administrator.Forms.setUploadDir(forms.setUploadDirForm, routes.Administrator.postSettings(), null)
-</section>
-<hr/>
-
-<br/><br/>
-<section id="eMailSettings">
-	<h2>E-mail settings</h2>
-	<br/>
-	@views.html.Administrator.Forms.configureEmail(forms.configureEmailForm, routes.Administrator.postSettings(), null)
-</section>
-<hr/>
-
-<br/><br/>
-<section id="jobCleanup">
-	<h2>Job cleanup</h2>
-	<br/>
-	@views.html.Administrator.Forms.setJobCleanup(forms.setJobCleanupForm, routes.Administrator.postSettings(), null)
-</section>
-<hr/>
+}
 
 <section id="branding">
 	<h2>Branding</h2>

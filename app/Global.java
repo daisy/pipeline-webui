@@ -23,8 +23,8 @@ public class Global extends GlobalSettings {
 	public static final String DEFAULT_DP2_ENDPOINT_LOCAL = "http://localhost:8181/ws";
 	public static final String DEFAULT_DP2_ENDPOINT_REMOTE = "http://localhost:8182/ws";
 	public static final String SLASH = System.getProperty("file.separator");
-	public static final String DP2_START = "/".equals(SLASH) ? "cli/dp2 help" : "start cmd /c cli\\dp2.exe help";
-	public static final String DP2_HALT = "/".equals(SLASH) ? "cli/dp2 halt" : "start cmd /c cli\\dp2.exe halt";
+	public static final String DP2_START = "/".equals(SLASH) ? "./dp2 help" : "start cmd /c dp2.exe help";
+	public static final String DP2_HALT = "/".equals(SLASH) ? "./dp2 halt" : "start cmd /c dp2.exe halt";
 	
 	public synchronized void beforeStart(Application app) {
 		Logger.debug("Application is about to start...");
@@ -34,6 +34,10 @@ public class Global extends GlobalSettings {
 	public synchronized void onStart(Application app) {
 		// Application has started...
 		final String datasource = Configuration.root().getString("dp2.datasource");
+		
+		if ("desktop".equals(FirstUse.deployment())) {
+			Setting.set("dp2fwk.dir", null); // reconfigure fwk dir each time, in case the install dir has changed
+		}
 		
 		if (Setting.get("branding.title") == null)
 			Setting.set("branding.title", "DAISY Pipeline 2");
@@ -160,7 +164,6 @@ public class Global extends GlobalSettings {
 				Duration.create(1, TimeUnit.MINUTES),
 				new Runnable() {
 					public void run() {
-						Logger.debug("checking if the fwk is online");
 						if (!"desktop".equals(FirstUse.deployment()))
 							return;
 						
@@ -173,7 +176,7 @@ public class Global extends GlobalSettings {
 							Logger.debug("Attempting to start the DAISY Pipeline 2 framework...");
 							Setting.set("dp2fwk.state","STARTING");
 							NotificationConnection.pushAll(new Notification("dp2fwk.state", "STARTING"));
-							int exitValue = CommandExecutor.executeCommandWithWorker(DP2_START, new File(dp2fwkDir), 20000L);
+							int exitValue = CommandExecutor.executeCommandWithWorker(DP2_START, new File(dp2fwkDir, "cli"), 20000L);
 							if (exitValue != 0) {
 								Setting.set("dp2fwk.state","RUNNING");
 								NotificationConnection.pushAll(new Notification("dp2fwk.state", "RUNNING"));
@@ -201,7 +204,7 @@ public class Global extends GlobalSettings {
 			return;
 		
 		if (Alive.isAlive(DEFAULT_DP2_ENDPOINT_LOCAL)) {
-			CommandExecutor.executeCommandWithWorker(DP2_HALT, new File(dp2fwkDir), 20000L);
+			CommandExecutor.executeCommandWithWorker(DP2_HALT, new File(dp2fwkDir, "cli"), 20000L);
 		}
 	}
 

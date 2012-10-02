@@ -27,7 +27,7 @@ public class Login extends Controller {
     public static Result login() {
     	
     	if (FirstUse.isFirstUse())
-    		return redirect(routes.FirstUse.getFirstUse());
+    		return redirect(routes.FirstUse.getFirstUse());//loop
     	
     	try {
     		Long.parseLong(Controller.session("userid"));

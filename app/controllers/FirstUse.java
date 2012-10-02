@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import org.daisy.pipeline.client.Alive;
@@ -30,12 +29,12 @@ import models.*;
  */
 public class FirstUse extends Controller {
 	
-	// Note: These are mirrored in java
+	// Note: These are mirrored in Global.java
 	public static final String DEFAULT_DP2_ENDPOINT_LOCAL = "http://localhost:8181/ws";
 	public static final String DEFAULT_DP2_ENDPOINT_REMOTE = "http://localhost:8182/ws";
 	public static final String SLASH = System.getProperty("file.separator");
-	public static final String DP2_START = "/".equals(SLASH) ? "cli/dp2 help" : "start cmd /c cli\\dp2.exe help";
-	public static final String DP2_HALT = "/".equals(SLASH) ? "cli/dp2 halt" : "start cmd /c cli\\dp2.exe halt";
+	public static final String DP2_START = "/".equals(SLASH) ? "./dp2 help" : "start cmd /c dp2.exe help";
+	public static final String DP2_HALT = "/".equals(SLASH) ? "./dp2 halt" : "start cmd /c dp2.exe halt";
 	
 	/**
 	 * GET /firstuse
@@ -49,12 +48,21 @@ public class FirstUse extends Controller {
 				return ok(views.html.FirstUse.setDeployment.render(form(Administrator.SetDeploymentForm.class)));
 			else if ("server".equals(deployment())) {
 				return ok(views.html.FirstUse.createAdmin.render(form(Administrator.CreateAdminForm.class)));
+			} else if ("desktop".equals(deployment())) {
+				User admin = User.find.where().eq("email", "email@example.com").findUnique();
+				if (admin == null) {
+					admin = new User("email@example.com", "Administrator", "password", true);
+				} else {
+					admin.admin = true;
+				}
+				admin.save(Application.datasource);
+				admin.login(session());
 			}
 		}
 		
 		User user = User.authenticate(request(), session());
 		if (user == null || !user.admin) {
-			return redirect(routes.Login.login());
+			return redirect(routes.Login.login());//loop
 		}
 		
 		if ("desktop".equals(deployment()) && (Setting.get("dp2fwk.dir") == null || "".equals(Setting.get("dp2fwk.dir")))) {
@@ -180,7 +188,7 @@ public class FirstUse extends Controller {
 	 * @return
 	 */
 	public static boolean isFirstUse() {
-		return User.findAll().size() == 0 || "desktop".equals(deployment()) && Setting.get("dp2ws.endpoint") == null;
+		return User.findAll().size() == 0 || "desktop".equals(deployment()) && Setting.get("dp2fwk.dir") == null;
 	}
 	
 	private static String deployment = null;
@@ -210,34 +218,30 @@ public class FirstUse extends Controller {
 					result.put("time", new Date());
 					
 					lastLocatorRun = new Date();
-					NotificationConnection.push(userId, browserId, new Notification("dp2locator", 5));
-					if (Setting.get("dp2ws.endpoint") != null) {
+					NotificationConnection.pushAll(new Notification("dp2locator", 5));
+					if (Setting.get("dp2fwk.dir") != null) {
 						result.put("state", "SUCCESS"); // endpoint already configured
 						result.put("endpoint", Setting.get("dp2ws.endpoint"));
-						NotificationConnection.push(userId, browserId, new Notification("dp2locator", result));
+						NotificationConnection.pushAll(new Notification("dp2locator", result));
 						dp2Locator.cancel();
+						return;
 					}
 					
-					NotificationConnection.push(userId, browserId, new Notification("dp2locator", 10));
+					NotificationConnection.pushAll(new Notification("dp2locator", 10));
 					File dp2dirFile = null;
 					try {
-						dp2dirFile = Play.application().getFile("").getParentFile();
-						if (dp2dirFile == null || !dp2dirFile.isDirectory()) {
+						dp2dirFile = Play.application().getFile("").getAbsoluteFile().getParentFile().getParentFile();
+						if (dp2dirFile != null && !new File(dp2dirFile.getAbsolutePath()+SLASH+"cli"+SLASH+"dp2").exists()) {
 							dp2dirFile = null;
-						} else if (!"daisy-pipeline".equals(dp2dirFile.getName())) {
-							dp2dirFile = new File(Play.application().getFile("").getParentFile(), "daisy-pipeline");
-							if (dp2dirFile == null || !dp2dirFile.isDirectory() || !"daisy-pipeline".equals(dp2dirFile.getName())
-									|| !new File(dp2dirFile.getAbsolutePath()+SLASH+"cli"+SLASH+"dp2").exists())
-								dp2dirFile = null;
 						}
 					} catch (NullPointerException e) {
 						// directory not found
 					}
-					dp2dirFile = new File("/home/jostein/Skrivebord/pipeline2-1.3/daisy-pipeline"); //TEMP
+					if (Play.isDev()) dp2dirFile = new File("/home/jostein/Skrivebord/pipeline2-1.4-beta"); //TEMP
 					
 					if (dp2dirFile == null) {
 						result.put("state", "FWK_NOT_FOUND"); // fwk dir not found
-						NotificationConnection.push(userId, browserId, new Notification("dp2locator", result));
+						NotificationConnection.pushAll(new Notification("dp2locator", result));
 						lastLocatorRun = null;
 						return;
 					}
@@ -248,39 +252,42 @@ public class FirstUse extends Controller {
 						result.put("dp2dir", dp2dirFile.getAbsolutePath());
 					}
 					
-					NotificationConnection.push(userId, browserId, new Notification("dp2locator", 15));
+					NotificationConnection.pushAll(new Notification("dp2locator", 15));
 					if (Alive.isAlive(DEFAULT_DP2_ENDPOINT_REMOTE)) {
 						result.put("state", "PLEASE_STOP_FWK"); // please stop fwk (DEFAULT_DP2_ENDPOINT_REMOTE)
 						result.put("endpoint", DEFAULT_DP2_ENDPOINT_REMOTE);
-						NotificationConnection.push(userId, browserId, new Notification("dp2locator", result));
+						NotificationConnection.pushAll(new Notification("dp2locator", result));
 						lastLocatorRun = null;
 						return;
 					}
 					
-					NotificationConnection.push(userId, browserId, new Notification("dp2locator", 40));
+					NotificationConnection.pushAll(new Notification("dp2locator", 40));
 					result.put("endpoint", DEFAULT_DP2_ENDPOINT_LOCAL);
 					if (Alive.isAlive(DEFAULT_DP2_ENDPOINT_LOCAL)) {
 						Logger.debug("executing "+DP2_HALT);
-						int exitValue = CommandExecutor.executeCommandWithWorker(DP2_HALT, dp2dirFile, 20000L);
+						int exitValue = CommandExecutor.executeCommandWithWorker(DP2_HALT, new File(dp2dirFile, "cli"), 20000L);
 						Logger.debug("exit value from "+DP2_HALT+" is "+exitValue);
 						if (exitValue != 0) {
 							result.put("state", "PLEASE_STOP_FWK"); // please stop fwk (DEFAULT_DP2_ENDPOINT_LOCAL)
-							NotificationConnection.push(userId, browserId, new Notification("dp2locator", result));
+							NotificationConnection.pushAll(new Notification("dp2locator", result));
 							lastLocatorRun = null;
 							return;
 						}
 					}
 					
-					NotificationConnection.push(userId, browserId, new Notification("dp2locator", 75));
-					int exitValue = CommandExecutor.executeCommandWithWorker(DP2_START, dp2dirFile, 20000L);
+					NotificationConnection.pushAll(new Notification("dp2locator", 75));
+					Logger.debug("executing "+DP2_START);
+					int exitValue = CommandExecutor.executeCommandWithWorker(DP2_START, new File(dp2dirFile, "cli"), 20000L);
+					Logger.debug("exit value from "+DP2_START+" is "+exitValue);
 					if (exitValue != 0) {
 						result.put("state", "UNABLE_TO_START_FWK"); // unable to start fwk; fwk is probably misconfigured
-						NotificationConnection.push(userId, browserId, new Notification("dp2locator", result));
+						NotificationConnection.pushAll(new Notification("dp2locator", result));
 						lastLocatorRun = null;
 						return;
 					}
 					
-					NotificationConnection.push(userId, browserId, new Notification("dp2locator", 100));
+					NotificationConnection.pushAll(new Notification("dp2locator", 100));
+					Setting.set("uploads", System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"));
 					Setting.set("dp2ws.endpoint", DEFAULT_DP2_ENDPOINT_LOCAL);
 					Setting.set("dp2ws.authid", "");
 					Setting.set("dp2ws.secret", "");
@@ -289,7 +296,7 @@ public class FirstUse extends Controller {
 					Setting.set("dp2ws.sameFilesystem", "true");
 					Setting.set("dp2fwk.dir", dp2dirFile.getAbsolutePath());
 					result.put("state", "SUCCESS"); // successfully configured the framework/CLI communication
-					NotificationConnection.push(userId, browserId, new Notification("dp2locator", result));
+					NotificationConnection.pushAll(new Notification("dp2locator", result));
 					
 					dp2Locator.cancel();
 					lastLocatorRun = null;

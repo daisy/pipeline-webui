@@ -32,7 +32,7 @@ public class Application extends Controller {
 	public static Result theme(String file) {
 		if (file.endsWith(".css")) {
 			String theme = Setting.get("branding.theme");
-			if (new File("public/stylesheets/themes/"+theme+file).exists())
+			if (new File("public/stylesheets/themes/"+theme+file).exists()) //TODO: fix for zip dist
 				return redirect(routes.Assets.at("stylesheets/themes/"+theme+file));
 			return redirect(routes.Assets.at("stylesheets/"+file));
 		}
