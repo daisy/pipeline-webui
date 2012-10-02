@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://www.idpf.org/2007/opf"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         prefix="dc: http://purl.org/dc/elements/1.1/"
+         unique-identifier="pub-id"
+         version="3.0">
+   <metadata>
+      <dc:identifier id="pub-id">29654cc6-3eef-454d-9112-c0ebbdcc5cf0</dc:identifier>
+      <meta property="dcterms:modified">2012-10-01T13:18:15Z</meta>
+      <meta refines="#pub-id" property="identifier-type" scheme="xsd:string">uuid</meta>
+      <dc:title id="d427e52">Alice's Adventures In Wonderland</dc:title>
+      <dc:language>en</dc:language>
+      <meta property="dc:publisher">CSU</meta>
+      <meta property="dc:date">2010-03-27T15:50:05Z</meta>
+      <meta property="dc:creator">Lewis Carroll</meta>
+   </metadata>
+   <manifest>
+      <item id="item_1"
+            media-type="application/xhtml+xml"
+            href="toc.xhtml"
+            properties="nav"/>
+      <item id="item_2" media-type="application/xhtml+xml" href="alice-1.xhtml"/>
+      <item id="item_3" media-type="application/xhtml+xml" href="alice-2.xhtml"/>
+      <item media-type="image/png" id="item_4" href="images/alice01a.png"/>
+      <item media-type="image/png" id="item_5" href="images/alice02a.png"/>
+      <item media-type="image/png" id="item_6" href="images/alice03a.png"/>
+      <item media-type="image/png" id="item_7" href="images/alice04a.png"/>
+      <item media-type="image/png" id="item_8" href="images/alice05a.png"/>
+      <item media-type="image/png" id="item_9" href="images/alice06a.png"/>
+      <item media-type="image/png" id="item_10" href="images/alice07a.png"/>
+      <item media-type="image/png" id="item_11" href="images/alice08a.png"/>
+      <item media-type="image/png" id="item_12" href="images/alice10a.png"/>
+      <item media-type="image/png" id="item_13" href="images/alice09a.png"/>
+   </manifest>
+   <spine>
+      <itemref idref="item_2" id="itemref_1"/>
+      <itemref idref="item_3" id="itemref_2"/>
+   </spine>
+</package>

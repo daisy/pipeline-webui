@@ -1,0 +1,7 @@
+
+no-pagenum &xpath(//louis:no-pagenum)
+contentsheader &xpath(//louis:toc[parent::louis:no-pagenum])
+skip &xpath(//louis:toc[not(parent::louis:no-pagenum)])
+preformatted-line &xpath(//louis:preformatted//louis:line)
+pagenum &xpath(//louis:print-page)
+            

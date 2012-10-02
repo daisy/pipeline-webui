@@ -1,0 +1,17 @@
+
+style no-pagenum
+    braillePageNumberFormat blank
+
+style contentsheader
+    leftMargin 0
+    rightMargin 0
+    firstLineIndent 0
+    format leftJustified
+
+style preformatted-line
+    leftMargin 0
+    rightMargin 0
+    firstLineIndent 0
+    format leftJustified
+    skipNumberLines yes
+            
