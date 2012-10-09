@@ -91,7 +91,8 @@
                                 <copy todir="target/server/daisy-pipeline-webui/dp2webui">
                                     <fileset dir="dist-resources/server/dp2webui"/>
                                 </copy>
-                                <copy file="dist-resources/server/start" todir="target/server/daisy-pipeline-webui/"/>
+                                <copy file="dist-resources/server/start" tofile="target/server/daisy-pipeline-webui/start_"/>
+                                <move file="target/server/daisy-pipeline-webui/start_" tofile="target/server/daisy-pipeline-webui/start"/>
                                 <copy file="dist-resources/server/start.bat" todir="target/server/daisy-pipeline-webui/"/>
                                 <chmod verbose="true" file="target/server/daisy-pipeline-webui/start" perm="ugo+rx"/>
                                 <zip basedir="target/server/daisy-pipeline-webui" destfile="target/pipeline2-webui-${project.version}-server.zip"/>
@@ -106,7 +107,8 @@
                                 <copy todir="target/desktop/daisy-pipeline/webui/dp2webui">
                                     <fileset dir="dist-resources/desktop/dp2webui"/>
                                 </copy>
-                                <copy file="dist-resources/desktop/start" todir="target/desktop/daisy-pipeline/webui/"/>
+                                <copy file="dist-resources/desktop/start" tofile="target/desktop/daisy-pipeline/webui/start_"/>
+                                <move file="target/desktop/daisy-pipeline/webui/start_" tofile="target/desktop/daisy-pipeline/webui/start"/>
                                 <copy file="dist-resources/desktop/start.bat" todir="target/desktop/daisy-pipeline/webui/"/>
                                 <chmod verbose="true" file="target/desktop/daisy-pipeline/webui/start" perm="ugo+rx"/>
                                 <zip basedir="target/desktop" destfile="target/pipeline2-webui-${project.version}-desktop.zip"/>
