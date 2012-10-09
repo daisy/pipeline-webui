@@ -14,6 +14,7 @@ import javax.persistence.*;
 
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
+import org.w3c.dom.Document;
 
 import controllers.Application;
 
@@ -21,6 +22,7 @@ import akka.actor.Cancellable;
 import akka.util.Duration;
 import play.data.validation.*;
 import play.libs.Akka;
+import utils.XML;
 
 @Entity
 public class Job extends Model implements Comparable<Job> {
@@ -104,6 +106,8 @@ public class Job extends Model implements Comparable<Job> {
 				Duration.create(1000, TimeUnit.MILLISECONDS),
 				new Runnable() {
 					public void run() {
+						Application.lastRequest = new Date();
+						
 						Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) + 1 : 0;
 						Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
 						
@@ -117,7 +121,9 @@ public class Job extends Model implements Comparable<Job> {
 								return;
 							}
 							
-							job = new org.daisy.pipeline.client.models.Job(wsJob.asXml());
+							Document xml = wsJob.asXml();
+							job = new org.daisy.pipeline.client.models.Job(xml);
+							Logger.debug(XML.toString(xml));
 							
 						} catch (Pipeline2WSException e) {
 							Logger.error(e.getMessage(), e);

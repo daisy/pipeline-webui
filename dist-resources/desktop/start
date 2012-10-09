@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+if [ "BROWSER" != "$1" ]
+then
+    exec $0 BROWSER &
+    java -Dconfig.file=`dirname $0`/application.conf $@ -cp "`dirname $0`/lib/*" play.core.server.NettyServer `dirname $0`
+else
+    echo "Starting browser in 10 seconds..."
+    sleep 10
+    if [ "`uname -s`" == "Darwin" ]
+    then
+        open "http://localhost:9000/"
+    else
+        xdg-open "http://localhost:9000/"
+    fi
+fi
+

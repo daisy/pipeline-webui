@@ -141,9 +141,10 @@ public class User extends Model {
 	public static User findById(long id) {
 		return find.where().eq("id", id).findUnique();
 	}
-
+	
 	/** Authenticate a user. */
 	public static User authenticate(Request request, Session session) {
+		Application.lastRequest = new Date();
 		User user;
 		
 		String idString = session.get("userid"); // login with session variables
@@ -205,11 +206,16 @@ public class User extends Model {
 	}
 
 	public void login(Session session) {
-		session.put("userid", id+"");
-    	session.put("name", name);
-    	session.put("email", email);
-    	session.put("password", password);
-    	session.put("admin", admin+"");
+		if (id != null) {
+			session.put("userid", id+"");
+	    	session.put("name", name);
+	    	session.put("email", email);
+	    	session.put("password", password);
+	    	session.put("admin", admin+"");
+		} else {
+			session.remove("userid");
+			Logger.warn("Could not log in user '"+name+"' ('"+email+"'); userid is null.");
+		}
 	}
 
 	/** Authenticate a user with an unencrypted password */

@@ -173,10 +173,8 @@ public class Jobs extends Controller {
 			try {
 				Pipeline2WSResponse result = org.daisy.pipeline.client.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
 				
-				// TODO: check content type of incoming stream? Implement result.getContentType() ?
-				
 				response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
-				response().setContentType("application/zip");
+				response().setContentType("application/zip"); // we could use result.contentType here if we wanted to...
 	
 				return ok(result.asStream());
 				
@@ -420,7 +418,7 @@ public class Jobs extends Controller {
 		}
 		
 		Map<String,String> callbacks = new HashMap<String,String>();
-		if (play.Play.isDev()) { // TODO: only in dev until the callback API is fully implemented
+		if (play.Play.isDev() && false) { // TODO: only in dev until the callback API is fully implemented
 			callbacks.put("messages", routes.Callbacks.postCallback("messages").absoluteURL(request()));
 			callbacks.put("status", routes.Callbacks.postCallback("status").absoluteURL(request()));
 		}

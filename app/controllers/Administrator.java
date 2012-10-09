@@ -221,6 +221,7 @@ public class Administrator extends Controller {
 			String theme = filledForm.field("theme").valueOr("");
         	if (theme.length() > 0)
         		theme += "/";
+        	Application.themeName = theme;
         	Setting.set("branding.theme", theme);
         	Setting.set("branding.title", filledForm.field("title").valueOr(Setting.get("branding.title")));
 		}
@@ -584,14 +585,14 @@ public class Administrator extends Controller {
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
-	        	String theme = Setting.get("branding.theme");
+	        	String theme = Application.themeName();
 	        	String title = Setting.get("branding.title");
 	        	
 	        	Administrator.ConfigureBrandingForm.save(filledForm);
 	        	
 	        	String successString = "";
-	        	if (!theme.equals(Setting.get("branding.theme")))
-	        		successString += "Theme changed to "+("".equals(Setting.get("branding.theme"))?"default":"\""+Setting.get("branding.theme").substring(0, Setting.get("branding.theme").length()-1)+"\"")+" !";
+	        	if (!theme.equals(Application.themeName()))
+	        		successString += "Theme changed to "+("".equals(Application.themeName())?"default":"\""+Application.themeName().substring(0, Application.themeName().length()-1)+"\"")+" !";
 	        	if (!title.equals(Setting.get("branding.title")))
 	        		successString += " Title changed to \""+Setting.get("branding.title")+"\" !";
 	        	flash("success", successString);

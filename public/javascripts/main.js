@@ -15,10 +15,7 @@ function toggleRadio(idPrefix, state, defaultState) {
 
 function toggleMultiRadio(classPrefix, value, defaultValue) {
 	$('#'+classPrefix+'-value').val(value);
-	console.log('.'+classPrefix+'-btn');
 	$('.'+classPrefix+'-btn').each(function(index, btn) {
-		console.log($(btn).attr('aria-checked'));
-		console.log('if ('+$(btn).val()+' === '+value+')', $(btn));
 		if ($(btn).val() === value) {
 			$(btn).addClass('active');
 			$(btn).attr('aria-checked','true');
@@ -26,7 +23,6 @@ function toggleMultiRadio(classPrefix, value, defaultValue) {
 			$(btn).removeClass('active');
 			$(btn).attr('aria-checked','false');
 		}
-		console.log("            --->           "+$(value).attr('aria-checked'));
 	});
 	toggleChanged(classPrefix, value, defaultValue);
 }

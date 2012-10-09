@@ -13,7 +13,6 @@ import akka.actor.Cancellable;
 import akka.util.Duration;
 
 import play.Logger;
-import play.Play;
 import play.libs.Akka;
 import play.mvc.*;
 import play.data.*;
@@ -33,8 +32,8 @@ public class FirstUse extends Controller {
 	public static final String DEFAULT_DP2_ENDPOINT_LOCAL = "http://localhost:8181/ws";
 	public static final String DEFAULT_DP2_ENDPOINT_REMOTE = "http://localhost:8182/ws";
 	public static final String SLASH = System.getProperty("file.separator");
-	public static final String DP2_START = "/".equals(SLASH) ? "./dp2 help" : "start cmd /c dp2.exe help";
-	public static final String DP2_HALT = "/".equals(SLASH) ? "./dp2 halt" : "start cmd /c dp2.exe halt";
+	public static final String DP2_START = "/".equals(SLASH) ? "./dp2 help" : "cmd /c start /B cmd /c dp2.exe help";
+	public static final String DP2_HALT = "/".equals(SLASH) ? "./dp2 halt" : "cmd /c start /B cmd /c dp2.exe halt";
 	
 	/**
 	 * GET /firstuse
@@ -43,7 +42,7 @@ public class FirstUse extends Controller {
 	public static Result getFirstUse() {
 		
 		if (isFirstUse()) {
-			session("userid", null);
+			session().remove("userid");
 			if (!"desktop".equals(deployment()) && !"server".equals(deployment()))
 				return ok(views.html.FirstUse.setDeployment.render(form(Administrator.SetDeploymentForm.class)));
 			else if ("server".equals(deployment())) {
@@ -230,14 +229,13 @@ public class FirstUse extends Controller {
 					NotificationConnection.pushAll(new Notification("dp2locator", 10));
 					File dp2dirFile = null;
 					try {
-						dp2dirFile = Play.application().getFile("").getAbsoluteFile().getParentFile().getParentFile();
+						dp2dirFile = new File("").getAbsoluteFile().getParentFile();
 						if (dp2dirFile != null && !new File(dp2dirFile.getAbsolutePath()+SLASH+"cli"+SLASH+"dp2").exists()) {
 							dp2dirFile = null;
 						}
 					} catch (NullPointerException e) {
 						// directory not found
 					}
-					if (Play.isDev()) dp2dirFile = new File("/home/jostein/Skrivebord/pipeline2-1.4-beta"); //TEMP
 					
 					if (dp2dirFile == null) {
 						result.put("state", "FWK_NOT_FOUND"); // fwk dir not found

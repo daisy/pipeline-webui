@@ -25,14 +25,14 @@
 				<label class="control-label" id="configureBranding-theme-label" for="configureBranding-theme" aria-label="configureBranding-theme">Visual theme</label>
 				<div class="controls" aria-role="radiogroup" aria-labelledby="configureBranding-theme-label" id="configureBranding-theme">
 					<label class="radio">
-						<input type="radio" name="theme" value="" @if(Setting.get("branding.theme") == ""){
+						<input type="radio" name="theme" value="" @if(Application.themeName() == ""){
 							checked=""
 						}/>
 						Default
 					</label>
 					@for(theme <- controllers.Administrator.ConfigureBrandingForm.themes){
 						<label class="radio">
-							@if(Setting.get("branding.theme") == theme+"/"){
+							@if(Application.themeName() == theme+"/"){
 								<input type="radio" name="theme" value="@theme" checked=""/> <em>@theme</em>
 							}else{
 								<input type="radio" name="theme" value="@theme"/> @theme

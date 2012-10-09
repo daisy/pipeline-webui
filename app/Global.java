@@ -23,11 +23,11 @@ public class Global extends GlobalSettings {
 	public static final String DEFAULT_DP2_ENDPOINT_LOCAL = "http://localhost:8181/ws";
 	public static final String DEFAULT_DP2_ENDPOINT_REMOTE = "http://localhost:8182/ws";
 	public static final String SLASH = System.getProperty("file.separator");
-	public static final String DP2_START = "/".equals(SLASH) ? "./dp2 help" : "start cmd /c dp2.exe help";
-	public static final String DP2_HALT = "/".equals(SLASH) ? "./dp2 halt" : "start cmd /c dp2.exe halt";
+	public static final String DP2_START = "/".equals(SLASH) ? "./dp2 help" : "cmd /c start /B cmd /c dp2.exe help";
+	public static final String DP2_HALT = "/".equals(SLASH) ? "./dp2 halt" : "cmd /c start /B cmd /c dp2.exe halt";
 	
 	public synchronized void beforeStart(Application app) {
-		Logger.debug("Application is about to start...");
+		
 	}
 	
 //	@Override
@@ -38,6 +38,9 @@ public class Global extends GlobalSettings {
 		if ("desktop".equals(FirstUse.deployment())) {
 			Setting.set("dp2fwk.dir", null); // reconfigure fwk dir each time, in case the install dir has changed
 		}
+		
+		if (User.findAll().size() > 0 && FirstUse.deployment() == null)
+			Setting.set("deployment", "server");
 		
 		if (Setting.get("branding.title") == null)
 			Setting.set("branding.title", "DAISY Pipeline 2");
@@ -68,7 +71,7 @@ public class Global extends GlobalSettings {
 								
 								for (int c = browsers.size()-1; c >= 0; c--) {
 									if (!browsers.get(c).isAlive()) {
-										Logger.debug("Browser: user #"+userId+" timed out browser window #"+browsers.get(c).browserId+" (last read: "+browsers.get(c).lastRead+")");
+//										Logger.debug("Browser: user #"+userId+" timed out browser window #"+browsers.get(c).browserId+" (last read: "+browsers.get(c).lastRead+")");
 										browsers.remove(c);
 									}
 								}
@@ -156,40 +159,81 @@ public class Global extends GlobalSettings {
 				}
 			);
 		
-		// If running in desktop mode; restart DP2 automatically if it crashes
 		if ("server".equals(FirstUse.deployment())) Setting.set("dp2fwk.state","RUNNING"); // assume that it is running when in server mode
 		else Setting.set("dp2fwk.state","STOPPED");
-		Akka.system().scheduler().schedule(
-				Duration.create(0, TimeUnit.SECONDS),
-				Duration.create(1, TimeUnit.MINUTES),
-				new Runnable() {
-					public void run() {
-						if (!"desktop".equals(FirstUse.deployment()))
-							return;
-						
-						String dp2fwkDir = Setting.get("dp2fwk.dir");
-						
-						if (dp2fwkDir == null || "".equals(dp2fwkDir))
-							return;
-						
-						if (!Alive.isAlive(DEFAULT_DP2_ENDPOINT_LOCAL)) {
-							Logger.debug("Attempting to start the DAISY Pipeline 2 framework...");
-							Setting.set("dp2fwk.state","STARTING");
-							NotificationConnection.pushAll(new Notification("dp2fwk.state", "STARTING"));
-							int exitValue = CommandExecutor.executeCommandWithWorker(DP2_START, new File(dp2fwkDir, "cli"), 20000L);
-							if (exitValue != 0) {
+		
+		if (!"server".equals(FirstUse.deployment())) {
+			
+			// If running in desktop mode; restart DP2 automatically if it crashes
+			Akka.system().scheduler().schedule(
+					Duration.create(0, TimeUnit.SECONDS),
+					Duration.create(1, TimeUnit.MINUTES),
+					new Runnable() {
+						public void run() {
+							if ("server".equals(FirstUse.deployment()))
 								Setting.set("dp2fwk.state","RUNNING");
-								NotificationConnection.pushAll(new Notification("dp2fwk.state", "RUNNING"));
-								Logger.info("Started the DAISY Pipeline 2 framework");
-							} else {
-								Setting.set("dp2fwk.state","STOPPED");
-								Logger.debug("Failed to start the DAISY Pipeline 2 framework");
+							if (!"desktop".equals(FirstUse.deployment()))
+								return;
+							
+							String dp2fwkDir = Setting.get("dp2fwk.dir");
+							
+							if (dp2fwkDir == null || "".equals(dp2fwkDir))
+								return;
+							
+							if (!Alive.isAlive(DEFAULT_DP2_ENDPOINT_LOCAL)) {
+								Logger.info("Attempting to start the DAISY Pipeline 2 framework...");
+								Setting.set("dp2fwk.state","STARTING");
+								NotificationConnection.pushAll(new Notification("dp2fwk.state", "STARTING"));
+								int exitValue = CommandExecutor.executeCommandWithWorker(DP2_START, new File(dp2fwkDir, "cli"), 20000L);
+								if (exitValue != 0) {
+									Setting.set("dp2fwk.state","RUNNING");
+									NotificationConnection.pushAll(new Notification("dp2fwk.state", "RUNNING"));
+									Logger.info("Started the DAISY Pipeline 2 framework");
+								} else {
+									Setting.set("dp2fwk.state","STOPPED");
+									Logger.info("Failed to start the DAISY Pipeline 2 framework");
+								}
+								return;
 							}
-							return;
 						}
 					}
-				}
-				);
+					);
+		
+			// If running in desktop mode; shutdown after a period of inactivity
+			Akka.system().scheduler().schedule(
+					Duration.create(5, TimeUnit.MINUTES),
+					Duration.create(1, TimeUnit.MINUTES),
+					new Runnable() {
+						public void run() {
+							if (!"desktop".equals(FirstUse.deployment()))
+								return;
+							
+							if (new Date(new Date().getTime() - 300000L).after(controllers.Application.lastRequest)) {
+								// after 5 minutes of inactivity; shutdown
+								
+								// DP2 framework
+								String dp2fwkDir = Setting.get("dp2fwk.dir");
+								if (dp2fwkDir != null && !"".equals(dp2fwkDir)) {
+									Logger.info("Attempting to stop the DAISY Pipeline 2 framework...");
+									Setting.set("dp2fwk.state","STOPPING");
+									NotificationConnection.pushAll(new Notification("dp2fwk.state", "STOPPING"));
+									int exitValue = CommandExecutor.executeCommandWithWorker(DP2_HALT, new File(dp2fwkDir, "cli"), 20000L);
+									if (exitValue != 0) {
+										Setting.set("dp2fwk.state","STOPPED");
+										NotificationConnection.pushAll(new Notification("dp2fwk.state", "STOPPED"));
+										Logger.info("Halted the DAISY Pipeline 2 framework");
+									} else {
+										Setting.set("dp2fwk.state","RUNNING");
+										Logger.info("Failed to halt the DAISY Pipeline 2 framework");
+									}
+								}
+								
+								// Web UI
+								System.exit(0);
+							}
+						}
+					});
+		}
 	}
 
 //	@Override
