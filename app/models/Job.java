@@ -108,7 +108,7 @@ public class Job extends Model implements Comparable<Job> {
 					public void run() {
 						Application.lastRequest = new Date();
 						
-						Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) + 1 : 0;
+						Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) : 0;
 						Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
 						
 						Pipeline2WSResponse wsJob;
