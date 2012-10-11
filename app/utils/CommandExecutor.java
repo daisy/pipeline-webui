@@ -52,6 +52,8 @@ public class CommandExecutor {
      */
     public static int executeCommandWithWorker(final String command, final File cwd, final long timeOut) {
     	
+    	Logger.info(cwd+" $ "+command);
+    	
         try
         {
             // create the process which will run the command

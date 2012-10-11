@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    
+
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>org.daisy</groupId>
         <artifactId>daisy</artifactId>
         <version>2</version>
         <relativePath/>
     </parent>
-    
+
     <groupId>org.daisy.pipeline</groupId>
     <artifactId>pipeline2-webui</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>play2</packaging>
-    
+
     <name>DAISY Pipeline 2 :: Web User Interface</name>
     <description>A web-based user interface for the DAISY Pipeline 2.</description>
     <url>https://github.com/daisy-consortium/pipeline-webui</url>
@@ -24,105 +24,80 @@
     	<url>http://www.daisy.org/</url>
     </organization>
     <licenses>
-    	<license>
-      		<name>GNU Lesser General Public License, Version 3</name>
-	      	<url>http://www.gnu.org/copyleft/lesser.html</url>
-      		<distribution>manual</distribution>
-    	</license>
-  	</licenses>
-    
+        <license>
+            <name>GNU Lesser General Public License, Version 3</name>
+            <url>http://www.gnu.org/copyleft/lesser.html</url>
+            <distribution>manual</distribution>
+        </license>
+    </licenses>
+
     <mailingLists>
-    	<mailingList>
-      		<name>DAISY Pipeline Developers</name>
-	      	<subscribe>http://groups.google.com/group/daisy-pipeline-dev/subscribe</subscribe>
-      		<unsubscribe>daisy-pipeline-dev+unsubscribe@googlegroups.com</unsubscribe>
-	      	<post>daisy-pipeline-dev@googlegroups.com</post>
-	      	<archive>http://groups.google.com/group/daisy-pipeline-dev</archive>
-	   	</mailingList>
-  	</mailingLists>
-  	
-  	<issueManagement>
-    	<system>Google Code Issue Tracker</system>
-	    <url>http://code.google.com/p/daisy-pipeline/issues/list</url>
-  	</issueManagement>
-    
+        <mailingList>
+            <name>DAISY Pipeline Developers</name>
+            <subscribe>http://groups.google.com/group/daisy-pipeline-dev/subscribe</subscribe>
+            <unsubscribe>daisy-pipeline-dev+unsubscribe@googlegroups.com</unsubscribe>
+            <post>daisy-pipeline-dev@googlegroups.com</post>
+            <archive>http://groups.google.com/group/daisy-pipeline-dev</archive>
+        </mailingList>
+    </mailingLists>
+
+    <issueManagement>
+        <system>Google Code Issue Tracker</system>
+        <url>http://code.google.com/p/daisy-pipeline/issues/list</url>
+    </issueManagement>
+
+    <properties>
+        <pipeline.webui.version>1.4-beta</pipeline.webui.version>
+    </properties>
+
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>de.akquinet.innovation.play2</groupId>
-                    <artifactId>play2-maven-plugin</artifactId>
-                    <version>1.2.0</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>de.akquinet.innovation.play2</groupId>
                 <artifactId>play2-maven-plugin</artifactId>
                 <version>1.2.0</version>
                 <extensions>true</extensions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>prepare</id>
+                        <phase>package</phase>
+                        <configuration>
+                            <tasks>
+                                <echo message="Unzipping ZIP distributable created by Play 2.0..."/>
+                                <unzip src="target/pipeline2-webui-${project.version}.zip" dest="target"/>
+                                <move file="target/pipeline2-webui-${project.version}" tofile="target/pipeline2-webui"/>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <goals>
+                    <goal>single</goal>
+                </goals>
                 <configuration>
+                    <descriptors>
+                        <descriptor>assembly-server.xml</descriptor>
+                        <descriptor>assembly-desktop.xml</descriptor>
+                    </descriptors>
+                    <appendAssemblyId>true</appendAssemblyId>
+                    <finalName>pipeline2-webui-${pipeline.webui.version}</finalName>
                 </configuration>
             </plugin>
-            <plugin>
-			    <groupId>org.apache.maven.plugins</groupId>
-			    <artifactId>maven-antrun-plugin</artifactId>
-			    <version>1.6</version>
-			    <executions>
-			        <execution>
-			            <id>prepare</id>
-			            <phase>package</phase>
-			            <configuration>
-			                <tasks>
-                                <echo message="Adding additional custom files and directories..."/>
-                                <unzip src="target/pipeline2-webui-${project.version}.zip" dest="target"/>
-                                <mkdir dir="target/pipeline2-webui-${project.version}/uploads"/>
-                                <copy file="dist-resources/application.conf" todir="target/pipeline2-webui-${project.version}/"/>
-                                <copy todir="target/pipeline2-webui-${project.version}/themes">
-                                    <fileset dir="themes"/>
-                                </copy>
-                                
-                                <echo message="Packaging server version..."/>
-                                <mkdir dir="target/server"/>
-                                <copy todir="target/server/daisy-pipeline-webui/">
-                                    <fileset dir="target/pipeline2-webui-${project.version}"/>
-                                </copy>
-                                <copy todir="target/server/daisy-pipeline-webui/dp2webui">
-                                    <fileset dir="dist-resources/server/dp2webui"/>
-                                </copy>
-                                <copy file="dist-resources/server/start" tofile="target/server/daisy-pipeline-webui/start_"/>
-                                <move file="target/server/daisy-pipeline-webui/start_" tofile="target/server/daisy-pipeline-webui/start"/>
-                                <copy file="dist-resources/server/start.bat" todir="target/server/daisy-pipeline-webui/"/>
-                                <chmod verbose="true" file="target/server/daisy-pipeline-webui/start" perm="ugo+rx"/>
-                                <zip basedir="target/server/daisy-pipeline-webui" destfile="target/pipeline2-webui-${project.version}-server.zip"/>
-
-                                <echo message="Packaging desktop version..."/>
-                                <unzip src="${org.daisy.pipeline:assembly:zip}" dest="target/desktop"/>
-                                <chmod verbose="true" file="target/desktop/daisy-pipeline/cli/dp2" perm="ugo+rx"/>
-                                <chmod verbose="true" file="target/desktop/daisy-pipeline/bin/pipeline2" perm="ugo+rx"/>
-                                <copy todir="target/desktop/daisy-pipeline/webui">
-                                    <fileset dir="target/pipeline2-webui-${project.version}"/>
-                                </copy>
-                                <copy todir="target/desktop/daisy-pipeline/webui/dp2webui">
-                                    <fileset dir="dist-resources/desktop/dp2webui"/>
-                                </copy>
-                                <copy file="dist-resources/desktop/start" tofile="target/desktop/daisy-pipeline/webui/start_"/>
-                                <move file="target/desktop/daisy-pipeline/webui/start_" tofile="target/desktop/daisy-pipeline/webui/start"/>
-                                <copy file="dist-resources/desktop/start.bat" todir="target/desktop/daisy-pipeline/webui/"/>
-                                <chmod verbose="true" file="target/desktop/daisy-pipeline/webui/start" perm="ugo+rx"/>
-                                <zip basedir="target/desktop" destfile="target/pipeline2-webui-${project.version}-desktop.zip"/>
-			                </tasks>
-			            </configuration>
-			            <goals>
-			                <goal>run</goal>
-			            </goals>
-			        </execution>
-			    </executions>
-			</plugin>
         </plugins>
     </build>
-    
+
     <dependencies>
         <dependency>
             <groupId>org.daisy.pipeline</groupId>
@@ -131,21 +106,5 @@
             <type>zip</type>
         </dependency>
     </dependencies>
-    <repositories>
-        <!-- 
-        Restlet is not on Maven Central
-        https://github.com/restlet/restlet-framework-java/issues/481
-        -->
-        <!--<repository>
-            <id>central</id>
-            <name>Maven Central</name>
-            <url>http://repo.maven.apache.org/maven2/</url>
-        </repository>
-        <repository>
-            <id>restlet-repo</id>
-            <name>Public online Restlet repository</name>
-            <url>http://maven.restlet.org</url>
-        </repository>-->
-    </repositories>
-    
+
 </project>
