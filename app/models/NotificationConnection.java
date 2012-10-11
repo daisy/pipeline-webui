@@ -229,4 +229,19 @@ public class NotificationConnection {
 		}
 	}
 	
+	public static NotificationConnection getBrowser(Long browserId) {
+		if (notificationConnections == null)
+			notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>(); // not sure why it is not initialized in Global.java...
+		synchronized (notificationConnections) {
+			for (Long userId : notificationConnections.keySet()) {
+				for (NotificationConnection connection : notificationConnections.get(userId)) {
+					if (connection.browserId.equals(browserId)) {
+						return connection;
+					}
+				}
+			}
+		}
+		return null;
+	}
+	
 }

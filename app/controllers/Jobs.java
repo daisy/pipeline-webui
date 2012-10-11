@@ -477,7 +477,7 @@ public class Jobs extends Controller {
 		webUiJob.pushNotifications();
 		
 		if (user.id < 0 && scriptForm.guestEmail != null) {
-			String jobUrl = routes.Jobs.getJob(jobId).absoluteURL(request())+"?guestid="+-Long.parseLong(session("userid"));
+			String jobUrl = routes.Jobs.getJob(jobId).absoluteURL(request())+"?guestid="+(models.User.parseUserId(session())!=null?-models.User.parseUserId(session()):"");
 			String html = views.html.Account.emailJobCreated.render(jobUrl, webUiJob.nicename).body();
 			String text = "To view your Pipeline 2 job, go to this web address: " + jobUrl;
 			if (!Account.sendEmail("Job started: "+webUiJob.nicename, html, text, scriptForm.guestEmail, scriptForm.guestEmail))

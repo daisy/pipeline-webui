@@ -100,8 +100,8 @@ public class Global extends GlobalSettings {
 						
 						List<Upload> uploads = Upload.find.all();
 						for (Upload upload : uploads) {
-							if (upload.job == null && upload.uploaded.before(timeoutDate)) {
-								Logger.info("Deleting old upload: "+upload.id+(upload.getFile()!=null?" ("+upload.getFile().getName()+")":""));
+							if (upload.job == null && NotificationConnection.getBrowser(upload.browserId) == null && upload.uploaded.before(timeoutDate)) {
+								Logger.info("Deleting old upload that is not open in any browser window: "+upload.id+(upload.getFile()!=null?" ("+upload.getFile().getName()+")":""));
 								upload.delete(datasource);
 							}
 						}
@@ -153,44 +153,55 @@ public class Global extends GlobalSettings {
 		if ("server".equals(controllers.Application.deployment())) Setting.set("dp2fwk.state","RUNNING"); // assume that it is running when in server mode
 		else Setting.set("dp2fwk.state","STOPPED");
 		
-		if (!"server".equals(controllers.Application.deployment())) {
+//		if (!"server".equals(controllers.Application.deployment())) {
 			
-			// If running in desktop mode; restart DP2 automatically if it crashes
 			Akka.system().scheduler().schedule(
 					Duration.create(0, TimeUnit.SECONDS),
 					Duration.create(1, TimeUnit.MINUTES),
 					new Runnable() {
 						public void run() {
-							if ("server".equals(controllers.Application.deployment()))
-								Setting.set("dp2fwk.state","RUNNING");
-							if (!"desktop".equals(controllers.Application.deployment()))
-								return;
-							
-							String dp2fwkDir = Setting.get("dp2fwk.dir");
-							
-							if (dp2fwkDir == null || "".equals(dp2fwkDir))
-								return;
-							
-							if (!Alive.isAlive(controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL)) {
-								Logger.info("Attempting to start the DAISY Pipeline 2 framework...");
-								Setting.set("dp2fwk.state","STARTING");
-								NotificationConnection.pushAll(new Notification("dp2fwk.state", "STARTING"));
-								int exitValue = CommandExecutor.executeCommandWithWorker(controllers.Application.DP2_START, new File(dp2fwkDir, "cli"), 20000L);
-								if (exitValue != 0) {
+							// If running in server mode; just report whether the framework is running or not
+							if ("server".equals(controllers.Application.deployment())) {
+								String endpoint = Setting.get("dp2ws.endpoint");
+								if (endpoint == null || !Alive.isAlive(endpoint)) {
+									Setting.set("dp2fwk.state","STOPPED");
+									NotificationConnection.pushAll(new Notification("dp2fwk.state", "STOPPED"));
+									
+								} else {
 									Setting.set("dp2fwk.state","RUNNING");
 									NotificationConnection.pushAll(new Notification("dp2fwk.state", "RUNNING"));
-									Logger.info("Started the DAISY Pipeline 2 framework");
-								} else {
-									Setting.set("dp2fwk.state","STOPPED");
-									Logger.info("Failed to start the DAISY Pipeline 2 framework");
 								}
-								return;
 							}
+							
+							// If running in desktop mode; also restart DP2 automatically if it crashes
+							else if ("desktop".equals(controllers.Application.deployment())) {
+								String dp2fwkDir = Setting.get("dp2fwk.dir");
+								
+								if (dp2fwkDir == null || "".equals(dp2fwkDir))
+									return;
+								
+								if (!Alive.isAlive(controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL)) {
+									Logger.info("Attempting to start the DAISY Pipeline 2 framework...");
+									Setting.set("dp2fwk.state","STARTING");
+									NotificationConnection.pushAll(new Notification("dp2fwk.state", "STARTING"));
+									int exitValue = CommandExecutor.executeCommandWithWorker(controllers.Application.DP2_START, new File(dp2fwkDir, "cli"), 20000L);
+									if (exitValue != 0) {
+										Setting.set("dp2fwk.state","RUNNING");
+										NotificationConnection.pushAll(new Notification("dp2fwk.state", "RUNNING"));
+										Logger.info("Started the DAISY Pipeline 2 framework");
+									} else {
+										Setting.set("dp2fwk.state","STOPPED");
+										Logger.info("Failed to start the DAISY Pipeline 2 framework");
+									}
+									return;
+								}
+							}
+							
 						}
 					}
 					);
 		
-		}
+//		}
 	}
 
 //	@Override

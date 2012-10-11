@@ -13,7 +13,6 @@ import akka.actor.Cancellable;
 import akka.util.Duration;
 
 import play.Logger;
-import play.Play;
 import play.libs.Akka;
 import play.mvc.*;
 import play.data.*;
@@ -36,7 +35,6 @@ public class FirstUse extends Controller {
 	public static Result getFirstUse() {
 		
 		if (isFirstUse()) {
-			session().remove("userid");
 			if (!"desktop".equals(Application.deployment()) && !"server".equals(Application.deployment()))
 				return ok(views.html.FirstUse.setDeployment.render(form(Administrator.SetDeploymentForm.class)));
 			else if ("server".equals(Application.deployment())) {
@@ -221,7 +219,6 @@ public class FirstUse extends Controller {
 					} catch (NullPointerException e) {
 						// directory not found
 					}
-					if (Play.isDev()) dp2dirFile = new File("/home/jostein/Skrivebord/pipeline2-1.3/daisy-pipeline/");
 					
 					if (dp2dirFile == null) {
 						result.put("state", "FWK_NOT_FOUND"); // fwk dir not found

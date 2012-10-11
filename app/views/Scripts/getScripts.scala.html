@@ -1,4 +1,4 @@
-@()
+@(frameworkState: String)
 
 @main("Scripts", "scripts", Array("notifications.js"), Array()){
 
@@ -27,12 +27,13 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 	<p>Starting the Pipeline 2 framework...</p>
 </div>
 <div role="alert" class="STOPPED alert alert-info" style="display:none;">
-	<p>The Pipeline 2 framework is not running.</p>
+	<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/>
+	<p>Unable to communicate with the Pipeline 2 framework...</p>
 </div>
 
 <script type="text/javascript">
 	$(function(){
-		Notifications.listen("dp2fwk.state", function(state){
+		var updateState = function (state){
 			$(".INITIAL").hide();
 			if (state === "RUNNING") {
 				$(".STOPPED").hide();
@@ -47,7 +48,8 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 				$(".STARTING").hide();
 				$(".RUNNING").hide();
 			}
-		});
+		}
+		Notifications.listen("dp2fwk.state", updateState); 
 		var scriptHrefBase = "@routes.Scripts.getScript("")";
 		var checkForScripts = function() {
 			$.ajax({
@@ -88,6 +90,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 				$(".INITIAL").show();
 			}
 		},1000);
+		updateState("@frameworkState");
 	});
 </script>
 

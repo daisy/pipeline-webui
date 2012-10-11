@@ -6,21 +6,21 @@
 		
 		@if(flash.contains("success")) {
 			<div role="alert" class="alert alert-success">
-				<button class="close" data-dismiss="alert">×</button>
+				<a class="close" data-dismiss="alert">&times;</a>
 				@flash.get("success")
 			</div>
 		}
 		
 		@if(flash.contains("error")) {
 			<div role="alert" class="alert alert-error">
-				<button class="close" data-dismiss="alert">×</button>
+				<a class="close" data-dismiss="alert">&times;</a>
 				@flash.get("error")
 			</div>
 		}
 		
 		@if(!flash.contains("error") && !flash.contains("success") && form.hasGlobalErrors) {
 			<div role="alert" class="alert alert-error">
-				<button class="close" data-dismiss="alert">×</button>
+				<a class="close" data-dismiss="alert">&times;</a>
 				@form.globalError.message
 			</div>
 		}
@@ -39,7 +39,7 @@
 					<label for="password" class="control-label">Password</label>
 					<div class="controls">
 						<input type="password" name="password" id="password" placeholder="Password" class="input-xlarge"/>
-						@if(Setting.get("email.enable")=="true"){
+						@if(Setting.get("mail.enable")=="true"){
 							<span class="help-inline">Forgot your password?
 								<button type="button" class="btn" id="submitLostPassword" name="submitLostPassword" onclick="window.location='@routes.Login.resetPassword()?email='+$('#email').val();return false;">Get a new one!</button>
 							</span>
@@ -49,13 +49,13 @@
 				
 				<div class="form-actions" style="text-align: right;">
 					<span style="float: left;"><button type="submit" class="btn btn-primary btn-large" id="submit" name="submit">Login</button></span>
-					@if(Setting.get("users.guest.allowGuests") == "true" && (Controller.session("userid") == null || Long.parseLong(Controller.session("userid")) >= 0)){
+					@if(Setting.get("users.guest.allowGuests") == "true" && (models.User.parseUserId(session()) == null || models.User.parseUserId(session()) >= 0)){
 						<span>
 							Don't have an account? &nbsp;&nbsp;&nbsp;
 							<button type="button" class="btn btn-large" id="guest-login" name="guest-login" onclick="window.location='@routes.Login.authenticateGuest()';return false;">Try it out as a guest <i class="icon-hand-right"></i></button>
 						</span>
 					}
-					@if(Controller.session("userid") != null && Long.parseLong(Controller.session("userid")) < 0){
+					@if(models.User.parseUserId(session()) != null && models.User.parseUserId(session()) < 0){
 						<span>You currently have guest privileges. Click the "Scripts" tab on the top menu bar to start using Pipeline 2.</span>
 					}
 			 	</div>

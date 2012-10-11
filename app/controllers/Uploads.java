@@ -82,7 +82,15 @@ public class Uploads extends Controller {
         	fileObject.put("size", file.getFile().length());
         	result.add(fileObject);
         	
-        	Long uploadId = models.Upload.store(file, user);
+        	String browserIdString = request().queryString().containsKey("browserId") ? request().queryString().get("browserId")[0] : null;
+        	Long browserId = null;
+        	if (browserIdString != null) try {
+        		browserId = Long.parseLong(browserIdString);
+        	} catch (NumberFormatException e) {
+        		Logger.error("Could not parse browserId from upload: "+browserIdString, e);
+        	}
+        	
+        	Long uploadId = models.Upload.store(file, user, browserId);
         	
         	NotificationConnection.push(user.id, new Notification("uploads", getUploadInfo(uploadId)));
         }

@@ -9,7 +9,7 @@
 @if(description != null && description.length > 0 || message != null && message.length > 0){
 <div role="alert" class="alert alert-error">
 	<p>@description</p>
-	@if(message != null && message.length > 0){<
+	@if(message != null && message.length > 0){
 		<p>
 			<a id="errorMessage-show" href="#" onclick="$('#errorMessage-show').hide('slow');$('#errorMessage').show('slow');return 0;">Show details</a>
 			<pre id="errorMessage" style="display:none;text-align:left;">

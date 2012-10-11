@@ -1,5 +1,6 @@
 package controllers;
 
+import play.Logger;
 import play.mvc.*;
 import play.data.*;
 
@@ -25,15 +26,10 @@ public class Login extends Controller {
      * Login page.
      */
     public static Result login() {
-    	
     	if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());//loop
     	
-    	try {
-    		Long.parseLong(Controller.session("userid"));
-    	} catch(NumberFormatException e) {
-    		Controller.session("userid", null);
-    	}
+    	User.parseUserId(session());
     	
 		return ok(views.html.Login.login.render(form(LoginForm.class)));
     }

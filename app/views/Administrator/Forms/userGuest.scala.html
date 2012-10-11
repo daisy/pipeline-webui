@@ -24,7 +24,7 @@
 						<button type="button" name="guest-login-automatic" id="guest-login-automatic" aria-role="radio" value="automatic"
 							class="btn guest-login-btn               @("active".when((if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny") == "automatic"))"
 							aria-checked="@(guestForm.field("login").valueOr(        (if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny")) == "automatic")"
-							onclick="toggleMultiRadio('guest-login', 'automatic', '@{(if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny")}');">Automatically</button>
+							onclick="toggleMultiRadio('guest-login', 'automatic', '@{(if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny")}');">Automatically ("Free-for-all")</button>
 							
 						<button type="button" name="guest-login-allow" id="guest-login-allow" aria-role="radio" value="allow"
 							class="btn guest-login-btn           @("active".when((if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny") == "allow"))"

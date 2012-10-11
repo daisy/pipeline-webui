@@ -7,8 +7,20 @@
   	@if(controllers.Application.deployment()=="desktop"){ Settings }else{ Administrator settings }
   </h1>
   @if(controllers.Application.deployment()=="server"){
-  <div class="subnav">
+  @if(controllers.Application.themeName()==""){
+  <div class="subnav visible-desktop">
     <ul class="nav nav-pills">
+      <li><a href="#usersAndPermissions">Users and Permissions</a></li>
+      <li><a href="#pipeline2WebServiceEndpoint">Pipeline 2 Web Service</a></li>
+	  <li><a href="#temporaryDirectoryForUploads">Upload directory</a></li>
+  	  <li><a href="#eMailSettings">E-mail settings</a></li>
+  	  <li><a href="#jobCleanup">Job Cleanup</a></li>
+	  <li><a href="#branding">Branding</a></li>
+    </ul>
+  </div>
+  }
+  <div class="@if(controllers.Application.themeName()==""){hidden-desktop}">
+    <ul class="nav nav-tabs nav-stacked">
       <li><a href="#usersAndPermissions">Users and Permissions</a></li>
       <li><a href="#pipeline2WebServiceEndpoint">Pipeline 2 Web Service Endpoint</a></li>
 	  <li><a href="#temporaryDirectoryForUploads">Temporary directory for uploads</a></li>
@@ -53,7 +65,7 @@
 	|| forms.globalForm != null && forms.globalForm.hasGlobalErrors()
 	|| Controller.flash("error") != null) {
     <div role="alert" class="alert alert-error">
-    	<button class="close" data-dismiss="alert">×</button>
+    	<a class="close" data-dismiss="alert">&times;</a>
     	@if(forms.userForm != null && forms.userForm.hasGlobalErrors) {
         	<p>@forms.userForm.globalError.message</p>
         }
@@ -71,7 +83,7 @@
 
 @if(flash.contains("success")) {
     <div role="alert" class="alert alert-success">
-    	<button class="close" data-dismiss="alert">×</button>
+    	<a class="close" data-dismiss="alert">&times;</a>
         @flash.get("success")
     </div>
 }

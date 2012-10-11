@@ -127,7 +127,7 @@ window.locale = {
 			
 	        // Settings:
 	        $('#fileupload').fileupload('option', {
-	            url: '@routes.Uploads.postUpload().absoluteURL(request)',
+	            url: '@routes.Uploads.postUpload().absoluteURL(request)?browserId=@flash().get("browserId")',
 	            autoUpload: true
 	        });
 		});

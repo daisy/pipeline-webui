@@ -31,7 +31,7 @@ public class Scripts extends Controller {
 			return redirect(routes.Login.login());
 		
 		user.flashBrowserId();
-		return ok(views.html.Scripts.getScripts.render());
+		return ok(views.html.Scripts.getScripts.render(Setting.get("dp2fwk.state")));
 	}
 	
 	public static Result getScriptsJson() {

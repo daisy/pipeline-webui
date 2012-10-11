@@ -12,7 +12,7 @@
         
         <div class="form-horizontal">
         	
-        	@if(play.mvc.Controller.session("userid") == user.id+""){
+        	@if(models.User.parseUserId(session()) == user.id){
         		<div class="control-group">
         			<p>To change your own name or e-mail, go to your account settings. To delete your account, ask another administrator to do it for you.</p>
         		</div>

@@ -368,6 +368,7 @@ public class Administrator extends Controller {
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.userForm = filledForm;
 				ConfigureBrandingForm.refreshList();
+				flash("error", "Could not edit user, please review the form and make sure it is filled out properly.");
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 				
 			} else {

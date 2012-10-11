@@ -27,6 +27,7 @@ public class Upload extends Model {
 	public String absolutePath;
 	public String contentType;
 	public Date uploaded;
+	public Long browserId; // browserId of the browser widnow that uploaded this upload
 	
 	@Column(name="user_id")
 	public Long user;
@@ -39,9 +40,11 @@ public class Upload extends Model {
 		this.uploaded = new Date();
 	}
 	
-	public static Long store(FilePart upload, User user) {
+	public static Long store(FilePart upload, User user, Long browserId) {
 		Upload u = new Upload();
 		u.save(Application.datasource); // saving here generates the unique id for this upload
+		
+		u.browserId = browserId;
 		
 		File uploadDir = new File(Setting.get("uploads")+u.id);
 		uploadDir.mkdirs();

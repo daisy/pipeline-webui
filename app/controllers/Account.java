@@ -70,7 +70,6 @@ public class Account extends Controller {
 			changedPassword = true;
 			
 			if (filledForm.field("newPassword") != null && filledForm.field("newPassword").valueOr("").length() < 6) {
-				// TODO: @Constraints.MinLength(6) doesn't seem to work for some reason, so checking it manually here for now
 				filledForm.reject("newPassword", "The password must be at least 6 characters long.");
 			
 			} else if (!filledForm.field("newPassword").valueOr("").equals(filledForm.field("repeatPassword").valueOr(""))) {

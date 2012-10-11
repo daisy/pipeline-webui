@@ -146,13 +146,14 @@ public class User extends Model {
 	public static User authenticate(Request request, Session session) {
 		User user;
 		
-		String idString = session.get("userid"); // login with session variables
-		if (idString == null && request.queryString().containsKey("guestid") && request.queryString().get("guestid").length > 0)
-			idString = "-"+request.queryString().get("guestid")[0]; // resume guest session
-		
-		Long id = null;
-		try { id = Long.parseLong(session.get("userid")); }
-		catch (NumberFormatException e) { } // do nothing
+		Long id = models.User.parseUserId(session); // login with session variables
+		if (id == null && request.queryString().containsKey("guestid") && request.queryString().get("guestid").length > 0) {
+			try {
+				id = Long.parseLong("-"+request.queryString().get("guestid")[0]); // resume guest session
+			} catch (NumberFormatException e) {
+				// do nothing
+			}
+		}
 		
 		if (id == null) { // no userid; try automatic login
 			if ("true".equals(Setting.get("users.guest.automaticLogin")))
@@ -269,18 +270,26 @@ public class User extends Model {
 			filledForm.reject("email", "That e-mail address is already taken");
 		
 		String password = filledForm.field("password").valueOr("");
-		if (password.length() == 0 && this.password != null && this.password.length() > 0
-				|| 0 < password.length() && password.length() < 6) {
-			filledForm.reject("password", "The password must be at least 6 characters long");
-		}
-		
-		if (!(this.admin + "").equals(filledForm.field("admin").valueOr(""))) {
-			String adminString = filledForm.field("admin").valueOr("");
-			if (!adminString.equals("true") && !adminString.equals("false"))
-				filledForm.reject("admin", "The user must either *be* an admin, or *not be* an admin");
+		if (password.length() > 0) {
+			// Trying to change the password
+			if (password.length() < 6)
+				filledForm.reject("password", "The password must be at least 6 characters long");
 			
-			if (this.id.equals(user.id))
-				filledForm.reject("admin", "Only other admins can demote you to a normal user, you cannot do it yourself");
+		} else {
+			// Not trying to change the password
+			if (!(this.admin + "").equals(filledForm.field("admin").valueOr(""))) {
+				String adminString = filledForm.field("admin").valueOr("");
+				if (!adminString.equals("true") && !adminString.equals("false"))
+					filledForm.reject("admin", "The user must either *be* an admin, or *not be* an admin");
+				
+				if (this.id.equals(user.id)) {
+					filledForm.reject("admin", "Only other admins can demote you to a normal user, you cannot do it yourself");
+					
+				} else if (user.admin) {
+					filledForm.errors().remove("password"); // dont throw "error.required" for "password" when an admin edits another user
+				}
+			}
+			
 		}
 	}
 	
@@ -306,7 +315,7 @@ public class User extends Model {
 	}
 	
 	public List<Job> getJobs() {
-		return Job.find.where("user = '"+id+"'").findList();
+		return Job.find.where().eq("user", id).findList();
 	}
 	
 	@Override
@@ -328,6 +337,20 @@ public class User extends Model {
 				this.id = user.id;
 			}
 		}
+	}
+	
+	/**
+	 * Parses the userid from the session. Useful to avoid having to handle cases (especially in templates) where session("userid") is neither null nor a string representation of a Long.
+	 * @param session
+	 * @return
+	 */
+	public static Long parseUserId(Session session) {
+		try {
+    		return Long.parseLong(session.get("userid"));
+    	} catch(NumberFormatException e) {
+    		session.remove("userid");
+    		return null;
+    	}
 	}
 
 }
