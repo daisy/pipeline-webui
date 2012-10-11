@@ -3,8 +3,10 @@
 @main("Administrator settings", "admin") {
 
 <header class="page-header">
-  <h1>Administrator settings</h1>
-  @if(controllers.FirstUse.deployment()=="server"){
+  <h1>
+  	@if(controllers.Application.deployment()=="desktop"){ Settings }else{ Administrator settings }
+  </h1>
+  @if(controllers.Application.deployment()=="server"){
   <div class="subnav">
     <ul class="nav nav-pills">
       <li><a href="#usersAndPermissions">Users and Permissions</a></li>
@@ -74,7 +76,7 @@
     </div>
 }
 
-@if(controllers.FirstUse.deployment()=="server"){
+@if(controllers.Application.deployment()=="server"){
 	
 	<section id="usersAndPermissions" class="tabbable tabs-left">
 		<h2>Users and permissions</h2>

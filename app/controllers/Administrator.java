@@ -3,6 +3,12 @@ package controllers;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import akka.util.Duration;
+
+import models.Notification;
+import models.NotificationConnection;
 import models.Setting;
 import models.User;
 import play.Logger;
@@ -11,7 +17,9 @@ import play.data.format.Formats;
 import play.data.validation.Constraints;
 import play.data.validation.Constraints.Required;
 import play.data.validation.ValidationError;
+import play.libs.Akka;
 import play.mvc.*;
+import utils.CommandExecutor;
 
 public class Administrator extends Controller {
 	
@@ -602,6 +610,41 @@ public class Administrator extends Controller {
 		
 		flash("error", "Form not found. Submitted information ignored :(");
 		return redirect(routes.Administrator.getSettings());
+	}
+	
+	public static Result shutdown() {
+		// If running in desktop mode; shutdown after a period of inactivity
+		if (!"desktop".equals(Application.deployment()))
+			return Results.forbidden();
+		
+		Akka.system().scheduler().scheduleOnce(
+				Duration.create(1, TimeUnit.SECONDS),
+				new Runnable() {
+					public void run() {
+						// DP2 framework
+						String dp2fwkDir = Setting.get("dp2fwk.dir");
+						if (dp2fwkDir != null && !"".equals(dp2fwkDir)) {
+							Logger.info("Attempting to stop the DAISY Pipeline 2 framework...");
+							Setting.set("dp2fwk.state","STOPPING");
+							NotificationConnection.pushAll(new Notification("dp2fwk.state", "STOPPING"));
+							int exitValue = CommandExecutor.executeCommandWithWorker(Application.DP2_HALT, new File(dp2fwkDir, "cli"), 20000L);
+							if (exitValue != 0) {
+								Setting.set("dp2fwk.state","STOPPED");
+								NotificationConnection.pushAll(new Notification("dp2fwk.state", "STOPPED"));
+								Logger.info("Halted the DAISY Pipeline 2 framework");
+							} else {
+								Setting.set("dp2fwk.state","RUNNING");
+								Logger.info("Failed to halt the DAISY Pipeline 2 framework");
+							}
+						}
+						
+						// Web UI
+						System.exit(0);
+					}
+				});
+		
+		flash("shutdown","true");
+		return ok(views.html.Administrator.goodbye.render());
 	}
 	
 	/**

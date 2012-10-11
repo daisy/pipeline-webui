@@ -144,7 +144,6 @@ public class User extends Model {
 	
 	/** Authenticate a user. */
 	public static User authenticate(Request request, Session session) {
-		Application.lastRequest = new Date();
 		User user;
 		
 		String idString = session.get("userid"); // login with session variables

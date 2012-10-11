@@ -3,7 +3,6 @@ package controllers;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.Date;
 
 import models.Setting;
 import models.User;
@@ -13,10 +12,13 @@ import play.mvc.*;
 
 public class Application extends Controller {
 	
-	public static final String datasource = Configuration.root().getString("dp2.datasource");
+	public static final String DEFAULT_DP2_ENDPOINT_LOCAL = "http://localhost:8181/ws";
+	public static final String DEFAULT_DP2_ENDPOINT_REMOTE = "http://localhost:8182/ws";
+	public static final String SLASH = System.getProperty("file.separator");
+	public static final String DP2_START = "/".equals(SLASH) ? "./dp2 help" : "cmd /c start /B cmd /c dp2.exe help";
+	public static final String DP2_HALT = "/".equals(SLASH) ? "./dp2 halt" : "cmd /c start /B cmd /c dp2.exe halt";
 	
-	/** Last activity (job running / user requests page) */
-	public static Date lastRequest = new Date();
+	public static final String datasource = Configuration.root().getString("dp2.datasource");
 	
 	public static Result index() {
 		if (FirstUse.isFirstUse())
@@ -81,5 +83,14 @@ public class Application extends Controller {
 		if (themeName == null)
 			themeName = Setting.get("branding.theme");
 		return themeName;
+	}
+	
+	private static String deployment = null;
+	/**
+	 * Returns a buffered value of the deployment type instead of having to check the DB each time using Setting.get("deployment").
+	 * @return
+	 */
+	public static String deployment() {
+		return deployment != null ? deployment : Setting.get("deployment");
 	}
 }

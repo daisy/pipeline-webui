@@ -13,6 +13,7 @@ import akka.actor.Cancellable;
 import akka.util.Duration;
 
 import play.Logger;
+import play.Play;
 import play.libs.Akka;
 import play.mvc.*;
 import play.data.*;
@@ -28,13 +29,6 @@ import models.*;
  */
 public class FirstUse extends Controller {
 	
-	// Note: These are mirrored in Global.java
-	public static final String DEFAULT_DP2_ENDPOINT_LOCAL = "http://localhost:8181/ws";
-	public static final String DEFAULT_DP2_ENDPOINT_REMOTE = "http://localhost:8182/ws";
-	public static final String SLASH = System.getProperty("file.separator");
-	public static final String DP2_START = "/".equals(SLASH) ? "./dp2 help" : "cmd /c start /B cmd /c dp2.exe help";
-	public static final String DP2_HALT = "/".equals(SLASH) ? "./dp2 halt" : "cmd /c start /B cmd /c dp2.exe halt";
-	
 	/**
 	 * GET /firstuse
 	 * @return
@@ -43,11 +37,11 @@ public class FirstUse extends Controller {
 		
 		if (isFirstUse()) {
 			session().remove("userid");
-			if (!"desktop".equals(deployment()) && !"server".equals(deployment()))
+			if (!"desktop".equals(Application.deployment()) && !"server".equals(Application.deployment()))
 				return ok(views.html.FirstUse.setDeployment.render(form(Administrator.SetDeploymentForm.class)));
-			else if ("server".equals(deployment())) {
+			else if ("server".equals(Application.deployment())) {
 				return ok(views.html.FirstUse.createAdmin.render(form(Administrator.CreateAdminForm.class)));
-			} else if ("desktop".equals(deployment())) {
+			} else if ("desktop".equals(Application.deployment())) {
 				User admin = User.find.where().eq("email", "email@example.com").findUnique();
 				if (admin == null) {
 					admin = new User("email@example.com", "Administrator", "password", true);
@@ -64,7 +58,7 @@ public class FirstUse extends Controller {
 			return redirect(routes.Login.login());//loop
 		}
 		
-		if ("desktop".equals(deployment()) && (Setting.get("dp2fwk.dir") == null || "".equals(Setting.get("dp2fwk.dir")))) {
+		if ("desktop".equals(Application.deployment()) && (Setting.get("dp2fwk.dir") == null || "".equals(Setting.get("dp2fwk.dir")))) {
 			Long browserId = user.flashBrowserId();
 			startDP2Configurator(user.id, browserId);
 			return ok(views.html.FirstUse.configureDP2.render());
@@ -187,16 +181,7 @@ public class FirstUse extends Controller {
 	 * @return
 	 */
 	public static boolean isFirstUse() {
-		return User.findAll().size() == 0 || "desktop".equals(deployment()) && Setting.get("dp2fwk.dir") == null;
-	}
-	
-	private static String deployment = null;
-	/**
-	 * Returns a buffered value of the deployment type instead of having to check the DB each time using Setting.get("deployment").
-	 * @return
-	 */
-	public static String deployment() {
-		return deployment != null ? deployment : Setting.get("deployment");
+		return User.findAll().size() == 0 || "desktop".equals(Application.deployment()) && Setting.get("dp2fwk.dir") == null;
 	}
 	
 	private static Cancellable dp2Locator = null;
@@ -230,12 +215,13 @@ public class FirstUse extends Controller {
 					File dp2dirFile = null;
 					try {
 						dp2dirFile = new File("").getAbsoluteFile().getParentFile();
-						if (dp2dirFile != null && !new File(dp2dirFile.getAbsolutePath()+SLASH+"cli"+SLASH+"dp2").exists()) {
+						if (dp2dirFile != null && !new File(dp2dirFile.getAbsolutePath()+controllers.Application.SLASH+"cli"+controllers.Application.SLASH+"dp2").exists()) {
 							dp2dirFile = null;
 						}
 					} catch (NullPointerException e) {
 						// directory not found
 					}
+					if (Play.isDev()) dp2dirFile = new File("/home/jostein/Skrivebord/pipeline2-1.3/daisy-pipeline/");
 					
 					if (dp2dirFile == null) {
 						result.put("state", "FWK_NOT_FOUND"); // fwk dir not found
@@ -251,20 +237,21 @@ public class FirstUse extends Controller {
 					}
 					
 					NotificationConnection.pushAll(new Notification("dp2locator", 15));
-					if (Alive.isAlive(DEFAULT_DP2_ENDPOINT_REMOTE)) {
+					Logger.debug("Alive.isAlive("+controllers.Application.DEFAULT_DP2_ENDPOINT_REMOTE+")");
+					if (Alive.isAlive(controllers.Application.DEFAULT_DP2_ENDPOINT_REMOTE)) {
 						result.put("state", "PLEASE_STOP_FWK"); // please stop fwk (DEFAULT_DP2_ENDPOINT_REMOTE)
-						result.put("endpoint", DEFAULT_DP2_ENDPOINT_REMOTE);
+						result.put("endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_REMOTE);
 						NotificationConnection.pushAll(new Notification("dp2locator", result));
 						lastLocatorRun = null;
 						return;
 					}
 					
 					NotificationConnection.pushAll(new Notification("dp2locator", 40));
-					result.put("endpoint", DEFAULT_DP2_ENDPOINT_LOCAL);
-					if (Alive.isAlive(DEFAULT_DP2_ENDPOINT_LOCAL)) {
-						Logger.debug("executing "+DP2_HALT);
-						int exitValue = CommandExecutor.executeCommandWithWorker(DP2_HALT, new File(dp2dirFile, "cli"), 20000L);
-						Logger.debug("exit value from "+DP2_HALT+" is "+exitValue);
+					result.put("endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL);
+					if (Alive.isAlive(controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL)) {
+						Logger.debug("executing "+controllers.Application.DP2_HALT);
+						int exitValue = CommandExecutor.executeCommandWithWorker(controllers.Application.DP2_HALT, new File(dp2dirFile, "cli"), 20000L);
+						Logger.debug("exit value from "+controllers.Application.DP2_HALT+" is "+exitValue);
 						if (exitValue != 0) {
 							result.put("state", "PLEASE_STOP_FWK"); // please stop fwk (DEFAULT_DP2_ENDPOINT_LOCAL)
 							NotificationConnection.pushAll(new Notification("dp2locator", result));
@@ -274,9 +261,9 @@ public class FirstUse extends Controller {
 					}
 					
 					NotificationConnection.pushAll(new Notification("dp2locator", 75));
-					Logger.debug("executing "+DP2_START);
-					int exitValue = CommandExecutor.executeCommandWithWorker(DP2_START, new File(dp2dirFile, "cli"), 20000L);
-					Logger.debug("exit value from "+DP2_START+" is "+exitValue);
+					Logger.debug("executing "+controllers.Application.DP2_START);
+					int exitValue = CommandExecutor.executeCommandWithWorker(controllers.Application.DP2_START, new File(dp2dirFile, "cli"), 20000L);
+					Logger.debug("exit value from "+controllers.Application.DP2_START+" is "+exitValue);
 					if (exitValue != 0) {
 						result.put("state", "UNABLE_TO_START_FWK"); // unable to start fwk; fwk is probably misconfigured
 						NotificationConnection.pushAll(new Notification("dp2locator", result));
@@ -286,11 +273,11 @@ public class FirstUse extends Controller {
 					
 					NotificationConnection.pushAll(new Notification("dp2locator", 100));
 					Setting.set("uploads", System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"));
-					Setting.set("dp2ws.endpoint", DEFAULT_DP2_ENDPOINT_LOCAL);
+					Setting.set("dp2ws.endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL);
 					Setting.set("dp2ws.authid", "");
 					Setting.set("dp2ws.secret", "");
-					Setting.set("dp2ws.tempDir", System.getProperty("user.dir") + SLASH + "local.temp" + SLASH);
-					Setting.set("dp2ws.resultDir", System.getProperty("user.dir") + SLASH + "local.results" + SLASH);
+					Setting.set("dp2ws.tempDir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.temp" + controllers.Application.SLASH);
+					Setting.set("dp2ws.resultDir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.results" + controllers.Application.SLASH);
 					Setting.set("dp2ws.sameFilesystem", "true");
 					Setting.set("dp2fwk.dir", dp2dirFile.getAbsolutePath());
 					result.put("state", "SUCCESS"); // successfully configured the framework/CLI communication

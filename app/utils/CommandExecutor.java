@@ -52,47 +52,46 @@ public class CommandExecutor {
      */
     public static int executeCommandWithWorker(final String command, final File cwd, final long timeOut) {
     	
-    	Logger.info(cwd+" $ "+command);
+    	Logger.info(cwd+"   "+command);
     	
-        try
-        {
-            // create the process which will run the command
-            Runtime runtime = Runtime.getRuntime();
-            Process process = runtime.exec(command, null, cwd);
+        // create the process which will run the command
+        Runtime runtime = Runtime.getRuntime();
+        Process process;
+		try {
+			process = runtime.exec(command, null, cwd);
+		} catch (IOException e) {
+            String errorMessage = "The process for the command [" + command + "] could not be created due to an IO error.";
+            Logger.error(errorMessage, e);
+            return 1;
+		}
+        
+        // consume and display the error and output streams
+        StreamGobbler outputGobbler = new StreamGobbler(process.getInputStream(), "INFO");
+        StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream(), "ERROR");
+        outputGobbler.start();
+        errorGobbler.start();
 
-            // consume and display the error and output streams
-            StreamGobbler outputGobbler = new StreamGobbler(process.getInputStream(), "INFO");
-            StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream(), "ERROR");
-            outputGobbler.start();
-            errorGobbler.start();
-
-            // create and start a Worker thread which this thread will join for the timeout period 
-            Worker worker = new Worker(process);
-            worker.start();
-            try {
-                worker.join(timeOut);
-                Integer exitValue = worker.getExitValue();
-                if (exitValue != null)
-                {
-                    // the worker thread completed within the timeout period
-                    return exitValue;
-                }
-
-                // if we get this far then we never got an exit value from the worker thread as a result of a timeout 
-                String errorMessage = "The command [" + command + "] timed out.";
-                Logger.error(errorMessage);
-                return 1;
+        // create and start a Worker thread which this thread will join for the timeout period 
+        Worker worker = new Worker(process);
+        worker.start();
+        try {
+            worker.join(timeOut);
+            Integer exitValue = worker.getExitValue();
+            if (exitValue != null)
+            {
+                // the worker thread completed within the timeout period
+                return exitValue;
             }
-            catch (InterruptedException e) {
-                worker.interrupt();
-                Thread.currentThread().interrupt();
-                String errorMessage = "The command [" + command + "] did not complete due to an unexpected interruption.";
-                Logger.error(errorMessage, e);
-                return 1;
-            }
+
+            // if we get this far then we never got an exit value from the worker thread as a result of a timeout 
+            String errorMessage = "The command [" + command + "] timed out.";
+            Logger.error(errorMessage);
+            return 1;
         }
-        catch (IOException e) {
-            String errorMessage = "The command [" + command + "] did not complete due to an IO error.";
+        catch (InterruptedException e) {
+            worker.interrupt();
+            Thread.currentThread().interrupt();
+            String errorMessage = "The command [" + command + "] did not complete due to an unexpected interruption.";
             Logger.error(errorMessage, e);
             return 1;
         }

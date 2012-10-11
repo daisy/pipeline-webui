@@ -106,8 +106,6 @@ public class Job extends Model implements Comparable<Job> {
 				Duration.create(1000, TimeUnit.MILLISECONDS),
 				new Runnable() {
 					public void run() {
-						Application.lastRequest = new Date();
-						
 						Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) : 0;
 						Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
 						

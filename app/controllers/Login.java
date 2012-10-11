@@ -96,9 +96,13 @@ public class Login extends Controller {
      * Logout and clean the session.
      */
     public static Result logout() {
-        session().clear();
-        flash("success", "You've been logged out");
-        return redirect(routes.Login.login());
+    	if ("server".equals(Application.deployment())) {
+	        session().clear();
+	        flash("success", "You've been logged out");
+	        return redirect(routes.Login.login());
+    	} else {
+    		return Application.error(FORBIDDEN, "You can't log out when running in desktop mode", null, null);
+    	}
     }
 
 }

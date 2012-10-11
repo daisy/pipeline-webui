@@ -52,6 +52,7 @@ POST	/account                            controllers.Account.changeDetails()
 # Administrator
 GET		/admin                              controllers.Administrator.getSettings()
 POST	/admin                              controllers.Administrator.postSettings()
+GET		/admin/shutdown                     controllers.Administrator.shutdown()
 GET 	/admin/POST                         controllers.Administrator.getPostSettings()
 
 # First use
