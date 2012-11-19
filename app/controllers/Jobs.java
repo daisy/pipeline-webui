@@ -384,7 +384,15 @@ public class Jobs extends Controller {
 				}
 				
 			} else {
-			
+				for (Argument arg : script.arguments) {
+					if (arg.output == null && "anyFileURI".equals(arg.xsdType)) {
+						Logger.debug(arg.name+" is file(s); resolve relative URI(s)");
+						for (int i = 0; i < arg.size(); i++) {
+							arg.set(i, new File(arg.get(i)).toURI().toString().substring(new File("").toURI().toString().length()));
+						}
+					}
+				}
+				
 				//	if (contextZipUpload == null) {
 				if (contextDir.list().length == 0) {
 					contextZipFile = null;

@@ -14,6 +14,7 @@ import controllers.Application;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.*;
 
 @Entity
@@ -52,7 +53,14 @@ public class Upload extends Model {
 		
         File file = upload.getFile();
 		File newFile = new File(uploadDir, upload.getFilename());
-		file.renameTo(newFile);
+		if (!file.renameTo(newFile)) {
+			Logger.debug("Was unable to move uploaded file to the upload directory, will try to copy it instead...");
+			try {
+				Files.copy(file, newFile);
+			} catch (IOException e) {
+				Logger.error("Was unable to copy uploaded file to new file", e);
+			}
+		}
 		file = newFile;
 		Logger.debug("Stored uploaded file as: "+file.getAbsolutePath()+" (=="+new File(uploadDir, upload.getFilename()).getAbsolutePath()+")");
 		try {
