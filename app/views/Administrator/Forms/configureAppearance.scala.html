@@ -1,0 +1,62 @@
+@(configureAppearanceForm: Form[controllers.Administrator.ConfigureAppearanceForm], route: play.api.mvc.Call, skipRoute: play.api.mvc.Call)
+
+@helper.form(action = route) {
+	
+	<input type="hidden" name="formName" value="configureAppearance"/>
+    
+    <fieldset>
+        
+        <div class="form-horizontal">
+        	
+        	<div class="control-group @("error".when(configureAppearanceForm.error("title") != null))" id="configureAppearance-titleGroup">
+        		<label for="configureAppearance-title" class="control-label">Application Title</label>
+	            <div class="controls">
+	        		<input type="text" name="title" id="configureAppearance-title" class="input-xlarge"
+	        			placeholder="&quot;@models.Setting.get("appearance.title")&quot; is the current title of this website."
+	        			value="@{if (configureAppearanceForm.hasErrors()) configureAppearanceForm.field("title").valueOr(""); else models.Setting.get("appearance.title");}"
+	        			onkeyup="if(this.value==='@models.Setting.get("appearance.title")')document.getElementById('configureAppearance-titleGroup').style.backgroundColor='#FFF';else document.getElementById('configureAppearance-titleGroup').style.backgroundColor='#DDF';"/>
+					@if(configureAppearanceForm != null && configureAppearanceForm.field("configureAppearance-title").errors().size() > 0){
+						<span class="help-inline">@configureAppearanceForm.error("title").message</span>
+					}
+	            </div>
+			</div>
+        	
+          	<div class="control-group @("error".when(configureAppearanceForm.error("theme") != null))" id="configureAppearance-themeGroup">
+				<label class="control-label" id="configureAppearance-theme-label" for="configureAppearance-theme" aria-label="configureAppearance-theme">Visual theme</label>
+				<div class="controls" aria-role="radiogroup" aria-labelledby="configureAppearance-theme-label" id="configureAppearance-theme">
+					<label class="radio">
+						<input type="radio" name="theme" value="" @if(Application.themeName() == ""){
+							checked=""
+						}/>
+						Default
+					</label>
+					@for(theme <- controllers.Administrator.ConfigureAppearanceForm.themes){
+						<label class="radio">
+							@if(Application.themeName() == theme+"/"){
+								<input type="radio" name="theme" value="@theme" checked=""/> <em>@theme</em>
+							}else{
+								<input type="radio" name="theme" value="@theme"/> @theme
+							}
+						</label>
+					}
+					@if(configureAppearanceForm.field("theme").errors().size() > 0){
+						<span class="help-inline">@configureAppearanceForm.error("theme").message</span>
+					}
+				</div>
+				<!-- TODO: link to guide on theming. -->
+			</div>
+			
+			<p class="muted"><small>Icons by <a href="http://www.glyphicons.com/" target="_blank">Glyphicons</a>.</small></p>
+			
+			<div class="form-actions">
+				<button class="btn btn-primary" id="submit" type="submit" name="submit">Save Settings</button>
+				@if(skipRoute != null){
+					<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Application.index()';return false;">I'll configure it later <i class="icon-hand-right"></i></button>
+				}
+			</div>
+			
+		</div>
+		
+	</fieldset>
+
+}

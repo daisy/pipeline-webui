@@ -3,45 +3,12 @@
 @helper.form(action = route) {
 	
 	<input type="hidden" name="formName" value="updateGuest"/>
-	<!--<input type="hidden" name="allowGuests" value="@{Setting.get("users.guest.allowGuests")}" id="allowGuests-value"/>-->
-	<!--<input type="hidden" name="automaticLogin" value="@{Setting.get("users.guest.automaticLogin")}" id="automaticLogin-value"/>-->
-	<input type="hidden" name="login" value="@{if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny"}" id="guest-login-value"/>
-	<input type="hidden" name="showGuestName" value="@{Setting.get("users.guest.showGuestName")}" id="showGuestName-value"/>
-	<input type="hidden" name="showEmailBox" value="@{Setting.get("users.guest.showEmailBox")}" id="showEmailBox-value"/>
-	<input type="hidden" name="shareJobs" value="@{Setting.get("users.guest.shareJobs")}" id="shareJobs-value"/>
 	
 	<fieldset>
 		<legend>Settings for guests</legend>
         <br/>
         
         <div class="form-horizontal">
-        	
-        	<div class="control-group @("error".when(guestForm.error("login") != null))" id="user-users.guest.loginGroup">
-				<label class="control-label" id="user-users.guest.login-label" for="user-users.guest.login" aria-label="user-users.guest.login">Login</label>
-				<div class="controls">
-					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="user-users.guest.login-label" id="user-users.guest.login">
-						
-						<button type="button" name="guest-login-automatic" id="guest-login-automatic" aria-role="radio" value="automatic"
-							class="btn guest-login-btn               @("active".when((if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny") == "automatic"))"
-							aria-checked="@(guestForm.field("login").valueOr(        (if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny")) == "automatic")"
-							onclick="toggleMultiRadio('guest-login', 'automatic', '@{(if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny")}');">Automatically ("Free-for-all")</button>
-							
-						<button type="button" name="guest-login-allow" id="guest-login-allow" aria-role="radio" value="allow"
-							class="btn guest-login-btn           @("active".when((if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny") == "allow"))"
-							aria-checked="@(guestForm.field("login").valueOr(    (if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny")) == "allow")"
-							onclick="toggleMultiRadio('guest-login', 'allow', '@{(if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny")}');">Allowed through login-page</button>
-							
-						<button type="button" name="guest-login-deny" id="guest-login-deny" aria-role="radio" value="deny"
-							class="btn guest-login-btn          @("active".when((if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny") == "deny"))"
-							aria-checked="@(guestForm.field("login").valueOr(   (if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny")) == "deny")"
-							onclick="toggleMultiRadio('guest-login', 'deny', '@{(if (Setting.get("users.guest.automaticLogin")=="true") "automatic" else if (Setting.get("users.guest.allowGuests")=="true") "allow" else "deny")}');">Not allowed</button>
-						
-					</div>
-					@if(guestForm.field("login").errors().size() > 0){
-						<span class="help-block">@guestForm.error("login").message</span>
-					}
-				</div>
-			</div>
         	
         	<div class="control-group @("error".when(guestForm != null && guestForm.error("name") != null))" id="user-users.guest.nameGroup">
         		<label for="user-users.guest.name" class="control-label">Name</label>
@@ -60,63 +27,9 @@
 	            </div>
 			</div>
 			
-			<div class="control-group @("error".when(guestForm.error("showGuestName") != null))" id="user-users.guest.showGuestNameGroup">
-				<label class="control-label" id="user-users.guest.showGuestName-label" for="user-users.guest.showGuestName" aria-label="user-users.guest.showGuestName">Show guest name</label>
-				<div class="controls">
-					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="user-users.guest.showGuestName-label" id="user-users.guest.showGuestName">
-						<button type="button" name="showGuestName-on" class="btn  @("active".when(guestForm.field("showGuestName").valueOr(Setting.get("users.guest.showGuestName"))=="true"))" id="showGuestName-on"
-							aria-role="radio"                             aria-checked="@(guestForm.field("showGuestName").valueOr(Setting.get("users.guest.showGuestName"))=="true")"
-							onclick="toggleRadio('showGuestName', true,                  '@(guestForm.field("showGuestName").valueOr(Setting.get("users.guest.showGuestName")))');">Show</button>
-						<button type="button" name="showGuestName-off" class="btn @("active".when(guestForm.field("showGuestName").valueOr(Setting.get("users.guest.showGuestName"))=="false"))" id="showGuestName-off"
-							aria-role="radio"                             aria-checked="@(guestForm.field("showGuestName").valueOr(Setting.get("users.guest.showGuestName"))=="false")"
-							onclick="toggleRadio('showGuestName', false,                 '@(guestForm.field("showGuestName").valueOr(Setting.get("users.guest.showGuestName")))');">Hide</button>
-					</div>
-					@if(guestForm.field("showGuestName").errors().size() > 0){
-						<span class="help-block">@guestForm.error("showGuestName").message</span>
-					}
-					<div class="help-block">Whether or not the name of the guest is displayed in the upper right corner.</div>
-				</div>
-			</div>
-			
-			<div class="control-group @("error".when(guestForm.error("showEmailBox") != null))" id="user-users.guest.showEmailBoxGroup">
-				<label class="control-label" id="user-users.guest.showEmailBox-label" for="user-users.guest.showEmailBox" aria-label="user-users.guest.showEmailBox">E-mail box</label>
-				<div class="controls">
-					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="user-users.guest.showEmailBox-label" id="user-users.guest.showEmailBox">
-						<button type="button" name="showEmailBox-on" class="btn  @("active".when(guestForm.field("showEmailBox").valueOr(Setting.get("users.guest.showEmailBox"))=="true"))" id="showEmailBox-on"
-							aria-role="radio"                             aria-checked="@(guestForm.field("showEmailBox").valueOr(Setting.get("users.guest.showEmailBox"))=="true")"
-							onclick="toggleRadio('showEmailBox', true,                  '@(guestForm.field("showEmailBox").valueOr(Setting.get("users.guest.showEmailBox")))');">Show</button>
-						<button type="button" name="showEmailBox-off" class="btn @("active".when(guestForm.field("showEmailBox").valueOr(Setting.get("users.guest.showEmailBox"))=="false"))" id="showEmailBox-off"
-							aria-role="radio"                             aria-checked="@(guestForm.field("showEmailBox").valueOr(Setting.get("users.guest.showEmailBox"))=="false")"
-							onclick="toggleRadio('showEmailBox', false,                 '@(guestForm.field("showEmailBox").valueOr(Setting.get("users.guest.showEmailBox")))');">Hide</button>
-					</div>
-					@if(guestForm.field("showEmailBox").errors().size() > 0){
-						<span class="help-block">@guestForm.error("showEmailBox").message</span>
-					}
-					<div class="help-block">A box will be displayed at the bottom of the job creation page, allowing the guest user to enter the e-mail address of the owner of the job.</div>
-				</div>
-			</div>
-			
-			<div class="control-group @("error".when(guestForm.error("shareJobs") != null))" id="user-users.guest.shareJobsGroup">
-				<label class="control-label" id="user-users.guest.shareJobs-label" for="user-users.guest.shareJobs" aria-label="user-users.guest.shareJobs">Jobs</label>
-				<div class="controls">
-					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="user-users.guest.shareJobs-label" id="user-users.guest.shareJobs">
-						<button type="button" name="shareJobs-on" class="btn  @("active".when(guestForm.field("shareJobs").valueOr(Setting.get("users.guest.shareJobs"))=="true"))" id="shareJobs-on"
-							aria-role="radio"                             aria-checked="@(guestForm.field("shareJobs").valueOr(Setting.get("users.guest.shareJobs"))=="true")"
-							onclick="toggleRadio('shareJobs', true,                  '@(guestForm.field("shareJobs").valueOr(Setting.get("users.guest.shareJobs")))');">Shared</button>
-						<button type="button" name="shareJobs-off" class="btn @("active".when(guestForm.field("shareJobs").valueOr(Setting.get("users.guest.shareJobs"))=="false"))" id="shareJobs-off"
-							aria-role="radio"                             aria-checked="@(guestForm.field("shareJobs").valueOr(Setting.get("users.guest.shareJobs"))=="false")"
-							onclick="toggleRadio('shareJobs', false,                 '@(guestForm.field("shareJobs").valueOr(Setting.get("users.guest.shareJobs")))');">Private</button>
-					</div>
-					@if(guestForm.field("shareJobs").errors().size() > 0){
-						<span class="help-block">@guestForm.error("shareJobs").message</span>
-					}
-					<div class="help-block">When guest jobs are shared, then all guests can view eachothers jobs, and the jobs are listed in the job listing. When guest jobs are private, then there is no job listing and users can only access their own jobs.</div>
-				</div>
-			</div>
-			
 			<div class="form-actions">
-				<button type="submit" class="btn btn-primary" id="user-guest-submit" name="submit">Save changes</button>
-				<button type="reset" class="btn" id="user-guest-reset" name="reset" onclick="toggleChanged('user-users.guest.name', '@models.Setting.get("users.guest.name")', '@models.Setting.get("users.guest.name")');">Clear changes</button>
+				<button type="submit" class="btn btn-primary" id="user-guest-submit" name="submit">Save</button>
+				<button type="reset" class="btn" id="user-guest-reset" name="reset" onclick="toggleChanged('user-users.guest.name', '@models.Setting.get("users.guest.name")', '@models.Setting.get("users.guest.name")');">Clear</button>
 			</div>
 			
 		</div>

@@ -3,7 +3,9 @@
 @main("Account settings", "account") {
 
 <div class="page-header">
-    <h1>Account settings for @session.get("name")</h1>
+	<hgroup>
+    	<h1>Account settings for @session.get("name")</h1>
+    </hgroup>
 </div>
 
 @helper.form(action = routes.Account.changeDetails()) {
@@ -85,7 +87,7 @@
 					<div class="control-group @("error".when(editDetailsForm.error("repeatPassword") != null))">
 		          		<label for="repeatPassword" class="control-label">Repeat password</label>
 						<div class="controls">
-							<input type="password" name="repeatPassword" id="repeatPassword" placeholder="Please repeat your password again." class="input-xlarge"/>
+							<input type="password" name="repeatPassword" id="repeatPassword" placeholder="Please repeat your password." class="input-xlarge"/>
 							@if(editDetailsForm.field("repeatPassword").errors().size() > 0){
 								<span class="help-inline">@editDetailsForm.error("repeatPassword").message</span>
 							}

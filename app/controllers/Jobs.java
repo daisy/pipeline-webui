@@ -59,7 +59,7 @@ public class Jobs extends Controller {
 			
 		} catch (Pipeline2WSException e) {
 			Logger.error(e.getMessage(), e);
-			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline engine", e.getMessage());
 		}
 		
 		List<Job> jobList = new ArrayList<Job>();
@@ -107,7 +107,7 @@ public class Jobs extends Controller {
 			
 		} catch (Pipeline2WSException e) {
 			Logger.error(e.getMessage(), e);
-			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline engine", e.getMessage());
 		}
 		
 		Job webuiJob = Job.findById(job.id);
@@ -180,7 +180,7 @@ public class Jobs extends Controller {
 				
 			} catch (Pipeline2WSException e) {
 				Logger.error(e.getMessage(), e);
-				return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
+				return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline engine", e.getMessage());
 			}
 		}
 	}
@@ -211,18 +211,17 @@ public class Jobs extends Controller {
 			if (jobLog.status != 200 && jobLog.status != 201 && jobLog.status != 204) {
 				return Application.error(jobLog.status, jobLog.statusName, jobLog.statusDescription, jobLog.asText());
 			}
-	
+			
 			if (jobLog.status == 204) {
-				return ok(views.html.Jobs.emptyLog.render(id));
+				return ok("The log is empty.");
 	
 			} else {
-				String[] lines = jobLog.asText().split("\n");
-				return ok(views.html.Jobs.getLog.render(id, Arrays.asList(lines)));
+				return ok(jobLog.asText());
 			}
 			
 		} catch (Pipeline2WSException e) {
 			Logger.error(e.getMessage(), e);
-			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline engine", e.getMessage());
 		}
 	}
 
@@ -266,7 +265,7 @@ public class Jobs extends Controller {
 
 		String id = params.get("id")[0];
 
-		// Get a description of the script from Pipeline 2 Web Service
+		// Get a description of the script from Pipeline 2 Web API
 		Pipeline2WSResponse scriptResponse;
 		Script script;
 		try {
@@ -276,7 +275,7 @@ public class Jobs extends Controller {
 			
 		} catch (Pipeline2WSException e) {
 			Logger.error(e.getMessage(), e);
-			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline engine", e.getMessage());
 		}
 		
 		// Parse and validate the submitted form (also create any necessary output directories in case of local mode)
@@ -452,12 +451,14 @@ public class Jobs extends Controller {
 			
 		} catch (Pipeline2WSException e) {
 			Logger.error(e.getMessage(), e);
-			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline 2 framework", e.getMessage());
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline engine", e.getMessage());
 		}
 		
 		Job webUiJob = new Job(jobId, user);
 		webUiJob.nicename = id;
 		webUiJob.localDirName = timeString;
+		webUiJob.scriptId = script.id;
+		webUiJob.scriptName = script.nicename;
 		if (scriptForm.uploads != null && scriptForm.uploads.size() > 0) {
 			String filenames = "";
 			int i = 0;
@@ -471,7 +472,7 @@ public class Jobs extends Controller {
 				filenames += scriptForm.uploads.get(uploadId).getFile().getName();
 			}
 			if (filenames.length() > 0)
-				webUiJob.nicename = id + " ("+filenames+")";
+				webUiJob.nicename = filenames;
 		}
 		webUiJob.started = new Date();
 		webUiJob.save(Application.datasource);

@@ -7,13 +7,15 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 </script>
 
 <div class="page-header">
-  <h1 id="h1" aria-live="polite">
-  	<span class="state">Starting DAISY Pipeline 2</span>
-  	<span class="FWK_NOT_FOUND state" style="display:none;">Framework not found</span>
-  	<span class="PLEASE_STOP_FWK state" style="display:none;">Please stop the framework</span>
-  	<span class="UNABLE_TO_START_FWK state" style="display:none;">Unable to start the framework</span>
-  	<span class="SUCCESS state" style="display:none;">Successfully started the framework!</span>
-  </h1>
+  <hgroup>
+	  <h1 id="h1" aria-live="polite">
+	  	<span class="state">Starting DAISY Pipeline 2</span>
+	  	<span class="FWK_NOT_FOUND state" style="display:none;">Pipeline engine not found</span>
+	  	<span class="PLEASE_STOP_FWK state" style="display:none;">Unable to start the Pipeline engine</span>
+	  	<span class="UNABLE_TO_START_FWK state" style="display:none;">Unable to start the Pipeline engine</span>
+	  	<span class="SUCCESS state" style="display:none;">Successfully started the Pipeline engine!</span>
+	  </h1>
+  </hgroup>
   <div class="progress progress-striped active" id="configurationProgress">
     <div class="bar" style="width: 0%;" id="configurationProgressBar"></div>
   </div>
@@ -28,13 +30,13 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 		<div class="span3"><img src="@routes.Assets.at("images/fwk_not_found.png")" alt="" style="margin:10px;"/></div>
 		<div class="span9">
 			<div class="alert alert-error" style="text-align:left;">
-				<p>When running the Pipeline 2 Web UI in desktop mode, you need to install it inside the framework directory.</p>
+				<p>When running the Pipeline 2 Web UI in desktop mode, you need to install it inside the Pipeline engine directory.</p>
 				<!--
 					TODO: uncomment when bundled version is released
-					<p>You can download a ZIP from the <a href="http://code.google.com/p/daisy-pipeline/">Pipeline 2 webside</a>, where the Web UI is already bundled with the framework.</p>
+					<p>You can download a ZIP from the <a href="http://code.google.com/p/daisy-pipeline/">Pipeline 2 webside</a>, where the Web UI is already bundled with the Pipeline engine.</p>
 				-->
-				<p>If you have not yet installed the Pipeline 2 framework, please visit the <a href="http://code.google.com/p/daisy-pipeline/">Pipeline 2 webside</a> and follow the instructions there.</p>
-				<p>If you have installed the Pipeline 2 framework, please locate the directory it is installed in, shut down the Web UI, move the Web UI directory into the framework directory, and restart the Web UI.</p>
+				<p>If you have not yet installed the Pipeline engine, please visit the <a href="http://code.google.com/p/daisy-pipeline/">Pipeline 2 webside</a> and follow the instructions there.</p>
+				<p>If you have installed the Pipeline engine, please locate the directory it is installed in, shut down the Web UI, move the Web UI directory into the Pipeline engine directory, and restart the Web UI.</p>
 				<p>If you need further assistance, please visit the <a href="http://www.daisy.org/forums/pipeline-2">Pipeline 2 forum</a> for help.</p>
 			</div>
 		</div>
@@ -42,14 +44,14 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 </div>
 
 <div class="PLEASE_STOP_FWK message alert alert-error" style="display:none;text-align:left;">
-	<p>A running instance of the Pipeline 2 framework was found on <code class="endpoint"></code>. Please shut it down before continuing.</p>
+	<p>A conflicting running instance of the Pipeline engine was found on <code class="endpoint"></code>. Please shut it down.</p>
 	<p>If you need further assistance, please visit the <a href="http://www.daisy.org/forums/pipeline-2">Pipeline 2 forum</a> for help.</p>
 </div>
 
 <div class="UNABLE_TO_START_FWK message alert alert-error" style="display:none;text-align:left;">
-	<p>A problem occured which prevented us from starting the Pipeline 2 framework.</p>
+	<p>A problem occured which prevented us from starting the Pipeline engine.</p>
 	<p>
-		Please make sure that you are able to start the Pipeline 2 framework using the command-line interface, and that it is running on port 8181.
+		Please make sure that you are able to start the Pipeline engine using the command-line interface, and that it is running on port 8181.
 		You can learn more about the command-line interface in the <a href="http://code.google.com/p/daisy-pipeline/wiki/CommandLine">command-line interface user guide</a>.
 	</p>
 	<p>If you need further assistance, please visit the <a href="http://www.daisy.org/forums/pipeline-2">Pipeline 2 forum</a> for help.</p>

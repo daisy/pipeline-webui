@@ -81,7 +81,7 @@ public class Application extends Controller {
 	public static String themeName = null;
 	public static String themeName() {
 		if (themeName == null)
-			themeName = Setting.get("branding.theme");
+			themeName = Setting.get("appearance.theme");
 		return themeName;
 	}
 	

@@ -4,12 +4,19 @@
 	}
 }
 
-h1 {
+hgroup {
 	text-align: center;
 	padding-bottom: 2em;
 }
+h1 {
+	text-align: center;
+}
 h2.label-headline {
 	font-size: 1em;
+}
+
+a {
+	/*text-decoration:underline;*/
 }
 
 .alert {
@@ -27,25 +34,42 @@ h2.label-headline {
 /* ############################## Message listing in job view ############################## */
 ol.messagelist {
 	/*overflow:auto;*/
-	font-family:"Courier New",Courier,mono;
+	/*font-family:"Courier New",Courier,mono;*/
+	color: #999999;
 	margin:0;
 	padding:1em 0 1em 2.8em;
 	width:96%;
+	font-size: 0.8em;
 	
 	li {
 		white-space: nowrap;
+		font-weight: 650;
+		padding-top: 0.25em;
 		
-		code {
-			color: #000;
+		span.message {
+			color: #222;
+			background-color: transparent;
+			border: 0px #FFF;
+			font-size: 1.25em;
 		}
 		
-		code.message-error {
+		span.message-error {
 			background-color: #FAA;
 		}
 		
-		code.message-warn {
+		span.message-warn {
 			background-color: #FFA;
 		}
+	}
+	
+	li:nth-child(3n) {
+		border-bottom:solid;
+		border-width:1px;
+		border-color:#DDD;
+	}
+	li:last-child {
+		border-bottom:none;
+		border-width:0px;
 	}
 }
 

@@ -2,7 +2,7 @@
 
 <input type="hidden" name="@{arg.kind}-@{arg.name}" value="true" id="@{arg.kind}-@{arg.name}-value"/>
 
-<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
+<div class="control-group @("advanced-argument".when(!arg.required))">
 	<label class="control-label" id="@{arg.kind}-@{arg.name}-label" for="@{arg.kind}-@{arg.name}" aria-label="@{arg.kind}-@{arg.name}">@arg.nicename</label>
 	<div class="controls">
 		<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="@{arg.kind}-@{arg.name}-label" id="@{arg.kind}-@{arg.name}">

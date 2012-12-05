@@ -1,19 +1,30 @@
 @(jobs: List[Job])
 
-@main("Jobs", "jobs", Array("notifications.js")) {
+@main("Jobs", "jobs", Array("notifications.js","fuzzyDates.js")) {
 
 <script type="text/javascript" charset="utf-8">
 $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
 </script>
 
+<hgroup>
 <h1>Jobs</h1>
+@if(session.get("admin")=="true"){
+	<p>Displaying jobs for all users</p>
+}else{
+@if(Setting.get("users.guest.shareJobs") == "true"){
+	<p>Displaying jobs for all guests</p>
+}else{
+	<p>Displaying your jobs</p>
+}}
+</hgroup>
 
 @if(jobs.size() > 0) {
-
+	
 	<table class="table joblist">
 	<tr>
+		<th><img src="@routes.Assets.at("images/icon-info-sign.png")" alt="Status" title="Status"/></th>
 		<th>Job</th>
-		<th>Status</th>
+		<th>Results</th>
 		<th>Created</th>
 		@if(Controller.flash("showOwner")=="true"){
 			<th>Owner</th>
@@ -21,23 +32,60 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 	</tr>
 	@for(job <- jobs) {
 	<tr>
-		<td><a href="@routes.Jobs.getJob(job.id)">@job.nicename</td>
 		<td id="job-status-@job.id">
-			@job.status
+			@if(job.status=="RUNNING"){
+				<img src="@routes.Assets.at("images/RUNNING.png")" alt="Running" title="Running"/>
+			}else{
 			@if(job.status=="DONE"){
-				<span style="padding-left: 20px;"><a class="btn btn-mini btn-success" href="@routes.Jobs.getResult(job.id)"><i class="icon-download-alt icon-white"></i> Download</a></span>
+				<img src="@routes.Assets.at("images/DONE.png")" alt="Done" title="Done"/>
+			}else{
+			@if(job.status=="ERROR"){
+				<img src="@routes.Assets.at("images/ERROR.png")" alt="Error" title="Error"/>
+			}else{
+			@if(job.status=="IDLE"){
+				<img src="@routes.Assets.at("images/IDLE.png")" alt="Idle" title="Idle"/>
+			}}}}
+		</td>
+		<td>
+			<a href="@routes.Jobs.getJob(job.id)">
+				@job.nicename (@job.scriptName)<br/>
+				<small class="muted">@job.id</small>
+			</a>
+		</td>
+		<td id="job-results-@job.id">
+			@if(job.status=="DONE"){
+				<span><a class="btn btn-mini btn-success" href="@routes.Jobs.getResult(job.id)"><i class="icon-download-alt icon-white"></i> Download</a></span>
 			}
 			<script type="text/javascript">
 				$(function(){Notifications.listen("job-status-@job.id", function(status){
-					$("#job-status-@job.id").html(status);
-					if (status==="DONE")
-						$("#job-status-@job.id").append(' <span style="padding-left: 20px;"><a class="btn btn-mini btn-success" href="@routes.Jobs.getResult(job.id)"><i class="icon-download-alt icon-white"></i> Download</a></span>');
+					if(status==="RUNNING"){
+						$("#job-status-@job.id").html('<img src="@routes.Assets.at("images/RUNNING.png")" alt="Running" title="Running"/>');
+					}else{
+					if(status==="DONE"){
+						$("#job-status-@job.id").html('<img src="@routes.Assets.at("images/DONE.png")" alt="Done" title="Done"/>');
+						$("#job-results-@job.id").html(' <span><a class="btn btn-mini btn-success" href="@routes.Jobs.getResult(job.id)"><i class="icon-download-alt icon-white"></i> Download</a></span>');
+					}else{
+					if(status==="ERROR"){
+						$("#job-status-@job.id").html('<img src="@routes.Assets.at("images/ERROR.png")" alt="Error" title="Error"/>');
+					}else{
+					if(status==="IDLE"){
+						$("#job-status-@job.id").html('<img src="@routes.Assets.at("images/IDLE.png")" alt="Idle" title="Idle"/>');
+					}}}}
 				});});
 			</script>
 		</td>
-		<td>@controllers.Jobs.DATE_FORMAT.format(job.created)</td>
+		<td>
+			<span id="created-@job.id" aria-live="timer"></span><br/>
+			<small class="muted">@job.created</small>
+			<script type="text/javascript">$(function(){updateFuzzy("created-@job.id");});</script>
+		</td>
 		@if(Controller.flash("showOwner")=="true"){
-			<td>@job.userNicename</td>
+			<td>
+				@job.userNicename<br/>
+				@if(job.user<0){
+					<small class="muted">#@{-job.user}</small>
+				}
+			</td>
 		}
 	</tr>
 	}
@@ -45,7 +93,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 
 }else {
 	
-	<div role="alert" class="alert alert-info">
+	<div class="muted" style="width:100%;text-align:center;">
 		<p>There are no jobs.</p>
 	</div>
 

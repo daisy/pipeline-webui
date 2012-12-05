@@ -1,8 +1,8 @@
 @(arg: org.daisy.pipeline.client.models.script.Argument, script: org.daisy.pipeline.client.models.Script)
 
 @if(arg.sequence==Boolean.TRUE){
-	
-	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
+
+	<div class="control-group @("advanced-argument".when(!arg.required))">
 		<!-- TODO: if ordered sequence; show up/down controls -->
 		<!-- TODO: allow drag'n'drop for reordering -->
 		<label class="control-label">@arg.nicename</label>
@@ -28,8 +28,8 @@
 	</div>
 	
 }else{
-	
-	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
+
+	<div class="control-group @("advanced-argument".when(!arg.required))">
 		<label class="control-label" for="@{arg.kind}-@{arg.name}">@arg.nicename</label>
 		<div class="controls">
 			<input name="@{arg.kind}-@{arg.name}" id="@{arg.kind}-@{arg.name}" type="text"/>

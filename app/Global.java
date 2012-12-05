@@ -33,11 +33,11 @@ public class Global extends GlobalSettings {
 		if (User.findAll().size() > 0 && controllers.Application.deployment() == null)
 			Setting.set("deployment", "server");
 		
-		if (Setting.get("branding.title") == null)
-			Setting.set("branding.title", "DAISY Pipeline 2");
+		if (Setting.get("appearance.title") == null)
+			Setting.set("appearance.title", "DAISY Pipeline 2");
 		
-		if (Setting.get("branding.theme") == null)
-			Setting.set("branding.theme", "");
+		if (Setting.get("appearance.theme") == null)
+			Setting.set("appearance.theme", "");
 		
 		if (Setting.get("jobs.hideAdvancedOptions") == null)
 			Setting.set("jobs.hideAdvancedOptions", "true");
@@ -85,18 +85,9 @@ public class Global extends GlobalSettings {
 				Duration.create(1, TimeUnit.MINUTES),
 				new Runnable() {
 					public void run() {
-						if ("0".equals(Setting.get("jobs.deleteAfterDuration")))
-							return;
 						
-						Date timeoutDate = new Date(new Date().getTime() - Long.parseLong(Setting.get("jobs.deleteAfterDuration")));
-						
-						List<Job> jobs = Job.find.all();
-						for (Job job : jobs) {
-							if (job.finished != null && job.finished.before(timeoutDate)) {
-								Logger.info("Deleting old job: "+job.id+" ("+job.nicename+")");
-								job.delete(datasource);
-							}
-						}
+						// unused uploads are deleted after one hour
+						Date timeoutDate = new Date(new Date().getTime() - 3600000L);
 						
 						List<Upload> uploads = Upload.find.all();
 						for (Upload upload : uploads) {
@@ -105,19 +96,30 @@ public class Global extends GlobalSettings {
 								upload.delete(datasource);
 							}
 						}
+						
+						// jobs are only deleted if that option is set in admin settings
+						if ("0".equals(Setting.get("jobs.deleteAfterDuration")))
+							return;
+						
+						timeoutDate = new Date(new Date().getTime() - Long.parseLong(Setting.get("jobs.deleteAfterDuration")));
+						
+						List<Job> jobs = Job.find.all();
+						for (Job job : jobs) {
+							if (job.finished != null && job.finished.before(timeoutDate)) {
+								Logger.info("Deleting old job: "+job.id+" ("+job.nicename+")");
+								job.delete(datasource);
+							}
+						}
 					}
 				}
 				);
 		
-		// If jobs.deleteAfterDuration is not set; clean up jobs that no longer exists in the Pipeline 2 framework. This typically happens if the framework is restarted.
+		// If jobs.deleteAfterDuration is not set; clean up jobs that no longer exists in the Pipeline engine. This typically happens if the Pipeline engine is restarted.
 		Akka.system().scheduler().schedule(
 				Duration.create(1, TimeUnit.MINUTES),
-				Duration.create(1, TimeUnit.HOURS),
+				Duration.create(5, TimeUnit.MINUTES),
 				new Runnable() {
 					public void run() {
-						if (Setting.get("jobs.deleteAfterDuration") != null && !"0".equals(Setting.get("jobs.deleteAfterDuration")))
-							return;
-						
 						String endpoint = Setting.get("dp2ws.endpoint");
 						if (endpoint == null)
 							return;
@@ -142,10 +144,24 @@ public class Global extends GlobalSettings {
 								}
 							}
 							if (!exists) {
-								Logger.info("Deleting job that no longer exists in the Pipeline 2 framework: "+webUiJob.id+" ("+webUiJob.nicename+")");
+								Logger.info("Deleting job that no longer exists in the Pipeline engine: "+webUiJob.id+" ("+webUiJob.nicename+")");
 								webUiJob.delete(datasource);
 							}
 						}
+						
+//						for (org.daisy.pipeline.client.models.Job fwkJob : fwkJobs) {
+//							boolean exists = false;
+//							for (Job webUiJob : webUiJobs) {
+//								if (fwkJob.id.equals(webUiJob.id)) {
+//									exists = true;
+//									break;
+//								}
+//							}
+//							if (!exists) {
+//								Logger.info("Adding job from the Pipeline engine that does not exist in the Web UI: "+fwkJob.id);
+//								// TODO: add job to webui ?
+//							}
+//						}
 					}
 				}
 			);
@@ -160,7 +176,7 @@ public class Global extends GlobalSettings {
 					Duration.create(1, TimeUnit.MINUTES),
 					new Runnable() {
 						public void run() {
-							// If running in server mode; just report whether the framework is running or not
+							// If running in server mode; just report whether the Pipeline engine is running or not
 							if ("server".equals(controllers.Application.deployment())) {
 								String endpoint = Setting.get("dp2ws.endpoint");
 								if (endpoint == null || !Alive.isAlive(endpoint)) {
@@ -181,17 +197,17 @@ public class Global extends GlobalSettings {
 									return;
 								
 								if (!Alive.isAlive(controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL)) {
-									Logger.info("Attempting to start the DAISY Pipeline 2 framework...");
+									Logger.info("Attempting to start the Pipeline engine...");
 									Setting.set("dp2fwk.state","STARTING");
 									NotificationConnection.pushAll(new Notification("dp2fwk.state", "STARTING"));
 									int exitValue = CommandExecutor.executeCommandWithWorker(controllers.Application.DP2_START, new File(dp2fwkDir, "cli"), 20000L);
 									if (exitValue != 0) {
 										Setting.set("dp2fwk.state","RUNNING");
 										NotificationConnection.pushAll(new Notification("dp2fwk.state", "RUNNING"));
-										Logger.info("Started the DAISY Pipeline 2 framework");
+										Logger.info("Started the Pipeline engine");
 									} else {
 										Setting.set("dp2fwk.state","STOPPED");
-										Logger.info("Failed to start the DAISY Pipeline 2 framework");
+										Logger.info("Failed to start the Pipeline engine");
 									}
 									return;
 								}

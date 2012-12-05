@@ -92,7 +92,7 @@ public class Uploads extends Controller {
         	
         	Long uploadId = models.Upload.store(file, user, browserId);
         	
-        	NotificationConnection.push(user.id, new Notification("uploads", getUploadInfo(uploadId)));
+        	NotificationConnection.push(user.id, browserId, new Notification("uploads", getUploadInfo(uploadId)));
         }
         
 //        Long uploadId = models.Upload.store(files.get(0));

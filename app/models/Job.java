@@ -14,6 +14,7 @@ import javax.persistence.*;
 
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
+import org.daisy.pipeline.client.models.Job.Status;
 import org.w3c.dom.Document;
 
 import controllers.Application;
@@ -28,7 +29,7 @@ import utils.XML;
 public class Job extends Model implements Comparable<Job> {
 	private static final long serialVersionUID = 1L;
 	
-	/** Key is the job ID; value is the sequence number of the last message read from the Pipeline 2 Web Service. */ 
+	/** Key is the job ID; value is the sequence number of the last message read from the Pipeline 2 Web API. */ 
 	public static Map<String,Integer> lastMessageSequence = Collections.synchronizedMap(new HashMap<String,Integer>());
 	public static Map<String,org.daisy.pipeline.client.models.Job.Status> lastStatus = Collections.synchronizedMap(new HashMap<String,org.daisy.pipeline.client.models.Job.Status>());
 	
@@ -45,6 +46,8 @@ public class Job extends Model implements Comparable<Job> {
 	@Column(name="user_id") public Long user;
 	public String guestEmail; // Guest users may enter an e-mail address to receive notifications
 	public String localDirName;
+	public String scriptId;
+	public String scriptName;
 	
 	// Notification flags
 	public boolean notifiedCreated;
@@ -90,9 +93,9 @@ public class Job extends Model implements Comparable<Job> {
 			if (user != null)
 				job.userNicename = user.name;
 			else if (job.user < 0)
-				job.userNicename = "Guest #"+-job.user;
+				job.userNicename = Setting.get("users.guest.name");
 			else
-				job.userNicename = "User #"+job.user;
+				job.userNicename = "User";
 		}
 		return job;
 	}
@@ -128,26 +131,41 @@ public class Job extends Model implements Comparable<Job> {
 							return;
 						}
 						
-						if (job.status != org.daisy.pipeline.client.models.Job.Status.RUNNING && job.status != org.daisy.pipeline.client.models.Job.Status.IDLE) {
+						Job webUiJob = Job.findById(job.id);
+						
+						if (webUiJob == null) {
+							// Job has been deleted; stop updates
 							pushNotifier.cancel();
-							Job webUiJob = Job.findById(job.id);
+						}
+						
+						if (job.status != Status.RUNNING && job.status != Status.IDLE) {
+							pushNotifier.cancel();
 							if (webUiJob.finished == null) {
 								// pushNotifier tends to fire multiple times after canceling it, so this if{} is just to fire the "finished" event exactly once
 								webUiJob.finished = new Date();
 								webUiJob.save(Application.datasource);
-								NotificationConnection.push(webUiJob.user, new Notification("job-finished-"+job.id, webUiJob.finished.toString()));
+								Map<String,String> finishedMap = new HashMap<String,String>();
+								finishedMap.put("text", webUiJob.finished.toString());
+								finishedMap.put("number", webUiJob.finished.getTime()+"");
+								NotificationConnection.push(webUiJob.user, new Notification("job-finished-"+job.id, finishedMap));
 							}
 						}
 						
-						Job webuiJob = Job.findById(job.id);
 						for (org.daisy.pipeline.client.models.job.Message message : job.messages) {
 							Notification notification = new Notification("job-message-"+job.id, message);
-							NotificationConnection.push(webuiJob.user, notification);
+							NotificationConnection.push(webUiJob.user, notification);
 						}
 						
 						if (!job.status.equals(lastStatus.get(job.id))) {
 							lastStatus.put(job.id, job.status);
-							NotificationConnection.push(webuiJob.user, new Notification("job-status-"+job.id, job.status));
+							NotificationConnection.push(webUiJob.user, new Notification("job-status-"+job.id, job.status));
+							
+							if (job.status == Status.RUNNING) {
+								Map<String,String> startedMap = new HashMap<String,String>();
+								startedMap.put("text", webUiJob.finished.toString());
+								startedMap.put("number", webUiJob.finished.getTime()+"");
+								NotificationConnection.push(webUiJob.user, new Notification("job-started-"+job.id, startedMap));
+							}
 						}
 						
 						if (job.messages.size() > 0) {

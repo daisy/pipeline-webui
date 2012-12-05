@@ -6,10 +6,13 @@
 $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
 </script>
 
-<h1>Scripts</h1>
+<hgroup>
+<h1>Create Job</h1>
+</hgroup>
 
 <div class="INITIAL" style="text-align:center;display:none;">
-	<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/>
+	<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/><br/>
+	<span>Loading...</span>
 </div>
 <div class="RUNNING" style="display:none;">
 	<table id="scriptTable" class="oneOrMoreScripts table scriptlist" style="display:none;">
@@ -24,11 +27,18 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 </div>
 <div role="alert" class="STARTING alert alert-info" style="text-align:center; display:none;">
 	<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/>
-	<p>Starting the Pipeline 2 framework...</p>
+	<p>Starting the Pipeline engine...</p>
 </div>
-<div role="alert" class="STOPPED alert alert-info" style="display:none;">
-	<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/>
-	<p>Unable to communicate with the Pipeline 2 framework...</p>
+<div class="STOPPED" style="display:none;">
+	<p style="text-align:center;">
+		<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/><br/>
+		<span>Attempting to connect to the framework...</span>
+	</p>
+	<br/>
+	<div role="alert" class="alert alert-warning">
+		<p>Unable to communicate with the Pipeline engine.</p>
+		<p>Please check the configuration of the Pipeline 2 engine in the administrative settings.</p>
+	</div>
 </div>
 
 <script type="text/javascript">

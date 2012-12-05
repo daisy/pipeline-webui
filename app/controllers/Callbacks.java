@@ -7,7 +7,7 @@ public class Callbacks extends Controller {
 	
 	/**
 	 * POST /callbacks/{type}
-	 * Handles callbacks from the Pipeline 2 Web Service.
+	 * Handles callbacks from the Pipeline 2 .
 	 * @return
 	 */
 	public static Result postCallback(String type) {

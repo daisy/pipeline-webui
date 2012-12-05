@@ -3,13 +3,20 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-	<title>@Setting.get("branding.title")</title>
+	<title>@Setting.get("appearance.title")</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="description" content="Web interface for Pipeline 2">
 	<meta name="author" content="DAISY Consortium">
 	
+	<meta http-equiv="cache-control" content="max-age=0" />
+	<meta http-equiv="cache-control" content="no-cache" />
+	<meta http-equiv="expires" content="0" />
+	<meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+	<meta http-equiv="pragma" content="no-cache" />
+	
 	<!-- Styles -->
 	<link href="@routes.Application.theme("stylesheets/bootstrap.min.css")?@Application.themeName()" rel="stylesheet" type="text/css"/>
+	<link href="@routes.Application.theme("stylesheets/bootstrap-responsive.min.css")?@Application.themeName()" rel="stylesheet" type="text/css"/>
 	@for(style <- moreStyles) {
 		<link href="@routes.Application.theme("stylesheets/"+style)?@Application.themeName()" rel="stylesheet" type="text/css"/>
 	}
@@ -46,15 +53,15 @@
 	                <span class="icon-bar"></span>
 	            </a>
 	            @if(Controller.flash("shutdown")=="true"){
-	            	<span class="brand">@Setting.get("branding.title")</span>
+	            	<span class="brand">@Setting.get("appearance.title")</span>
 	            }else{
-	   				<a class="brand" href="@routes.Application.index()">@Setting.get("branding.title")</a>
+	   				<a class="brand" href="@routes.Application.index()">@Setting.get("appearance.title")</a>
 	   			}
 	   			<nav class="nav-collapse">
 		   			<ul class="nav">
 		   				@if(models.User.parseUserId(session()) != null){
 		   					@if(navs.contains("scripts")){
-			   					<li class="@("active".when(nav == "scripts"))"><a href="@routes.Scripts.getScripts()"><i class="icon-home icon-white"></i> Scripts</a></li>
+			   					<li class="@("active".when(nav == "scripts"))"><a href="@routes.Scripts.getScripts()"><i class="icon-plus icon-white"></i> Create Job</a></li>
 			   				}
 		   				}
 		   				@if(models.User.parseUserId(session()) != null && (models.User.parseUserId(session()) >= 0 || Setting.get("users.guest.shareJobs") == "true")){
@@ -112,11 +119,7 @@
 	</div>
 	
 	<!-- Scripts -->
-	<script src="@routes.Assets.at("javascripts/bootstrap-alert.js")" type="text/javascript"></script>
-	<script src="@routes.Assets.at("javascripts/bootstrap-button.js")" type="text/javascript"></script>
-	<script src="@routes.Assets.at("javascripts/bootstrap-scrollspy.js")" type="text/javascript"></script>
-	<script src="@routes.Assets.at("javascripts/bootstrap-tab.js")" type="text/javascript"></script>
-	<script src="@routes.Assets.at("javascripts/bootstrap-collapse.js")" type="text/javascript"></script>
+	<script src="@routes.Assets.at("javascripts/bootstrap.min.js")" type="text/javascript"></script>
 	<script src="@routes.Assets.at("javascripts/json2.js")" type="text/javascript"></script>
 	<script src="@routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
 	@for(script <- moreScripts) {

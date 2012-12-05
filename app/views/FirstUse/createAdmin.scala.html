@@ -3,11 +3,13 @@
 @main("First use", "", Array(), Array(), Array()){
 
   	<div class="page-header">
-       	<h1>Create administrative user</h1>
+  		<hgroup>
+       		<h1>Configure Administrative Account</h1>
+       	</hgroup>
     </div>
   	
-	<p>This seems to be the first time that you are using the Pipeline 2 Web UI. Please fill in the form below to create an administrator for this website.</p>
-  	<hr/>
+	<p>This is the first time that you are using the Pipeline 2 Web UI. Please fill in the form below to configure an administrative account for this website.</p>
+	<br/>
   	
     @if(flash.contains("error")) {
         <div role="alert" class="alert alert-error">

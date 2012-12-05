@@ -32,19 +32,19 @@
 					@if(setWSForm.field("authid").errors().size() > 0){
 						<span class="help-inline">A valid authentication id must be provided.</span>
 					}
-					<span class="help-block">When communicating with the Pipeline 2 framework, the Web UI needs to authenticate. This authentication id is not to be confused with the user accounts listed under "Users and Permissions".</span>
+					<span class="help-block">When communicating with the Pipeline engine, the Web UI needs to authenticate. This authentication id is not to be confused with the user accounts listed under "Users and Permissions".</span>
 				</div>
 			</div>
 			
 			<div class="control-group @("error".when(setWSForm.error("secret") != null))" id="setWS-secretGroup">
-				<label for="secret" class="control-label">Secret text</label>
+				<label for="secret" class="control-label">Secret token</label>
 				<div class="controls">
 					<input type="password" autocomplete="off" name="secret" id="setWS-secret" value=""
-							placeholder="@if(models.Setting.get("dp2ws.secret")==null){Secret text}else{**********}" class="input-xlarge"
+							placeholder="@if(models.Setting.get("dp2ws.secret")==null){Secret token}else{**********}" class="input-xlarge"
 							onkeyup="if(@{models.Setting.get("dp2ws.secret")==null} || this.value==='')document.getElementById('setWS-secretGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-secretGroup').style.backgroundColor='#DDF';"
 					/>
 					@if(setWSForm.field("secret").errors().size() > 0){
-						<span class="help-inline">A valid secret text must be provided.</span>
+						<span class="help-inline">A valid secret token must be provided.</span>
 					}
 					<span class="help-block">The password corresponding to the authentication id.</span>
 				</div>
@@ -60,7 +60,7 @@
 					@if(setWSForm.field("resultDir").errors().size() > 0){
 						<span class="help-inline">A valid result directory path must be provided.</span>
 					}
-					<span class="help-block">If Pipeline 2 is running in local mode then you need to provide a filesystem path where the results (the output of a job) will be stored. The path is relative to the filesystem of the Pipeline 2 framework which might be different than the filesystem of the Web UI if the Pipeline 2 framework and the Web UI are running on different servers. <em>If Pipeline 2 is running in remote mode you can ignore this setting.</em></span>
+					<span class="help-block">If Pipeline 2 is running in local mode then you need to provide a filesystem path where the results (the output of a job) will be stored. The path is relative to the filesystem of the Pipeline engine which might be different than the filesystem of the Web UI if the Pipeline engine and the Web UI are running on different servers. <em>If Pipeline 2 is running in remote mode you can ignore this setting.</em></span>
 				</div>
 			</div>
 			
@@ -74,7 +74,7 @@
 					@if(setWSForm.field("tempDir").errors().size() > 0){
 						<span class="help-inline">A valid temporary directory path must be provided.</span>
 					}
-					<span class="help-block">This is a directory similar to the temporary directory above, but are used for temporary files. Jobs may need to store some temporary files here while running. The temporary files are deleted automatically when the job is finished. This directory is also relative to the Pipeline 2 frameworks filesystem. <em>If Pipeline 2 is running in remote mode you can ignore this setting.</em></span>
+					<span class="help-block">This is a directory similar to the temporary directory above, but are used for temporary files. Jobs may need to store some temporary files here while running. The temporary files are deleted automatically when the job is finished. This directory is also relative to the Pipeline engines filesystem. <em>If Pipeline 2 is running in remote mode you can ignore this setting.</em></span>
 				</div>
 			</div>
 			
@@ -92,14 +92,14 @@
 					@if("tab" == "new" && setWSForm != null && setWSForm.field("sameFilesystem").errors().size() > 0){
 						<span class="help-inline">@setWSForm.error("sameFilesystem").message</span>
 					}
-					<span class="help-block">Whether or not the Pipeline 2 framework is running on the same server as the Web UI. If they are running on the same server, then the uploaded files are handed over more efficiently to the Pipeline 2 framework. <em>If Pipeline 2 is running in remote mode then this setting must be set to "No".</em></span>
+					<span class="help-block">Whether or not the Pipeline engine is running on the same server as the Web UI. If they are running on the same server, then the uploaded files are handed over more efficiently to the Pipeline engine. <em>If Pipeline 2 is running in remote mode then this setting must be set to "No".</em></span>
 				</div>
 			</div>
 			
 			<div class="form-actions">
-				<button class="btn btn-primary" id="submit" type="submit" name="submit">Ok, looks good</button>
+				<button class="btn btn-primary" id="submit" type="submit" name="submit">Save and Continue</button>
 				@if(skipRoute != null){
-					<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Administrator.getSettings()';return false;">I'll configure it later <i class="icon-hand-right"></i></button>
+					<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Administrator.getSettings()';return false;">Skip Configuration <i class="icon-hand-right"></i></button>
 				}
 			</div>
 			

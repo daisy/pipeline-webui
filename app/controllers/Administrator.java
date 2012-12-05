@@ -31,8 +31,8 @@ public class Administrator extends Controller {
 		public Form<User> userForm = Administrator.userForm;
 		public Form<GuestUser> guestForm = Administrator.guestForm;
 		public Form<GlobalPermissions> globalForm = Administrator.globalForm;
-		public Form<SetJobCleanupForm> setJobCleanupForm = Administrator.setJobCleanupForm;
-		public Form<ConfigureBrandingForm> configureBrandingForm = Administrator.configureBrandingForm;
+		public Form<SetMaintenanceForm> setMaintenanceForm = Administrator.setMaintenanceForm;
+		public Form<ConfigureAppearanceForm> configureAppearanceForm = Administrator.configureAppearanceForm;
 	}
 	
 	public final static Form<SetDeploymentForm> setDeploymentForm = form(SetDeploymentForm.class);
@@ -170,36 +170,36 @@ public class Administrator extends Controller {
 		}
 	}
 	
-	public final static Form<SetJobCleanupForm> setJobCleanupForm = form(SetJobCleanupForm.class);
-	public static class SetJobCleanupForm {
+	public final static Form<SetMaintenanceForm> setMaintenanceForm = form(SetMaintenanceForm.class);
+	public static class SetMaintenanceForm {
         @Required
-        public String jobcleanup;
+        public String maintenance;
         
-        public static void validate(Form<SetJobCleanupForm> filledForm) {
-        	String jobCleanupString = filledForm.field("jobcleanup").valueOr("0");
-        	Long jobCleanup = null;
+        public static void validate(Form<SetMaintenanceForm> filledForm) {
+        	String maintenanceString = filledForm.field("maintenance").valueOr("0");
+        	Long maintenance = null;
         	try {
-        		jobCleanup = Long.parseLong(jobCleanupString);
+        		maintenance = Long.parseLong(maintenanceString);
         	} catch (NumberFormatException e) {
-        		filledForm.reject("jobcleanup", "Please enter a number.");
+        		filledForm.reject("maintenance", "Please enter a number.");
         	}
-        	if (jobCleanup != null && jobCleanup < 0)
-        		filledForm.reject("jobcleanup", "Please enter a positive number.");
+        	if (maintenance != null && maintenance < 0)
+        		filledForm.reject("maintenance", "Please enter a positive number.");
         }
 
-		public static void save(Form<SetJobCleanupForm> filledForm) {
-			long jobCleanupTime = Long.parseLong(filledForm.field("jobcleanup").valueOr("0")) * 60000L;
-        	Setting.set("jobs.deleteAfterDuration", jobCleanupTime+"");
+		public static void save(Form<SetMaintenanceForm> filledForm) {
+			long maintenanceTime = Long.parseLong(filledForm.field("maintenance").valueOr("0")) * 60000L;
+        	Setting.set("jobs.deleteAfterDuration", maintenanceTime+"");
 		}
     }
 	
-	public final static Form<ConfigureBrandingForm> configureBrandingForm = form(ConfigureBrandingForm.class);
-	public static class ConfigureBrandingForm {
+	public final static Form<ConfigureAppearanceForm> configureAppearanceForm = form(ConfigureAppearanceForm.class);
+	public static class ConfigureAppearanceForm {
         
 		public String title;
         public String theme;
         
-        public static void validate(Form<ConfigureBrandingForm> filledForm) {
+        public static void validate(Form<ConfigureAppearanceForm> filledForm) {
         	String title = filledForm.field("title").valueOr("");
         	if ("".equals(title)) {
         		filledForm.reject("title", "The website must have a title.");
@@ -225,13 +225,13 @@ public class Administrator extends Controller {
 	        		themes.add(theme);
         	}
         }
-		public static void save(Form<ConfigureBrandingForm> filledForm) {
+		public static void save(Form<ConfigureAppearanceForm> filledForm) {
 			String theme = filledForm.field("theme").valueOr("");
         	if (theme.length() > 0)
         		theme += "/";
         	Application.themeName = theme;
-        	Setting.set("branding.theme", theme);
-        	Setting.set("branding.title", filledForm.field("title").valueOr(Setting.get("branding.title")));
+        	Setting.set("appearance.theme", theme);
+        	Setting.set("appearance.title", filledForm.field("title").valueOr(Setting.get("appearance.title")));
 		}
     }
 	
@@ -239,22 +239,21 @@ public class Administrator extends Controller {
 	
 	final static Form<GuestUser> guestForm = form(GuestUser.class);
 	public static class GuestUser {
-		
-		public boolean allowGuests;
-		public boolean automaticLogin;
-		
 		@Constraints.MinLength(1)
 		@Constraints.Pattern("[^{}\\[\\]();:'\"<>]+") // Avoid breaking JavaScript code in templates
 		public String name;
-		
-		public boolean shareJobs;
-		public boolean showEmailBox;
-		public boolean showGuestName;
 	}
 	
 	final static Form<GlobalPermissions> globalForm = form(GlobalPermissions.class);
 	public static class GlobalPermissions {
 		public boolean hideAdvancedOptions;
+		
+		public boolean allowGuests;
+		public boolean automaticLogin;
+		
+		public boolean shareJobs;
+		public boolean showEmailBox;
+		public boolean showGuestName;
 	}
 	
 	public static Result getSettings() {
@@ -267,7 +266,7 @@ public class Administrator extends Controller {
 
 		List<User> users = User.find.orderBy("admin, name, email").findList();
 		AdminForms forms = new AdminForms();
-		ConfigureBrandingForm.refreshList();
+		ConfigureAppearanceForm.refreshList();
 		
 		return ok(views.html.Administrator.settings.render(forms, users));
 	}
@@ -280,6 +279,8 @@ public class Administrator extends Controller {
 		if (user == null || !user.admin)
 			return redirect(routes.Login.login());
 		
+		ConfigureAppearanceForm.refreshList();
+		
 		AdminForms forms = new AdminForms();
 		
 		String formName = request().queryString().containsKey("formName") ? request().queryString().get("formName")[0] :
@@ -290,6 +291,8 @@ public class Administrator extends Controller {
 			redirect(routes.Administrator.getSettings());
 		}
 		
+		flash("settings.formName", formName);
+		
 		if ("updateGlobalPermissions".equals(formName)) {
 			Form<GlobalPermissions> filledForm = globalForm.bindFromRequest();
 //			GlobalPermissions.validate(filledForm);
@@ -299,10 +302,32 @@ public class Administrator extends Controller {
 			if (filledForm.hasErrors()) {
 				forms.globalForm = filledForm;
 				List<User> users = User.find.orderBy("admin, name, email").findList();
-				ConfigureBrandingForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 				
 			} else {
+				String login = filledForm.field("login").valueOr("deny");
+				if ("automatic".equals(login)) {
+					Setting.set("users.guest.allowGuests", "true");
+					Setting.set("users.guest.automaticLogin", "true");
+					Setting.set("users.guest.showGuestName", "false");
+					Setting.set("users.guest.shareJobs", "true");
+					Setting.set("users.guest.showEmailBox", "false");
+					
+				} else if ("allow".equals(login)) {
+					Setting.set("users.guest.allowGuests", "true");
+					Setting.set("users.guest.automaticLogin", "false");
+					Setting.set("users.guest.showGuestName", "true");
+					Setting.set("users.guest.shareJobs", "false");
+					Setting.set("users.guest.showEmailBox", "true");
+					
+				} else {
+					Setting.set("users.guest.allowGuests", "false");
+					Setting.set("users.guest.automaticLogin", "false");
+					Setting.set("users.guest.showGuestName", "true");
+					Setting.set("users.guest.shareJobs", "false");
+					Setting.set("users.guest.showEmailBox", "false");
+				}
+				
 				Setting.set("jobs.hideAdvancedOptions", filledForm.field("hideAdvancedOptions").valueOr("false"));
 				flash("success", "Global permissions was updated successfully!");
 				return redirect(routes.Administrator.getSettings());
@@ -318,28 +343,10 @@ public class Administrator extends Controller {
 			if (filledForm.hasErrors()) {
 				forms.guestForm = filledForm;
 				List<User> users = User.find.orderBy("admin, name, email").findList();
-				ConfigureBrandingForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 				
 			} else {
-				String login = filledForm.field("login").valueOr("deny");
-				if ("automatic".equals(login)) {
-					Setting.set("users.guest.allowGuests", "true");
-					Setting.set("users.guest.automaticLogin", "true");
-					
-				} else if ("allow".equals(login)) {
-					Setting.set("users.guest.allowGuests", "true");
-					Setting.set("users.guest.automaticLogin", "false");
-					
-				} else {
-					Setting.set("users.guest.allowGuests", "false");
-					Setting.set("users.guest.automaticLogin", "false");
-				}
-				
 				Setting.set("users.guest.name", filledForm.field("name").valueOr("Guest"));
-				Setting.set("users.guest.showGuestName", filledForm.field("showGuestName").valueOr("false"));
-				Setting.set("users.guest.shareJobs", filledForm.field("shareJobs").valueOr("false"));
-				Setting.set("users.guest.showEmailBox", filledForm.field("showEmailBox").valueOr("true"));
 				flash("success", "Guest was updated successfully!");
 				return redirect(routes.Administrator.getSettings());
 			}
@@ -367,7 +374,6 @@ public class Administrator extends Controller {
 			} else if (filledForm.hasErrors()) {
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.userForm = filledForm;
-				ConfigureBrandingForm.refreshList();
 				flash("error", "Could not edit user, please review the form and make sure it is filled out properly.");
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 				
@@ -475,7 +481,6 @@ public class Administrator extends Controller {
 				flash("settings.usertab", "adduser");
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.userForm = filledForm;
-				ConfigureBrandingForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 				
 			} else {
@@ -510,12 +515,11 @@ public class Administrator extends Controller {
 			if (filledForm.hasErrors()) {
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.setWSForm = filledForm;
-				ConfigureBrandingForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
 	        	Administrator.SetWSForm.save(filledForm);
-	        	flash("success", "Pipeline 2 Web Service endpoint changed successfully!");
+	        	flash("success", "Pipeline 2 Web API endpoint changed successfully!");
 	        	return redirect(routes.Administrator.getSettings());
 	        }
 		}
@@ -527,7 +531,6 @@ public class Administrator extends Controller {
 			if(filledForm.hasErrors()) {
 	        	List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.setUploadDirForm = filledForm;
-				ConfigureBrandingForm.refreshList();
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
@@ -543,13 +546,13 @@ public class Administrator extends Controller {
 			
 			if (filledForm.field("enable").value() != null) {
 				Setting.set("mail.enable", filledForm.field("enable").valueOr(""));
+				flash("success", "E-mail is now "+("true".equals(filledForm.field("enable").valueOr("false"))?"enabled":"disabled")+".");
 				return redirect(routes.Administrator.getSettings());
 				
 			} else {
 				if(filledForm.hasErrors()) {
 					List<User> users = User.find.orderBy("admin, name, email").findList();
 					forms.configureEmailForm = filledForm;
-					ConfigureBrandingForm.refreshList();
 					return badRequest(views.html.Administrator.settings.render(forms, users));
 	
 				} else {
@@ -560,26 +563,25 @@ public class Administrator extends Controller {
 			}
 		}
 		
-		if ("setJobCleanup".equals(formName)) {
-			Form<Administrator.SetJobCleanupForm> filledForm = setJobCleanupForm.bindFromRequest();
-			Administrator.SetJobCleanupForm.validate(filledForm);
+		if ("setMaintenance".equals(formName)) {
+			Form<Administrator.SetMaintenanceForm> filledForm = setMaintenanceForm.bindFromRequest();
+			Administrator.SetMaintenanceForm.validate(filledForm);
 			
 			if(filledForm.hasErrors()) {
 	        	List<User> users = User.find.orderBy("admin, name, email").findList();
-				forms.setJobCleanupForm  = filledForm;
-				ConfigureBrandingForm.refreshList();
+				forms.setMaintenanceForm  = filledForm;
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
-	        	Administrator.SetJobCleanupForm.save(filledForm);
-	        	flash("success", "Job cleanup time changed successfully!");
+	        	Administrator.SetMaintenanceForm.save(filledForm);
+	        	flash("success", "Maintenance time changed successfully!");
 	        	return redirect(routes.Administrator.getSettings());
 	        }
 		}
 		
-		if ("configureBranding".equals(formName)) {
-			Form<Administrator.ConfigureBrandingForm> filledForm = configureBrandingForm.bindFromRequest();
-			Administrator.ConfigureBrandingForm.validate(filledForm);
+		if ("configureAppearance".equals(formName)) {
+			Form<Administrator.ConfigureAppearanceForm> filledForm = configureAppearanceForm.bindFromRequest();
+			Administrator.ConfigureAppearanceForm.validate(filledForm);
 			
 			if(filledForm.hasErrors()) {
 				for (String key : filledForm.errors().keySet()) {
@@ -589,21 +591,22 @@ public class Administrator extends Controller {
 				}
 				
 	        	List<User> users = User.find.orderBy("admin, name, email").findList();
-				forms.configureBrandingForm  = filledForm;
-				ConfigureBrandingForm.refreshList();
+				forms.configureAppearanceForm  = filledForm;
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
 	        	String theme = Application.themeName();
-	        	String title = Setting.get("branding.title");
+	        	String title = Setting.get("appearance.title");
 	        	
-	        	Administrator.ConfigureBrandingForm.save(filledForm);
+	        	Administrator.ConfigureAppearanceForm.save(filledForm);
 	        	
 	        	String successString = "";
 	        	if (!theme.equals(Application.themeName()))
 	        		successString += "Theme changed to "+("".equals(Application.themeName())?"default":"\""+Application.themeName().substring(0, Application.themeName().length()-1)+"\"")+" !";
-	        	if (!title.equals(Setting.get("branding.title")))
-	        		successString += " Title changed to \""+Setting.get("branding.title")+"\" !";
+	        	if (!title.equals(Setting.get("appearance.title")))
+	        		successString += " Title changed to \""+Setting.get("appearance.title")+"\" !";
+	        	if ("".equals(successString))
+	        		successString = "Nothing changed";
 	        	flash("success", successString);
 	        	return redirect(routes.Administrator.getSettings());
 	        }
@@ -622,20 +625,20 @@ public class Administrator extends Controller {
 				Duration.create(1, TimeUnit.SECONDS),
 				new Runnable() {
 					public void run() {
-						// DP2 framework
+						// Pipeline engine
 						String dp2fwkDir = Setting.get("dp2fwk.dir");
 						if (dp2fwkDir != null && !"".equals(dp2fwkDir)) {
-							Logger.info("Attempting to stop the DAISY Pipeline 2 framework...");
+							Logger.info("Attempting to stop the Pipeline engine...");
 							Setting.set("dp2fwk.state","STOPPING");
 							NotificationConnection.pushAll(new Notification("dp2fwk.state", "STOPPING"));
 							int exitValue = CommandExecutor.executeCommandWithWorker(Application.DP2_HALT, new File(dp2fwkDir, "cli"), 20000L);
 							if (exitValue != 0) {
 								Setting.set("dp2fwk.state","STOPPED");
 								NotificationConnection.pushAll(new Notification("dp2fwk.state", "STOPPED"));
-								Logger.info("Halted the DAISY Pipeline 2 framework");
+								Logger.info("Halted the Pipeline engine");
 							} else {
 								Setting.set("dp2fwk.state","RUNNING");
-								Logger.info("Failed to halt the DAISY Pipeline 2 framework");
+								Logger.info("Failed to halt the Pipeline engine");
 							}
 						}
 						

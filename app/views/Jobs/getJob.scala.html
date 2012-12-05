@@ -1,32 +1,86 @@
 @(fwkJob: org.daisy.pipeline.client.models.Job, uiJob: models.Job)
 
-@main("View job", "", Array("notifications.js")) {
+@main("View job", "", Array("notifications.js","fuzzyDates.js")) {
 
 <script type="text/javascript" charset="utf-8">
 $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
 </script>
 
-<h1>Job: @uiJob.nicename <br/><small>(@fwkJob.id)</small></h1>
+<hgroup>
+	<h1>Job Summary<br>
+	<small>@uiJob.nicename</small></h1>
+	
+	<small><a class="accordion-toggle collapsed" data-toggle="collapse" href="#job-details">
+		<style>
+			#job-details-show { display:none; }
+			.collapsed #job-details-show { display:inline; }
+			#job-details-hide { display:inline; }
+			.collapsed #job-details-hide { display:none; }
+		</style>
+		<span id="job-details-show"><i class="icon-chevron-down"></i>Show details</span>
+		<span id="job-details-hide"><i class="icon-chevron-up"></i>Hide details</span>
+	</a></small>
 
-<p>
-<table>
-<!--<tr><td>Created:</td><td>@uiJob.created</td></tr>-->
-<tr><td>Started:</td><td id="job-started">@uiJob.started</td></tr>
-<tr><td>Finished:</td><td id="job-finished">@uiJob.finished</td></tr>
-</table>
-</p>
+</hgroup>
+
+<div class="collapse" id="job-details">
+	<style>
+		/*#job-details td { vertical-align: middle; }*/
+	</style>
+	<table class="table table-hover table-condensed">
+		<tr>
+			<td><strong>Job:</strong></td>
+			<td>
+				<strong>@uiJob.nicename</strong><br/>
+				<small class="muted">@fwkJob.id</small>
+			</td>
+		</tr>
+		<tr>
+			<td>Script:</td>
+			<td>
+				@uiJob.scriptName<br/>
+				<small class="muted">@uiJob.scriptId</small>
+			</td>
+		</tr>
+		<tr>
+			<td>Created:</td>
+			<td>
+				<span id="created-fuzzy" aria-live="timer"></span><br/>
+				<small class="muted" id="created">@uiJob.created</small>
+				<script type="text/javascript">$(function(){updateFuzzy("created-fuzzy",new Date(@if(uiJob.created==null){ 0 }else{ @uiJob.created.getTime() } ));});</script>
+			</td>
+		</tr>
+		<tr>
+			<td>Started:</td>
+			<td>
+				<span id="started-fuzzy" aria-live="timer"></span><br/>
+				<small class="muted" id="started">@uiJob.started</small>
+				<script type="text/javascript">$(function(){updateFuzzy("started-fuzzy",new Date(@if(uiJob.started==null){ 0 }else{ @uiJob.started.getTime() } ));});</script>
+			</td>
+		</tr>
+		<tr>
+			<td>Finished:</td>
+			<td>
+				<span id="finished-fuzzy" aria-live="timer"></span><br/>
+				<small class="muted" id="finished">@uiJob.finished</small>
+				<script type="text/javascript">$(function(){updateFuzzy("finished-fuzzy",new Date(@if(uiJob.finished==null){ 0 }else{ @uiJob.finished.getTime() } ));});</script>
+			</td>
+		</tr>
+	</table>
+	<br/>
+</div>
 
 <div class="row">
 	<div class="hero-unit" style="text-align:center">
 	
 	<div id="status-done" style="display:none;">
-		<h2 role="status">Job finished successfully!</h1>
+		<h2 role="status" class="text-success">Success</h1>
 		<a class="btn btn-large btn-success" href="@routes.Jobs.getResult(fwkJob.id)"><i class="icon-download-alt icon-white"></i> Download results</a>
 	</div>
 	
 	<div id="status-running" style="display:none;">
-		<h2 role="status" style="color:#000080;">
-			Job is running
+		<h2 role="status" class="text-info">
+			Running
 			<span aria-live="none">
 				<span id="runningDot1"                       >&nbsp;.&nbsp; &nbsp; &nbsp;</span>
 				<span id="runningDot2" style="display: none;">&nbsp;.&nbsp;.&nbsp; &nbsp;</span>
@@ -58,14 +112,14 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 	</div>
 	
 	<div id="status-idle" style="display:none;">
-		<h2 role="status" style="color:#000080;">Job is idle</h2>
+		<h2 role="status" class="text-muted">Queued</h2>
 		@if(fwkJob.messages.size()>0){
 			<ol start="@fwkJob.messages.get(fwkJob.messages.size()-1).sequence"><li><pre>@fwkJob.messages.get(fwkJob.messages.size()-1).text</pre></li></ol>
 		}
 	</div>
 	
 	<div id="status-error" style="display:none;">
-		<h2 role="status" style="color:#800000;">Job failed</h2>
+		<h2 role="status" class="text-error">Failed</h2>
 		<p>See the message log for details.</p>
 	</div>
 	
@@ -76,26 +130,25 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 	</div>
 </div>
 
-<div class="well">
-	<h2>Other output</h2>
-	<br/>
-	<a class="btn btn-info" href="@routes.Jobs.getLog(fwkJob.id)"><i class="icon-eye-open"></i> Detailed log</a>
-	<!-- Other outputs such as secondary output ports can be listed here -->
-</div>
+<h2>Execution Log</h2>
 
-<h2>Messages</h2>
+<br/>
+<a class="btn btn-info" href="@routes.Jobs.getLog(fwkJob.id)"><i class="icon-download-alt icon-white"></i> Download Detailed Log</a>
+<br/><br/>
 
 <ol aria-live="polite" role="log" class="messagelist" id="message-list">
 	@for(message <- fwkJob.messages){
-		<li value="@message.sequence" class="message @("message-error".when(org.daisy.pipeline.client.models.job.Message.Level.ERROR==message.level)) @("message-warn".when(org.daisy.pipeline.client.models.job.Message.Level.WARNING==message.level))""><code>@message.text</code></li>
+		<li value="@message.sequence"><span class="message @("text-error".when(org.daisy.pipeline.client.models.job.Message.Level.ERROR==message.level)) @("text-warning".when(org.daisy.pipeline.client.models.job.Message.Level.WARNING==message.level))"">@message.text</span></li>
 	}
 </ol>
+
+<br/><br/><br/>
 
 <script type="text/javascript">
 	$(function(){
 		Notifications.listen("job-message-@fwkJob.id", function(message){
 			//if ($("#message-list li").filter(function(i){return $(this).attr("value")===message.sequence;}).size() === 0) {
-				$("#message-list").append('<li value="'+message.sequence+'" class="message '+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><code>'+message.text+'</code></li>');
+				$("#message-list").append('<li value="'+message.sequence+'"><span class="message '+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'">'+message.text+'</span></li>');
 				$("#message-latest").html("<pre>"+message.text+"</pre>");
 			//}
 		});
@@ -105,8 +158,8 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 			}
 			$("#status-"+status.toLowerCase()).show();
 		});
-		Notifications.listen("job-created-@fwkJob.id", function(message){ $("#job-created").html(message); });
-		Notifications.listen("job-finished-@fwkJob.id", function(message){ $("#job-finished").html(message); });
+		Notifications.listen("job-started-@fwkJob.id", function(message){ $("#started").html(message.text); updateFuzzy("started-fuzzy", new Date(parseInt(message.number))); });
+		Notifications.listen("job-finished-@fwkJob.id", function(message){ $("#finished").html(message.text); updateFuzzy("finished-fuzzy", new Date(parseInt(message.number))); });
 	});
 </script>
 

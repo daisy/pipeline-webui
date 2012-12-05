@@ -35,7 +35,7 @@
 			<div class="control-group @("error".when(createAdminForm.error("repeatPassword") != null))">
          		<label for="repeatPassword" class="control-label">Repeat password</label>
 				<div class="controls">
-					<input type="password" name="repeatPassword" id="repeatPassword" placeholder="Please repeat your password again." class="input-xlarge"/>
+					<input type="password" name="repeatPassword" id="repeatPassword" placeholder="Please repeat your password." class="input-xlarge"/>
 					@if(createAdminForm.field("repeatPassword").errors().size() > 0){
 						<span class="help-inline">@createAdminForm.error("repeatPassword").message</span>
 					}
@@ -43,7 +43,7 @@
 			</div>
 			
 			<div class="form-actions">
-				<button class="btn btn-primary" id="submit" type="submit" name="submit">Create administrator</button>
+				<button class="btn btn-primary" id="submit" type="submit" name="submit">Save and continue</button>
 			</div>
 			
 		</div>

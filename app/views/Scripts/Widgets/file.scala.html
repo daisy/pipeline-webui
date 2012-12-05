@@ -1,23 +1,23 @@
-@(arg: org.daisy.pipeline.client.models.script.Argument, script: org.daisy.pipeline.client.models.Script)
+@(arg: org.daisy.pipeline.client.models.script.Argument, script: org.daisy.pipeline.client.models.Script, mediaTypeBlacklist: List[String])
 
 @if(arg.sequence==Boolean.TRUE){
 	
-	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
+	<div class="control-group @("advanced-argument".when(!arg.required))">
 		<label class="control-label" id="@{arg.kind}-@{arg.name}-label">@arg.nicename</label>
 		<!-- TODO: add drag'n'drop support for reordering items? -->
 		<div class="controls">
 			<input type="hidden" name="@{arg.kind}-@{arg.name}" id="@{arg.kind}-@{arg.name}" value=""/>
 			<div class="row">
 				<div class="span">
-					<label for="@{arg.kind}-@{arg.name}-all" id="@{arg.kind}-@{arg.name}-all-label">Available files</label>
+					<label for="@{arg.kind}-@{arg.name}-all" id="@{arg.kind}-@{arg.name}-all-label">Uploaded files</label>
 					<select style="width:auto;min-width:220px;" id="@{arg.kind}-@{arg.name}-all" multiple="multiple" size="10" class="all-files" aria-labelledby="@{arg.kind}-@{arg.name}-all-label @{arg.kind}-@{arg.name}-label">
 						<optgroup id="@{arg.kind}-@{arg.name}-suggested" label="Suggested files"></optgroup>
 						<optgroup id="@{arg.kind}-@{arg.name}-other" label="Other files"></optgroup>
 					</select>
 				</div>
 				<div class="span" style="padding-top:50px;">
-					<button type="button" id="@{arg.kind}-@{arg.name}-add" class="btn" style="white-space:nowrap; width:120px;">Add <i class="icon-arrow-right"></i></button><br/>
-					<button type="button" id="@{arg.kind}-@{arg.name}-remove" class="btn" style="white-space:nowrap; width:120px;"><i class="icon-arrow-left"></i> Remove</button>
+					<button type="button" id="@{arg.kind}-@{arg.name}-add" class="btn" title="Add"><img src="@routes.Assets.at("images/glyphicons/glyphicons_211_right_arrow.png")" alt="Add"/></button><br/>
+					<button type="button" id="@{arg.kind}-@{arg.name}-remove" class="btn" title="Remove"><img src="@routes.Assets.at("images/glyphicons/glyphicons_210_left_arrow.png")" alt="Remove"/></button>
 				</div>
 				<div class="span scrollable">
 					<label for="@{arg.kind}-@{arg.name}-selected" id="@{arg.kind}-@{arg.name}-selected-label">Selected files</label>
@@ -26,8 +26,8 @@
 				</div>
 				@if(arg.ordered==Boolean.TRUE){
 					<div class="span" style="padding-top:50px;">
-						<button type="button" id="@{arg.kind}-@{arg.name}-up" class="btn" style="white-space:nowrap; width:120px;"><i class="icon-arrow-up"></i> Move up</button><br/>
-						<button type="button" id="@{arg.kind}-@{arg.name}-down" class="btn" style="white-space:nowrap; width:120px;"><i class="icon-arrow-down"></i> Move down</button>
+						<button type="button" id="@{arg.kind}-@{arg.name}-up" class="btn" title="Move up"><img src="@routes.Assets.at("images/glyphicons/glyphicons_213_up_arrow.png")" alt="Move up"/></button><br/>
+						<button type="button" id="@{arg.kind}-@{arg.name}-down" class="btn" title="Move down"><img src="@routes.Assets.at("images/glyphicons/glyphicons_212_down_arrow.png")" alt="Move down"/></button>
 					</div>
 					
 				}
@@ -104,9 +104,9 @@
 								}
 							}
 							
-							@if(script.mediaTypeBlacklist.length > 0){
+							@if(mediaTypeBlacklist.length > 0){
 								switch (file.contentType) {
-									@for(contentType <- script.mediaTypeBlacklist){
+									@for(contentType <- mediaTypeBlacklist){
 									case "@contentType":
 									}
 										matchingContentType = false;
@@ -152,7 +152,7 @@
 	
 }else{
 	
-	<div class="control-group @("advanced-argument".when(arg.hide))" style="@("display:none;".when(arg.hide))">
+	<div class="control-group @("advanced-argument".when(!arg.required))">
 		<label class="control-label" for="@{arg.kind}-@{arg.name}">@arg.nicename</label>
 		<div class="controls">
 			<select name="@{arg.kind}-@{arg.name}" id="@{arg.kind}-@{arg.name}">
@@ -185,9 +185,9 @@
 								}
 							}
 							
-							@if(script.mediaTypeBlacklist.length > 0){
+							@if(mediaTypeBlacklist.length > 0){
 								switch (file.contentType) {
-									@for(contentType <- script.mediaTypeBlacklist){
+									@for(contentType <- mediaTypeBlacklist){
 									case "@contentType":
 									}
 										matchingContentType = false;

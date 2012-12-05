@@ -22,7 +22,7 @@ import models.*;
 /**
  * Helps with configuring the Web UI for the first time.
  * 
- * Configure database -> create admin account -> set webservice endpoint -> set upload directory -> welcome page!
+ * Configure database -> configure administrative account -> set webservice endpoint -> set upload directory -> welcome page!
  * 
  * @author jostein
  */
@@ -277,7 +277,7 @@ public class FirstUse extends Controller {
 					Setting.set("dp2ws.resultDir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.results" + controllers.Application.SLASH);
 					Setting.set("dp2ws.sameFilesystem", "true");
 					Setting.set("dp2fwk.dir", dp2dirFile.getAbsolutePath());
-					result.put("state", "SUCCESS"); // successfully configured the framework/CLI communication
+					result.put("state", "SUCCESS"); // successfully configured the Pipeline engine / CLI communication
 					NotificationConnection.pushAll(new Notification("dp2locator", result));
 					
 					dp2Locator.cancel();

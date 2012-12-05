@@ -1,4 +1,4 @@
-@(script: org.daisy.pipeline.client.models.Script, uploadFiles: Boolean, hideAdvancedOptions: Boolean)
+@(script: org.daisy.pipeline.client.models.Script, uploadFiles: Boolean, hasAdvancedOptions: Boolean, hideAdvancedOptions: Boolean, mediaTypeBlacklist: List[String])
 
 @main("Create job", "",
 Array("tmpl.js","jquery.ui.widget.js","jquery.iframe-transport.js","jquery.fileupload.js","jquery.fileupload-ui.js","notifications.js","createJob.js"),
@@ -12,19 +12,16 @@ Array("jquery.fileupload-ui.css")) {
 	$(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
 </script>
 
+<hgroup>
 <h1>
 	@script.nicename<br /> <small>@script.desc</small>
 </h1>
-
-@if(hideAdvancedOptions){
-	<div class="pull-right well">
-		<label class="control-label" for="hideAdvancedOptions" aria-label="hideAdvancedOptions">Show advanced options</label>
-		<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" id="hideAdvancedOptions" aria-labelledby="hideAdvancedOptions-label">
-			<button type="button" name="showAdvancedOptions-on" class="btn" id="showAdvancedOptions-on" aria-role="radio" aria-checked="false" onclick="$('.advanced-argument').show('slow');">Yes</button>
-			<button type="button" name="showAdvancedOptions-off" class="btn active" id="showAdvancedOptions-off" aria-role="radio" aria-checked="true" onclick="$('.advanced-argument').hide('slow');">No</button>
-		</div>
-	</div>
+@if(script.homepage!=null && script.homepage.href!=null && script.homepage.href.length()>0){
+	<address class="muted">
+		<a href="@script.homepage.href" target="_blank">Online Documentation <i class="icon-share"></a></i>
+	</address>
 }
+</hgroup>
 
 @if(uploadFiles){
 	@Widgets.upload()
@@ -37,20 +34,63 @@ Array("jquery.fileupload-ui.css")) {
 	<fieldset>
 		
 		@for(arg <- script.arguments){
-			@if(arg.output!="result" && arg.output!="temp"){
-				@if(arg.kind=="parameters"){
-					@Widgets.parameters(arg, script)
-				}else{
-					@defining(arg.xsdType){xsdType => @xsdType match{
-						case "string" => { @Widgets.string(arg, script) }
-						case "boolean" => { @Widgets.boolean(arg, script) }
-						case "anyFileURI" => { @Widgets.file(arg, script) }
-						case _ => { @Widgets.string(arg, script) }
-					}}
+			@if(arg.required==true){
+				@if(arg.output!="result" && arg.output!="temp"){
+					@if(arg.kind=="parameters"){
+						@Widgets.parameters(arg, script)
+					}else{
+						@defining(arg.xsdType){xsdType => @xsdType match{
+							case "string" => { @Widgets.string(arg, script) }
+							case "boolean" => { @Widgets.boolean(arg, script) }
+							case "anyFileURI" => { @Widgets.file(arg, script, mediaTypeBlacklist) }
+							case _ => { @Widgets.string(arg, script) }
+						}}
+					}
 				}
 			}
 		}
 		
+	</fieldset>
+	
+	@if(hasAdvancedOptions){
+		<fieldset>
+			<legend>
+				<span>Optional parameters</span>
+				<small><a class="accordion-toggle @("collapsed".when(hideAdvancedOptions))" data-toggle="collapse" href="#advanced-options">
+					<style>
+						#advanced-options-show { display:none; }
+						.collapsed #advanced-options-show { display:inline; }
+						#advanced-options-hide { display:inline; }
+						.collapsed #advanced-options-hide { display:none; }
+					</style>
+					<span id="advanced-options-show"><i class="icon-chevron-down"></i>Show</span>
+					<span id="advanced-options-hide"><i class="icon-chevron-up"></i>Hide</span>
+				</a></small>
+			</legend>
+			
+			<div class="control-group @("in".when(!hideAdvancedOptions)) collapse" id="advanced-options">
+				@for(arg <- script.arguments){
+					@if(arg.required==false || arg.required == null){
+						@if(arg.output!="result" && arg.output!="temp"){
+							@if(arg.kind=="parameters"){
+								@Widgets.parameters(arg, script)
+							}else{
+								@defining(arg.xsdType){xsdType => @xsdType match{
+									case "string" => { @Widgets.string(arg, script) }
+									case "boolean" => { @Widgets.boolean(arg, script) }
+									case "anyFileURI" => { @Widgets.file(arg, script, mediaTypeBlacklist) }
+									case _ => { @Widgets.string(arg, script) }
+								}}
+							}
+						}
+					}
+					<br/>
+				}
+			</div>
+		</fieldset>
+	}
+	
+	<fieldset>
 		@if(models.User.parseUserId(session()) != null && models.User.parseUserId(session()) < 0 && Setting.get("mail.enable") == "true" && Setting.get("users.guest.showEmailBox") == "true"){
 			<div class="control-group">
 				<label class="control-label" for="guest-email">Your e-mail</label>
@@ -64,16 +104,8 @@ Array("jquery.fileupload-ui.css")) {
 		<div class="form-actions">
 			<button type="submit" value="Start job" data-loading-text="Starting job..." class="btn btn-large btn-primary" onclick="$(this).button('loading');">Start job</button>
 		</div>
-	
 	</fieldset>
 	
-}
-
-@if(script.homepage!=null && script.homepage.href!=null && script.homepage.href.length()>0){
-	<address style="text-align: center;">
-		Script homepage: <a href="@script.homepage.href" target="_blank">@script.homepage.href</a>.
-		@script.homepage.desc
-	</address>
 }
 
 }

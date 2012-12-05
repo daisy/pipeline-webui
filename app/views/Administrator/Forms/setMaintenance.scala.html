@@ -1,0 +1,37 @@
+@(setMaintenanceForm: Form[controllers.Administrator.SetMaintenanceForm], route: play.api.mvc.Call, skipRoute: play.api.mvc.Call)
+
+@helper.form(action = route) {
+	
+	<input type="hidden" name="formName" value="setMaintenance"/>
+	
+   	<fieldset>
+   		
+   		<div class="form-horizontal">
+   			
+			<div class="control-group @("error".when(setMaintenanceForm.error("maintenance") != null))" id="setMaintenance-maintenanceGroup">
+				<label for="maintenance" class="control-label">Job persistence time</label>
+				<div class="controls">
+					<input type="number" name="maintenance" id="maintenance" placeholder="Number of minutes" class="input-xlarge"
+							value="@setMaintenanceForm.field("maintenance").valueOr(if (Setting.get("jobs.deleteAfterDuration") != null) (Long.parseLong(models.Setting.get("jobs.deleteAfterDuration"))/60000L)+"" else "0")"
+							onkeyup="if(this.value==='@{if (models.Setting.get("jobs.deleteAfterDuration")==null) "0" else Long.parseLong(models.Setting.get("jobs.deleteAfterDuration"))/60000L}')document.getElementById('setMaintenance-maintenanceGroup').style.backgroundColor='#FFF';else document.getElementById('setMaintenance-maintenanceGroup').style.backgroundColor='#DDF';"
+					/> minutes before jobs are deleted.
+					<p class="help-block">If you never want to delete jobs, set the job persistence time to 0.</p>
+					@if(setMaintenanceForm.field("maintenance").errors().size() > 0){
+						<p class="help-block">@setMaintenanceForm.field("maintenance").errors().get(0).message()</p>
+					}
+				</div>
+			</div>
+			
+			<!-- TODO: add checkbox or on/off switch for enabling/disabling maintenance. It can be done already by setting the cleanup time to 0 minutes, but it should be more obvious. -->
+			
+			<div class="form-actions">
+				<button class="btn btn-primary" id="submit" type="submit" name="submit">Save Settings</button>
+				@if(skipRoute != null){
+					<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Application.index()';return false;">I'll configure it later <i class="icon-hand-right"></i></button>
+				}
+			</div>
+			
+		</div>
+	
+	</fieldset>
+}
