@@ -10,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 import org.daisy.pipeline.client.Alive;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
+import org.daisy.pipeline.client.Pipeline2WSResponse;
+import org.daisy.pipeline.client.models.Script;
 
 import akka.util.Duration;
 import play.libs.Akka;
@@ -47,6 +49,36 @@ public class Global extends GlobalSettings {
 		
 		if (Play.isDev())
 			Pipeline2WS.debug = true;
+		
+		Akka.system().scheduler().schedule(
+				Duration.create(0, TimeUnit.SECONDS),
+				Duration.create(10, TimeUnit.SECONDS),
+				new Runnable() {
+					public void run() {
+						if (Setting.get("dp2ws.endpoint") == null)
+							return;
+						
+						Pipeline2WSResponse response;
+						Alive alive = null;
+						String error = null;
+
+						int status = 200;
+						try {
+							response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));
+							if (response.status != 200) {
+								status = response.status;
+								error = response.asText();
+								
+							} else {
+								controllers.Application.alive = new org.daisy.pipeline.client.models.Alive(response);
+							}
+						} catch (Pipeline2WSException e) {
+							Logger.error(e.getMessage(), e);
+							status = 500;
+							error = e.getMessage();
+						}
+					}
+				});
 		
 		NotificationConnection.notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>();
 		

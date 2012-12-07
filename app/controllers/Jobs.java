@@ -22,6 +22,7 @@ import models.Setting;
 import models.Upload;
 import models.User;
 
+import org.codehaus.jackson.JsonNode;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
@@ -37,7 +38,7 @@ import utils.Files;
 public class Jobs extends Controller {
 
 	public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
+	
 	public static Result getJobs() {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
@@ -46,20 +47,36 @@ public class Jobs extends Controller {
 		if (user == null || (user.id < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
 			return redirect(routes.Login.login());
 		
+		if (user.admin)
+			flash("showOwner", "true");
+		
+		user.flashBrowserId();
+		return ok(views.html.Jobs.getJobs.render());
+	}
+	
+	public static Result getJobsJson() {
+		if (FirstUse.isFirstUse())
+			return unauthorized("unauthorized");
+		
+		User user = User.authenticate(request(), session());
+		if (user == null || (user.id < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
+			return unauthorized("unauthorized");
+		
 		Pipeline2WSResponse jobs;
 		List<Node> jobNodes;
 		try {
 			jobs = org.daisy.pipeline.client.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
 			
 			if (jobs.status != 200) {
-				return Application.error(jobs.status, jobs.statusName, jobs.statusDescription, jobs.asText());
+				Logger.error(jobs.status+": "+jobs.statusName+" - "+jobs.statusDescription+" : "+jobs.asText());
+				return internalServerError(jobs.statusDescription);
 			}
 			
 			jobNodes = XPath.selectNodes("//d:job", jobs.asXml(), Pipeline2WS.ns);
 			
 		} catch (Pipeline2WSException e) {
 			Logger.error(e.getMessage(), e);
-			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline engine", e.getMessage());
+			return internalServerError("A problem occured while communicating with the Pipeline engine");
 		}
 		
 		List<Job> jobList = new ArrayList<Job>();
@@ -71,18 +88,18 @@ public class Jobs extends Controller {
 			} else {
 				job.href = XPath.selectText("@href", jobNode, Pipeline2WS.ns);
 				job.status = XPath.selectText("@status", jobNode, Pipeline2WS.ns);
-				if (user.admin || user.id >= 0 && user.id.equals(job.user) || user.id < 0 && job.user < 0 && "true".equals(Setting.get("users.guest.shareJobs")))
+				if (user.admin || user.id >= 0 && user.id.equals(job.user) || user.id < 0 && job.user < 0 && "true".equals(Setting.get("users.guest.shareJobs"))) {
+					Logger.debug(user.id+" >= 0 && "+user.id+".equals("+job.user+")");
 					jobList.add(job);
+				}
 			}
 		}
 		
 		Collections.sort(jobList);
 		Collections.reverse(jobList);
-		if (user.admin)
-			flash("showOwner", "true");
 		
-		user.flashBrowserId();
-		return ok(views.html.Jobs.getJobs.render(jobList));
+		JsonNode jobsJson = play.libs.Json.toJson(jobList);
+		return ok(jobsJson);
 	}
 	
 	public static Result getJob(String id) {
@@ -103,7 +120,6 @@ public class Jobs extends Controller {
 			}
 			
 			job = new org.daisy.pipeline.client.models.Job(response.asXml());
-			Logger.debug(utils.XML.toString(response.asXml()));
 			
 		} catch (Pipeline2WSException e) {
 			Logger.error(e.getMessage(), e);
@@ -121,6 +137,8 @@ public class Jobs extends Controller {
 				))
 			return forbidden("You are not allowed to view this job.");
 		
+		webuiJob.status = job.status.toString();
+		webuiJob.messages = job.messages;
 		if (!Job.lastMessageSequence.containsKey(job.id) && job.messages.size() > 0) {
 			Collections.sort(job.messages);
 			Job.lastMessageSequence.put(job.id, job.messages.get(job.messages.size()-1).sequence);
@@ -131,6 +149,56 @@ public class Jobs extends Controller {
 		
 		user.flashBrowserId();
 		return ok(views.html.Jobs.getJob.render(job, webuiJob));
+	}
+	
+	public static Result getJobJson(String id) {
+		if (FirstUse.isFirstUse())
+			return unauthorized("unauthorized");
+		
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return unauthorized("unauthorized");
+		
+		Pipeline2WSResponse response;
+		org.daisy.pipeline.client.models.Job job;
+		try {
+			response = org.daisy.pipeline.client.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, null);
+			
+			if (response.status != 200 && response.status != 201) {
+				Logger.error(response.status+": "+response.statusName+" - "+response.statusDescription+" : "+response.asText());
+				return internalServerError(response.statusDescription);
+			}
+			
+			job = new org.daisy.pipeline.client.models.Job(response.asXml());
+			
+		} catch (Pipeline2WSException e) {
+			Logger.error(e.getMessage(), e);
+			return internalServerError("A problem occured while communicating with the Pipeline engine");
+		}
+		
+		Job webuiJob = Job.findById(job.id);
+		if (webuiJob == null) {
+			Logger.debug("Job #"+job.id+" was not found.");
+			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
+		}
+		if (!(	user.admin
+			||	webuiJob.user.equals(user.id)
+			||	webuiJob.user < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+				))
+			return forbidden("You are not allowed to view this job.");
+		
+		webuiJob.status = job.status.toString();
+		webuiJob.messages = job.messages;
+		if (!Job.lastMessageSequence.containsKey(job.id) && job.messages.size() > 0) {
+			Collections.sort(job.messages);
+			Job.lastMessageSequence.put(job.id, job.messages.get(job.messages.size()-1).sequence);
+		}
+		if (!Job.lastStatus.containsKey(job.id)) {
+			Job.lastStatus.put(job.id, job.status);
+		}
+		
+		JsonNode jobJson = play.libs.Json.toJson(webuiJob);
+		return ok(jobJson);
 	}
 
 	public static Result getResult(String id) {
@@ -152,7 +220,7 @@ public class Jobs extends Controller {
 					))
 				return forbidden("You are not allowed to view this job.");
 		
-		if ("true".equals(Setting.get("dp2ws.sameFilesystem"))) {
+		if (Application.alive.local == Boolean.TRUE) {
 			try {
 				File resultDir = new File(Setting.get("dp2ws.resultDir")+webuiJob.localDirName);
 				File tempZip;
@@ -160,7 +228,7 @@ public class Jobs extends Controller {
 				Logger.debug("zipping result directory: "+resultDir.getAbsolutePath());
 				Files.zip(resultDir, tempZip);
 				
-				response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
+				response().setHeader("Content-Disposition", "attachment; filename=\""+webuiJob.nicename.replaceAll("[^\\w ]","-").subSequence(0, webuiJob.nicename.length())+".zip\""); // TODO: use job nicename with characters replaced to work on all filesystems
 				response().setContentType("application/zip");
 				return ok(new FileInputStream(tempZip));
 				
@@ -367,7 +435,7 @@ public class Jobs extends Controller {
 				}
 			}
 			
-			if ("true".equals(Setting.get("dp2ws.sameFilesystem"))) {
+			if (Application.alive.local == Boolean.TRUE) {
 				Logger.debug("Running the Web UI and fwk on the same filesystem, no need to ZIP files...");
 				for (Argument arg : script.arguments) {
 					if (arg.output != null) {
@@ -483,7 +551,12 @@ public class Jobs extends Controller {
 			scriptForm.uploads.get(uploadId).save(Application.datasource);
 		}
 		
+		webUiJob.status = "IDLE";
+		
 		webUiJob.pushNotifications();
+		JsonNode jobJson = play.libs.Json.toJson(webUiJob);
+		Notification jobNotification = new Notification("new-job", jobJson);
+		NotificationConnection.pushJobNotification(webUiJob.user, jobNotification);
 		
 		if (user.id < 0 && scriptForm.guestEmail != null) {
 			String jobUrl = routes.Jobs.getJob(jobId).absoluteURL(request())+"?guestid="+(models.User.parseUserId(session())!=null?-models.User.parseUserId(session()):"");
@@ -493,6 +566,7 @@ public class Jobs extends Controller {
 				flash("error", "Was unable to send the e-mail.");
 		}
 		
+//		return getJob(jobId);
 		return redirect(controllers.routes.Jobs.getJob(jobId));
 	}
 	

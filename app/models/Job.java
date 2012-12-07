@@ -15,6 +15,7 @@ import javax.persistence.*;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.models.Job.Status;
+import org.daisy.pipeline.client.models.job.Message;
 import org.w3c.dom.Document;
 
 import controllers.Application;
@@ -60,6 +61,8 @@ public class Job extends Model implements Comparable<Job> {
 	public String status;
 	@Transient
 	public String userNicename;
+	@Transient
+	public List<Message> messages;
 
 	@Transient
 	private Cancellable pushNotifier;
@@ -147,24 +150,24 @@ public class Job extends Model implements Comparable<Job> {
 								Map<String,String> finishedMap = new HashMap<String,String>();
 								finishedMap.put("text", webUiJob.finished.toString());
 								finishedMap.put("number", webUiJob.finished.getTime()+"");
-								NotificationConnection.push(webUiJob.user, new Notification("job-finished-"+job.id, finishedMap));
+								NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-finished-"+job.id, finishedMap));
 							}
 						}
 						
 						for (org.daisy.pipeline.client.models.job.Message message : job.messages) {
 							Notification notification = new Notification("job-message-"+job.id, message);
-							NotificationConnection.push(webUiJob.user, notification);
+							NotificationConnection.pushJobNotification(webUiJob.user, notification);
 						}
 						
 						if (!job.status.equals(lastStatus.get(job.id))) {
 							lastStatus.put(job.id, job.status);
-							NotificationConnection.push(webUiJob.user, new Notification("job-status-"+job.id, job.status));
+							NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-status-"+job.id, job.status));
 							
 							if (job.status == Status.RUNNING) {
 								Map<String,String> startedMap = new HashMap<String,String>();
 								startedMap.put("text", webUiJob.finished.toString());
 								startedMap.put("number", webUiJob.finished.getTime()+"");
-								NotificationConnection.push(webUiJob.user, new Notification("job-started-"+job.id, startedMap));
+								NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-started-"+job.id, startedMap));
 							}
 						}
 						

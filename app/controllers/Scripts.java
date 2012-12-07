@@ -35,6 +35,13 @@ public class Scripts extends Controller {
 	}
 
 	public static Result getScriptsJson() {
+		if (FirstUse.isFirstUse())
+			return unauthorized("unauthorized");
+
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return unauthorized("unauthorized");
+		
 		Pipeline2WSResponse response;
 		List<Script> scripts = null;
 		String error = null;
@@ -214,7 +221,7 @@ public class Scripts extends Controller {
 				}
 			}
 
-			if (userId < 0)
+			if (userId < 0 && params.containsKey("guest-email"))
 				this.guestEmail = params.get("guest-email")[0];
 
 			this.errors = new HashMap<String, List<String>>();

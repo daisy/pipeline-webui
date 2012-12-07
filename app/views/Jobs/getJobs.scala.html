@@ -1,4 +1,4 @@
-@(jobs: List[Job])
+@()
 
 @main("Jobs", "jobs", Array("notifications.js","fuzzyDates.js")) {
 
@@ -18,10 +18,8 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 }}
 </hgroup>
 
-@if(jobs.size() > 0) {
-	
-	<table class="table joblist">
-	<tr>
+<table id="joblist" class="table joblist" style="display:none;">
+	<tr id="joblist-headline">
 		<th><img src="@routes.Assets.at("images/icon-info-sign.png")" alt="Status" title="Status"/></th>
 		<th>Job</th>
 		<th>Results</th>
@@ -30,73 +28,91 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 			<th>Owner</th>
 		}
 	</tr>
-	@for(job <- jobs) {
-	<tr>
-		<td id="job-status-@job.id">
-			@if(job.status=="RUNNING"){
-				<img src="@routes.Assets.at("images/RUNNING.png")" alt="Running" title="Running"/>
-			}else{
-			@if(job.status=="DONE"){
-				<img src="@routes.Assets.at("images/DONE.png")" alt="Done" title="Done"/>
-			}else{
-			@if(job.status=="ERROR"){
-				<img src="@routes.Assets.at("images/ERROR.png")" alt="Error" title="Error"/>
-			}else{
-			@if(job.status=="IDLE"){
-				<img src="@routes.Assets.at("images/IDLE.png")" alt="Idle" title="Idle"/>
-			}}}}
-		</td>
-		<td>
-			<a href="@routes.Jobs.getJob(job.id)">
-				@job.nicename (@job.scriptName)<br/>
-				<small class="muted">@job.id</small>
-			</a>
-		</td>
-		<td id="job-results-@job.id">
-			@if(job.status=="DONE"){
-				<span><a class="btn btn-mini btn-success" href="@routes.Jobs.getResult(job.id)"><i class="icon-download-alt icon-white"></i> Download</a></span>
-			}
-			<script type="text/javascript">
-				$(function(){Notifications.listen("job-status-@job.id", function(status){
-					if(status==="RUNNING"){
-						$("#job-status-@job.id").html('<img src="@routes.Assets.at("images/RUNNING.png")" alt="Running" title="Running"/>');
-					}else{
-					if(status==="DONE"){
-						$("#job-status-@job.id").html('<img src="@routes.Assets.at("images/DONE.png")" alt="Done" title="Done"/>');
-						$("#job-results-@job.id").html(' <span><a class="btn btn-mini btn-success" href="@routes.Jobs.getResult(job.id)"><i class="icon-download-alt icon-white"></i> Download</a></span>');
-					}else{
-					if(status==="ERROR"){
-						$("#job-status-@job.id").html('<img src="@routes.Assets.at("images/ERROR.png")" alt="Error" title="Error"/>');
-					}else{
-					if(status==="IDLE"){
-						$("#job-status-@job.id").html('<img src="@routes.Assets.at("images/IDLE.png")" alt="Idle" title="Idle"/>');
-					}}}}
-				});});
-			</script>
-		</td>
-		<td>
-			<span id="created-@job.id" aria-live="timer"></span><br/>
-			<small class="muted">@job.created</small>
-			<script type="text/javascript">$(function(){updateFuzzy("created-@job.id");});</script>
-		</td>
-		@if(Controller.flash("showOwner")=="true"){
-			<td>
-				@job.userNicename<br/>
-				@if(job.user<0){
-					<small class="muted">#@{-job.user}</small>
-				}
-			</td>
-		}
-	</tr>
+</table>
+
+<script type="text/javascript">
+
+addJob = function(job) {
+	var statusText = job.status.charAt(0).toUpperCase() + job.status.slice(1).toLowerCase();
+	var html = '<tr id="job-'+job.id+'" class="job">'+"\n";
+	html += '    <td id="job-status-'+job.id+'">'+"\n";
+	html += '        <img src="@routes.Assets.at("images/")'+job.status+'.png" alt="'+statusText+'" title="'+statusText+'"/>'+"\n";
+	html += '    </td>'+"\n";
+	html += '    <td>'+"\n";
+	html += '        <a href="@routes.Jobs.getJob("")'+job.id+'">'+"\n";
+	html += '            '+job.nicename+' ('+job.scriptName+')<br/>'+"\n";
+	html += '            <small class="muted">'+job.id+'</small>'+"\n";
+	html += '        </a>'+"\n";
+	html += '    </td>'+"\n";
+	html += '    <td id="job-results-'+job.id+'">'+"\n";
+	if (job.status==="DONE") {
+		html += '        <span><a class="btn btn-mini btn-success" href="@routes.Jobs.getResult("")'+job.id+'"><i class="icon-download-alt icon-white"></i> Download</a></span>'+"\n";
 	}
-	</table>
-
-}else {
+	html += '    </td>'+"\n";
+	html += '    <td>'+"\n";
+	html += '        <span id="created-'+job.id+'" aria-live="timer"></span><br/>'+"\n";
+	html += '        <small class="muted">'+job.created+'</small>'+"\n";
+	html += '    </td>'+"\n";
+	@if(Controller.flash("showOwner")=="true"){
+		html += '    <td>'+"\n";
+		html += '        '+job.userNicename+'<br/>'+"\n";
+		if (job.user < 0) {
+			html += '        <small class="muted">#'+(-job.user)+'</small>'+"\n";
+		}
+		html += '    </td>'+"\n";
+	}
+	html += '</tr>'+"\n";
 	
-	<div class="muted" style="width:100%;text-align:center;">
-		<p>There are no jobs.</p>
-	</div>
-
+	if ($("#job-"+job.id).length > 0) {
+		$("#job-"+job.id).replaceWith(html);
+	}
+	else {
+		$("#joblist-headline").after(html);
+	}
+	
+	$("#nojobs").hide();
+	$("#joblist").show();
+	
+	updateFuzzy("created-"+job.id,new Date( job.created === null ? 0 : job.created ));
+	
+	Notifications.listen("job-status-"+job.id, function(status){
+		var statusText = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+		$("#job-status-"+job.id).html('<img src="@routes.Assets.at("images/")'+status+'.png" alt="'+statusText+'" title="'+statusText+'"/>');
+		if (status==="DONE") {
+			$("#job-results-"+job.id).html(' <span><a class="btn btn-mini btn-success" href="@routes.Jobs.getResult("")'+job.id+'"><i class="icon-download-alt icon-white"></i> Download</a></span>');
+		}
+	});
 }
+
+$(function(){
+	$.ajax({
+		url: "@routes.Jobs.getJobsJson()?"+new Date().getTime(),
+		error: function(jqXHR, textStatus, errorThrown) {
+			// error; too bad :(
+		},
+		success: function(jobs, textStatus, jqXHR) {
+			if (jobs.length == 0) {
+				$("#joblist").hide();
+				$("#nojobs").show();
+			} else {
+				$("#nojobs").hide();
+				$("#joblist").show();
+			}
+			$(".job").remove();
+			$.each(jobs.reverse(), function(j, job) {
+				addJob(job);
+			});
+		}
+	});
+	
+	Notifications.listen("new-job", function(job){
+		addJob(job);
+	});
+});
+</script>
+
+<div id="nojobs" role="alert" class="muted" style="width:100%;text-align:center;display:none;">
+	<p>There are no jobs.</p>
+</div>
 
 }

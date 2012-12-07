@@ -57,7 +57,7 @@
 						<button type="button" class="btn btn-large" id="guest-login" name="guest-login" onclick="window.location='@routes.Login.authenticateGuest()';return false;">Try it out as a guest <i class="icon-hand-right"></i></button>
 					}
 					@if(models.User.parseUserId(session()) != null && models.User.parseUserId(session()) < 0){
-						<span>You currently have guest privileges. Click the "Scripts" tab on the top menu bar to start using Pipeline 2.</span>
+						&nbsp;&nbsp;<span>You currently have guest privileges.</span>
 					}
 			 	</div>
 				

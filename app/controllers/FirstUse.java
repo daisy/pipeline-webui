@@ -102,7 +102,6 @@ public class FirstUse extends Controller {
 					Setting.set("users.guest.showEmailBox", "false");
 					Setting.set("users.guest.shareJobs", "true");
 					Setting.set("users.guest.automaticLogin", "true");
-					Setting.set("dp2ws.sameFilesystem", "true");
 					Setting.set("mail.enable", "false");
 					Setting.set("uploads", System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"));
 				}
@@ -133,7 +132,6 @@ public class FirstUse extends Controller {
 				Setting.set("users.guest.showEmailBox", "true");
 				Setting.set("users.guest.shareJobs", "false");
 				Setting.set("users.guest.automaticLogin", "false");
-				Setting.set("dp2ws.sameFilesystem", "false");
 				Setting.set("mail.enable", "false");
 				
 				return redirect(routes.FirstUse.getFirstUse());
@@ -275,7 +273,6 @@ public class FirstUse extends Controller {
 					Setting.set("dp2ws.secret", "");
 					Setting.set("dp2ws.tempDir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.temp" + controllers.Application.SLASH);
 					Setting.set("dp2ws.resultDir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.results" + controllers.Application.SLASH);
-					Setting.set("dp2ws.sameFilesystem", "true");
 					Setting.set("dp2fwk.dir", dp2dirFile.getAbsolutePath());
 					result.put("state", "SUCCESS"); // successfully configured the Pipeline engine / CLI communication
 					NotificationConnection.pushAll(new Notification("dp2locator", result));

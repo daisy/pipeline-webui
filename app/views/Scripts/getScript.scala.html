@@ -27,7 +27,7 @@ Array("jquery.fileupload-ui.css")) {
 	@Widgets.upload()
 }
 
-@helper.form(action = routes.Jobs.postJob(), 'id -> "job-form", 'class -> "form-horizontal", 'onsubmit -> "Job.submit();") {
+<form action="@routes.Jobs.postJob().unique()" method="POST" id="job-form" class="form-horizontal" onsubmit="Job.submit();">
 	<input type="hidden" id="id" name="id" value="@script.id" />
 	<input type="hidden" id="uploads" name="uploads" value=""/>
 	
@@ -106,6 +106,6 @@ Array("jquery.fileupload-ui.css")) {
 		</div>
 	</fieldset>
 	
-}
+</form>
 
 }

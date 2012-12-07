@@ -3,7 +3,6 @@
 @helper.form(action = route) {
 	
 	<input type="hidden" name="formName" value="setWS"/>
-	<input type="hidden" name="sameFilesystem" value="@(if(setWSForm!=null)setWSForm.field("sameFilesystem").valueOr("false") else "false")" id="setWS-sameFilesystem-value"/>
     
     <fieldset>
           
@@ -75,24 +74,6 @@
 						<span class="help-inline">A valid temporary directory path must be provided.</span>
 					}
 					<span class="help-block">This is a directory similar to the temporary directory above, but are used for temporary files. Jobs may need to store some temporary files here while running. The temporary files are deleted automatically when the job is finished. This directory is also relative to the Pipeline engines filesystem. <em>If Pipeline 2 is running in remote mode you can ignore this setting.</em></span>
-				</div>
-			</div>
-			
-			<div class="control-group @("error".when("tab" == "new" && setWSForm != null && setWSForm.error("admin") != null))" id="setWS-sameFilesystemGroup">
-				<label class="control-label" id="setWS-sameFilesystem-label" for="sameFilesystem" aria-label="sameFilesystem">Same filesystem</label>
-				<div class="controls">
-					<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="setWS-sameFilesystem-label" id="sameFilesystem">
-						<button type="button" name="setWS-sameFilesystem-on" class="btn @("active".when(setWSForm != null && setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))=="true"))" id="setWS-sameFilesystem-on"
-							aria-role="radio" aria-checked="@((setWSForm != null && setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))=="true"))"
-							onclick="toggleRadio('setWS-sameFilesystem', true, 'true');return false;">Yes</button>
-						<button type="button" name="setWS-sameFilesystem-off" class="btn @("active".when(setWSForm != null && setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))=="false" || setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))==null))" id="setWS-sameFilesystem-off"
-							aria-role="radio" aria-checked="@((setWSForm == null || setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))=="false" || setWSForm.field("sameFilesystem").valueOr(Setting.get("dp2ws.sameFilesystem"))==null))"
-							onclick="toggleRadio('setWS-sameFilesystem', false, 'false');return false;">No</button>
-					</div>
-					@if("tab" == "new" && setWSForm != null && setWSForm.field("sameFilesystem").errors().size() > 0){
-						<span class="help-inline">@setWSForm.error("sameFilesystem").message</span>
-					}
-					<span class="help-block">Whether or not the Pipeline engine is running on the same server as the Web UI. If they are running on the same server, then the uploaded files are handed over more efficiently to the Pipeline engine. <em>If Pipeline 2 is running in remote mode then this setting must be set to "No".</em></span>
 				</div>
 			</div>
 			

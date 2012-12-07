@@ -8,7 +8,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 
 <hgroup>
 	<h1>Job Summary<br>
-	<small>@uiJob.nicename</small></h1>
+	<small id="header-nicename">@uiJob.nicename</small></h1>
 	
 	<small><a class="accordion-toggle collapsed" data-toggle="collapse" href="#job-details">
 		<style>
@@ -24,46 +24,64 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 </hgroup>
 
 <div class="collapse" id="job-details">
-	<style>
-		/*#job-details td { vertical-align: middle; }*/
-	</style>
 	<table class="table table-hover table-condensed">
 		<tr>
 			<td><strong>Job:</strong></td>
 			<td>
-				<strong>@uiJob.nicename</strong><br/>
-				<small class="muted">@fwkJob.id</small>
+				<strong id="nicename">@uiJob.nicename</strong><br/>
+				<small id="id" class="muted">@fwkJob.id</small>
 			</td>
 		</tr>
 		<tr>
 			<td>Script:</td>
 			<td>
-				@uiJob.scriptName<br/>
-				<small class="muted">@uiJob.scriptId</small>
+				<span id="scriptname">@uiJob.scriptName</span><br/>
+				<small id="scriptid" class="muted">@uiJob.scriptId</small>
 			</td>
 		</tr>
 		<tr>
 			<td>Created:</td>
 			<td>
 				<span id="created-fuzzy" aria-live="timer"></span><br/>
-				<small class="muted" id="created">@uiJob.created</small>
-				<script type="text/javascript">$(function(){updateFuzzy("created-fuzzy",new Date(@if(uiJob.created==null){ 0 }else{ @uiJob.created.getTime() } ));});</script>
+				<small id="created" class="muted">@uiJob.created</small>
+				<script type="text/javascript">
+					updateFuzzyCreatedInterval = null;
+					updateFuzzyCreated = function(){updateFuzzyCreatedInterval=updateFuzzy("created-fuzzy",new Date(@if(uiJob.created==null){ 999999999999999 }else{ @uiJob.created.getTime() } ));};
+					$(updateFuzzyCreated);
+				</script>
 			</td>
 		</tr>
 		<tr>
 			<td>Started:</td>
 			<td>
 				<span id="started-fuzzy" aria-live="timer"></span><br/>
-				<small class="muted" id="started">@uiJob.started</small>
-				<script type="text/javascript">$(function(){updateFuzzy("started-fuzzy",new Date(@if(uiJob.started==null){ 0 }else{ @uiJob.started.getTime() } ));});</script>
+				<small id="started" class="muted">@uiJob.started</small>
+				<script type="text/javascript">
+					updateFuzzyStartedInterval = null;
+					updateFuzzyStarted = function(){updateFuzzyStartedInterval=updateFuzzy("started-fuzzy",new Date(@if(uiJob.started==null){ 999999999999999 }else{ @uiJob.started.getTime() } ));};
+					$(updateFuzzyStarted);
+				</script>
 			</td>
 		</tr>
 		<tr>
 			<td>Finished:</td>
 			<td>
 				<span id="finished-fuzzy" aria-live="timer"></span><br/>
-				<small class="muted" id="finished">@uiJob.finished</small>
-				<script type="text/javascript">$(function(){updateFuzzy("finished-fuzzy",new Date(@if(uiJob.finished==null){ 0 }else{ @uiJob.finished.getTime() } ));});</script>
+				<small id="finished" class="muted">@uiJob.finished</small>
+				<script type="text/javascript">
+					updateFuzzyFinishedInterval = null;
+					updateFuzzyFinished = function(){updateFuzzyFinishedInterval=updateFuzzy("finished-fuzzy",new Date(@if(uiJob.finished==null){ 999999999999999 }else{ @uiJob.finished.getTime() } ));};
+					$(updateFuzzyFinished);
+				</script>
+			</td>
+		</tr>
+		<tr>
+			<td>User:</td>
+			<td>
+				<span id="username">@uiJob.userNicename</span><br/>
+				@if(uiJob.user<0){
+					<small id="userid" class="muted">@uiJob.user</small>
+				}
 			</td>
 		</tr>
 	</table>
@@ -104,18 +122,17 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 			</span>
 		</h2>
 		<br/>
-		@if(fwkJob.messages.size()>0){
-			<ul style="list-style-type:none;text-align:left;padding-top:20px;"><li id="message-latest"><pre>@fwkJob.messages.get(fwkJob.messages.size()-1).text</pre></li></ul>
-		} else {
-			<ul style="list-style-type:none;text-align:left;padding-top:20px;"><li id="message-latest"><pre>&nbsp;</pre></li></ul>
-		}
+		<ul style="list-style-type:none;text-align:left;padding-top:20px;"><li id="message-latest">
+			@if(fwkJob.messages.size()>0){
+				<pre>@fwkJob.messages.get(fwkJob.messages.size()-1).text</pre>
+			}else{
+				<pre>&nbsp;</pre>
+			}
+		</li></ul>
 	</div>
 	
 	<div id="status-idle" style="display:none;">
 		<h2 role="status" class="text-muted">Queued</h2>
-		@if(fwkJob.messages.size()>0){
-			<ol start="@fwkJob.messages.get(fwkJob.messages.size()-1).sequence"><li><pre>@fwkJob.messages.get(fwkJob.messages.size()-1).text</pre></li></ol>
-		}
 	</div>
 	
 	<div id="status-error" style="display:none;">
@@ -158,8 +175,58 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 			}
 			$("#status-"+status.toLowerCase()).show();
 		});
-		Notifications.listen("job-started-@fwkJob.id", function(message){ $("#started").html(message.text); updateFuzzy("started-fuzzy", new Date(parseInt(message.number))); });
-		Notifications.listen("job-finished-@fwkJob.id", function(message){ $("#finished").html(message.text); updateFuzzy("finished-fuzzy", new Date(parseInt(message.number))); });
+		Notifications.listen("job-started-@fwkJob.id", function(message){
+			$("#started").html(message.text);
+			clearInterval(updateFuzzyStartedInterval);
+			updateFuzzy("started-fuzzy", new Date(parseInt(message.number)));
+		});
+		Notifications.listen("job-finished-@fwkJob.id", function(message){
+			$("#finished").html(message.text);
+			clearInterval(updateFuzzyFinishedInterval);
+			updateFuzzy("finished-fuzzy", new Date(parseInt(message.number)));
+		});
+		
+		if (Math.abs(new Date().getTime() - @(new Date().getTime())) > 1000) {
+			// You probably arrived through the back/forward buttons; reload the page contents dynamically
+			$.ajax({
+				url: "@routes.Jobs.getJobJson(fwkJob.id)?"+new Date().getTime(),
+				error: function(jqXHR, textStatus, errorThrown) {
+					// error; too bad :(
+				},
+				success: function(job, textStatus, jqXHR) {
+					// updating page contents dynamically...
+					clearInterval(updateFuzzyCreatedInterval);
+					clearInterval(updateFuzzyStartedInterval);
+					clearInterval(updateFuzzyFinishedInterval);
+					$("#created").html(job.created);
+					$("#started").html(job.started);
+					$("#finished").html(job.finished);
+					updateFuzzy("created-fuzzy", new Date(job.created));
+					updateFuzzy("started-fuzzy", new Date(job.started));
+					updateFuzzy("finished-fuzzy", new Date(job.finished));
+					
+					$("#id").html(job.id);
+					$("#header-nicename, #nicename").html(job.nicename);
+					$("#scriptid").html(job.scriptId);
+					$("#scriptname").html(job.scriptName);
+					$("#username").html(job.userNicename);
+					$("#userid").html(job.user);
+					
+					@for(status <- org.daisy.pipeline.client.models.Job.Status.values()){
+						$("#status-@(status.toString().toLowerCase())").hide();
+					}
+					$("#status-"+job.status.toLowerCase()).show();
+					
+					$("#message-list li").remove();
+					for (var m = 0; m < job.messages.length; m++) {
+						$("#message-list").append('<li value="'+job.messages[m].sequence+'"><span class="message '+(job.messages[m].level==="ERROR"?"message-error":"")+(job.messages[m].level==="WARNING"?"message-warn":"")+'">'+job.messages[m].text+'</span></li>');
+					}
+					if (job.messages.length > 0) {
+						$("#message-latest").html("<pre>"+job.messages[job.messages.length-1].text+"</pre>");
+					}
+				}
+			});
+		}
 	});
 </script>
 

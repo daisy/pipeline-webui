@@ -19,6 +19,7 @@ public class Application extends Controller {
 	public static final String DP2_HALT = "/".equals(SLASH) ? "./dp2 halt" : "cmd /c start /B cmd /c dp2.exe halt";
 	
 	public static final String datasource = Configuration.root().getString("dp2.datasource");
+	public static org.daisy.pipeline.client.models.Alive alive = null;
 	
 	public static Result index() {
 		if (FirstUse.isFirstUse())

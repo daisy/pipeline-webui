@@ -104,6 +104,35 @@ public class NotificationConnection {
 		}
 	}
 	
+	public static void pushAdmins(Notification notification) {
+		synchronized (notificationConnections) {
+			for (Long userId : notificationConnections.keySet()) {
+				User user = User.findById(userId);
+				if (user != null && user.admin)
+					for (NotificationConnection connection : notificationConnections.get(userId))
+						connection.push(notification);
+			}
+		}
+	}
+	
+	public static void pushPublic(Notification notification) {
+		synchronized (notificationConnections) {
+			for (Long userId : notificationConnections.keySet())
+				if (userId < 0)
+					for (NotificationConnection connection : notificationConnections.get(userId))
+						connection.push(notification);
+		}
+	}
+	
+	public static void pushJobNotification(Long userId, Notification notification) {
+		NotificationConnection.pushAdmins(notification);
+		if (userId < 0 && "true".equals(Setting.get("users.guest.shareJobs"))) {
+				NotificationConnection.pushPublic(notification); // push to all public users
+		} else {
+			NotificationConnection.push(userId, notification); // push to current user only
+		}
+	}
+	
 	/**
 	 * Push a notification to all the users browser windows
 	 * @param notification

@@ -50,12 +50,14 @@ function fuzzyDate(date) {
 	}
 }
 
+/** Returns the return value of window.setInterval(… , 1min) */
 function updateFuzzy(id, date) {
 	// now
 	document.getElementById(id).innerHTML = fuzzyDate(new Date(date.getTime()));
 	
 	// every second the first minute
-	if (new Date().getTime() - date.getTime() < 60000) {
+	var delta = new Date().getTime() - date.getTime();
+	if (0 <= delta && delta < 60000) {
 		for (var t = 1000; t < 60000; t += 1000) {
 			window.setTimeout(function(){
 				document.getElementById(id).innerHTML = fuzzyDate(new Date(date.getTime()));
@@ -64,7 +66,7 @@ function updateFuzzy(id, date) {
 	}
 	
 	// every minute
-	window.setInterval(function(){
+	return window.setInterval(function(){
 		document.getElementById(id).innerHTML = fuzzyDate(new Date(date.getTime()));
 	}, 60000);
 }

@@ -84,8 +84,6 @@ public class Administrator extends Controller {
         
         public String resultDir;
         
-        public boolean sameFilesystem;
-        
         public static void validate(Form<SetWSForm> filledForm) {
         	if (filledForm.field("endpoint").valueOr("").equals(""))
         		filledForm.reject("endpoint", "Invalid endpoint URL.");
@@ -104,7 +102,6 @@ public class Administrator extends Controller {
         	if (resultDir.contains("\\") && !resultDir.endsWith("\\")) resultDir += "\\";
         	Setting.set("dp2ws.tempDir", tempDir);
         	Setting.set("dp2ws.resultDir", resultDir);
-        	Setting.set("dp2ws.sameFilesystem", filledForm.field("sameFilesystem").valueOr(""));
 		}
     }
 	

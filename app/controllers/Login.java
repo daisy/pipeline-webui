@@ -95,6 +95,10 @@ public class Login extends Controller {
     	if ("server".equals(Application.deployment())) {
 	        session().clear();
 	        flash("success", "You've been logged out");
+	        
+	        if ("true".equals(Setting.get("users.guest.automaticLogin")))
+				User.loginAsGuest(session());
+	        
 	        return redirect(routes.Login.login());
     	} else {
     		return Application.error(FORBIDDEN, "You can't log out when running in desktop mode", null, null);
