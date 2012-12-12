@@ -11,6 +11,8 @@ import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 
+import controllers.FirstUse;
+
 import akka.actor.Cancellable;
 import akka.util.Duration;
 import play.libs.Akka;
@@ -26,9 +28,19 @@ public class Global extends GlobalSettings {
 		// Application has started...
 		final String datasource = Configuration.root().getString("dp2.datasource");
 		
+		NotificationConnection.notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>();
+		
 		if ("desktop".equals(controllers.Application.deployment())) {
 			// reconfigure fwk dir each time, in case the install dir has changed
 			Pipeline2Engine.cwd = new File(Configuration.root().getString("dp2engine.dir")).getAbsoluteFile();
+			Logger.info("STARTING....");
+			Pipeline2Engine.setState(Pipeline2Engine.State.STOPPED);
+			FirstUse.configureDesktopDefaults();
+			Akka.system().scheduler().scheduleOnce(Duration.create(0, TimeUnit.SECONDS),new Runnable() {
+				public void run() {
+					Pipeline2Engine.start();
+				}
+			});
 		}
 		
 		if (User.findAll().size() > 0 && controllers.Application.deployment() == null)
@@ -74,8 +86,6 @@ public class Global extends GlobalSettings {
 						}
 					}
 				});
-		
-		NotificationConnection.notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>();
 		
 		// Push "heartbeat" notifications (keeping the push notification connections alive). Hopefully this scales...
 		Akka.system().scheduler().schedule(

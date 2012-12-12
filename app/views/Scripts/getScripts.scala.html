@@ -16,10 +16,12 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 </div>
 <div class="RUNNING" style="display:none;">
 	<table id="scriptTable" class="oneOrMoreScripts table scriptlist" style="display:none;">
-		<tr>
-			<th>Script</th>
-			<th>Description</th>
-		</tr>
+		<tbody>
+			<tr>
+				<th>Script</th>
+				<th>Description</th>
+			</tr>
+		</tbody>
 	</table>
 	<div role="alert" class="noScripts alert alert-info" style="display:none;">
 		<p>There are no scripts installed.</p>
@@ -81,7 +83,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 					else {
 						$(".oneOrMoreScripts").show();
 						$(".noScripts").hide();
-						var table = $("#scriptTable");
+						var table = $("#scriptTable tbody");
 						for (var s = 0; s < scripts.length; s++) {
 							$(table).append(
 								"	<tr>\n"+

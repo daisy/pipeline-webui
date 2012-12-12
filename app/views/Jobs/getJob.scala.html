@@ -25,65 +25,67 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 
 <div class="collapse" id="job-details">
 	<table class="table table-hover table-condensed">
-		<tr>
-			<td><strong>Job:</strong></td>
-			<td>
-				<strong id="nicename">@uiJob.nicename</strong><br/>
-				<small id="id" class="muted">@fwkJob.id</small>
-			</td>
-		</tr>
-		<tr>
-			<td>Script:</td>
-			<td>
-				<span id="scriptname">@uiJob.scriptName</span><br/>
-				<small id="scriptid" class="muted">@uiJob.scriptId</small>
-			</td>
-		</tr>
-		<tr>
-			<td>Created:</td>
-			<td>
-				<span id="created-fuzzy" aria-live="timer"></span><br/>
-				<small id="created" class="muted">@uiJob.created</small>
-				<script type="text/javascript">
-					updateFuzzyCreatedInterval = null;
-					updateFuzzyCreated = function(){updateFuzzyCreatedInterval=updateFuzzy("created-fuzzy",new Date(@if(uiJob.created==null){ 999999999999999 }else{ @uiJob.created.getTime() } ));};
-					$(updateFuzzyCreated);
-				</script>
-			</td>
-		</tr>
-		<tr>
-			<td>Started:</td>
-			<td>
-				<span id="started-fuzzy" aria-live="timer"></span><br/>
-				<small id="started" class="muted">@uiJob.started</small>
-				<script type="text/javascript">
-					updateFuzzyStartedInterval = null;
-					updateFuzzyStarted = function(){updateFuzzyStartedInterval=updateFuzzy("started-fuzzy",new Date(@if(uiJob.started==null){ 999999999999999 }else{ @uiJob.started.getTime() } ));};
-					$(updateFuzzyStarted);
-				</script>
-			</td>
-		</tr>
-		<tr>
-			<td>Finished:</td>
-			<td>
-				<span id="finished-fuzzy" aria-live="timer"></span><br/>
-				<small id="finished" class="muted">@uiJob.finished</small>
-				<script type="text/javascript">
-					updateFuzzyFinishedInterval = null;
-					updateFuzzyFinished = function(){updateFuzzyFinishedInterval=updateFuzzy("finished-fuzzy",new Date(@if(uiJob.finished==null){ 999999999999999 }else{ @uiJob.finished.getTime() } ));};
-					$(updateFuzzyFinished);
-				</script>
-			</td>
-		</tr>
-		<tr>
-			<td>User:</td>
-			<td>
-				<span id="username">@uiJob.userNicename</span><br/>
-				@if(uiJob.user<0){
-					<small id="userid" class="muted">#@(-uiJob.user)</small>
-				}
-			</td>
-		</tr>
+		<tbody>
+			<tr>
+				<td><strong>Job:</strong></td>
+				<td>
+					<strong id="nicename">@uiJob.nicename</strong><br/>
+					<small id="id" class="muted">@fwkJob.id</small>
+				</td>
+			</tr>
+			<tr>
+				<td>Script:</td>
+				<td>
+					<span id="scriptname">@uiJob.scriptName</span><br/>
+					<small id="scriptid" class="muted">@uiJob.scriptId</small>
+				</td>
+			</tr>
+			<tr>
+				<td>Created:</td>
+				<td>
+					<span id="created-fuzzy" aria-live="timer"></span><br/>
+					<small id="created" class="muted">@uiJob.created</small>
+					<script type="text/javascript">
+						updateFuzzyCreatedInterval = null;
+						updateFuzzyCreated = function(){updateFuzzyCreatedInterval=updateFuzzy("created-fuzzy",new Date(@if(uiJob.created==null){ 999999999999999 }else{ @uiJob.created.getTime() } ));};
+						$(updateFuzzyCreated);
+					</script>
+				</td>
+			</tr>
+			<tr>
+				<td>Started:</td>
+				<td>
+					<span id="started-fuzzy" aria-live="timer"></span><br/>
+					<small id="started" class="muted">@uiJob.started</small>
+					<script type="text/javascript">
+						updateFuzzyStartedInterval = null;
+						updateFuzzyStarted = function(){updateFuzzyStartedInterval=updateFuzzy("started-fuzzy",new Date(@if(uiJob.started==null){ 999999999999999 }else{ @uiJob.started.getTime() } ));};
+						$(updateFuzzyStarted);
+					</script>
+				</td>
+			</tr>
+			<tr>
+				<td>Finished:</td>
+				<td>
+					<span id="finished-fuzzy" aria-live="timer"></span><br/>
+					<small id="finished" class="muted">@uiJob.finished</small>
+					<script type="text/javascript">
+						updateFuzzyFinishedInterval = null;
+						updateFuzzyFinished = function(){updateFuzzyFinishedInterval=updateFuzzy("finished-fuzzy",new Date(@if(uiJob.finished==null){ 999999999999999 }else{ @uiJob.finished.getTime() } ));};
+						$(updateFuzzyFinished);
+					</script>
+				</td>
+			</tr>
+			<tr>
+				<td>User:</td>
+				<td>
+					<span id="username">@uiJob.userNicename</span><br/>
+					@if(uiJob.user<0){
+						<small id="userid" class="muted">#@(-uiJob.user)</small>
+					}
+				</td>
+			</tr>
+		</tbody>
 	</table>
 	<br/>
 </div>

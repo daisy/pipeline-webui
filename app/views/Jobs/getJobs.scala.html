@@ -19,15 +19,18 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 </hgroup>
 
 <table id="joblist" class="table joblist" style="display:none;">
-	<tr id="joblist-headline">
-		<th><img src="@routes.Assets.at("images/icon-info-sign.png")" alt="Status" title="Status"/></th>
-		<th>Job</th>
-		<th>Results</th>
-		<th>Created</th>
-		@if(Controller.flash("showOwner")=="true"){
-			<th>Owner</th>
-		}
-	</tr>
+	<thead>
+		<tr id="joblist-headline">
+			<th><img src="@routes.Assets.at("images/icon-info-sign.png")" alt="Status" title="Status"/></th>
+			<th>Job</th>
+			<th>Results</th>
+			<th>Created</th>
+			@if(Controller.flash("showOwner")=="true"){
+				<th>Owner</th>
+		    }
+    	</tr>
+	</thead>
+	<tbody></tbody>
 </table>
 
 <script type="text/javascript">
@@ -67,7 +70,7 @@ addJob = function(job) {
 		$("#job-"+job.id).replaceWith(html);
 	}
 	else {
-		$("#joblist-headline").after(html);
+		$("#joblist tbody").prepend(html);
 	}
 	
 	$("#nojobs").hide();

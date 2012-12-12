@@ -24,7 +24,7 @@ public class Pipeline2Engine {
 	private static State state = null;
 	
 	public static final String SLASH = System.getProperty("file.separator");
-	public static final String DP2_START = "/".equals(SLASH) ? "./pipeline2" : "pipeline2.bat";
+	public static final String DP2_START = "/".equals(SLASH) ? "./pipeline2" : "cmd /c start /B pipeline2.bat";
 	public static File cwd = null;
 	
 	static Worker engine = null;
@@ -93,13 +93,13 @@ public class Pipeline2Engine {
      */
     private static Worker executeCommandWithWorker(final String command, final File cwd) {
     	
-    	Logger.info(cwd+"   "+command);
+    	Logger.info("Running command '"+command+"' from directory '"+cwd.getAbsolutePath()+"'");
     	
         // create the process which will run the command
         Runtime runtime = Runtime.getRuntime();
         Process process;
 		try {
-			process = runtime.exec(command, null, cwd);
+			process = runtime.exec(command, null, cwd.getAbsoluteFile());
 		} catch (IOException e) {
             String errorMessage = "The process for the command [" + command + "] could not be created due to an IO error.";
             Logger.error(errorMessage, e);

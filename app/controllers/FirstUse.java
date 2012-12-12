@@ -58,16 +58,6 @@ public class FirstUse extends Controller {
 		}
 		
 		if ("desktop".equals(Application.deployment()) && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING) {
-			if (Pipeline2Engine.getState() == null) {
-				Logger.info("STARTING....");
-				Pipeline2Engine.setState(Pipeline2Engine.State.STOPPED);
-				configureDesktopDefaults();
-				Akka.system().scheduler().scheduleOnce(Duration.create(0, TimeUnit.SECONDS),new Runnable() {
-					public void run() {
-						Pipeline2Engine.start();
-					}
-				});
-			}
 			user.flashBrowserId();
 			return ok(views.html.FirstUse.configureDP2.render());
 		}
@@ -202,7 +192,7 @@ public class FirstUse extends Controller {
 		return User.findAll().size() == 0 || "desktop".equals(Application.deployment()) && Pipeline2Engine.cwd == null;
 	}
 	
-	private static void configureDesktopDefaults() {
+	public static void configureDesktopDefaults() {
 		Setting.set("uploads", System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"));
 		Setting.set("dp2ws.endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL);
 		Setting.set("dp2ws.authid", "");
