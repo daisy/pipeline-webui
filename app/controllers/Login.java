@@ -1,6 +1,5 @@
 package controllers;
 
-import play.Logger;
 import play.mvc.*;
 import play.data.*;
 
@@ -28,6 +27,11 @@ public class Login extends Controller {
     public static Result login() {
     	if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());//loop
+    	
+    	if ("desktop".equals(Application.deployment())) {
+			User.find.where().eq("admin", true).findUnique().login(session());
+			return redirect(routes.FirstUse.welcome());
+		}
     	
     	User.parseUserId(session());
     	
@@ -84,7 +88,6 @@ public class Login extends Controller {
 			else
 				flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
     		return ok(views.html.Login.login.render(form(LoginForm.class)));
-    		
     	}
     }
 

@@ -19,7 +19,7 @@ import play.data.validation.Constraints.Required;
 import play.data.validation.ValidationError;
 import play.libs.Akka;
 import play.mvc.*;
-import utils.CommandExecutor;
+import utils.Pipeline2Engine;
 
 public class Administrator extends Controller {
 	
@@ -623,20 +623,9 @@ public class Administrator extends Controller {
 				new Runnable() {
 					public void run() {
 						// Pipeline engine
-						String dp2fwkDir = Setting.get("dp2fwk.dir");
-						if (dp2fwkDir != null && !"".equals(dp2fwkDir)) {
+						if (Pipeline2Engine.cwd != null) {
 							Logger.info("Attempting to stop the Pipeline engine...");
-							Setting.set("dp2fwk.state","STOPPING");
-							NotificationConnection.pushAll(new Notification("dp2fwk.state", "STOPPING"));
-							int exitValue = CommandExecutor.executeCommandWithWorker(Application.DP2_HALT, new File(dp2fwkDir, "cli"), 20000L);
-							if (exitValue != 0) {
-								Setting.set("dp2fwk.state","STOPPED");
-								NotificationConnection.pushAll(new Notification("dp2fwk.state", "STOPPED"));
-								Logger.info("Halted the Pipeline engine");
-							} else {
-								Setting.set("dp2fwk.state","RUNNING");
-								Logger.info("Failed to halt the Pipeline engine");
-							}
+							Pipeline2Engine.halt();
 						}
 						
 						// Web UI

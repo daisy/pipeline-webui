@@ -80,7 +80,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 			<td>
 				<span id="username">@uiJob.userNicename</span><br/>
 				@if(uiJob.user<0){
-					<small id="userid" class="muted">@uiJob.user</small>
+					<small id="userid" class="muted">#@(-uiJob.user)</small>
 				}
 			</td>
 		</tr>
@@ -155,7 +155,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 
 <ol aria-live="polite" role="log" class="messagelist" id="message-list">
 	@for(message <- fwkJob.messages){
-		<li value="@message.sequence"><span class="message @("text-error".when(org.daisy.pipeline.client.models.job.Message.Level.ERROR==message.level)) @("text-warning".when(org.daisy.pipeline.client.models.job.Message.Level.WARNING==message.level))"">@message.text</span></li>
+		<li id="m@message.sequence" value="@message.sequence"><span class="message @("text-error".when(org.daisy.pipeline.client.models.job.Message.Level.ERROR==message.level)) @("text-warning".when(org.daisy.pipeline.client.models.job.Message.Level.WARNING==message.level))"">@message.text</span></li>
 	}
 </ol>
 
@@ -164,10 +164,20 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 <script type="text/javascript">
 	$(function(){
 		Notifications.listen("job-message-@fwkJob.id", function(message){
-			//if ($("#message-list li").filter(function(i){return $(this).attr("value")===message.sequence;}).size() === 0) {
-				$("#message-list").append('<li value="'+message.sequence+'"><span class="message '+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'">'+message.text+'</span></li>');
+			var li = '<li id="m'+message.sequence+'" value="'+message.sequence+'"><span class="message '+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'">'+message.text+'</span></li>';
+			if ($("#m"+message.sequence).size() > 0) {
+				$("#m"+message.sequence).replaceWith(li);
+			}
+			else if (message.sequence < $("#message-list li").last().attr("value")) {
+				$("#message-list li")
+					.filter(function(i){ return $(this).attr("value") < message.sequence; })
+					.last()
+					.after(li);
+			}
+			else {
+				$("#message-list").append(li);
 				$("#message-latest").html("<pre>"+message.text+"</pre>");
-			//}
+			}
 		});
 		Notifications.listen("job-status-@fwkJob.id", function(status){
 			@for(status <- org.daisy.pipeline.client.models.Job.Status.values()){
@@ -219,7 +229,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 					
 					$("#message-list li").remove();
 					for (var m = 0; m < job.messages.length; m++) {
-						$("#message-list").append('<li value="'+job.messages[m].sequence+'"><span class="message '+(job.messages[m].level==="ERROR"?"message-error":"")+(job.messages[m].level==="WARNING"?"message-warn":"")+'">'+job.messages[m].text+'</span></li>');
+						$("#message-list").append('<li id="m'+job.messages[m].sequence+'" value="'+job.messages[m].sequence+'"><span class="message '+(job.messages[m].level==="ERROR"?"message-error":"")+(job.messages[m].level==="WARNING"?"message-warn":"")+'">'+job.messages[m].text+'</span></li>');
 					}
 					if (job.messages.length > 0) {
 						$("#message-latest").html("<pre>"+job.messages[job.messages.length-1].text+"</pre>");

@@ -13,10 +13,11 @@ import akka.actor.Cancellable;
 import akka.util.Duration;
 
 import play.Logger;
+import play.Play;
 import play.libs.Akka;
 import play.mvc.*;
 import play.data.*;
-import utils.CommandExecutor;
+import utils.Pipeline2Engine;
 import models.*;
 
 /**
@@ -56,9 +57,18 @@ public class FirstUse extends Controller {
 			return redirect(routes.Login.login());//loop
 		}
 		
-		if ("desktop".equals(Application.deployment()) && (Setting.get("dp2fwk.dir") == null || "".equals(Setting.get("dp2fwk.dir")))) {
-			Long browserId = user.flashBrowserId();
-			startDP2Configurator(user.id, browserId);
+		if ("desktop".equals(Application.deployment()) && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING) {
+			if (Pipeline2Engine.getState() == null) {
+				Logger.info("STARTING....");
+				Pipeline2Engine.setState(Pipeline2Engine.State.STOPPED);
+				configureDesktopDefaults();
+				Akka.system().scheduler().scheduleOnce(Duration.create(0, TimeUnit.SECONDS),new Runnable() {
+					public void run() {
+						Pipeline2Engine.start();
+					}
+				});
+			}
+			user.flashBrowserId();
 			return ok(views.html.FirstUse.configureDP2.render());
 		}
 		
@@ -70,6 +80,18 @@ public class FirstUse extends Controller {
 			return ok(views.html.FirstUse.setUploadDir.render(form(Administrator.SetUploadDirForm.class)));
 		}
 		
+		return redirect(routes.FirstUse.welcome());
+	}
+	
+	public static Result welcome() {
+		if (FirstUse.isFirstUse())
+			return redirect(routes.FirstUse.getFirstUse());
+
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return redirect(routes.Login.login());
+
+		user.flashBrowserId();
 		return ok(views.html.FirstUse.welcome.render());
 	}
 	
@@ -177,110 +199,15 @@ public class FirstUse extends Controller {
 	 * @return
 	 */
 	public static boolean isFirstUse() {
-		return User.findAll().size() == 0 || "desktop".equals(Application.deployment()) && Setting.get("dp2fwk.dir") == null;
+		return User.findAll().size() == 0 || "desktop".equals(Application.deployment()) && Pipeline2Engine.cwd == null;
 	}
 	
-	private static Cancellable dp2Locator = null;
-	private static Date lastLocatorRun = null;
-	private static void startDP2Configurator(final Long userId, final Long browserId) {
-		if (dp2Locator != null)
-			dp2Locator.cancel();
-		
-		dp2Locator = Akka.system().scheduler().schedule(
-				Duration.create(0, TimeUnit.SECONDS),
-				Duration.create(10, TimeUnit.SECONDS),
-			new Runnable() {
-				public void run() {
-					if (lastLocatorRun != null && lastLocatorRun.after(new Date(new Date().getTime()-60000)))
-						return; // wait for the previous instance of the thread to complete, or 60 seconds
-					
-					Map<String,Object> result = new HashMap<String,Object>();
-					result.put("time", new Date());
-					
-					lastLocatorRun = new Date();
-					NotificationConnection.pushAll(new Notification("dp2locator", 5));
-					if (Setting.get("dp2fwk.dir") != null) {
-						result.put("state", "SUCCESS"); // endpoint already configured
-						result.put("endpoint", Setting.get("dp2ws.endpoint"));
-						NotificationConnection.pushAll(new Notification("dp2locator", result));
-						dp2Locator.cancel();
-						return;
-					}
-					
-					NotificationConnection.pushAll(new Notification("dp2locator", 10));
-					File dp2dirFile = null;
-					try {
-						dp2dirFile = new File("").getAbsoluteFile().getParentFile();
-						if (dp2dirFile != null && !new File(dp2dirFile.getAbsolutePath()+controllers.Application.SLASH+"cli"+controllers.Application.SLASH+"dp2").exists()) {
-							dp2dirFile = null;
-						}
-					} catch (NullPointerException e) {
-						// directory not found
-					}
-					
-					if (dp2dirFile == null) {
-						result.put("state", "FWK_NOT_FOUND"); // fwk dir not found
-						NotificationConnection.pushAll(new Notification("dp2locator", result));
-						lastLocatorRun = null;
-						return;
-					}
-					try {
-						result.put("dp2dir", dp2dirFile.getCanonicalPath());
-					} catch (IOException e) {
-						Logger.error("Could not resolve cononical path name to dp2dir", e);
-						result.put("dp2dir", dp2dirFile.getAbsolutePath());
-					}
-					
-					NotificationConnection.pushAll(new Notification("dp2locator", 15));
-					Logger.debug("Alive.isAlive("+controllers.Application.DEFAULT_DP2_ENDPOINT_REMOTE+")");
-					if (Alive.isAlive(controllers.Application.DEFAULT_DP2_ENDPOINT_REMOTE)) {
-						result.put("state", "PLEASE_STOP_FWK"); // please stop fwk (DEFAULT_DP2_ENDPOINT_REMOTE)
-						result.put("endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_REMOTE);
-						NotificationConnection.pushAll(new Notification("dp2locator", result));
-						lastLocatorRun = null;
-						return;
-					}
-					
-					NotificationConnection.pushAll(new Notification("dp2locator", 40));
-					result.put("endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL);
-					if (Alive.isAlive(controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL)) {
-						Logger.debug("executing "+controllers.Application.DP2_HALT);
-						int exitValue = CommandExecutor.executeCommandWithWorker(controllers.Application.DP2_HALT, new File(dp2dirFile, "cli"), 20000L);
-						Logger.debug("exit value from "+controllers.Application.DP2_HALT+" is "+exitValue);
-						if (exitValue != 0) {
-							result.put("state", "PLEASE_STOP_FWK"); // please stop fwk (DEFAULT_DP2_ENDPOINT_LOCAL)
-							NotificationConnection.pushAll(new Notification("dp2locator", result));
-							lastLocatorRun = null;
-							return;
-						}
-					}
-					
-					NotificationConnection.pushAll(new Notification("dp2locator", 75));
-					Logger.debug("executing "+controllers.Application.DP2_START);
-					int exitValue = CommandExecutor.executeCommandWithWorker(controllers.Application.DP2_START, new File(dp2dirFile, "cli"), 20000L);
-					Logger.debug("exit value from "+controllers.Application.DP2_START+" is "+exitValue);
-					if (exitValue != 0) {
-						result.put("state", "UNABLE_TO_START_FWK"); // unable to start fwk; fwk is probably misconfigured
-						NotificationConnection.pushAll(new Notification("dp2locator", result));
-						lastLocatorRun = null;
-						return;
-					}
-					
-					NotificationConnection.pushAll(new Notification("dp2locator", 100));
-					Setting.set("uploads", System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"));
-					Setting.set("dp2ws.endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL);
-					Setting.set("dp2ws.authid", "");
-					Setting.set("dp2ws.secret", "");
-					Setting.set("dp2ws.tempDir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.temp" + controllers.Application.SLASH);
-					Setting.set("dp2ws.resultDir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.results" + controllers.Application.SLASH);
-					Setting.set("dp2fwk.dir", dp2dirFile.getAbsolutePath());
-					result.put("state", "SUCCESS"); // successfully configured the Pipeline engine / CLI communication
-					NotificationConnection.pushAll(new Notification("dp2locator", result));
-					
-					dp2Locator.cancel();
-					lastLocatorRun = null;
-				}
-			}
-			);
+	private static void configureDesktopDefaults() {
+		Setting.set("uploads", System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"));
+		Setting.set("dp2ws.endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL);
+		Setting.set("dp2ws.authid", "");
+		Setting.set("dp2ws.secret", "");
+		Setting.set("dp2ws.tempDir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.temp" + controllers.Application.SLASH);
+		Setting.set("dp2ws.resultDir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.results" + controllers.Application.SLASH);
 	}
 }

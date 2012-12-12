@@ -19,6 +19,7 @@ import models.User;
 
 import play.Logger;
 import play.mvc.*;
+import utils.Pipeline2Engine;
 
 public class Scripts extends Controller {
 
@@ -31,7 +32,7 @@ public class Scripts extends Controller {
 			return redirect(routes.Login.login());
 
 		user.flashBrowserId();
-		return ok(views.html.Scripts.getScripts.render(Setting.get("dp2fwk.state")));
+		return ok(views.html.Scripts.getScripts.render(Application.getPipeline2EngineState()));
 	}
 
 	public static Result getScriptsJson() {

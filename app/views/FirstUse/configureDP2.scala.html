@@ -9,91 +9,39 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 <div class="page-header">
   <hgroup>
 	  <h1 id="h1" aria-live="polite">
-	  	<span class="state">Starting DAISY Pipeline 2</span>
-	  	<span class="FWK_NOT_FOUND state" style="display:none;">Pipeline engine not found</span>
-	  	<span class="PLEASE_STOP_FWK state" style="display:none;">Unable to start the Pipeline engine</span>
-	  	<span class="UNABLE_TO_START_FWK state" style="display:none;">Unable to start the Pipeline engine</span>
-	  	<span class="SUCCESS state" style="display:none;">Successfully started the Pipeline engine!</span>
+	  	<span class="STARTING state">Starting the Pipeline 2 engine...</span>
+	  	<span class="RUNNING state" style="display:none;">Successfully started the Pipeline 2 engine!</span>
 	  </h1>
   </hgroup>
-  <div class="progress progress-striped active" id="configurationProgress">
-    <div class="bar" style="width: 0%;" id="configurationProgressBar"></div>
-  </div>
 </div>
 
-<div class="message" style="text-align: center;">
-	<!-- Initial message -->
+<div class="STOPPED STARTING message" style="text-align:center;">
+	<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/><br/>
+	<!-- TODO: show error message if unable to start pipeline 2 engine. also suggest solutions like installing the engine and getting support on the mailinglist. -->
 </div>
 
-<div class="FWK_NOT_FOUND message" style="display:none;">
-	<div class="row">
-		<div class="span3"><img src="@routes.Assets.at("images/fwk_not_found.png")" alt="" style="margin:10px;"/></div>
-		<div class="span9">
-			<div class="alert alert-error" style="text-align:left;">
-				<p>When running the Pipeline 2 Web UI in desktop mode, you need to install it inside the Pipeline engine directory.</p>
-				<!--
-					TODO: uncomment when bundled version is released
-					<p>You can download a ZIP from the <a href="http://code.google.com/p/daisy-pipeline/">Pipeline 2 webside</a>, where the Web UI is already bundled with the Pipeline engine.</p>
-				-->
-				<p>If you have not yet installed the Pipeline engine, please visit the <a href="http://code.google.com/p/daisy-pipeline/">Pipeline 2 webside</a> and follow the instructions there.</p>
-				<p>If you have installed the Pipeline engine, please locate the directory it is installed in, shut down the Web UI, move the Web UI directory into the Pipeline engine directory, and restart the Web UI.</p>
-				<p>If you need further assistance, please visit the <a href="http://www.daisy.org/forums/pipeline-2">Pipeline 2 forum</a> for help.</p>
-			</div>
-		</div>
-	</div>
-</div>
-
-<div class="PLEASE_STOP_FWK message alert alert-error" style="display:none;text-align:left;">
-	<p>A conflicting running instance of the Pipeline engine was found on <code class="endpoint"></code>. Please shut it down.</p>
-	<p>If you need further assistance, please visit the <a href="http://www.daisy.org/forums/pipeline-2">Pipeline 2 forum</a> for help.</p>
-</div>
-
-<div class="UNABLE_TO_START_FWK message alert alert-error" style="display:none;text-align:left;">
-	<p>A problem occured which prevented us from starting the Pipeline engine.</p>
-	<p>
-		Please make sure that you are able to start the Pipeline engine using the command-line interface, and that it is running on port 8181.
-		You can learn more about the command-line interface in the <a href="http://code.google.com/p/daisy-pipeline/wiki/CommandLine">command-line interface user guide</a>.
-	</p>
-	<p>If you need further assistance, please visit the <a href="http://www.daisy.org/forums/pipeline-2">Pipeline 2 forum</a> for help.</p>
-</div>
-
-<div class="SUCCESS message" style="display:none;text-align:center;">
-	<!-- Message on success -->
-	@helper.form(action = routes.FirstUse.getFirstUse()) {
-		<button type="submit" value="Continue..." class="btn btn-large btn-primary">Continue...</button>
-	}
+<div class="SUCCESS message" style="text-align:center;display:none;">
+	<!-- successfully started the pipeline 2 engine -->
 </div>
 
 
 <script type="text/javascript">
-	var lastMessage = {time:0};
+	lastMessage = null;
+	started = null;
 	$(function(){
-		Notifications.listen("dp2locator", function(message){
-			if (typeof message.time === "number" && message.time < lastMessage.time)
-				return;
-			if (typeof message === "number") {
-				$("#configurationProgressBar").width(message+"%");
-				$("#configurationProgress").removeClass("progress-danger").addClass("progress-info");
-				if (message === 100) {
-					$("#configurationProgress").removeClass("progress-striped").removeClass("active").addClass("progress-success");
-					$("#configurationProgress").removeClass("progress-danger").removeClass("progress-info").addClass("progress-success");
-				}
-				
-			} else if ($("."+message.state).size() > 0) {
-				$(".endpoint").html(message.endpoint);
-				$(".message").hide();
-				$(".state").hide();
-				if (message.state === "SUCCESS") {
-					$(".SUCCESS.state").show();
-					window.location='@routes.FirstUse.getFirstUse()';
-					setTimeout(function(){
-						$(".SUCCESS.message").show();
-					},5000);
-				} else {
-					$("."+message.state).show();
-				}
-				if (message.state !== "SUCCESS")
-					$("#configurationProgress").removeClass("progress-info").addClass("progress-danger");
+		started = new Date();
+		lastMessage = new Date(); 
+		Notifications.listen("heartbeat", function(state){
+			lastMessage = new Date();
+			if (state === "RUNNING") {
+				window.location='@routes.FirstUse.welcome()';
+				setTimeout(function(){
+					$(".state, .message").hide();
+					$("."+state).show();
+				},1000); // avoid flashing success message before redirect
+			} else {
+				$(".state, .message").hide();
+				$("."+state).show();
 			}
 		});
 	});

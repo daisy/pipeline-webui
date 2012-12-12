@@ -6,6 +6,8 @@ import play.db.ebean.*;
 
 import javax.persistence.*;
 
+import com.avaje.ebean.ExpressionList;
+
 import controllers.Application;
 
 import java.util.*;
@@ -134,12 +136,24 @@ public class User extends Model {
 
 	/** Retrieve a User from email. */
 	public static User findByEmail(String email) {
-		return find.where().eq("email", email).findUnique();
+		List<User> users = find.where().eq("email", email).findList();
+		for (int u = users.size()-1; u > 0; u--)
+			users.get(u).delete(Application.datasource);
+		if (users.size() == 0)
+			return null;
+		else
+			return users.get(0);
 	}
 
 	/** Retrieve a User from id. */
 	public static User findById(long id) {
-		return find.where().eq("id", id).findUnique();
+		List<User> users = find.where().eq("id", id).findList();
+		for (int u = users.size()-1; u > 0; u--)
+			users.get(u).delete(Application.datasource);
+		if (users.size() == 0)
+			return null;
+		else
+			return users.get(0);
 	}
 	
 	/** Authenticate a user. */

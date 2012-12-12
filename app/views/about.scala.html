@@ -22,14 +22,17 @@
 <p>For more information on the Pipeline 2 development, please see:</p>
 
 <ul>
-    <li>A Pipeline 2 <a href="/pipeline2/overview">Overview</a></li>
+    <li>A Pipeline 2 <a href="http://www.daisy.org/pipeline2/overview">Overview</a></li>
     <li>The Pipeline 2 <a href="http://code.google.com/p/daisy-pipeline/wiki/ProjectCharter">project charter</a></li>
     <li>The Pipeline 2 <a href="http://code.google.com/p/daisy-pipeline/">development site</a>, hosted on Google Code</li>
     <li>The Pipeline 2 <a href="http://code.google.com/p/daisy-pipeline/wiki/UserGuideIntro">user guide</a> (draft), on the development wiki</li>
 </ul>
 
 <div class="well">
-	<em>Pipeline 2 Web UI version: 1.4 SNAPSHOT 2012-12-05</em>
+	<em>Pipeline 2 Web UI version: 1.4</em><br/>
+	@if(Application.alive!=null){
+		<em>Pipeline 2 Engine version: @Application.alive.version</em>
+	}
 </div>
 
 }

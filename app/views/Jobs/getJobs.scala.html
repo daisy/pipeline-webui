@@ -46,7 +46,7 @@ addJob = function(job) {
 	html += '    </td>'+"\n";
 	html += '    <td id="job-results-'+job.id+'">'+"\n";
 	if (job.status==="DONE") {
-		html += '        <span><a class="btn btn-mini btn-success" href="@routes.Jobs.getResult("")'+job.id+'"><i class="icon-download-alt icon-white"></i> Download</a></span>'+"\n";
+		html += '        <span><a class="btn btn-mini btn-success" href="'+'@routes.Jobs.getResult("JOBID")'.replace('JOBID',job.id)+'"><i class="icon-download-alt icon-white"></i> Download</a></span>'+"\n";
 	}
 	html += '    </td>'+"\n";
 	html += '    <td>'+"\n";
@@ -79,7 +79,7 @@ addJob = function(job) {
 		var statusText = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 		$("#job-status-"+job.id).html('<img src="@routes.Assets.at("images/")'+status+'.png" alt="'+statusText+'" title="'+statusText+'"/>');
 		if (status==="DONE") {
-			$("#job-results-"+job.id).html(' <span><a class="btn btn-mini btn-success" href="@routes.Jobs.getResult("")'+job.id+'"><i class="icon-download-alt icon-white"></i> Download</a></span>');
+			$("#job-results-"+job.id).html(' <span><a class="btn btn-mini btn-success" href="'+'@routes.Jobs.getResult("JOBID")'.replace('JOBID',job.id)+'"><i class="icon-download-alt icon-white"></i> Download</a></span>');
 		}
 	});
 }

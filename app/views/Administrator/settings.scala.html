@@ -38,14 +38,14 @@
   </h1>
 </hgroup>
 @if(controllers.Application.deployment()=="server"){
-  <ul class="nav nav-pills">
+<ul class="nav nav-pills">
     <li class="@("active".when(Controller.flash("settings.formName")==null||Controller.flash("settings.formName")=="updateGlobalPermissions"||Controller.flash("settings.formName")=="updateGuest"||Controller.flash("settings.formName")=="updateUser"))"><a href="#usersAndPermissions" data-toggle="tab">Users and Permissions</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="setWS"))"><a href="#pipeline2WebServiceEndpoint" data-toggle="tab">Pipeline 2 Web API</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="setUploadDir"))"><a href="#temporaryDirectoryForUploads" data-toggle="tab">Upload directory</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="configureEmail"))"><a href="#eMailSettings" data-toggle="tab">E-mail settings</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="setMaintenance"))"><a href="#maintenance" data-toggle="tab">Maintenance</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="configureAppearance"))"><a href="#appearance" data-toggle="tab">Appearance</a></li>
-  </ul>
+</ul>
 }
 
 <div class="tab-content">
@@ -118,7 +118,7 @@
 
 }
 
-<section id="appearance" class="tab-pane @("active".when(Controller.flash("settings.formName")=="configureAppearance"))">
+<section id="appearance" class="tab-pane @("active".when(Controller.flash("settings.formName")=="configureAppearance"||controllers.Application.deployment()=="desktop"))">
 	<h2>Appearance</h2>
 	<br/>
 	@views.html.Administrator.Forms.configureAppearance(forms.configureAppearanceForm, routes.Administrator.postSettings(), null)

@@ -7,15 +7,14 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import org.daisy.pipeline.client.Alive;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
-import org.daisy.pipeline.client.models.Script;
 
+import akka.actor.Cancellable;
 import akka.util.Duration;
 import play.libs.Akka;
-import utils.CommandExecutor;
+import utils.Pipeline2Engine;
 
 public class Global extends GlobalSettings {
 	
@@ -23,13 +22,13 @@ public class Global extends GlobalSettings {
 		
 	}
 	
-//	@Override
 	public synchronized void onStart(Application app) {
 		// Application has started...
 		final String datasource = Configuration.root().getString("dp2.datasource");
 		
 		if ("desktop".equals(controllers.Application.deployment())) {
-			Setting.set("dp2fwk.dir", null); // reconfigure fwk dir each time, in case the install dir has changed
+			// reconfigure fwk dir each time, in case the install dir has changed
+			Pipeline2Engine.cwd = new File(Configuration.root().getString("dp2engine.dir")).getAbsoluteFile();
 		}
 		
 		if (User.findAll().size() > 0 && controllers.Application.deployment() == null)
@@ -59,23 +58,19 @@ public class Global extends GlobalSettings {
 							return;
 						
 						Pipeline2WSResponse response;
-						Alive alive = null;
-						String error = null;
-
-						int status = 200;
 						try {
 							response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));
 							if (response.status != 200) {
-								status = response.status;
-								error = response.asText();
+								controllers.Application.alive = null;
 								
 							} else {
 								controllers.Application.alive = new org.daisy.pipeline.client.models.Alive(response);
+								if ("desktop".equals(controllers.Application.deployment()))
+									Pipeline2Engine.setState(Pipeline2Engine.State.RUNNING);
 							}
 						} catch (Pipeline2WSException e) {
 							Logger.error(e.getMessage(), e);
-							status = 500;
-							error = e.getMessage();
+							controllers.Application.alive = null;
 						}
 					}
 				});
@@ -102,7 +97,26 @@ public class Global extends GlobalSettings {
 								for (NotificationConnection c : browsers) {
 									if (c.notifications.size() == 0) {
 //										Logger.debug("*heartbeat* for user #"+userId+" and browser window #"+c.browserId);
-										c.push(new Notification("heartbeat", null));
+										c.push(new Notification("heartbeat", controllers.Application.getPipeline2EngineState()));
+									}
+								}
+								
+								// When starting the engine; check more often whether it is alive
+								if ("desktop".equals(controllers.Application.deployment()) && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING && Setting.get("dp2ws.endpoint") != null) {
+									Pipeline2WSResponse response;
+									try {
+										response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));
+										if (response.status != 200) {
+											controllers.Application.alive = null;
+											
+										} else {
+											controllers.Application.alive = new org.daisy.pipeline.client.models.Alive(response);
+											if ("desktop".equals(controllers.Application.deployment()))
+												Pipeline2Engine.setState(Pipeline2Engine.State.RUNNING);
+										}
+									} catch (Pipeline2WSException e) {
+										Logger.error(e.getMessage(), e);
+										controllers.Application.alive = null;
 									}
 								}
 							}
@@ -197,75 +211,13 @@ public class Global extends GlobalSettings {
 					}
 				}
 			);
-		
-		if ("server".equals(controllers.Application.deployment())) Setting.set("dp2fwk.state","RUNNING"); // assume that it is running when in server mode
-		else Setting.set("dp2fwk.state","STOPPED");
-		
-//		if (!"server".equals(controllers.Application.deployment())) {
-			
-			Akka.system().scheduler().schedule(
-					Duration.create(0, TimeUnit.SECONDS),
-					Duration.create(1, TimeUnit.MINUTES),
-					new Runnable() {
-						public void run() {
-							// If running in server mode; just report whether the Pipeline engine is running or not
-							if ("server".equals(controllers.Application.deployment())) {
-								String endpoint = Setting.get("dp2ws.endpoint");
-								if (endpoint == null || !Alive.isAlive(endpoint)) {
-									Setting.set("dp2fwk.state","STOPPED");
-									NotificationConnection.pushAll(new Notification("dp2fwk.state", "STOPPED"));
-									
-								} else {
-									Setting.set("dp2fwk.state","RUNNING");
-									NotificationConnection.pushAll(new Notification("dp2fwk.state", "RUNNING"));
-								}
-							}
-							
-							// If running in desktop mode; also restart DP2 automatically if it crashes
-							else if ("desktop".equals(controllers.Application.deployment())) {
-								String dp2fwkDir = Setting.get("dp2fwk.dir");
-								
-								if (dp2fwkDir == null || "".equals(dp2fwkDir))
-									return;
-								
-								if (!Alive.isAlive(controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL)) {
-									Logger.info("Attempting to start the Pipeline engine...");
-									Setting.set("dp2fwk.state","STARTING");
-									NotificationConnection.pushAll(new Notification("dp2fwk.state", "STARTING"));
-									int exitValue = CommandExecutor.executeCommandWithWorker(controllers.Application.DP2_START, new File(dp2fwkDir, "cli"), 20000L);
-									if (exitValue != 0) {
-										Setting.set("dp2fwk.state","RUNNING");
-										NotificationConnection.pushAll(new Notification("dp2fwk.state", "RUNNING"));
-										Logger.info("Started the Pipeline engine");
-									} else {
-										Setting.set("dp2fwk.state","STOPPED");
-										Logger.info("Failed to start the Pipeline engine");
-									}
-									return;
-								}
-							}
-							
-						}
-					}
-					);
-		
-//		}
 	}
-
-//	@Override
+	
 	public void onStop(Application app) {
 		// Application shutdown...
-		if ("server".equals(controllers.Application.deployment()))
-			return;
 		
-		String dp2fwkDir = Setting.get("dp2fwk.dir");
-		
-		if (dp2fwkDir == null || "".equals(dp2fwkDir))
-			return;
-		
-		if (Alive.isAlive(controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL)) {
-			CommandExecutor.executeCommandWithWorker(controllers.Application.DP2_HALT, new File(dp2fwkDir, "cli"), 20000L);
-		}
+		// Halts the Pipeline 2 engine if present
+		Pipeline2Engine.halt();
 	}
 
 }

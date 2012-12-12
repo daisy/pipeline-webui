@@ -60,6 +60,7 @@ GET 	/admin/POST                         controllers.Administrator.getPostSettin
 # First use
 GET     /firstuse                           controllers.FirstUse.getFirstUse()
 POST    /firstuse                           controllers.FirstUse.postFirstUse()
+GET		/welcome							controllers.FirstUse.welcome()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file                       controllers.Assets.at(path="/public", file)

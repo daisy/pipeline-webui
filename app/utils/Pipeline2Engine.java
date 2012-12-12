@@ -5,15 +5,57 @@ import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
+import models.Notification;
+import models.NotificationConnection;
+
 import play.Logger;
 
 /**
  * Utility class for performing process related functions such as command line processing.
  * Based on http://stackoverflow.com/a/809976
  */
-public class CommandExecutor {
-
-    /**
+public class Pipeline2Engine {
+	
+	public static enum State {
+		STOPPED, STARTING, RUNNING
+	};
+	
+	private static State state = null;
+	
+	public static final String SLASH = System.getProperty("file.separator");
+	public static final String DP2_START = "/".equals(SLASH) ? "./pipeline2" : "pipeline2.bat";
+	public static File cwd = null;
+	
+	static Worker engine = null;
+	
+	private Pipeline2Engine(){} // don't instantiate
+	
+	public static void start() {
+		if (engine != null)
+			halt();
+		engine = executeCommandWithWorker(DP2_START, new File(cwd,"bin"));
+		state = State.STARTING;
+	}
+	
+	public static void halt() {
+		if (engine != null)
+			engine.process.destroy();
+		engine = null;
+		state = State.STOPPED;
+	}
+	
+	public static State getState() {
+		return state;
+	}
+	
+	public static void setState(State state) {
+		Pipeline2Engine.state = state;
+		NotificationConnection.pushAll(new Notification("heartbeat", Pipeline2Engine.state.toString()));
+		Logger.debug("Pipeline 2 engine state: "+Pipeline2Engine.state);
+	}
+	
+	/**
      * Thread class to be used as a worker
      */
     private static class Worker extends Thread {
@@ -38,19 +80,18 @@ public class CommandExecutor {
             }
         }
     }
-
+    
     /**
      * Executes a command.
      * 
      * @param command
-     * @param printOutput
-     * @param printError
+     * @param cwd
      * @param timeOut
      * @return
      * @throws java.io.IOException
      * @throws java.lang.InterruptedException
      */
-    public static int executeCommandWithWorker(final String command, final File cwd, final long timeOut) {
+    private static Worker executeCommandWithWorker(final String command, final File cwd) {
     	
     	Logger.info(cwd+"   "+command);
     	
@@ -62,7 +103,7 @@ public class CommandExecutor {
 		} catch (IOException e) {
             String errorMessage = "The process for the command [" + command + "] could not be created due to an IO error.";
             Logger.error(errorMessage, e);
-            return 1;
+            return null;
 		}
         
         // consume and display the error and output streams
@@ -74,27 +115,29 @@ public class CommandExecutor {
         // create and start a Worker thread which this thread will join for the timeout period 
         Worker worker = new Worker(process);
         worker.start();
-        try {
-            worker.join(timeOut);
-            Integer exitValue = worker.getExitValue();
-            if (exitValue != null)
-            {
-                // the worker thread completed within the timeout period
-                return exitValue;
-            }
-
-            // if we get this far then we never got an exit value from the worker thread as a result of a timeout 
-            String errorMessage = "The command [" + command + "] timed out.";
-            Logger.error(errorMessage);
-            return 1;
-        }
-        catch (InterruptedException e) {
-            worker.interrupt();
-            Thread.currentThread().interrupt();
-            String errorMessage = "The command [" + command + "] did not complete due to an unexpected interruption.";
-            Logger.error(errorMessage, e);
-            return 1;
-        }
+        return worker;
+        
+//        try {
+//            worker.join(timeOut);
+//            Integer exitValue = worker.getExitValue();
+//            if (exitValue != null)
+//            {
+//                // the worker thread completed within the timeout period
+//                return exitValue;
+//            }
+//
+//            // if we get this far then we never got an exit value from the worker thread as a result of a timeout 
+//            String errorMessage = "The command [" + command + "] timed out.";
+//            Logger.error(errorMessage);
+//            return 1;
+//        }
+//        catch (InterruptedException e) {
+//            worker.interrupt();
+//            Thread.currentThread().interrupt();
+//            String errorMessage = "The command [" + command + "] did not complete due to an unexpected interruption.";
+//            Logger.error(errorMessage, e);
+//            return 1;
+//        }
     }
 
     /**

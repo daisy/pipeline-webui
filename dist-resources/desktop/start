@@ -1,17 +1,12 @@
 #!/usr/bin/env bash
 
-if [ "BROWSER" != "$1" ]
+echo "Starting browser..."
+if [ "`uname -s`" == "Darwin" ]
 then
-    exec $0 BROWSER &
-    ( cd `dirname $0` && exec java -Dconfig.file="`pwd`/application.conf" $@ -cp "`pwd`/lib/*" play.core.server.NettyServer "`pwd`" )
+    open "startui/start.html"
 else
-    echo "Starting browser in 10 seconds..."
-    sleep 10
-    if [ "`uname -s`" == "Darwin" ]
-    then
-        open "http://localhost:9000/"
-    else
-        xdg-open "http://localhost:9000/"
-    fi
+    xdg-open "startui/start.html"
 fi
 
+echo "Starting Web UI..."
+( cd "`dirname "$0"`" && exec java -Dconfig.file="`pwd`/application.conf" $@ -cp "`pwd`/lib/*" play.core.server.NettyServer "`pwd`" )

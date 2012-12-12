@@ -59,7 +59,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 				$(".RUNNING").hide();
 			}
 		}
-		Notifications.listen("dp2fwk.state", updateState); 
+		Notifications.listen("heartbeat", updateState);
 		var scriptHrefBase = "@routes.Scripts.getScript("")";
 		var checkForScripts = function() {
 			$.ajax({

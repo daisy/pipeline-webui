@@ -243,12 +243,13 @@ public class ContentType {
     	nsMap.put("http://www.daisy.org/ns/z3986/authoring/", "application/z3998-auth+xml");
     	nsMap.put("http://www.daisy.org/ns/z3998/authoring/", "application/z3998-auth+xml");
     	nsMap.put("http://www.w3.org/XML/1998/namespace", "application/xml");
+    	nsMap.put("http://openebook.org/namespaces/oeb-package/1.0/", "application/oebps-package+xml");
+    	nsMap.put("http://www.w3.org/2001/XML", "application/xml");
+    	nsMap.put("http://www.w3.org/ns/xproc-step", "application/xproc+xml");
     	
     	// TODO: see if some of these namespaces (grep'ed from daisy-pipeline.modules) has content types
     	//nsMap.put("http://maven.apache.org/POM/4.0.0", "");
     	//nsMap.put("urn:oasis:names:tc:entity:xmlns:xml:catalog", "");
-    	//nsMap.put("http://www.w3.org/2001/XML", "");
-    	//nsMap.put("http://www.w3.org/ns/xproc-step", "");
     	//nsMap.put("http://xmlcalabash.com/ns/extensions", "");
     	//nsMap.put("http://xmlcalabash.com/ns/extensions/osutils", "");
     	//nsMap.put("http://www.daisy.org/ns/pipeline/xproc", "");

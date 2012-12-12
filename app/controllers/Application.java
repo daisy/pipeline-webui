@@ -9,14 +9,15 @@ import models.User;
 import play.Configuration;
 import play.Logger;
 import play.mvc.*;
+import utils.Pipeline2Engine;
 
 public class Application extends Controller {
+	
+	Pipeline2Engine localEngine = null;
 	
 	public static final String DEFAULT_DP2_ENDPOINT_LOCAL = "http://localhost:8181/ws";
 	public static final String DEFAULT_DP2_ENDPOINT_REMOTE = "http://localhost:8182/ws";
 	public static final String SLASH = System.getProperty("file.separator");
-	public static final String DP2_START = "/".equals(SLASH) ? "./dp2 help" : "cmd /c start /B cmd /c dp2.exe help";
-	public static final String DP2_HALT = "/".equals(SLASH) ? "./dp2 halt" : "cmd /c start /B cmd /c dp2.exe halt";
 	
 	public static final String datasource = Configuration.root().getString("dp2.datasource");
 	public static org.daisy.pipeline.client.models.Alive alive = null;
@@ -93,5 +94,15 @@ public class Application extends Controller {
 	 */
 	public static String deployment() {
 		return deployment != null ? deployment : Setting.get("deployment");
+	}
+
+	public static String getPipeline2EngineState() {
+		if (Pipeline2Engine.getState() != null)
+			return Pipeline2Engine.getState()+"";
+		
+		if (Application.alive == null || Application.alive.error)
+			return Pipeline2Engine.State.STOPPED+"";
+		
+		return Pipeline2Engine.State.RUNNING+"";
 	}
 }

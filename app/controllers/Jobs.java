@@ -26,6 +26,7 @@ import org.codehaus.jackson.JsonNode;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
+import org.daisy.pipeline.client.models.Alive.Mode;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.script.Argument;
 import org.w3c.dom.Node;
@@ -220,12 +221,12 @@ public class Jobs extends Controller {
 					))
 				return forbidden("You are not allowed to view this job.");
 		
-		if (Application.alive.local == Boolean.TRUE) {
+		if (Mode.LOCAL.equals(Application.alive.mode)) {
 			try {
 				File resultDir = new File(Setting.get("dp2ws.resultDir")+webuiJob.localDirName);
 				File tempZip;
 				tempZip = File.createTempFile("dp2result", "zip");
-				Logger.debug("zipping result directory: "+resultDir.getAbsolutePath());
+				Logger.info("zipping result directory: "+resultDir.getAbsolutePath());
 				Files.zip(resultDir, tempZip);
 				
 				response().setHeader("Content-Disposition", "attachment; filename=\""+webuiJob.nicename.replaceAll("[^\\w ]","-").subSequence(0, webuiJob.nicename.length())+".zip\""); // TODO: use job nicename with characters replaced to work on all filesystems
@@ -239,10 +240,18 @@ public class Jobs extends Controller {
 			
 		} else {
 			try {
+				Logger.info("retrieving result ZIP from Pipeline 2 engine...");
+				
 				Pipeline2WSResponse result = org.daisy.pipeline.client.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
 				
+				Logger.debug(result.contentType);
+				Logger.debug(result.statusDescription);
+				Logger.debug(result.statusName);
+				Logger.debug(result.status+"");
+//				Logger.debug("result size: "+result.asText().length());
+				
 				response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
-				response().setContentType("application/zip"); // we could use result.contentType here if we wanted to...
+				response().setContentType(result.contentType);
 	
 				return ok(result.asStream());
 				
@@ -435,7 +444,7 @@ public class Jobs extends Controller {
 				}
 			}
 			
-			if (Application.alive.local == Boolean.TRUE) {
+			if (Mode.LOCAL.equals(Application.alive.mode)) {
 				Logger.debug("Running the Web UI and fwk on the same filesystem, no need to ZIP files...");
 				for (Argument arg : script.arguments) {
 					if (arg.output != null) {
