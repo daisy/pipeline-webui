@@ -1,5 +1,7 @@
 @ECHO OFF
 
+title Pipeline 2 Web UI
+
 echo Starting browser...
 start startui\start.html
 
