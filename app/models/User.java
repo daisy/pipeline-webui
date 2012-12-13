@@ -335,10 +335,14 @@ public class User extends Model {
 	
 	@Override
 	public void delete(String datasource) {
-		List<Job> jobs = getJobs();
-		for (Job job : jobs)
-			job.delete(datasource);
-		super.delete(datasource);
+		try {
+			List<Job> jobs = getJobs();
+			for (Job job : jobs)
+				job.delete(datasource);
+			super.delete(datasource);
+		} catch (javax.persistence.OptimisticLockException e) {
+			Logger.warn("Could not delete user "+this.id+" ("+this.name+" / "+this.email+")", e);
+		}
 	}
 	
 	@Override
