@@ -19,7 +19,7 @@ local.results
 local.temp
 
 # Derby database
-dp2webui
+/dp2webui
 derby.log
 
 # IDE and editors
