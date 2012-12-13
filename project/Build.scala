@@ -19,7 +19,7 @@ object ApplicationBuild extends Build {
     val main = PlayProject(appName, appVersion, appDependencies, mainLang = JAVA).settings(
       // project settings
       ebeanEnabled := true,
-      resolvers += ("Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"),
+      resolvers += ("Local Maven Repository" at "file:///"+Path.userHome.absolutePath+"/.m2/repository"),
       resolvers += ("Public online Restlet repository" at "http://maven.restlet.org")
     )
 
