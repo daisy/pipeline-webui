@@ -14,9 +14,9 @@ bin
 lib
 
 # Default directories
-uploads
-local.results
-local.temp
+/uploads
+/local.results
+/local.temp
 
 # Derby database
 /dp2webui
