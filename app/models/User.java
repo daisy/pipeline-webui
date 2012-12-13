@@ -193,6 +193,7 @@ public class User extends Model {
 		} else if ("true".equals(models.Setting.get("users.guest.allowGuests"))) { // guest user
 			user = new User("", models.Setting.get("users.guest.name"), "", false);
 			user.id = id;
+			user.login(session);
 			return user;
 			
 		} else {
