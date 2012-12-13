@@ -112,67 +112,73 @@ public class Job extends Model implements Comparable<Job> {
 				Duration.create(1000, TimeUnit.MILLISECONDS),
 				new Runnable() {
 					public void run() {
-						Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) : 0;
-						Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
-						
-						Pipeline2WSResponse wsJob;
-						org.daisy.pipeline.client.models.Job job;
-						
 						try {
-							wsJob = org.daisy.pipeline.client.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, fromSequence);
+							Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) : 0;
+							Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
 							
-							if (wsJob.status != 200 && wsJob.status != 201) {
+							Pipeline2WSResponse wsJob;
+							org.daisy.pipeline.client.models.Job job;
+							
+							try {
+								wsJob = org.daisy.pipeline.client.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, fromSequence);
+								
+								if (wsJob.status != 200 && wsJob.status != 201) {
+									return;
+								}
+								
+								Document xml = wsJob.asXml();
+								job = new org.daisy.pipeline.client.models.Job(xml);
+								Logger.debug(XML.toString(xml));
+								
+							} catch (Pipeline2WSException e) {
+								Logger.error(e.getMessage(), e);
 								return;
 							}
 							
-							Document xml = wsJob.asXml();
-							job = new org.daisy.pipeline.client.models.Job(xml);
-							Logger.debug(XML.toString(xml));
+							Job webUiJob = Job.findById(job.id);
 							
-						} catch (Pipeline2WSException e) {
-							Logger.error(e.getMessage(), e);
-							return;
-						}
-						
-						Job webUiJob = Job.findById(job.id);
-						
-						if (webUiJob == null) {
-							// Job has been deleted; stop updates
-							pushNotifier.cancel();
-						}
-						
-						if (job.status != Status.RUNNING && job.status != Status.IDLE) {
-							pushNotifier.cancel();
-							if (webUiJob.finished == null) {
-								// pushNotifier tends to fire multiple times after canceling it, so this if{} is just to fire the "finished" event exactly once
-								webUiJob.finished = new Date();
-								webUiJob.save(Application.datasource);
-								Map<String,String> finishedMap = new HashMap<String,String>();
-								finishedMap.put("text", webUiJob.finished.toString());
-								finishedMap.put("number", webUiJob.finished.getTime()+"");
-								NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-finished-"+job.id, finishedMap));
+							if (webUiJob == null) {
+								// Job has been deleted; stop updates
+								pushNotifier.cancel();
 							}
-						}
-						
-						for (org.daisy.pipeline.client.models.job.Message message : job.messages) {
-							Notification notification = new Notification("job-message-"+job.id, message);
-							NotificationConnection.pushJobNotification(webUiJob.user, notification);
-						}
-						
-						if (!job.status.equals(lastStatus.get(job.id))) {
-							lastStatus.put(job.id, job.status);
-							NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-status-"+job.id, job.status));
 							
-							if (job.status == Status.RUNNING) {
-								Map<String,String> startedMap = new HashMap<String,String>();
-								startedMap.put("text", webUiJob.finished.toString());
-								startedMap.put("number", webUiJob.finished.getTime()+"");
-								NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-started-"+job.id, startedMap));
+							if (job.status != Status.RUNNING && job.status != Status.IDLE) {
+								pushNotifier.cancel();
+								if (webUiJob.finished == null) {
+									// pushNotifier tends to fire multiple times after canceling it, so this if{} is just to fire the "finished" event exactly once
+									webUiJob.finished = new Date();
+									webUiJob.save(Application.datasource);
+									Map<String,String> finishedMap = new HashMap<String,String>();
+									finishedMap.put("text", webUiJob.finished.toString());
+									finishedMap.put("number", webUiJob.finished.getTime()+"");
+									NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-finished-"+job.id, finishedMap));
+								}
 							}
-						}
-						
-						if (job.messages.size() > 0) {
-							Job.lastMessageSequence.put(job.id, job.messages.get(job.messages.size()-1).sequence);
+							
+							for (org.daisy.pipeline.client.models.job.Message message : job.messages) {
+								Notification notification = new Notification("job-message-"+job.id, message);
+								NotificationConnection.pushJobNotification(webUiJob.user, notification);
+							}
+							
+							if (!job.status.equals(lastStatus.get(job.id))) {
+								lastStatus.put(job.id, job.status);
+								NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-status-"+job.id, job.status));
+								
+								if (job.status == Status.RUNNING) {
+									Map<String,String> startedMap = new HashMap<String,String>();
+									startedMap.put("text", webUiJob.finished.toString());
+									startedMap.put("number", webUiJob.finished.getTime()+"");
+									NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-started-"+job.id, startedMap));
+								}
+							}
+							
+							if (job.messages.size() > 0) {
+								Job.lastMessageSequence.put(job.id, job.messages.get(job.messages.size()-1).sequence);
+							}
+						} catch (javax.persistence.PersistenceException e) {
+							// Ignores this exception that happens on shutdown:
+							// javax.persistence.PersistenceException: java.sql.SQLException: Attempting to obtain a connection from a pool that has already been shutdown.
+							// Should be safe to ignore I think...
 						}
 					}
 				}

@@ -622,14 +622,20 @@ public class Administrator extends Controller {
 				Duration.create(1, TimeUnit.SECONDS),
 				new Runnable() {
 					public void run() {
-						// Pipeline engine
-						if (Pipeline2Engine.cwd != null) {
-							Logger.info("Attempting to stop the Pipeline engine...");
-							Pipeline2Engine.halt();
+						try {
+							// Pipeline engine
+							if (Pipeline2Engine.cwd != null) {
+								Logger.info("Attempting to stop the Pipeline engine...");
+								Pipeline2Engine.halt();
+							}
+							
+							// Web UI
+							System.exit(0);
+						} catch (javax.persistence.PersistenceException e) {
+							// Ignores this exception that happens on shutdown:
+							// javax.persistence.PersistenceException: java.sql.SQLException: Attempting to obtain a connection from a pool that has already been shutdown.
+							// Should be safe to ignore I think...
 						}
-						
-						// Web UI
-						System.exit(0);
 					}
 				});
 		
