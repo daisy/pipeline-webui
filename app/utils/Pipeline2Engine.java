@@ -1,13 +1,21 @@
 package utils;
 
+import org.daisy.pipeline.client.Pipeline2WS;
+import org.daisy.pipeline.client.Pipeline2WSException;
+import org.daisy.pipeline.client.Pipeline2WSResponse;
+
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Scanner;
 
 import models.Notification;
 import models.NotificationConnection;
+import models.Setting;
 
 import play.Logger;
 
@@ -39,8 +47,50 @@ public class Pipeline2Engine {
 	}
 	
 	public static void halt() {
-		if (engine != null)
+		if (engine != null) {
+			
+			// shut down through the /admin/halt API
+			try {
+                String tempDir = System.getProperty("java.io.tmpdir");
+                if (!tempDir.endsWith(SLASH))
+                	tempDir += SLASH;
+                File keyFile = new File(tempDir+"dp2key.txt");
+                
+                String key = null;
+                Scanner scanner = new Scanner(new FileInputStream(keyFile));
+                try {
+                  if (scanner.hasNextLine()){
+                    key = scanner.nextLine();
+                  }
+                } finally{
+                  scanner.close();
+                }
+                
+                Logger.debug("Shutdown key: "+key);
+				
+				if (key == null) {
+					Logger.error("Could not read Pipelne 2 engine key file");
+					
+				} else {
+					Pipeline2WSResponse response = org.daisy.pipeline.client.Admin.halt(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), key);
+					if (response.status != 204) {
+						Logger.error("Could not shut down Pipelne 2 engine:");
+						Logger.error(response.asText());
+						
+					} else {
+						Logger.error("Successfully shut down the Pipeline 2 engine!");
+					}
+				}
+			} catch (Pipeline2WSException e) {
+				Logger.error(e.getMessage(), e);
+			} catch (FileNotFoundException e) {
+				Logger.error("Could not read Pipelne 2 engine key file; "+e.getMessage(), e);
+			}
+			
+			// shut down by killing the process
 			engine.process.destroy();
+		}
+		
 		engine = null;
 		state = State.STOPPED;
 	}
@@ -116,28 +166,6 @@ public class Pipeline2Engine {
         Worker worker = new Worker(process);
         worker.start();
         return worker;
-        
-//        try {
-//            worker.join(timeOut);
-//            Integer exitValue = worker.getExitValue();
-//            if (exitValue != null)
-//            {
-//                // the worker thread completed within the timeout period
-//                return exitValue;
-//            }
-//
-//            // if we get this far then we never got an exit value from the worker thread as a result of a timeout 
-//            String errorMessage = "The command [" + command + "] timed out.";
-//            Logger.error(errorMessage);
-//            return 1;
-//        }
-//        catch (InterruptedException e) {
-//            worker.interrupt();
-//            Thread.currentThread().interrupt();
-//            String errorMessage = "The command [" + command + "] did not complete due to an unexpected interruption.";
-//            Logger.error(errorMessage, e);
-//            return 1;
-//        }
     }
 
     /**
@@ -177,9 +205,8 @@ public class Pipeline2Engine {
                 	else if ("WARN".equals(streamType)) Logger.warn(line);
                 }
                 
-            } catch (IOException ex) {
-                Logger.error("Failed to successfully consume and display the input stream of type " + streamType + ".", ex);
-                ex.printStackTrace();
+            } catch (IOException e) {
+                Logger.warn("Could not completely consume and display the "+streamType+" input stream");
             }
         }
     }
