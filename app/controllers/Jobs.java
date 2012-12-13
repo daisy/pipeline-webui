@@ -229,7 +229,7 @@ public class Jobs extends Controller {
 				Logger.info("zipping result directory: "+resultDir.getAbsolutePath());
 				Files.zip(resultDir, tempZip);
 				
-				response().setHeader("Content-Disposition", "attachment; filename=\""+webuiJob.nicename.replaceAll("[^\\w ]","-").subSequence(0, webuiJob.nicename.length())+".zip\""); // TODO: use job nicename with characters replaced to work on all filesystems
+				response().setHeader("Content-Disposition", "attachment; filename=\""+webuiJob.nicename.replaceAll("[^\\w ]","-").subSequence(0, webuiJob.nicename.length())+".zip\"");
 				response().setContentType("application/zip");
 				return ok(new FileInputStream(tempZip));
 				
@@ -250,7 +250,7 @@ public class Jobs extends Controller {
 				Logger.debug(result.status+"");
 //				Logger.debug("result size: "+result.asText().length());
 				
-				response().setHeader("Content-Disposition", "attachment; filename=\"result-"+id+".zip\"");
+				response().setHeader("Content-Disposition", "attachment; filename=\""+webuiJob.nicename.replaceAll("[^\\w ]","-").subSequence(0, webuiJob.nicename.length())+".zip\"");
 				response().setContentType(result.contentType);
 	
 				return ok(result.asStream());
