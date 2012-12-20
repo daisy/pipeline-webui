@@ -35,7 +35,7 @@ Array("jquery.fileupload-ui.css")) {
 		
 		@for(arg <- script.arguments){
 			@if(arg.required==true){
-				@if(arg.output!="result" && arg.output!="temp"){
+				@if(arg.output!="result" && arg.output!="temp" && arg.kind!="output"){
 					@if(arg.kind=="parameters"){
 						@Widgets.parameters(arg, script)
 					}else{
@@ -71,7 +71,7 @@ Array("jquery.fileupload-ui.css")) {
 			<div class="control-group @("in".when(!hideAdvancedOptions)) collapse" id="advanced-options">
 				@for(arg <- script.arguments){
 					@if(arg.required==false || arg.required == null){
-						@if(arg.output!="result" && arg.output!="temp"){
+						@if(arg.output!="result" && arg.output!="temp" && arg.kind!="output"){
 							@if(arg.kind=="parameters"){
 								@Widgets.parameters(arg, script)
 							}else{

@@ -103,6 +103,8 @@ public class Scripts extends Controller {
 		{
 			Map<String,Integer> mediaTypeOccurences = new HashMap<String,Integer>();
 			for (Argument arg : script.arguments) {
+				if ("output".equals(arg.kind) || arg.output != null)
+					continue;
 				for (String mediaType : arg.mediaTypes) {
 					if (mediaTypeOccurences.containsKey(mediaType)) {
 						mediaTypeOccurences.put(mediaType, mediaTypeOccurences.get(mediaType)+1);
@@ -121,6 +123,8 @@ public class Scripts extends Controller {
 		boolean hideAdvancedOptions = "true".equals(Setting.get("jobs.hideAdvancedOptions"));
 		boolean hasAdvancedOptions = false;
 		for (Argument arg : script.arguments) {
+			if ("output".equals(arg.kind) || arg.output != null)
+				continue;
 			if (arg.required != Boolean.TRUE)
 				hasAdvancedOptions = true;
 			if ("input".equals(arg.kind) || "anyFileURI".equals(arg.xsdType)) {
