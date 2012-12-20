@@ -53,8 +53,8 @@ addJob = function(job) {
 	}
 	html += '    </td>'+"\n";
 	html += '    <td>'+"\n";
-	html += '        <span id="created-'+job.id+'" aria-live="timer"></span><br/>'+"\n";
-	html += '        <small class="muted">'+job.created+'</small>'+"\n";
+	html += '        <span id="created-'+job.id+'-fuzzy" aria-live="timer"></span><br/>'+"\n";
+	html += '        <small id="created-'+job.id+'" class="muted">'+new Date(job.created)+'</small>'+"\n";
 	html += '    </td>'+"\n";
 	@if(Controller.flash("showOwner")=="true"){
 		html += '    <td>'+"\n";
@@ -76,7 +76,7 @@ addJob = function(job) {
 	$("#nojobs").hide();
 	$("#joblist").show();
 	
-	updateFuzzy("created-"+job.id,new Date( job.created === null ? 0 : job.created ));
+	updateFuzzy("created-"+job.id+"-fuzzy",new Date( job.created === null ? 999999999999999 : job.created ));
 	
 	Notifications.listen("job-status-"+job.id, function(status){
 		var statusText = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();

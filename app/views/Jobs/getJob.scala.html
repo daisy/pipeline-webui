@@ -49,6 +49,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 						updateFuzzyCreatedInterval = null;
 						updateFuzzyCreated = function(){updateFuzzyCreatedInterval=updateFuzzy("created-fuzzy",new Date(@if(uiJob.created==null){ 999999999999999 }else{ @uiJob.created.getTime() } ));};
 						$(updateFuzzyCreated);
+						$("#created").html(new Date(@if(uiJob.created==null){ 999999999999999 }else{ @uiJob.created.getTime() })+"");
 					</script>
 				</td>
 			</tr>
@@ -61,6 +62,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 						updateFuzzyStartedInterval = null;
 						updateFuzzyStarted = function(){updateFuzzyStartedInterval=updateFuzzy("started-fuzzy",new Date(@if(uiJob.started==null){ 999999999999999 }else{ @uiJob.started.getTime() } ));};
 						$(updateFuzzyStarted);
+						$("#started").html(new Date(@if(uiJob.started==null){ 999999999999999 }else{ @uiJob.started.getTime() })+"");
 					</script>
 				</td>
 			</tr>
@@ -73,6 +75,7 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 						updateFuzzyFinishedInterval = null;
 						updateFuzzyFinished = function(){updateFuzzyFinishedInterval=updateFuzzy("finished-fuzzy",new Date(@if(uiJob.finished==null){ 999999999999999 }else{ @uiJob.finished.getTime() } ));};
 						$(updateFuzzyFinished);
+						$("#finished").html(new Date(@if(uiJob.finished==null){ 999999999999999 }else{ @uiJob.finished.getTime() })+"");
 					</script>
 				</td>
 			</tr>
@@ -188,14 +191,16 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 			$("#status-"+status.toLowerCase()).show();
 		});
 		Notifications.listen("job-started-@fwkJob.id", function(message){
-			$("#started").html(message.text);
+			var date = new Date(parseInt(message.number));
+			$("#started").html(date+"");
 			clearInterval(updateFuzzyStartedInterval);
-			updateFuzzy("started-fuzzy", new Date(parseInt(message.number)));
+			updateFuzzy("started-fuzzy", date);
 		});
 		Notifications.listen("job-finished-@fwkJob.id", function(message){
-			$("#finished").html(message.text);
+			var date = new Date(parseInt(message.number));
+			$("#finished").html(date+"");
 			clearInterval(updateFuzzyFinishedInterval);
-			updateFuzzy("finished-fuzzy", new Date(parseInt(message.number)));
+			updateFuzzy("finished-fuzzy", date);
 		});
 		
 		if (Math.abs(new Date().getTime() - @(new Date().getTime())) > 1000) {
@@ -210,9 +215,9 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 					clearInterval(updateFuzzyCreatedInterval);
 					clearInterval(updateFuzzyStartedInterval);
 					clearInterval(updateFuzzyFinishedInterval);
-					$("#created").html(job.created);
-					$("#started").html(job.started);
-					$("#finished").html(job.finished);
+					$("#created").html(new Date(job.created)+"");
+					$("#started").html(new Date(job.started)+"");
+					$("#finished").html(new Date(job.finished)+"");
 					updateFuzzy("created-fuzzy", new Date(job.created));
 					updateFuzzy("started-fuzzy", new Date(job.started));
 					updateFuzzy("finished-fuzzy", new Date(job.finished));
