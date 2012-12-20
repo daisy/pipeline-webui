@@ -21,6 +21,8 @@ object ApplicationBuild extends Build {
       ebeanEnabled := true,
       resolvers += ("Local Maven Repository" at "file:///"+Path.userHome.absolutePath+"/.m2/repository"),
       resolvers += ("Public online Restlet repository" at "http://maven.restlet.org")
+    ).settings(
+      javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
     )
 
 }
