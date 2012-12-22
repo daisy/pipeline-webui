@@ -3,9 +3,9 @@
 echo "Starting browser..."
 if [ "`uname -s`" == "Darwin" ]
 then
-    open "startui/start.html"
+    open "`dirname "$0"`/startui/start.html"
 else
-    xdg-open "startui/start.html"
+    xdg-open "`dirname "$0"`/startui/start.html"
 fi
 
 echo "Starting Web UI..."
