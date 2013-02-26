@@ -60,7 +60,7 @@
 		   			<ul class="nav">
 		   				@if(models.User.parseUserId(session()) != null){
 		   					@if(navs.contains("scripts")){
-			   					<li class="@("active".when(nav == "scripts"))"><a href="@routes.Scripts.getScripts()"><i class="icon-plus icon-white"></i> Create Job</a></li>
+			   					<li class="@("active".when(nav == "scripts"))"><a href="@routes.Jobs.newJob()"><i class="icon-plus icon-white"></i> Create Job</a></li>
 			   				}
 		   				}
 		   				@if(models.User.parseUserId(session()) != null && (models.User.parseUserId(session()) >= 0 || Setting.get("users.guest.shareJobs") == "true")){

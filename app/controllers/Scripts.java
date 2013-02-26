@@ -23,19 +23,7 @@ import utils.Pipeline2Engine;
 
 public class Scripts extends Controller {
 
-	public static Result getScripts() {
-		if (FirstUse.isFirstUse())
-			return redirect(routes.FirstUse.getFirstUse());
-
-		User user = User.authenticate(request(), session());
-		if (user == null)
-			return redirect(routes.Login.login());
-
-		user.flashBrowserId();
-		return ok(views.html.Scripts.getScripts.render(Application.getPipeline2EngineState()));
-	}
-
-	public static Result getScriptsJson() {
+		public static Result getScriptsJson() {
 		if (FirstUse.isFirstUse())
 			return unauthorized("unauthorized");
 

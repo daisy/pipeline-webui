@@ -40,6 +40,18 @@ public class Jobs extends Controller {
 
 	public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	
+	public static Result newJob() {
+		if (FirstUse.isFirstUse())
+			return redirect(routes.FirstUse.getFirstUse());
+
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return redirect(routes.Login.login());
+
+		user.flashBrowserId();
+		return ok(views.html.Jobs.newJob.render(Application.getPipeline2EngineState()));
+	}
+	
 	public static Result getJobs() {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());

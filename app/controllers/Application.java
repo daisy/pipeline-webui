@@ -30,7 +30,7 @@ public class Application extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 		
-		return redirect(routes.Scripts.getScripts());
+		return redirect(routes.Jobs.newJob());
 	}
 	
 	public static Result about() {

@@ -67,7 +67,9 @@
 		        </div>
 			    
 			    <!-- The table listing the files available for upload/download -->
-			    <table aria-live="off" class="table table-striped"><tbody class="files" id="files"></tbody></table>
+			    <table aria-live="off" class="table table-striped">
+			    	<tbody class="files" id="files"></tbody>
+			    </table>
 		    </div>
 	    </div>
 	}
@@ -94,7 +96,7 @@
 	    	data.formData = [{name:"element", value:fileWidgetId}];
 	    	var tr = $('<tr class="fileRow" id="'+fileWidgetId+'"></tr>');
 	    	fileWidgetId = "#"+fileWidgetId;
-        	tr.append('<td class="preview"><span class="fade"></span></td>');
+        	tr.append('<td class="preview"><i class="'+mediaTypeIcon(data.files[0].type)+'"></i></td>');
         	tr.append('<td class="name"></td>');
         	tr.append('<td class="size"></td>');
         	tr.append('<td><div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0%"><div class="bar" style="width:0%;"></div></div></td>');
@@ -267,6 +269,18 @@
 		} else {
 			data.jqXHR.abort();
 		}
+	}
+	function mediaTypeIcon(type) {
+		if (typeof type !== "string") return "icon-file";
+		if (type === "application/zip") return "icon-folder-open";
+		if (type.indexOf("image/") == 0) return "icon-picture";
+		if (type.indexOf("audio/") == 0) return "icon-headphones";
+		if (type.indexOf("video/") == 0) return "icon-film";
+		if (type === "text/html" || type === "text/plain"
+			|| type === "application/xhtml+xml"
+			|| type === "application/x-dtbook+xml"
+			|| type === "application/z3998-auth+xml") return "icon-book";
+		return "icon-file";
 	}
 	// ]]>
 </script>

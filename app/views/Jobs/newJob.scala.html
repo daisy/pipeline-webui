@@ -15,25 +15,6 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 h2 {
 	text-align:center;
 }
-#accordion > h2 {
-	font-size: 1.5em;
-	z-index: 2;
-}
-#scriptCreationPathGroup h2 {
-	text-align:left;
-}
-#scriptCreationPathGroup {
-	text-align:left;
-}
-.table-noborder td {
-	border-top: 0px;
-}
-.fill-parent-padding {
-    width: 100%;
-    -moz-box-sizing:    border-box;
-    -webkit-box-sizing: border-box;
-    box-sizing:         border-box;
-}
 </style>
 
 <hgroup>
@@ -46,7 +27,7 @@ h2 {
 		<h2>Files</h2>
 		<div id="filesInnerGroup">
 			<div id="acceptsFiles">
-    			@Widgets.upload()
+    			@views.html.Scripts.Widgets.upload()
     		</div>
     		<div id="doesNotAcceptFiles" style="display:none;">
     			<p><span id="doesNotAcceptFilesScriptName"></span> does not require any input files.</p>

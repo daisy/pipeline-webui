@@ -49,7 +49,7 @@ public class Login extends Controller {
             return badRequest(views.html.Login.login.render(loginForm));
         } else {
         	user.login(Controller.session());
-            return redirect(routes.Scripts.getScripts());
+            return redirect(routes.Jobs.newJob());
         }
     }
     
@@ -62,7 +62,7 @@ public class Login extends Controller {
     	
     	User.loginAsGuest(Controller.session());
     	
-        return redirect(routes.Scripts.getScripts());
+        return redirect(routes.Jobs.newJob());
     }
     
     public static Result resetPassword() {
