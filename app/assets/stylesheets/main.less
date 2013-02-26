@@ -1,4 +1,4 @@
-@media (min-width: 980px) {
+@media (min-width: 800px) {
 	body {
 		padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
 	}
@@ -66,7 +66,7 @@ ol.messagelist {
 
 /* ############################## Admin settings subnav ############################## */
 body {    padding-top: 90px; }
-@media (max-width: 980px) {
+@media (max-width: 800px) {
     body {
         padding-top: 0;
     }
@@ -211,4 +211,72 @@ body {    padding-top: 90px; }
 /* ############################## Proper spacing before headlines ############################## */
 section {
 	padding-top: 90px;
-}​
+}
+
+/*​ ############################## Adapted from the AEGIS project: http://access.aol.com/aegis/demo.css ############################## */
+/*
+body { font-size: 62.5%; font-family:Arial, Helvetica, sans-serif }
+
+#toolbar {
+    padding: 10px 4px;
+}
+
+.noCloseBtn .ui-dialog-titlebar-close{
+    display: none;
+}
+
+.sliderValue {
+    position: absolute;
+    color:#f6931f;
+    font-weight:bold;
+}
+
+#tabs-1 {
+    padding: 30px;
+}
+
+.dialogSubGroup {
+    border: 1px solid #BBB;
+    padding: 5px;
+ }
+
+.viewer {
+   padding: 5px 35px;
+   width: 300px;
+   height: 270px;
+}
+
+.viewer img {
+   border: 1px solid #BBB;
+   padding: 1px;
+}
+*/
+
+/* Experimental: Global focus styles */
+
+.ui-state-focus, .ui-state-focus .ui-button-icon-primary, a.ui-global-focus, input.ui-global-focus, div.ui-global-focus, select.ui-global-focus, button.ui-global-focus {
+	outline: 2px solid #412C84 !important;
+    outline-offset: 0;
+    -moz-outline-radius: 5px;
+}
+
+.ui-state-focus .ui-button-icon-primary {
+	outline-offset: .4em;
+}
+
+.ui-button-icon-only.ui-state-focus, .ui-tabs-nav a.ui-global-focus {
+	outline: none !important;
+}
+
+/* End global focus styles */
+
+/* Fix jQuery UI styles */
+.ui-widget {
+	font-size: inherit;
+}
+.ui-widget .btn.btn-large {
+	font-size: 18px;
+}
+.ui-widget-content a {
+	color: #0088CC;
+}

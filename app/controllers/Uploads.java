@@ -72,7 +72,7 @@ public class Uploads extends Controller {
         MultipartFormData body = request().body().asMultipartFormData();
         List<FilePart> files = body.getFiles();
         
-        List<Map<String,Object>> result = new ArrayList<Map<String,Object>>();
+        List<Map<String,Object>> filesResult = new ArrayList<Map<String,Object>>();
         
         for (FilePart file : files) {
         	Logger.debug(request().method()+" | "+file.getContentType()+" | "+file.getFilename()+" | "+file.getFile().getAbsolutePath());
@@ -80,7 +80,7 @@ public class Uploads extends Controller {
         	Map<String,Object> fileObject = new HashMap<String,Object>();
         	fileObject.put("name", file.getFilename());
         	fileObject.put("size", file.getFile().length());
-        	result.add(fileObject);
+        	filesResult.add(fileObject);
         	
         	String browserIdString = request().queryString().containsKey("browserId") ? request().queryString().get("browserId")[0] : null;
         	Long browserId = null;
@@ -95,7 +95,8 @@ public class Uploads extends Controller {
         	NotificationConnection.push(user.id, browserId, new Notification("uploads", getUploadInfo(uploadId)));
         }
         
-//        Long uploadId = models.Upload.store(files.get(0));
+        Map<String,List<Map<String,Object>>> result = new HashMap<String,List<Map<String,Object>>>();
+        result.put("files", filesResult);
         
 		response().setContentType("text/html");
 		return ok(play.libs.Json.toJson(result));

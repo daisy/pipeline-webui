@@ -6,6 +6,9 @@ var Job = {
 	
 	onNewUpload: function(listener) {
 		Job.uploadListeners.push(listener);
+		for (id in Job.uploads) {
+			listener(Job.uploads[id].fileset, Job.uploads[id].id);
+		}
 	},
 	
 	onValidate: function(listener) {
@@ -15,7 +18,7 @@ var Job = {
 	submit: function() {
 		var uploads = [];
 		for (var id in Job.uploads) uploads.push(Job.uploads[id].id);
-		$("#uploads").attr("value",uploads.join());
+		$("input[name=uploads]").attr("value",uploads.join());
 		
 		var result = {valid: true, messages: []};
 		
@@ -27,9 +30,23 @@ var Job = {
 			}
 		}
 		
-		// TODO: display messages
+		// TODO: display validation messages
 		
 		return result.valid;
+	},
+
+	upload: function(fileset, id) {
+		for (var n = 0; n < Job.uploadListeners.length; n++) {
+			Job.uploadListeners[n](fileset, id);
+		}
+	},
+
+	prettySize: function(bytes) {
+		if (bytes < 1000) return bytes+" B";
+		if (bytes < 1000000) return (Math.round(bytes/100)/10).toLocaleString()+" kB";
+		if (bytes < 1000000000) return (Math.round(bytes/100000)/10).toLocaleString()+" MB";
+		if (bytes < 1000000000000) return (Math.round(bytes/100000000)/10).toLocaleString()+" GB";
+		return (Math.round(bytes/100000000000)/10).toLocaleString()+" TB";
 	}
 };
 

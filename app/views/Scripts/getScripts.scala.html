@@ -1,50 +1,134 @@
 @(frameworkState: String)
 
-@main("Scripts", "scripts", Array("notifications.js"), Array()){
+@main("Scripts", "scripts", 
+Array("jquery-ui-1.9.2.custom.min.js","jquery.ui.widget.js","jquery.iframe-transport.js","jquery.fileupload.js","jquery.fileupload-ui.js","notifications.js","createJob.js"),
+Array("jquery-ui-1.10.0.custom.css","jquery.fileupload-ui.css")){
 
 <script type="text/javascript" charset="utf-8">
+@if(play.Play.application().isDev()){
+	$(function(){Job.debug = true;});
+}
 $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
 </script>
+
+<style type="text/css">
+h2 {
+	text-align:center;
+}
+#accordion > h2 {
+	font-size: 1.5em;
+	z-index: 2;
+}
+#scriptCreationPathGroup h2 {
+	text-align:left;
+}
+#scriptCreationPathGroup {
+	text-align:left;
+}
+.table-noborder td {
+	border-top: 0px;
+}
+.fill-parent-padding {
+    width: 100%;
+    -moz-box-sizing:    border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing:         border-box;
+}
+</style>
 
 <hgroup>
 <h1>Create Job</h1>
 </hgroup>
 
-<div class="INITIAL" style="text-align:center;display:none;">
-	<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/><br/>
-	<span>Loading...</span>
-</div>
-<div class="RUNNING" style="display:none;">
-	<table id="scriptTable" class="oneOrMoreScripts table scriptlist" style="display:none;">
-		<tbody>
-			<tr>
-				<th>Script</th>
-				<th>Description</th>
-			</tr>
-		</tbody>
-	</table>
-	<div role="alert" class="noScripts alert alert-info" style="display:none;">
-		<p>There are no scripts installed.</p>
+<!-- script creation path -->
+<div class="row" id="scriptCreationPathGroup">
+	<div class="span8">
+		<h2>Files</h2>
+		<div id="filesInnerGroup">
+			<div id="acceptsFiles">
+    			@Widgets.upload()
+    		</div>
+    		<div id="doesNotAcceptFiles" style="display:none;">
+    			<p><span id="doesNotAcceptFilesScriptName"></span> does not require any input files.</p>
+    		</div>
+		</div>
 	</div>
-</div>
-<div role="alert" class="STARTING alert alert-info" style="text-align:center; display:none;">
-	<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/>
-	<p>Starting the Pipeline engine...</p>
-</div>
-<div class="STOPPED" style="display:none;">
-	<p style="text-align:center;">
-		<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/><br/>
-		<span>Attempting to connect to the framework...</span>
-	</p>
-	<br/>
-	<div role="alert" class="alert alert-warning">
-		<p>Unable to communicate with the Pipeline engine.</p>
-		<p>Please check the configuration of the Pipeline 2 engine in the administrative settings.</p>
+	<div class="span4">
+		<h2>Scripts</h2>
+		<div id="scriptsInnerGroup">
+		    <div class="INITIAL" style="text-align:center;display:none;">
+				<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/><br/>
+				<span>Loading...</span>
+			</div>
+			<div class="RUNNING" style="display:none;">
+				<ul id="scriptList" class="unstyled oneOrMoreScripts scriptlist" style="display:none;"></ul>
+				<table id="scriptTable" class="table" style="display:none;">
+					<thead>
+						<tr>
+							<th>Script</th>
+							<th>Description</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+					<tfoot>
+						<tr>
+							<td colspan="2">More</td>
+						</tr>
+					</tfoot>
+				</table>
+				
+				<div role="alert" class="noScripts alert alert-info" style="display:none;">
+					<p>There are no scripts installed.</p>
+				</div>
+			</div>
+			<div role="alert" class="STARTING alert alert-info" style="text-align:center; display:none;">
+				<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/>
+				<p>Starting the Pipeline engine...</p>
+			</div>
+			<div class="STOPPED" style="display:none;">
+				<p style="text-align:center;">
+					<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/><br/>
+					<span>Attempting to connect to the framework...</span>
+				</p>
+				<br/>
+				<div role="alert" class="alert alert-warning">
+					<p>Unable to communicate with the Pipeline engine.</p>
+					<p>Please check the configuration of the Pipeline 2 engine in the administrative settings.</p>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
 
+<div id="accordion" style="display:none;">
+	<h2 id="hFiles" class="fill-parent-padding">Files<br/><small class="muted" id="filesDetails"><span id="filesNicename">No files</span>&nbsp;<span id="filesProgress"></span></small></h2>
+	<div id="collapseFiles" class="fill-parent-padding">
+		<!-- files -->
+		<div id="filesGroup" style="display:none;"></div>
+	</div>
+	<h2 id="hScripts" class="fill-parent-padding">Scripts<br/><small class="muted" id="scriptsDetails">&nbsp;</small></h2>
+	<div id="collapseScripts" class="fill-parent-padding">
+        <!-- scripts -->
+		<div id="scriptsGroup" style="display:none;"></div>
+	</div>
+	<h2 id="hOptions">Options<br/><span class="muted" id="optionsDetails">&nbsp;</span></h2>
+    <div id="collapseOptions">
+        <!-- options -->
+		<div id="optionsGroup" style="display:none;"></div>
+	</div>
+</div>
+
+<br/><br/><br/><br/><br/><br/><!-- some room for scrolling -->
+
 <script type="text/javascript">
 	$(function(){
+    	$("#accordion").accordion({
+	    	heightStyle: "content",
+	    	icons: {
+		    	header: "ui-icon-circle-arrow-e",
+		    	activeHeader: "ui-icon-circle-arrow-s"
+		    }
+	    });
 		var updateState = function (state){
 			$(".INITIAL").hide();
 			if (state === "RUNNING") {
@@ -67,8 +151,6 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 			$.ajax({
 				url: "@routes.Scripts.getScriptsJson()",
 				error: function(jqXHR, textStatus, errorThrown) {
-					//$(".INITIAL").hide();
-					//$(".ERROR").hide();
 					setTimeout(checkForScripts,5000);
 				},
 				success: function(scripts, textStatus, jqXHR) {
@@ -84,18 +166,55 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 						$(".oneOrMoreScripts").show();
 						$(".noScripts").hide();
 						var table = $("#scriptTable tbody");
+						var list = $("#scriptList");
 						for (var s = 0; s < scripts.length; s++) {
+							$(list).append("	<li><a data-description=\""+scripts[s].desc+"\" data-nicename=\""+scripts[s].nicename+"\" data-id=\""+scripts[s].id+"\" class=\"script-button-"+scripts[s].id+"\" href=\"javascript:void(0)\">"+scripts[s].nicename+"</a></li>\n");
 							$(table).append(
 								"	<tr>\n"+
-								"		<td><a href=\"@routes.Scripts.getScript("")"+scripts[s].id+"\">"+scripts[s].nicename+"</td>\n"+
+								"		<td><a data-description=\""+scripts[s].desc+"\" data-nicename=\""+scripts[s].nicename+"\" data-id=\""+scripts[s].id+"\" class=\"script-button-"+scripts[s].id+"\" href=\"javascript:void(0)\">"+scripts[s].nicename+"</a></td>\n"+
 								"		<td>"+scripts[s].desc+"</td>\n"+
 								"	</tr>\n");
+							$(".script-button-"+scripts[s].id).click(function(){
+								if (firstFileOrScriptChosen !== null) firstFileOrScriptChosen();
+								if ($("#script-"+$(this).data("id")).size()===0) {
+									$.ajax({
+										url: "@routes.Scripts.getScript("")"+$(this).data("id"),
+										success: function(data) {
+											$('#optionsGroup').append(data);
+											chooseScript(this);
+										},
+										context: this
+									});
+								} else {
+									chooseScript(this);
+								}
+								$("#optionsGroup > *:not(#script-"+$(this).data("id")+")").hide();
+								$("#optionsGroup").show();
+							});
 						}
 					}
 				}
 			});
 		}
 		checkForScripts();
+		chooseScript = function(linkElement) {
+			$("#script-"+$(this).data("id")).show();
+			$("#scriptsDetails").html($(linkElement).data("nicename"));
+			
+			if ($("#script-"+$(linkElement).data("id")).data("fileinput")==="false" || !$.isEmptyObject(Job.uploads)) {
+				// got to options accordion group if the script does not accept files or files have already been added
+				$("#doesNotAcceptFilesScriptName").html($(linkElement).data("nicename"));
+				$("#acceptsFiles").hide();
+				$("#doesNotAcceptFiles").show();
+				$("#hOptions").click();
+				
+			} else {
+				// go to files accordion group if the script accepts input files and no files have been added
+				$("#doesNotAcceptFiles").hide();
+				$("#acceptsFiles").show();
+				$("#hFiles").click();
+			}
+		}
 		setTimeout(function(){
 			// show spinning gif after one second of waiting
 			if (!$(".STOPPED, .STARTING, .RUNNING, .ERROR").is(":visible")) {
@@ -103,8 +222,32 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 			}
 		},1000);
 		updateState("@frameworkState");
+		firstFileOrScriptChosen = function() {
+			$("#scriptCreationPathGroup").hide();
+			$("#scriptList").hide();
+			$("#scriptsInnerGroup").appendTo("#scriptsGroup");
+			$("#scriptList").removeClass("oneOrMoreScripts scriptlist");
+			$("#scriptTable").addClass("oneOrMoreScripts scriptlist");
+			$("#scriptTable").show();
+			$("#filesInnerGroup").appendTo("#filesGroup");
+			$("#filesGroup").show();
+			$("#scriptsGroup").show();
+			$("#accordion").show();
+			$("#fileupload > div.row").children().removeClass("span6");
+			$($("#fileupload > div.row")[0]).css("margin-left","auto").css("margin-right","auto").css("width","200px");
+			$($("#fileupload > div.row")[1]).css("margin-left","auto").css("margin-right","auto").css("width","50%");
+			$($("#fileupload > div.row")[2]).css("margin-left","auto").css("margin-right","auto").css("width","61.8033989%");
+			firstFileOrScriptChosen = null;
+		}
+		Job.onNewUpload(function(fileset, id){
+			if (firstFileOrScriptChosen !== null) {
+				firstFileOrScriptChosen();
+				
+				$("#hScripts").click();
+			}
+		});
+		$('html,body').animate({scrollTop: 0},'fast');
 	});
 </script>
-
 
 }

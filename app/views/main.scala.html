@@ -16,7 +16,6 @@
 	
 	<!-- Styles -->
 	<link href="@routes.Application.theme("stylesheets/bootstrap.min.css")?@Application.themeName()" rel="stylesheet" type="text/css"/>
-	<link href="@routes.Application.theme("stylesheets/bootstrap-responsive.min.css")?@Application.themeName()" rel="stylesheet" type="text/css"/>
 	@for(style <- moreStyles) {
 		<link href="@routes.Application.theme("stylesheets/"+style)?@Application.themeName()" rel="stylesheet" type="text/css"/>
 	}
@@ -37,7 +36,7 @@
 	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
 	<script type="text/javascript">
 		if (typeof jQuery == 'undefined') {
-			document.write(unescape("%3Cscript src='@routes.Assets.at("javascripts/jquery-1.8.3.min.js")' type='text/javascript'%3E%3C/script%3E"));
+			document.write(unescape("%3Cscript src='@routes.Assets.at("javascripts/jquery-1.9.1.min.js")' type='text/javascript'%3E%3C/script%3E"));
 		}
 	</script>
   </head>
@@ -52,7 +51,7 @@
 	                <span class="icon-bar"></span>
 	                <span class="icon-bar"></span>
 	            </a>
-	            @if(Controller.flash("shutdown")=="true"){
+                @if(Controller.flash("shutdown")=="true"){
 	            	<span class="brand">@Setting.get("appearance.title")</span>
 	            }else{
 	   				<a class="brand" href="@routes.Application.index()">@Setting.get("appearance.title")</a>

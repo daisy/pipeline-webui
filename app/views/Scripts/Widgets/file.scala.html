@@ -3,31 +3,31 @@
 @if(arg.sequence==Boolean.TRUE){
 	
 	<div class="control-group @("advanced-argument".when(!arg.required))">
-		<label class="control-label" id="@{arg.kind}-@{arg.name}-label">@arg.nicename</label>
+		<label class="control-label" id="script-@script.id-@{arg.kind}-@{arg.name}-label">@arg.nicename</label>
 		<!-- TODO: add drag'n'drop support for reordering items? -->
 		<div class="controls">
-			<input type="hidden" name="@{arg.kind}-@{arg.name}" id="@{arg.kind}-@{arg.name}" value=""/>
+			<input type="hidden" name="@{arg.kind}-@{arg.name}" id="script-@script.id-@{arg.kind}-@{arg.name}" value=""/>
 			<div class="row">
 				<div class="span">
-					<label for="@{arg.kind}-@{arg.name}-all" id="@{arg.kind}-@{arg.name}-all-label">Uploaded files</label>
-					<select style="width:auto;min-width:220px;" id="@{arg.kind}-@{arg.name}-all" multiple="multiple" size="10" class="all-files" aria-labelledby="@{arg.kind}-@{arg.name}-all-label @{arg.kind}-@{arg.name}-label">
-						<optgroup id="@{arg.kind}-@{arg.name}-suggested" label="Suggested files"></optgroup>
-						<optgroup id="@{arg.kind}-@{arg.name}-other" label="Other files"></optgroup>
+					<label for="@{arg.kind}-@{arg.name}-all" id="script-@script.id-@{arg.kind}-@{arg.name}-all-label">Uploaded files</label>
+					<select style="width:auto;min-width:220px;" id="script-@script.id-@{arg.kind}-@{arg.name}-all" multiple="multiple" size="10" class="all-files" aria-labelledby="@{arg.kind}-@{arg.name}-all-label @{arg.kind}-@{arg.name}-label">
+						<optgroup id="script-@script.id-@{arg.kind}-@{arg.name}-suggested" label="Suggested files"></optgroup>
+						<optgroup id="script-@script.id-@{arg.kind}-@{arg.name}-other" label="Other files"></optgroup>
 					</select>
 				</div>
 				<div class="span" style="padding-top:50px;">
-					<button type="button" id="@{arg.kind}-@{arg.name}-add" class="btn" title="Add"><img src="@routes.Assets.at("images/glyphicons/glyphicons_211_right_arrow.png")" alt="Add"/></button><br/>
-					<button type="button" id="@{arg.kind}-@{arg.name}-remove" class="btn" title="Remove"><img src="@routes.Assets.at("images/glyphicons/glyphicons_210_left_arrow.png")" alt="Remove"/></button>
+					<button type="button" id="script-@script.id-@{arg.kind}-@{arg.name}-add" class="btn" title="Add"><img src="@routes.Assets.at("images/glyphicons/glyphicons_211_right_arrow.png")" alt="Add"/></button><br/>
+					<button type="button" id="script-@script.id-@{arg.kind}-@{arg.name}-remove" class="btn" title="Remove"><img src="@routes.Assets.at("images/glyphicons/glyphicons_210_left_arrow.png")" alt="Remove"/></button>
 				</div>
 				<div class="span scrollable">
-					<label for="@{arg.kind}-@{arg.name}-selected" id="@{arg.kind}-@{arg.name}-selected-label">Selected files</label>
-					<select style="width:auto;min-width:220px;" id="@{arg.kind}-@{arg.name}-selected" multiple="multiple" size="10" aria-labelledby="@{arg.kind}-@{arg.name}-selected-label @{arg.kind}-@{arg.name}-label">
+					<label for="@{arg.kind}-@{arg.name}-selected" id="script-@script.id-@{arg.kind}-@{arg.name}-selected-label">Selected files</label>
+					<select style="width:auto;min-width:220px;" id="script-@script.id-@{arg.kind}-@{arg.name}-selected" multiple="multiple" size="10" aria-labelledby="@{arg.kind}-@{arg.name}-selected-label @{arg.kind}-@{arg.name}-label">
 					</select>
 				</div>
 				@if(arg.ordered==Boolean.TRUE){
 					<div class="span" style="padding-top:50px;">
-						<button type="button" id="@{arg.kind}-@{arg.name}-up" class="btn" title="Move up"><img src="@routes.Assets.at("images/glyphicons/glyphicons_213_up_arrow.png")" alt="Move up"/></button><br/>
-						<button type="button" id="@{arg.kind}-@{arg.name}-down" class="btn" title="Move down"><img src="@routes.Assets.at("images/glyphicons/glyphicons_212_down_arrow.png")" alt="Move down"/></button>
+						<button type="button" id="script-@script.id-@{arg.kind}-@{arg.name}-up" class="btn" title="Move up"><img src="@routes.Assets.at("images/glyphicons/glyphicons_213_up_arrow.png")" alt="Move up"/></button><br/>
+						<button type="button" id="script-@script.id-@{arg.kind}-@{arg.name}-down" class="btn" title="Move down"><img src="@routes.Assets.at("images/glyphicons/glyphicons_212_down_arrow.png")" alt="Move down"/></button>
 					</div>
 					
 				}
@@ -40,8 +40,8 @@
 				$(function(){
 					@if(arg.ordered==Boolean.TRUE){
 						/* Event handler for "move up"-button. */
-						$("#@{arg.kind}-@{arg.name}-up").click(function() {
-							var options = "#@{arg.kind}-@{arg.name}-selected option";
+						$("#script-@script.id-@{arg.kind}-@{arg.name}-up").click(function() {
+							var options = "#script-@script.id-@{arg.kind}-@{arg.name}-selected option";
 							for (var i = 1; i < $(options).size(); i++) {
 								if (!$($(options)[i-1]).is(":selected") && $($(options)[i]).is(":selected")) {
 									var top = $($(options)[i-1]);
@@ -53,8 +53,8 @@
 						});
 						
 						/* Event handler for "move down"-button. */
-						$("#@{arg.kind}-@{arg.name}-down").click(function() {
-							var options = "#@{arg.kind}-@{arg.name}-selected option";
+						$("#script-@script.id-@{arg.kind}-@{arg.name}-down").click(function() {
+							var options = "#script-@script.id-@{arg.kind}-@{arg.name}-selected option";
 							for (var i = $(options).size()-2; i >= 0; i--) {
 								if (!$($(options)[i+1]).is(":selected") && $($(options)[i]).is(":selected")) {
 									var top = $($(options)[i]);
@@ -67,21 +67,21 @@
 					}
 					
 					/* Event handler for "add"-button. */
-					$("#@{arg.kind}-@{arg.name}-add").click(function() {
-						$.each($("#@{arg.kind}-@{arg.name}-all option:selected"), function(i,e){
+					$("#script-@script.id-@{arg.kind}-@{arg.name}-add").click(function() {
+						$.each($("#script-@script.id-@{arg.kind}-@{arg.name}-all option:selected"), function(i,e){
 							$(e).remove();
-							$(e).appendTo($("#@{arg.kind}-@{arg.name}-selected"));
+							$(e).appendTo($("#script-@script.id-@{arg.kind}-@{arg.name}-selected"));
 						});
 					});
 					
 					/* Event handler for "remove"-button. */
-					$("#@{arg.kind}-@{arg.name}-remove").click(function() {
-						$.each($("#@{arg.kind}-@{arg.name}-selected option:selected"), function(i,e){
+					$("#script-@script.id-@{arg.kind}-@{arg.name}-remove").click(function() {
+						$.each($("#script-@script.id-@{arg.kind}-@{arg.name}-selected option:selected"), function(i,e){
 							$(e).remove();
 							if ($(e).hasClass("rightContentType"))
-								$(e).appendTo($("#@{arg.kind}-@{arg.name}-suggested"));
+								$(e).appendTo($("#script-@script.id-@{arg.kind}-@{arg.name}-suggested"));
 							else
-								$(e).appendTo($("#@{arg.kind}-@{arg.name}-other"));
+								$(e).appendTo($("#script-@script.id-@{arg.kind}-@{arg.name}-other"));
 							// TODO: instead of append; insert in sorted order according to fileName
 						});
 					});
@@ -115,10 +115,10 @@
 							}
 							
 							if (matchingContentType) {
-								$("#@{arg.kind}-@{arg.name}-selected").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>')
+								$("#script-@script.id-@{arg.kind}-@{arg.name}-selected").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>')
 								);
 							} else {
-								$("#@{arg.kind}-@{arg.name}-other").append($('<option class="wrongContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>')
+								$("#script-@script.id-@{arg.kind}-@{arg.name}-other").append($('<option class="wrongContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>')
 								);
 							}
 							
@@ -131,12 +131,12 @@
 						var result = {valid: true, messages: []};
 						
 						var value = [];
-						$.each($("#@{arg.kind}-@{arg.name}-selected option"), function(i, e) {
+						$.each($("#script-@script.id-@{arg.kind}-@{arg.name}-selected option"), function(i, e) {
 							value.push($(e).attr("value"));
 						});
-						$('#@{arg.kind}-@{arg.name}').attr("value", value.join());
+						$('#script-@script.id-@{arg.kind}-@{arg.name}').attr("value", value.join());
 						
-						//TODO: validate #@{arg.kind}-@{arg.name}
+						//TODO: validate #script-@script.id-@{arg.kind}-@{arg.name}
 						/*
 						mediaType
 							$("@{arg.kind}-@{arg.name}-selected option") - WARN: check the media type of each option against supported types 
@@ -155,10 +155,10 @@
 	<div class="control-group @("advanced-argument".when(!arg.required))">
 		<label class="control-label" for="@{arg.kind}-@{arg.name}">@arg.nicename</label>
 		<div class="controls">
-			<select name="@{arg.kind}-@{arg.name}" id="@{arg.kind}-@{arg.name}">
+			<select name="@{arg.kind}-@{arg.name}" id="script-@script.id-@{arg.kind}-@{arg.name}">
 				<option value="" selected=""></option>
-				<optgroup id="@{arg.kind}-@{arg.name}-suggested" label="Supported files"></optgroup>
-				<optgroup id="@{arg.kind}-@{arg.name}-other" label="Other files"></optgroup>
+				<optgroup id="script-@script.id-@{arg.kind}-@{arg.name}-suggested" label="Supported files"></optgroup>
+				<optgroup id="script-@script.id-@{arg.kind}-@{arg.name}-other" label="Other files"></optgroup>
 			</select>
 			@if(arg.desc.length > 0){
 				<span class="help-block">@arg.desc</span>
@@ -169,7 +169,7 @@
 					/* Event handler for fileset changes. */
 					Job.onNewUpload(function(fileset, id){
 						var contentTypes = @Html(play.libs.Json.stringify(play.libs.Json.toJson(arg.mediaTypes)));
-						var selectedSomething = $("#@{arg.kind}-@{arg.name} optgroup option").filter(":selected").size() > 0;
+						var selectedSomething = $("#script-@script.id-@{arg.kind}-@{arg.name} optgroup option").filter(":selected").size() > 0;
 						for (var f = 0; f < fileset.length; f++) {
 							var file = fileset[f];
 							
@@ -197,12 +197,12 @@
 							
 							if (matchingContentType) {
 								if (!selectedSomething) {
-									$("#@{arg.kind}-@{arg.name}-suggested").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'" selected="">'+file.fileName+'</option>'));
+									$("#script-@script.id-@{arg.kind}-@{arg.name}-suggested").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'" selected="">'+file.fileName+'</option>'));
 								} else {
-									$("#@{arg.kind}-@{arg.name}-suggested").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>'));
+									$("#script-@script.id-@{arg.kind}-@{arg.name}-suggested").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>'));
 								}
 							} else {
-								$("#@{arg.kind}-@{arg.name}-other").append($('<option class="wrongContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>')
+								$("#script-@script.id-@{arg.kind}-@{arg.name}-other").append($('<option class="wrongContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>')
 								);
 							}
 							
@@ -212,17 +212,17 @@
 					
 					/* Prepare and validate widget */
 					var validator = function(){
-						//TODO: validate #@{arg.kind}-@{arg.name}
+						//TODO: validate #script-@script.id-@{arg.kind}-@{arg.name}
 						
 						var result = {valid: true, messages: []};
 						
 						@if(arg.required==Boolean.TRUE){
-							if ($("#option-href option").filter(":selected").attr("value") === "") {
+							if ($("#script-@script.id-option-href option").filter(":selected").attr("value") === "") {
 								result.valid = false;
 								message.push({level: "error", text: "A file must be selected."});
 							}
 						}
-						if ($("#option-href option").filter(":selected").hasClass("wrongContentType")) {
+						if ($("#script-@script.id-option-href option").filter(":selected").hasClass("wrongContentType")) {
 							message.push({level: "warning", text: "The file you selected is not supported. If you continue you may experience unexpected results."});
 						}
 						

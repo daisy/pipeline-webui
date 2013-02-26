@@ -37,15 +37,17 @@ public class Upload extends Model {
 	@Transient
 	private List<FileInfo> fileList;
 	
+	private static Random tempIdGenerator = new Random();
+	
 	private Upload() {
 		this.uploaded = new Date();
 	}
 	
 	public static Long store(FilePart upload, User user, Long browserId) {
 		Upload u = new Upload();
-		u.save(Application.datasource); // saving here generates the unique id for this upload
-		
 		u.browserId = browserId;
+		u.user = user.id;
+		u.save(Application.datasource); // saving here generates the unique id for this upload
 		
 		File uploadDir = new File(Setting.get("uploads")+u.id);
 		uploadDir.mkdirs();
@@ -69,8 +71,6 @@ public class Upload extends Model {
 			Logger.error("Was unable to probe "+file.getAbsolutePath()+" : "+e.getMessage());
 			u.contentType = upload.getContentType();
 		}
-		
-		u.user = user.id;
 		
 		u.save(Application.datasource);
 		
@@ -107,6 +107,8 @@ public class Upload extends Model {
 	}
 	
 	public File getFile() {
+		if (this.absolutePath == null)
+			return null;
 		File uploadDir = new File(this.absolutePath);
 		if (uploadDir.isDirectory()) {
 			File[] dirContents = uploadDir.listFiles();
@@ -131,13 +133,6 @@ public class Upload extends Model {
         return find.where().eq("id", id).findUnique();
     }
     
-//    /** Delete all Uploads belonging to a user */
-//	public static void deleteUserUploads(User user) {
-//		for (Upload upload : find.where().eq("user", user.id).findList()) {
-//			upload.delete(Application.datasource);
-//		}
-//	}
-    
     @Override
     public void delete(String datasource) {
     	File file = getFile();
@@ -148,14 +143,21 @@ public class Upload extends Model {
     
     @Override
 	public void save(String datasource) {
+		String absolutePath = this.absolutePath;
+		this.absolutePath = "" + tempIdGenerator.nextLong();
 		super.save(datasource);
 		
 		// refresh id after save
 		if (this.id == null) {
-			Upload upload = Upload.find.where().eq("uploaded", this.uploaded).eq("absolutePath", this.absolutePath).findUnique();
+			Upload upload = null;
+			upload = Upload.find.where().eq("uploaded", this.uploaded).eq("absolutePath", this.absolutePath).findUnique();
 			if (upload != null) {
 				this.id = upload.id;
 			}
 		}
+		
+		// absolutePath used to store temporary id
+		this.absolutePath = absolutePath;
+		super.save(datasource);
 	}
 }

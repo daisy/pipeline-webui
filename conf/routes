@@ -5,6 +5,7 @@
 # Application
 GET     /                                   controllers.Application.index()
 GET     /assets/img/*file                   controllers.Application.redirect(path="/assets/images/", file)
+GET     /assets/stylesheets/images/*file    controllers.Application.redirect(path="/assets/images/", file)
 GET     /img/*file                          controllers.Application.redirect(path="/assets/images/", file)
 GET     /about								controllers.Application.about()
 GET     /theme/*file						controllers.Application.theme(file)
@@ -23,9 +24,10 @@ GET     /notifications/:browser/websocket   controllers.Notifications.websocket(
 GET     /notifications/:browser/xhr         controllers.Notifications.xhr(browser: Long)
 
 # Scripts
+GET		/scripts/:id.json                   controllers.Scripts.getScriptJson(id: String)
 GET		/scripts/:id                        controllers.Scripts.getScript(id: String)
 GET     /scripts.json                       controllers.Scripts.getScriptsJson()
-GET     /scripts                            controllers.Scripts.getScripts()
+GET     /jobs/new                           controllers.Scripts.getScripts()
 
 # Jobs
 GET		/jobs/:id/result                    controllers.Jobs.getResult(id: String)

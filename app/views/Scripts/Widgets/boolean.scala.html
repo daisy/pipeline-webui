@@ -1,15 +1,15 @@
 @(arg: org.daisy.pipeline.client.models.script.Argument, script: org.daisy.pipeline.client.models.Script)
 
-<input type="hidden" name="@{arg.kind}-@{arg.name}" value="true" id="@{arg.kind}-@{arg.name}-value"/>
+<input type="hidden" name="@{arg.kind}-@{arg.name}" value="true" id="script-@script.id-@{arg.kind}-@{arg.name}-value"/>
 
 <div class="control-group @("advanced-argument".when(!arg.required))">
-	<label class="control-label" id="@{arg.kind}-@{arg.name}-label" for="@{arg.kind}-@{arg.name}" aria-label="@{arg.kind}-@{arg.name}">@arg.nicename</label>
+	<label class="control-label" id="script-@script.id-@{arg.kind}-@{arg.name}-label" for="@{arg.kind}-@{arg.name}" aria-label="@{arg.kind}-@{arg.name}">@arg.nicename</label>
 	<div class="controls">
-		<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="@{arg.kind}-@{arg.name}-label" id="@{arg.kind}-@{arg.name}">
-			<button type="button" name="@{arg.kind}-@{arg.name}-on" class="btn active" id="@{arg.kind}-@{arg.name}-on"
+		<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="@{arg.kind}-@{arg.name}-label" id="script-@script.id-@{arg.kind}-@{arg.name}">
+			<button type="button" name="@{arg.kind}-@{arg.name}-on" class="btn active" id="script-@script.id-@{arg.kind}-@{arg.name}-on"
 				aria-role="radio" aria-checked="true"
 				onclick="toggleRadio('@{arg.kind}-@{arg.name}', true, 'true');return false;">Yes</button>
-			<button type="button" name="@{arg.kind}-@{arg.name}-off" class="btn" id="@{arg.kind}-@{arg.name}-off"
+			<button type="button" name="@{arg.kind}-@{arg.name}-off" class="btn" id="script-@script.id-@{arg.kind}-@{arg.name}-off"
 				aria-role="radio" aria-checked="false"
 				onclick="toggleRadio('@{arg.kind}-@{arg.name}', false, 'false');return false;">No</button>
 		</div>

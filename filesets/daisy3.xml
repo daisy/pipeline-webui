@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fileset id="daisy3" name="DAISY 3" xmlns="http://www.daisy.org/ns/pipeline/data">
+    <file href="(^|/)ncx\.xml$" case-insensitive="true"/>
+    <file href="(^|/).*\.smil$" case-insensitive="true"/>
+</fileset>

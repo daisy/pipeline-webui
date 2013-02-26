@@ -32,7 +32,7 @@
 	<div class="control-group @("advanced-argument".when(!arg.required))">
 		<label class="control-label" for="@{arg.kind}-@{arg.name}">@arg.nicename</label>
 		<div class="controls">
-			<input name="@{arg.kind}-@{arg.name}" id="@{arg.kind}-@{arg.name}" type="text"/>
+			<input name="@{arg.kind}-@{arg.name}" id="script-@script.id-@{arg.kind}-@{arg.name}" type="text"/>
 			@if(arg.desc.length > 0){
 				<span class="help-block">@arg.desc</span>
 			}

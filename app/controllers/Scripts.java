@@ -71,7 +71,7 @@ public class Scripts extends Controller {
 			return status(status,error);
 		}
 	}
-
+	
 	public static Result getScript(String id) {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
@@ -79,7 +79,7 @@ public class Scripts extends Controller {
 		User user = User.authenticate(request(), session());
 		if (user == null)
 			return redirect(routes.Login.login());
-
+		
 		Pipeline2WSResponse response;
 		Script script;
 		try {
@@ -134,6 +134,44 @@ public class Scripts extends Controller {
 
 		user.flashBrowserId();
 		return ok(views.html.Scripts.getScript.render(script, uploadFiles, hasAdvancedOptions, hideAdvancedOptions, mediaTypeBlacklist));
+	}
+	
+	public static Result getScriptJson(String id) {
+		if (FirstUse.isFirstUse())
+			return unauthorized("unauthorized");
+
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return unauthorized("unauthorized");
+		
+		Pipeline2WSResponse response;
+		Script script = null;
+		String error = null;
+
+		int status = 200;
+
+		try {
+			response = org.daisy.pipeline.client.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
+			if (response.status != 200) {
+				status = response.status;
+				error = response.asText();
+
+			} else {
+				script = new Script(response);
+			}
+		} catch (Pipeline2WSException e) {
+			Logger.error(e.getMessage(), e);
+			status = 500;
+			error = e.getMessage();
+		}
+
+		if (status == 200) {
+			JsonNode scriptJson = play.libs.Json.toJson(script);
+			return ok(scriptJson);
+		} else {
+			return status(status,error);
+		}
+
 	}
 
 	public static class ScriptForm {

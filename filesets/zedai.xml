@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fileset id="zedai" name="ZedAI" xmlns="http://www.daisy.org/ns/pipeline/data">
+    <file href="(^|/).*\.xml$" case-insensitive="true" media-type="application/z3998-auth+xml"/>
+</fileset>

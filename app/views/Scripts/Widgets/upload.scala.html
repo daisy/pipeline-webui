@@ -1,135 +1,272 @@
 @()
 
-<script type="text/javascript">
-// jQuery File Upload Plugin Localization
-window.locale = {
-    "fileupload": {
-        "errors": {
-            "maxFileSize": "File is too big",
-            "minFileSize": "File is too small",
-            "acceptFileTypes": "Filetype not allowed",
-            "maxNumberOfFiles": "Max number of files exceeded",
-            "uploadedBytes": "Uploaded bytes exceed file size",
-            "emptyResult": "Empty file upload result"
-        },
-        "error": "Error",
-        "start": "Start",
-        "cancel": "Cancel",
-        "destroy": "Delete"
-    }
-};
-</script>
-
 @if(Setting.get("uploads")==null){
 	<div class="hero-unit" style="text-align:center">
 		<h2>We're sorry, but files cannot be uploaded until the upload directory is configured.</h2>
 	</div>
 }else{
 	@helper.form(action = routes.Uploads.postUpload(), 'enctype -> "multipart/form-data", 'id -> "fileupload", 'class -> "form-horizontal"){
-		<fieldset>
-			<div class="control-group">
-				<div class="controls">
-				    <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
-			        <div class="fileupload-buttonbar">
-			            <!-- The fileinput-button span is used to style the file input field as button -->
-			            <span class="btn btn-success fileinput-button">
-			                <i class="icon-plus icon-white"></i>
-			                <span id="upload-button-label">Upload Files</span>
-			                <input type="file" name="files" multiple="" aria-labelledby="upload-button-label"/>
-			            </span>
-			            <a class="accordion-toggle" data-toggle="collapse" href="#fileupload-help" title="Help"><i class="icon-question-sign">&nbsp;</i></a>
-			        </div>
+	    <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
+	    <div class="row">
+		    <div class="span6">
+		        <div class="fileupload-buttonbar" id="fileupload-buttonbar" style="@if(play.Play.application().isDev()){ width:400px; }else{ 200px; }">
+		            <!-- The fileinput-button span is used to style the file input field as button -->
+		            <span class="btn btn-success fileinput-button" style="width:173px;">
+		                <i class="icon-plus icon-white"></i>
+		                <span id="upload-button-label">Upload Files</span>
+		                <input type="file" name="files" multiple="" aria-labelledby="upload-button-label"/>
+		            </span>
+		            @if(play.Play.application().isDev() && false){
+			            <script type="text/javascript">
+			            	if (Boolean(window.chrome)){
+				            	(function(){
+				            		var button = $('<span class="btn btn-success fileinput-button" style="width:173px;">');
+				            		$(button).append('<i class="icon-plus icon-white"></i>');
+				            		$(button).append('<span id="upload-directory-button-label">Upload Directory</span>');
+				            		$(button).append('<input type="file" name="files[]" multiple="" aria-labelledby="upload-directory-button-label" directory="" webkitdirectory="" mozdirectory=""/>');
+				            		$("#fileupload-buttonbar").append(button);
+				            	})();
+			            	}
+			            </script>
+			        }
+		            <a id="fileupload-help-link" class="accordion-toggle" data-toggle="collapse" href="#fileupload-help" title="Help" style="position:absolute;"><i class="icon-question-sign">&nbsp;</i></a>
+		        </div>
+	        </div>
+        </div>
+		
+		<div class="row">
+			<div class="span6">
+			    <div class="accordion-body collapse" id="fileupload-help">
+	        		<p>In modern browsers you can drag and drop files from your desktop into the browser window.</p>
+	        		@if(play.Play.application().isDev() && false){
+			            <script type="text/javascript">
+			            	if (Boolean(window.chrome)){
+			            		$("#fileupload-help").append('<p>Directory upload is an experimental feature in Google Chrome. You can use the "Upload Directory" button to upload an entire directory directly without zipping it first.</p>');
+				            } else {
+				            	$("#fileupload-help").append('<p>If you need to upload lots of files or if you need to preserve the folder structure of your fileset, please compress your files as a ZIP archive before uploading them. ZIP files will be unzipped on the server.</p>');
+				            	$("#fileupload-help").append('<p>If you use <a href="http://www.google.com/chrome">Google Chrome</a>, you can upload entire directories directly without zipping them first.</p>');
+				            }
+			            </script>
+			        }else{
+			        	<p>If you need to upload lots of files or if you need to preserve the folder structure of your fileset, please compress your files as a ZIP archive before uploading them. ZIP files will be unzipped on the server.</p>
+			        }
 			    </div>
 		    </div>
-		    <div class="control-group collapse" id="fileupload-help">
-        		<p>If you need to upload lots of files or if you need to preserve the folder structure of your fileset, please compress your files as a ZIP archive before uploading them. ZIP files will be unzipped on the server.</p>
-        		<p>In modern browsers you can drag and drop files from your desktop into the browser window.</p>
+	    </div>
+	    
+	    <div class="row">
+		    <div class="span6">
+		        <!-- The global progress information -->
+		        <div aria-live="polite" class="fileupload-progress fade">
+		            <!-- The global progress bar -->
+		            <div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+		                <div class="bar" style="width:0%;"></div>
+		            </div>
+		            <!-- The extended global progress information -->
+		            <div class="progress-extended">&nbsp;</div>
+		        </div>
+			    
+			    <!-- The table listing the files available for upload/download -->
+			    <table aria-live="off" class="table table-striped"><tbody class="files" id="files"></tbody></table>
 		    </div>
-		    <div class="control-group">
-		    	<div class="controls">
-			        <!-- The global progress information -->
-			        <div aria-live="polite" class="fileupload-progress fade">
-			            <!-- The global progress bar -->
-			            <div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-			                <div class="bar" style="width:0%;"></div>
-			            </div>
-			            <!-- The extended global progress information -->
-			            <div class="progress-extended">&nbsp;</div>
-			        </div>
-				    
-				    <!-- The table listing the files available for upload/download -->
-				    <table aria-live="off" class="table table-striped"><tbody class="files"></tbody></table>
-			    </div>
-		    </div>
-		</fieldset>
+	    </div>
 	}
 }
 
-<!-- The template to display files available for upload -->
-<script id="template-upload" type="text/x-tmpl">
-{% for (var i=0, file; file=o.files[i]; i++) { %}
-    <tr class="template-upload fade">
-        <td class="preview"><span class="fade"></span></td>
-        <td class="name"><span>{%=file.name%}</span></td>
-        <td class="size"><span>{%=o.formatFileSize(file.size)%}</span></td>
-        {% if (file.error) { %}
-            <td class="error" colspan="2"><span class="label label-important">{%=locale.fileupload.error%}</span> {%=locale.fileupload.errors[file.error] || file.error%}</td>
-        {% } else if (o.files.valid && !i) { %}
-            <td>
-                <div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0%"><div class="bar" style="width:0%;"></div></div>
-            </td>
-            <td class="start">{% if (!o.options.autoUpload) { %}
-                <button class="btn btn-primary">
-                    <i class="icon-upload icon-white"></i>
-                    <span>{%=locale.fileupload.start%}</span>
-                </button>
-            {% } %}</td>
-        {% } else { %}
-            <td colspan="2"></td>
-        {% } %}
-        <td class="cancel">{% if (!i) { %}
-            <button class="btn btn-warning">
-                <i class="icon-ban-circle icon-white"></i>
-                <span>{%=locale.fileupload.cancel%}</span>
-            </button>
-        {% } %}</td>
-    </tr>
-{% } %}
-</script>
-
-<!-- The template to display files available for download -->
-<script id="template-download" type="text/x-tmpl">
-{% for (var i=0, file; file=o.files[i]; i++) { %}
-    <tr class="template-download fade">
-        {% if (file.error) { %}
-            <td></td>
-            <td class="name"><span>{%=file.name%}</span></td>
-            <td class="size"><span>{%=o.formatFileSize(file.size)%}</span></td>
-            <td class="error" colspan="2"><span class="label label-important">{%=locale.fileupload.error%}</span> {%=locale.fileupload.errors[file.error] || file.error%}</td>
-        {% } else { %}
-            <td class="preview"><!--<img src="{%=file.thumbnail_url%}"> TODO: different icons for different content types (set thumbnail_url server-side?)--></td>
-            <td class="name">{%=file.name%}</td>
-            <td class="size"><span>{%=o.formatFileSize(file.size)%}</span></td>
-            <td colspan="2"></td>
-        {% } %}
-    </tr>
-{% } %}
-</script>
-
 <script type="text/javascript">
+	// <![CDATA[
 	/* Instantiate file upload button. */
-	$(function () {
-		$(function(){
-		    'use strict';
-		    
-		    // Initialize the jQuery File Upload widget:
-		    $('#fileupload').fileupload();
-			
-	        // Settings:
-	        $('#fileupload').fileupload('option', {
-	            url: '@routes.Uploads.postUpload().absoluteURL(request)?browserId=@flash().get("browserId")',
-	            autoUpload: true
-	        });
-		});
+	$(function(){
+	    'use strict';
+	    
+	    // Initialize the jQuery File Upload widget:
+	    $('#fileupload').fileupload();
+		
+        // Settings:
+        $('#fileupload').fileupload('option', {
+            url: '@routes.Uploads.postUpload().absoluteURL(request)?browserId=@flash().get("browserId")'
+        });
+        
+        $('#fileupload')
+	    .bind('fileuploadadd', function (e, data) {
+	    	// file queued
+	    	var fileWidgetId = "file"+$("#files tr.fileRow").size();
+	    	data.formData = [{name:"element", value:fileWidgetId}];
+	    	var tr = $('<tr class="fileRow" id="'+fileWidgetId+'"></tr>');
+	    	fileWidgetId = "#"+fileWidgetId;
+        	tr.append('<td class="preview"><span class="fade"></span></td>');
+        	tr.append('<td class="name"></td>');
+        	tr.append('<td class="size"></td>');
+        	tr.append('<td><div class="progress progress-success progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="0%"><div class="bar" style="width:0%;"></div></div></td>');
+        	tr.append('<td class="cancel"><button class="btn btn-warning"><i class="icon-ban-circle icon-white"></i><span>Cancel</span></button><div class="error" style="display:none;"></div></td>');
+        	$("#files").append(tr);
+        	data.context = $(fileWidgetId);
+        	data.context.find("button").click(abortUpload);
+        	var xhr = data.submit();
+        	data.context.data('data',{data: data, jqXHR: xhr});
+        	var fileCount = Number($("#filesNicename").data("fileCount"));
+        	$("#filesNicename").data("fileCount", (isNaN(fileCount) ? 0 : fileCount) + 1);
+        	var plural = !isNaN(fileCount);
+        	$("#filesNicename").html($("#filesNicename").data("fileCount")+" "+(plural?"files":"file"));
+        	var size = 0;
+        	var filename = "";
+        	var fileCount = 0;
+        	for (var i = 0; i < data.files.length; i++) {
+        		size += data.files[i].size;
+        		if (i === 0) filename = data.files[i].name;
+        		else if (i < 3) filename += ", "+data.files[i].name;
+        		fileCount++;
+    		}
+    		if (fileCount > 3) filename += " and "+(fileCount-3)+" more";
+        	$(fileWidgetId+" td.size").html(Job.prettySize(size));
+        	$(fileWidgetId+" td.name").html(filename);
+	    })
+	    .bind('fileuploadsubmit', function (e, data) {
+	    	// file submitted
+	    })
+	    .bind('fileuploadsend', function (e, data) {
+	    	// file started
+	    })
+	    .bind('fileuploadprogress', function (e, data) {
+	    	// file progress update
+	    	var fileWidgetId = "#"+data.context.attr("id");
+	    	var loaded = typeof e.loaded === "undefined" ? 0 : e.loaded;
+	    	var total = typeof e.total === "undefined" ? 0 : e.total;
+	    	var progress = Math.abs(total) < 1 ? 0 : loaded/total*100;
+	    	$(fileWidgetId+" div.progress").attr("aria-valuenow", progress);
+	    	$(fileWidgetId+" div.progress").attr("aria-valuetext", Math.floor(progress)+"%");
+	    	$(fileWidgetId+" div.progress div.bar").css("width", progress+"%");
+	    })
+	    .bind('fileuploaddone', function (e, data) {
+	    	// file successfully uploaded
+	    })
+	    .bind('fileuploadfail', function (e, data) {
+	    	// file upload failed
+	    	var fileWidgetId = "#"+data.context.attr("id");
+	    	var jqXHR = $(fileWidgetId).data("data").jqXHR;
+	    	var errorText = jqXHR.responseText; // might be a string, might be XML, might be HTML. Let's assume HTML and extract the text content.
+	    	if (typeof errorText === "string") {
+		    	errorText = errorText.replace(/[\r\n]/g," ");
+		    	errorText = errorText.replace(/<head[^>]*>.*<\/head[^>]*>/,""); // Remove <head/>
+		    	errorText = errorText.replace(/<script[^>]*>.*<\/script[^>]*>/g,""); // Remove <script/>
+		    	errorText = errorText.replace(/<style[^>]*>.*<\/style[^>]*>/g,""); // Remove <style/>
+		    	errorText = errorText.replace(/<[^>]*>/g," ").replace(/\s+/g," ").replace(/^\s/,"").replace(/\s$/,"");
+		    	if (errorText.length > 140)
+		    		errorText = errorText.substring(0,140) + " (…)";
+	    	}
+	    	var statusTexts = {
+			    "100": "Continue",
+			    "101": "Switching Protocols",
+			    "102": "Processing",
+			    "200": "OK",
+			    "201": "Created",
+			    "202": "Accepted",
+			    "203": "Non-Authoritative Information",
+			    "204": "No Content",
+			    "205": "Reset Content",
+			    "206": "Partial Content",
+			    "207": "Multi-Status",
+			    "208": "Already Reported",
+			    "226": "IM Used",
+			    "300": "Multiple Choices",
+			    "301": "Moved Permanently",
+			    "302": "Found",
+			    "303": "See Other",
+			    "304": "Not Modified",
+			    "305": "Use Proxy",
+			    "306": "Reserved",
+			    "307": "Temporary Redirect",
+			    "308": "Permanent Redirect",
+			    "400": "Bad Request",
+			    "401": "Unauthorized",
+			    "402": "Payment Required",
+			    "403": "Forbidden",
+			    "404": "Not Found",
+			    "405": "Method Not Allowed",
+			    "406": "Not Acceptable",
+			    "407": "Proxy Authentication Required",
+			    "408": "Request Timeout",
+			    "409": "Conflict",
+			    "410": "Gone",
+			    "411": "Length Required",
+			    "412": "Precondition Failed",
+			    "413": "Request Entity Too Large",
+			    "414": "Request-URI Too Long",
+			    "415": "Unsupported Media Type",
+			    "416": "Requested Range Not Satisfiable",
+			    "417": "Expectation Failed",
+			    "422": "Unprocessable Entity",
+			    "423": "Locked",
+			    "424": "Failed Dependency",
+			    "425": "Reserved for WebDAV advanced collections expired proposal",
+			    "426": "Upgrade Required",
+			    "427": "Unassigned",
+			    "428": "Precondition Required",
+			    "429": "Too Many Requests",
+			    "430": "Unassigned",
+			    "431": "Request Header Fields Too Large",
+			    "500": "Internal Server Error",
+			    "501": "Not Implemented",
+			    "502": "Bad Gateway",
+			    "503": "Service Unavailable",
+			    "504": "Gateway Timeout",
+			    "505": "HTTP Version Not Supported",
+			    "506": "Variant Also Negotiates (Experimental)",
+			    "507": "Insufficient Storage",
+			    "508": "Loop Detected",
+			    "509": "Unassigned",
+			    "510": "Not Extended",
+			    "511": "Network Authentication Required"
+			};
+			var statusText = jqXHR.status+"" in statusTexts ? statusTexts[jqXHR.status+""] : jqXHR.status+"";
+	    	$(fileWidgetId+" td div.error").text(statusText+": "+errorText).show();
+	    	
+	    	var fileCount = Number($("#filesNicename").data("fileCount"));
+			fileCount = isNaN(fileCount) ? 0 : fileCount-1; 
+	    	$("#filesNicename").data("fileCount", fileCount);
+	    	$("#filesNicename").html(fileCount === 0 ? "No files" : fileCount === 1 ? "1 file" : fileCount+" files");
+	    })
+	    .bind('fileuploadalways', function (e, data) {
+	    	// file upload finished (either succeeded or failed)
+	    	var fileWidgetId = "#"+data.formData[0].value; // for some reason data.context does not refer to the row anymore here
+	    	$(fileWidgetId+" div.progress").attr("aria-valuenow", 100);
+	    	$(fileWidgetId+" div.progress").attr("aria-valuetext", "100%");
+	    	$(fileWidgetId+" div.progress div.bar").css("width", "100%");
+	    	$(fileWidgetId+" div.progress").hide();
+	    	$(fileWidgetId+" td.cancel button").hide();
+	    })
+	    .bind('fileuploadstart', function (e) {
+	    	// started uploading a file
+	    	$("#filesProgress").html("(0%)");
+	    })
+	    .bind('fileuploadstop', function (e) {
+	    	// finished uploading all files
+	    	$("#filesProgress").html("");
+	    })
+	    .bind('fileuploadprogressall', function (e, data) {
+	    	// global progress update
+	    	var loaded = typeof e.loaded === "undefined" ? 0 : e.loaded;
+	    	var total = typeof e.total === "undefined" ? 0 : e.total;
+	    	var progress = Math.abs(total) < 1 ? 0 : Math.floor(loaded/total*100);
+	    	$("#filesProgress").html("("+progress+"%)");
+	    });
 	});
+	function abortUpload (e) {
+		e.preventDefault();
+		var fileRow = $(e.currentTarget).closest('.fileRow');
+		
+		var fileCount = Number($("#filesNicename").data("fileCount"));
+		fileCount = isNaN(fileCount) ? 0 : fileCount-1; 
+    	$("#filesNicename").data("fileCount", fileCount);
+    	$("#filesNicename").html(fileCount === 0 ? "No files" : fileCount === 1 ? "1 file" : fileCount+" files");
+		
+		var data = fileRow.data('data') || {};
+		if (!data.jqXHR) {
+			data.errorThrown = 'abort';
+			this._trigger('fail', e, data);
+		} else {
+			data.jqXHR.abort();
+		}
+	}
+	// ]]>
 </script>

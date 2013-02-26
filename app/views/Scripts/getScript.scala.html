@@ -1,21 +1,11 @@
 @(script: org.daisy.pipeline.client.models.Script, uploadFiles: Boolean, hasAdvancedOptions: Boolean, hideAdvancedOptions: Boolean, mediaTypeBlacklist: List[String])
 
-@main("Create job", "",
-Array("tmpl.js","jquery.ui.widget.js","jquery.iframe-transport.js","jquery.fileupload.js","jquery.fileupload-ui.js","notifications.js","createJob.js"),
-Array("jquery.fileupload-ui.css")) {
 
-<script type="text/javascript">
-	script = @Html(play.libs.Json.stringify(play.libs.Json.toJson(script)));
-	@if(play.Play.application().isDev()){
-		$(function(){Job.debug = true;});
-	}
-	$(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
-</script>
-
+<div id="script-@script.id" data-fileinput="@uploadFiles">
 <hgroup>
-<h1>
+<h3>
 	@script.nicename<br /> <small>@script.desc</small>
-</h1>
+</h3>
 @if(script.homepage!=null && script.homepage.href!=null && script.homepage.href.length()>0){
 	<address class="muted">
 		<a href="@script.homepage.href" target="_blank">Online Documentation <i class="icon-share"></a></i>
@@ -23,13 +13,9 @@ Array("jquery.fileupload-ui.css")) {
 }
 </hgroup>
 
-@if(uploadFiles){
-	@Widgets.upload()
-}
-
-<form action="@routes.Jobs.postJob().unique()" method="POST" id="job-form" class="form-horizontal" onsubmit="Job.submit();">
-	<input type="hidden" id="id" name="id" value="@script.id" />
-	<input type="hidden" id="uploads" name="uploads" value=""/>
+<form action="@routes.Jobs.postJob().unique()" method="POST" id="script-@script.id-form" class="form-horizontal" onsubmit="Job.submit();">
+	<input type="hidden" id="@script.id-id" name="id" value="@script.id" />
+	<input type="hidden" id="@script.id-uploads" name="uploads" value=""/>
 	
 	<fieldset>
 		
@@ -56,19 +42,19 @@ Array("jquery.fileupload-ui.css")) {
 		<fieldset>
 			<legend>
 				<span>Optional parameters</span>
-				<small><a class="accordion-toggle @("collapsed".when(hideAdvancedOptions))" data-toggle="collapse" href="#advanced-options">
+				<small><a class="accordion-toggle @("collapsed".when(hideAdvancedOptions)) advanced-options-toggle" data-toggle="collapse" href="#script-@script.id-advanced-options" id="script-@script.id-advanced-options-toggle">
 					<style>
-						#advanced-options-show { display:none; }
-						.collapsed #advanced-options-show { display:inline; }
-						#advanced-options-hide { display:inline; }
-						.collapsed #advanced-options-hide { display:none; }
+						#script-@script.id-advanced-options-show { display:none; }
+						#script-@script.id-advanced-options-toggle.collapsed #script-@script.id-advanced-options-show { display:inline; }
+						#script-@script.id-advanced-options-hide { display:inline; }
+						#script-@script.id-advanced-options-toggle.collapsed #script-@script.id-advanced-options-hide { display:none; }
 					</style>
-					<span id="advanced-options-show"><i class="icon-chevron-down"></i>Show</span>
-					<span id="advanced-options-hide"><i class="icon-chevron-up"></i>Hide</span>
+					<span id="script-@script.id-advanced-options-show"><i class="icon-chevron-down"></i>Show</span>
+					<span id="script-@script.id-advanced-options-hide"><i class="icon-chevron-up"></i>Hide</span>
 				</a></small>
 			</legend>
 			
-			<div class="control-group @("in".when(!hideAdvancedOptions)) collapse" id="advanced-options">
+			<div class="control-group @("in".when(!hideAdvancedOptions)) collapse" id="script-@script.id-advanced-options">
 				@for(arg <- script.arguments){
 					@if(arg.required==false || arg.required == null){
 						@if(arg.output!="result" && arg.output!="temp" && arg.kind!="output"){
@@ -95,7 +81,7 @@ Array("jquery.fileupload-ui.css")) {
 			<div class="control-group">
 				<label class="control-label" for="guest-email">Your e-mail</label>
 				<div class="controls">
-					<input name="guest-email" id="guest-email" type="email"/>
+					<input name="guest-email" id="@script.id-guest-email" type="email"/>
 					<span class="help-block">Enter your e-mail address if you wish to receive a link to the job.</span>
 				</div>
 			</div>
@@ -107,5 +93,4 @@ Array("jquery.fileupload-ui.css")) {
 	</fieldset>
 	
 </form>
-
-}
+</div>
