@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<fileset id="daisy202" name="DAISY 2.02" xmlns="http://www.daisy.org/ns/pipeline/data">
-    <file href="(^|/)ncc\.html$" case-insensitive="true"/>
-</fileset>

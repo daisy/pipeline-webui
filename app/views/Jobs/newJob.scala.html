@@ -82,7 +82,7 @@ h2 {
 </div>
 
 <div id="accordion" style="display:none;">
-	<h2 id="hFiles" class="fill-parent-padding">Files<br/><small class="muted" id="filesDetails"><span id="filesNicename">No files</span>&nbsp;<span id="filesProgress"></span></small></h2>
+	<h2 id="hFiles" class="fill-parent-padding">Files<br/><small class="muted" id="filesDetails"><span id="filesNicename">No files</span>&nbsp;<span id="filesProgress"></span><span id="filesetTypes"></span></small></h2>
 	<div id="collapseFiles" class="fill-parent-padding">
 		<!-- files -->
 		<div id="filesGroup" style="display:none;"></div>
@@ -220,6 +220,16 @@ h2 {
 			$($("#fileupload > div.row")[2]).css("margin-left","auto").css("margin-right","auto").css("width","61.8033989%");
 			firstFileOrScriptChosen = null;
 		}
+		Job.onFilesetTypeUpdate(function(filesetTypes){
+			var types = "";
+			for (var id in filesetTypes) {
+				var fs = filesetTypes[id];
+				if (types.length > 0) types = types + ", ";
+				types = types + fs.name;
+			}
+			if (types.length > 0) types = "- " + types;
+			$("#filesetTypes").html(types);
+		});
 		Job.onNewUpload(function(fileset, id){
 			if (firstFileOrScriptChosen !== null) {
 				firstFileOrScriptChosen();
