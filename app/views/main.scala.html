@@ -124,5 +124,6 @@
 	@for(script <- moreScripts) {
 		<script src="@routes.Assets.at("javascripts/"+script)" type="text/javascript"></script>
 	}
+	<script src="@routes.Application.theme("javascripts/theme.js")?@Application.themeName()" type="text/javascript"></script>
   </body>
 </html>

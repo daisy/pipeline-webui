@@ -183,7 +183,7 @@ h2 {
 			$("#scriptsDetails").html($(linkElement).data("nicename"));
 			
 			if ($("#script-"+$(linkElement).data("id")).data("fileinput")==="false" || !$.isEmptyObject(Job.uploads)) {
-				// got to options accordion group if the script does not accept files or files have already been added
+				// go to options accordion group if the script does not accept files or files have already been added
 				$("#doesNotAcceptFilesScriptName").html($(linkElement).data("nicename"));
 				$("#acceptsFiles").hide();
 				$("#doesNotAcceptFiles").show();
