@@ -83,17 +83,23 @@
 
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <goals>
-                    <goal>single</goal>
-                </goals>
-                <configuration>
-                    <descriptors>
-                        <descriptor>assembly-server.xml</descriptor>
-                        <descriptor>assembly-desktop.xml</descriptor>
-                    </descriptors>
-                    <appendAssemblyId>true</appendAssemblyId>
-                    <finalName>pipeline2-webui-${pipeline.webui.version}</finalName>
-                </configuration>
+                <executions>
+                    <execution>
+                        <id>package</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>assembly-server.xml</descriptor>
+                                <descriptor>assembly-desktop.xml</descriptor>
+                            </descriptors>
+                            <appendAssemblyId>true</appendAssemblyId>
+                            <finalName>pipeline2-webui-${pipeline.webui.version}</finalName>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
