@@ -141,7 +141,7 @@ Notifications.listen("uploads", function(notification) {
 });
 
 Job.filesetTypeDescriptions["daisy202"] = {
-	type: "multipart/x-daisy202",
+	type: "multipart/x.daisy202",
 	name: "DAISY 2.02",
 	requirements: [
 		{ fileName: new RegExp("(^|/)ncc\\.html$","i") }
@@ -149,7 +149,7 @@ Job.filesetTypeDescriptions["daisy202"] = {
 };
 
 Job.filesetTypeDescriptions["daisy3"] = {
-	type: "multipart/x-daisy3",
+	type: "multipart/x.daisy3",
 	name: "DAISY 3",
 	requirements: [
 		{ contentType: "application/x-dtbncx+xml" },
