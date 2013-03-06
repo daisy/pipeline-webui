@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import akka.actor.Cancellable;
 import akka.util.Duration;
 
 import models.Notification;
@@ -26,7 +27,7 @@ public class Administrator extends Controller {
 	public static class AdminForms {
 		public Form<CreateAdminForm> createAdminForm = Administrator.createAdminForm;
 		public Form<SetWSForm> setWSForm = Administrator.setWSForm;
-		public Form<SetUploadDirForm> setUploadDirForm = Administrator.setUploadDirForm;
+		public Form<SetUploadDirForm> setStorageDirsForm = Administrator.setStorageDirsForm;
 		public Form<ConfigureEmailForm> configureEmailForm = Administrator.configureEmailForm;
 		public Form<User> userForm = Administrator.userForm;
 		public Form<GuestUser> guestForm = Administrator.guestForm;
@@ -105,7 +106,7 @@ public class Administrator extends Controller {
 		}
     }
 	
-	public final static Form<SetUploadDirForm> setUploadDirForm = form(SetUploadDirForm.class);
+	public final static Form<SetUploadDirForm> setStorageDirsForm = form(SetUploadDirForm.class);
 	public static class SetUploadDirForm {
         @Required
         public String uploaddir;
@@ -521,13 +522,13 @@ public class Administrator extends Controller {
 	        }
 		}
 		
-		if ("setUploadDir".equals(formName)) {
-			Form<Administrator.SetUploadDirForm> filledForm = setUploadDirForm.bindFromRequest();
+		if ("setStorageDirs".equals(formName)) {
+			Form<Administrator.SetUploadDirForm> filledForm = setStorageDirsForm.bindFromRequest();
 			Administrator.SetUploadDirForm.validate(filledForm);
 			
 			if(filledForm.hasErrors()) {
 	        	List<User> users = User.find.orderBy("admin, name, email").findList();
-				forms.setUploadDirForm = filledForm;
+				forms.setStorageDirsForm = filledForm;
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 	        	
 	        } else {
@@ -613,13 +614,15 @@ public class Administrator extends Controller {
 		return redirect(routes.Administrator.getSettings());
 	}
 	
-	public static Result shutdown() {
-		// If running in desktop mode; shutdown after a period of inactivity
-		if (!"desktop".equals(Application.deployment()))
-			return Results.forbidden();
+	public static Cancellable shutdownProgramatically() {
+		// TODO: If running in desktop mode; shutdown after a period of inactivity?
 		
-		Akka.system().scheduler().scheduleOnce(
-				Duration.create(1, TimeUnit.SECONDS),
+		// Shutdown only allowed in desktop mode
+		if (!"desktop".equals(Application.deployment()))
+			return null;
+		
+		return Akka.system().scheduler().scheduleOnce(
+				Duration.create(3, TimeUnit.SECONDS),
 				new Runnable() {
 					public void run() {
 						try {
@@ -638,6 +641,12 @@ public class Administrator extends Controller {
 						}
 					}
 				});
+	}
+	
+	public static Result shutdown() {
+		Cancellable cancellable = shutdownProgramatically();
+		if (cancellable == null)
+			Results.forbidden();
 		
 		flash("shutdown","true");
 		return ok(views.html.Administrator.goodbye.render());

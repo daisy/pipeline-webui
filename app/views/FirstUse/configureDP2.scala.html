@@ -1,4 +1,4 @@
-@()
+@(errorMessages: List[String], errorStacktraces: List[String])
 
 @main("Starting Pipeline 2", "", Array("notifications.js"), Array(), Array()){
 
@@ -11,11 +11,13 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 	  <h1 id="h1" aria-live="polite">
 	  	<span class="STARTING state">Starting the Pipeline 2 engine...</span>
 	  	<span class="RUNNING state" style="display:none;">Successfully started the Pipeline 2 engine!</span>
+	  	<span class="STOPPED state" style="display:none;">The Pipeline 2 engine is stopped</span>
+	  	<span class="ERROR state" style="display:none;">An error occured while starting the Pipeline 2 engine</span>
 	  </h1>
   </hgroup>
 </div>
 
-<div class="STOPPED STARTING message" style="text-align:center;">
+<div class="STARTING message" style="text-align:center;">
 	<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/><br/>
 	<!-- TODO: show error message if unable to start pipeline 2 engine. also suggest solutions like installing the engine and getting support on the mailinglist. -->
 </div>
@@ -24,13 +26,54 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 	<!-- successfully started the pipeline 2 engine -->
 </div>
 
+<div class="ERROR message" style="text-align:center;display:none;">
+	<div id="errorMessages" class="alert alert-error" style="text-align:left;">
+	@for(errorMessage <- errorMessages) {
+		<p>@errorMessage</p>
+	}
+	</div>
+	<p style="text-align:left;">The Pipeline 2 Web UI has been shut down since it was unable to start the Pipeline 2 Engine.
+	   If you are unable to solve the problem based on the error messages above, please download
+	   the error report and post its contents to the <a href="http://www.daisy.org/forums/pipeline-2">Pipeline 2 forum</a>.</p>
+	<a id="errorLink" class="btn btn-danger btn-xlarge" href="data:," download="log.txt">Download error report</a>
+	<div style="text-align:left;display:none;" id="windowsPath">
+	    <hr>
+	    <h2>Is Java in your PATH?</h2>
+		<p>The Pipeline 2 engine is a Java application and requires access to a Java runtime environment (Java SE 6 or higher). You can check that Java is correctly installed by running <code>java -version</code> from the command line.</p>
+	    <p>If you are using Microsoft Windows, note that the Java binaries needs to be added to the executables path. Follow the Java guide to learn <a href="http://java.com/en/download/help/path.xml" rel="nofollow">how to change your PATH system
+	            variable</a>. For easier maintenance, we recommend applying the following steps:</p>
+	    <ol>
+	        <li>create a new <code>JAVA_HOME</code> environment variable pointing to your Java installation, e.g. <code>c:\Program Files (x86)\Java\jre6</code>. </li>
+	        <li>append <code>;%JAVA_HOME%\bin</code> to the <code>PATH</code> environment variable. </li>
+	    </ol>
+	</div>
+</div>
+
 
 <script type="text/javascript">
+	var errorMessages = @Html(play.libs.Json.toJson(errorMessages).toString());
+	var errorStacktraces = @Html(play.libs.Json.toJson(errorStacktraces).toString());
+	function updateErrorReport() {
+		var report = "An error occured while starting the Pipeline 2 engine in desktop mode.\n\n\n\n";
+		report = report + "########## Error Messages ##########\n";
+		for (var e in errorMessages) {
+			report = report+errorMessages[e] + "\n";
+			if (errorMessages[e].indexOf("'java'") == 0) {
+				$("#windowsPath").show();
+			}
+		}
+		report = report + "\n\n\n";
+		report = report + "########## Error Stacktrace ##########\n";
+		for (var e in errorStacktraces) report = report+errorStacktraces[e] + "\n";
+		$("#errorLink").attr("href","data:,"+encodeURIComponent(report));
+		$("#errorLink").attr("download", "log-"+new Date().getTime()+".txt");
+	}
+	updateErrorReport();
 	lastMessage = null;
 	started = null;
 	$(function(){
 		started = new Date();
-		lastMessage = new Date(); 
+		lastMessage = new Date();
 		Notifications.listen("heartbeat", function(state){
 			lastMessage = new Date();
 			if (state === "RUNNING") {
@@ -38,11 +81,31 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 				setTimeout(function(){
 					$(".state, .message").hide();
 					$("."+state).show();
-				},1000); // avoid flashing success message before redirect
+				},1000); // a delay to avoid flashing success message before redirect
+			} else if (state==="STOPPED" && $(".ERROR").filter(":visible")) {
+				// ignore state change; engine shuts down when an error occurs
 			} else {
 				$(".state, .message").hide();
 				$("."+state).show();
+				if (state==="ERROR") {
+					$("a").each(function(i,a){
+						// delete any links to the Web UI, the Web UI is shutting down
+						var href = $(a).attr("href");
+						if (typeof href === "string" && href.indexOf("http") != 0 && href.indexOf("data") != 0) {
+							$(a).replaceWith($('<span class="'+$(a).attr("class")+'" style="'+$(a).attr("style")+'">' + a.innerHTML + '</span>'));
+						}
+					});
+				}
 			}
+		});
+		Notifications.listen("engine.error.message", function(errorMessage){
+			$("#errorMessages").append("<p>"+errorMessage+"</p>");
+			errorMessages.push(errorMessage);
+			updateErrorReport();
+		});
+		Notifications.listen("engine.error.stacktrace", function(errorStacktrace){
+			errorMessages.push(errorStacktrace);
+			updateErrorReport();
 		});
 	});
 </script>

@@ -11,6 +11,7 @@ import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 
+import controllers.Administrator;
 import controllers.FirstUse;
 
 import akka.actor.Cancellable;
@@ -99,6 +100,9 @@ public class Global extends GlobalSettings {
 				Duration.create(1, TimeUnit.SECONDS),
 				new Runnable() {
 					public void run() {
+						if ((utils.Pipeline2Engine.State.ERROR+"").equals(controllers.Application.getPipeline2EngineState())) {
+							Administrator.shutdownProgramatically();
+						}
 						try {
 							synchronized (NotificationConnection.notificationConnections) {
 								for (Long userId : NotificationConnection.notificationConnections.keySet()) {

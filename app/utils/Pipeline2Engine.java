@@ -1,6 +1,5 @@
 package utils;
 
-import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 
@@ -11,6 +10,10 @@ import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import models.Notification;
@@ -26,7 +29,7 @@ import play.Logger;
 public class Pipeline2Engine {
 	
 	public static enum State {
-		STOPPED, STARTING, RUNNING
+		STOPPED, STARTING, RUNNING, ERROR
 	};
 	
 	private static State state = null;
@@ -35,15 +38,21 @@ public class Pipeline2Engine {
 	public static final String DP2_START = "/".equals(SLASH) ? "./pipeline2" : "cmd /c start /B pipeline2.bat";
 	public static File cwd = null;
 	
+	public static List<String> errorMessages = new ArrayList<String>();
+	public static List<String> errorStacktraces = new ArrayList<String>();
+	
 	static Worker engine = null;
+	
+	/** Signals whether the error messages have been delivered to the user and it is safe to shut down the Web UI. */
+	public static boolean errorsDelivered = false;
 	
 	private Pipeline2Engine(){} // don't instantiate
 	
 	public static void start() {
 		if (engine != null)
 			halt();
+		setState(State.STARTING);
 		engine = executeCommandWithWorker(DP2_START, new File(cwd,"bin"));
-		state = State.STARTING;
 	}
 	
 	public static void halt() {
@@ -69,12 +78,12 @@ public class Pipeline2Engine {
                 Logger.debug("Shutdown key: "+key);
 				
 				if (key == null) {
-					Logger.error("Could not read Pipelne 2 engine key file");
+					Logger.error("Could not read the Pipeline 2 engine key file");
 					
 				} else {
 					Pipeline2WSResponse response = org.daisy.pipeline.client.Admin.halt(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), key);
 					if (response.status != 204) {
-						Logger.error("Could not shut down Pipelne 2 engine:");
+						Logger.error("Could not shut down the Pipeline 2 engine:");
 						Logger.error(response.asText());
 						
 					} else {
@@ -82,9 +91,9 @@ public class Pipeline2Engine {
 					}
 				}
 			} catch (Pipeline2WSException e) {
-				Logger.error(e.getMessage(), e);
+				Logger.error(e.getLocalizedMessage(), e);
 			} catch (FileNotFoundException e) {
-				Logger.error("Could not read Pipelne 2 engine key file; "+e.getMessage(), e);
+				Logger.error("Could not read Pipelne 2 engine key file; "+e.getLocalizedMessage(), e);
 			}
 			
 			// shut down by killing the process
@@ -92,7 +101,7 @@ public class Pipeline2Engine {
 		}
 		
 		engine = null;
-		state = State.STOPPED;
+		setState(State.STOPPED);
 	}
 	
 	public static State getState() {
@@ -152,7 +161,25 @@ public class Pipeline2Engine {
 			process = runtime.exec(command, null, cwd.getAbsoluteFile());
 		} catch (IOException e) {
             String errorMessage = "The process for the command [" + command + "] could not be created due to an IO error.";
+            
+            errorMessages.add(errorMessage);
+            errorMessages.add(e.getLocalizedMessage());
+            while (errorMessages.size() > 100) errorMessages.remove(0);
+            
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            errorStacktraces.add(sw.toString()); // stack trace as a string
+            while (errorStacktraces.size() > 100) errorStacktraces.remove(0);
+            
+    		if (Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING) {
+    			NotificationConnection.pushAll(new Notification("engine.error.message", errorMessage));
+    		}
+    		
             Logger.error(errorMessage, e);
+            
+            setState(State.ERROR);
+            
             return null;
 		}
         
@@ -161,7 +188,7 @@ public class Pipeline2Engine {
         StreamGobbler errorGobbler = new StreamGobbler(process.getErrorStream(), "ERROR");
         outputGobbler.start();
         errorGobbler.start();
-
+        
         // create and start a Worker thread which this thread will join for the timeout period 
         Worker worker = new Worker(process);
         worker.start();
@@ -199,10 +226,25 @@ public class Pipeline2Engine {
                 String line = null;
                 while ((line = bufferedReader.readLine()) != null) {
                 	if ("INFO".equals(streamType)) Logger.info(line);
-                	else if ("ERROR".equals(streamType)) Logger.error(line);
+                	else if ("ERROR".equals(streamType)) Logger.error("|||"+line);
                 	else if ("DEBUG".equals(streamType)) Logger.debug(line);
                 	else if ("TRACE".equals(streamType)) Logger.trace(line);
                 	else if ("WARN".equals(streamType)) Logger.warn(line);
+                	
+                	if ("ERROR".equals(streamType)) {
+                		errorMessages.add(line);
+                		while (errorMessages.size() > 100) errorMessages.remove(0);
+                		if (Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING) {
+                			NotificationConnection.pushAll(new Notification("engine.error.message", line));
+                		}
+                	}
+                	else if ("TRACE".equals(streamType)) {
+                		errorStacktraces.add(line);
+                		while (errorStacktraces.size() > 100) errorStacktraces.remove(0);
+                		if (Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING) {
+                			NotificationConnection.pushAll(new Notification("engine.error.stacktrace", line));
+                		}
+                	}
                 }
                 
             } catch (IOException e) {

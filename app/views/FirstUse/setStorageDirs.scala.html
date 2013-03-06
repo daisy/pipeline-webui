@@ -1,0 +1,35 @@
+@(setStorageDirsForm: Form[controllers.Administrator.SetUploadDirForm])
+
+@main("First use", "", Array(), Array(), Array()){
+	
+	<div class="horizontally-centered">
+	
+	  	<div class="page-header">
+	  		<hgroup>
+	       		<h1>Set the temporary directory for uploads</h1>
+	       	</hgroup>
+	    </div>
+	    
+	    @if(flash.contains("error")) {
+	        <div role="alert" class="alert alert-error">
+	        	<a class="close" data-dismiss="alert">&times;</a>
+	            @flash.get("error")
+	        </div>
+	    }
+	    
+	    @if(flash.contains("success")) {
+	        <div role="alert" class="alert alert-success">
+	        	<a class="close" data-dismiss="alert">&times;</a>
+	            @flash.get("success")
+	        </div>
+	    }
+	    
+	    <div class="alert alert-info">
+	    	<p>Depending on the number of users and the type of usage (especially when producing audio books), this file storage area may grow large. Please make sure that you have enough free space on your file system.</p>
+	  	</div>
+	    
+		@views.html.Administrator.Forms.setStorageDirs(setStorageDirsForm, routes.FirstUse.postFirstUse(), routes.Application.index())
+	
+	</div>
+	
+}

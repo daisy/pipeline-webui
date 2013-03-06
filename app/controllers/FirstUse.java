@@ -1,20 +1,5 @@
 package controllers;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import org.daisy.pipeline.client.Alive;
-
-import akka.actor.Cancellable;
-import akka.util.Duration;
-
-import play.Logger;
-import play.Play;
-import play.libs.Akka;
 import play.mvc.*;
 import play.data.*;
 import utils.Pipeline2Engine;
@@ -58,8 +43,9 @@ public class FirstUse extends Controller {
 		}
 		
 		if ("desktop".equals(Application.deployment()) && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING) {
+			Pipeline2Engine.errorsDelivered = true;
 			user.flashBrowserId();
-			return ok(views.html.FirstUse.configureDP2.render());
+			return ok(views.html.FirstUse.configureDP2.render(Pipeline2Engine.errorMessages, Pipeline2Engine.errorStacktraces));
 		}
 		
 		if (Setting.get("dp2ws.endpoint") == null) {
@@ -67,7 +53,7 @@ public class FirstUse extends Controller {
 		}
 		
 		if (Setting.get("uploads") == null) {
-			return ok(views.html.FirstUse.setUploadDir.render(form(Administrator.SetUploadDirForm.class)));
+			return ok(views.html.FirstUse.setStorageDirs.render(form(Administrator.SetUploadDirForm.class)));
 		}
 		
 		return redirect(routes.FirstUse.welcome());
@@ -168,12 +154,12 @@ public class FirstUse extends Controller {
 	        }
 		}
 		
-		if ("setUploadDir".equals(formName)) {
+		if ("setStorageDirs".equals(formName)) {
 			Form<Administrator.SetUploadDirForm> filledForm = form(Administrator.SetUploadDirForm.class).bindFromRequest();
 			Administrator.SetUploadDirForm.validate(filledForm);
 			
 			if(filledForm.hasErrors()) {
-	        	return badRequest(views.html.FirstUse.setUploadDir.render(filledForm));
+	        	return badRequest(views.html.FirstUse.setStorageDirs.render(filledForm));
 	        	
 	        } else {
 	        	Administrator.SetUploadDirForm.save(filledForm);

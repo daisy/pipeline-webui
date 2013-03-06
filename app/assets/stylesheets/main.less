@@ -301,3 +301,77 @@ body { font-size: 62.5%; font-family:Arial, Helvetica, sans-serif }
     -webkit-box-sizing: border-box;
     box-sizing:         border-box;
 }
+
+/* centered elements (adapted from http://stackoverflow.com/questions/8442782) */
+@media (min-width: 800px) {
+	.horizontally-centered {
+		position:absolute;
+	    width:50%;
+	    left: 50%;
+	    margin-left:-25%; /* negative number 1/2 width */
+	}
+	.centered { .horizontally-centered; }
+	@media (min-height: 400px) {
+		.vertically-centered {
+		    position:absolute;
+		    height:50%;
+		    top: 50%;
+		    margin-top:-25%; /* negative number 1/2 height */
+		}
+		.centered { .vertically-centered; }
+	}
+}
+
+/* left/right div split (adapted from http://www.dev-archive.net/articles/table-in-css.html) */
+@media (min-width: 800px) {
+	.split {
+		margin-top: 0; margin-right: auto; margin-bottom: 0; margin-left: auto;
+		padding: 0;
+	}
+	.split-left {
+		border: none; float: left; margin: 0; padding: 0; width: 50%;
+		.split-content {
+			.fill-parent-padding;
+			margin: 0; padding: 0.3em 0.3em 0 0.3em;
+			font-style: normal; font-size: 1em; text-indent: 0;
+			width: auto;
+		}
+	}
+	.split-right {
+		border: none; float: right; margin: 0; padding: 0; width: 50%;
+		.split-content {
+			.fill-parent-padding;
+			margin: 0; padding: 0.3em 0.3em 0 0.3em;
+			font-style: normal; font-size: 1em; text-indent: 0;
+			width: 100%;
+		}
+	}
+	.split-br {
+		clear: both; margin: 0; padding: 0; width: auto;
+	}
+	
+	.dp2-form { .split; }
+	.dp2-form-label {
+		.split-left;
+		.dp2-form-content { .split-left.split-content; text-align: right; padding-top: 10px; }
+	}
+	.dp2-form-input {
+		.split-right;
+		.dp2-form-content { .split-left.split-content; text-align: left; }
+	}
+	.dp2-form-br { .split-br }
+	.dp2-form-actions { text-align: center; }
+}
+
+/**
+ * Extra large button extensions. Extends `.btn`.
+ * http://stackoverflow.com/questions/13112200/resizing-buttons-in-twitter-boostrap/13112826#13112826
+ */
+.btn-xlarge {
+    padding: 18px 28px;
+    font-size: 22px;
+    line-height: normal;
+	-webkit-border-radius: 8px;
+       -moz-border-radius: 8px;
+            border-radius: 8px;
+}

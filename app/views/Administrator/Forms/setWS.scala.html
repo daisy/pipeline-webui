@@ -4,13 +4,16 @@
 	
 	<input type="hidden" name="formName" value="setWS"/>
     
-    <fieldset>
-          
-        <div class="form-horizontal">
-        
-          	<div class="control-group @("error".when(setWSForm.error("endpoint") != null))" id="setWS-endpointGroup">
-				<label for="endpoint" class="control-label">Address</label>
-				<div class="controls">
+    <fieldset style="text-align:center;">
+    	
+      	<div class="dp2-form @("error".when(setWSForm.error("endpoint") != null))" id="setWS-endpointGroup">
+     		<div class="dp2-form-label">
+     			<div class="dp2-form-content">
+					<label for="endpoint" class="control-label">Address</label>
+				</div>
+			</div>
+			<div class="dp2-form-input">
+				<div class="dp2-form-content">
 					<input type="text" name="endpoint" id="setWS-endpoint" placeholder="URL" class="input-xlarge"
 							value="@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "http://localhost:8182/ws")"
 							onkeyup="if(@{models.Setting.get("dp2ws.endpoint")==null} || this.value==='@models.Setting.get("dp2ws.endpoint")')document.getElementById('setWS-endpointGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-endpointGroup').style.backgroundColor='#DDF';"
@@ -20,10 +23,17 @@
 					}
 				</div>
 			</div>
-			
-			<div class="control-group @("error".when(setWSForm.error("authid") != null))" id="setWS-authidGroup">
-				<label for="authid" class="control-label">Authentication ID</label>
-				<div class="controls">
+			<div class="dp2-form-br"></div>
+		</div>
+		
+		<div class="dp2-form @("error".when(setWSForm.error("authid") != null))" id="setWS-authidGroup">
+     		<div class="dp2-form-label">
+     			<div class="dp2-form-content">
+					<label for="authid" class="control-label">Authentication ID</label>
+				</div>
+			</div>
+			<div class="dp2-form-input">
+				<div class="dp2-form-content">
 					<input type="text" autocomplete="off" name="authid" id="setWS-authid" placeholder="Authentication ID" class="input-xlarge"
 							value="@setWSForm.field("authid").valueOr(models.Setting.get("dp2ws.authid"))"
 							onkeyup="if(@{models.Setting.get("dp2ws.authid")==null} || this.value==='@models.Setting.get("dp2ws.authid")')document.getElementById('setWS-authidGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-authidGroup').style.backgroundColor='#DDF';"
@@ -34,10 +44,17 @@
 					<span class="help-block">When communicating with the Pipeline engine, the Web UI needs to authenticate. This authentication id is not to be confused with the user accounts listed under "Users and Permissions".</span>
 				</div>
 			</div>
-			
-			<div class="control-group @("error".when(setWSForm.error("secret") != null))" id="setWS-secretGroup">
-				<label for="secret" class="control-label">Secret token</label>
-				<div class="controls">
+			<div class="dp2-form-br"></div>
+		</div>
+		
+		<div class="dp2-form @("error".when(setWSForm.error("secret") != null))" id="setWS-secretGroup">
+     		<div class="dp2-form-label">
+     			<div class="dp2-form-content">
+					<label for="secret" class="control-label">Secret token</label>
+				</div>
+			</div>
+			<div class="dp2-form-input">
+				<div class="dp2-form-content">
 					<input type="password" autocomplete="off" name="secret" id="setWS-secret" value=""
 							placeholder="@if(models.Setting.get("dp2ws.secret")==null){Secret token}else{**********}" class="input-xlarge"
 							onkeyup="if(@{models.Setting.get("dp2ws.secret")==null} || this.value==='')document.getElementById('setWS-secretGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-secretGroup').style.backgroundColor='#DDF';"
@@ -48,10 +65,17 @@
 					<span class="help-block">The password corresponding to the authentication id.</span>
 				</div>
 			</div>
-			
-			<div class="control-group @("error".when(setWSForm.error("resultDir") != null))" id="setWS-resultDirGroup">
-				<label for="tempDir" class="control-label">Result directory</label>
-				<div class="controls">
+			<div class="dp2-form-br"></div>
+		</div>
+		
+		<div class="dp2-form @("error".when(setWSForm.error("resultDir") != null))" id="setWS-resultDirGroup">
+     		<div class="dp2-form-label">
+     			<div class="dp2-form-content">
+					<label for="tempDir" class="control-label">Result directory</label>
+				</div>
+			</div>
+			<div class="dp2-form-input">
+				<div class="dp2-form-content">
 					<input type="text" autocomplete="off" name="resultDir" id="setWS-resultDir" placeholder="Temporary directory path" class="input-xlarge"
 							value="@setWSForm.field("resultDir").valueOr(if (Setting.get("dp2ws.resultDir") != null) Setting.get("dp2ws.resultDir") else System.getProperty("user.dir") + System.getProperty("file.separator") + "local.results" + System.getProperty("file.separator"))"
 							onkeyup="if(@{models.Setting.get("dp2ws.resultDir")==null} || this.value==='@models.Setting.get("dp2ws.resultDir")')document.getElementById('setWS-resultDirGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-resultDirGroup').style.backgroundColor='#DDF';"
@@ -62,10 +86,17 @@
 					<span class="help-block">If Pipeline 2 is running in local mode then you need to provide a filesystem path where the results (the output of a job) will be stored. The path is relative to the filesystem of the Pipeline engine which might be different than the filesystem of the Web UI if the Pipeline engine and the Web UI are running on different servers. <em>If Pipeline 2 is running in remote mode you can ignore this setting.</em></span>
 				</div>
 			</div>
-			
-			<div class="control-group @("error".when(setWSForm.error("tempDir") != null))" id="setWS-tempDirGroup">
-				<label for="tempDir" class="control-label">Temporary directory</label>
-				<div class="controls">
+			<div class="dp2-form-br"></div>
+		</div>
+		
+		<div class="dp2-form @("error".when(setWSForm.error("tempDir") != null))" id="setWS-tempDirGroup">
+     		<div class="dp2-form-label">
+     			<div class="dp2-form-content">
+					<label for="tempDir" class="control-label">Temporary directory</label>
+				</div>
+			</div>
+			<div class="dp2-form-input">
+				<div class="dp2-form-content">
 					<input type="text" autocomplete="off" name="tempDir" id="setWS-tempDir" placeholder="Temporary directory path" class="input-xlarge"
 							value="@setWSForm.field("tempDir").valueOr(if (Setting.get("dp2ws.tempDir") != null) Setting.get("dp2ws.tempDir") else System.getProperty("user.dir") + System.getProperty("file.separator") + "local.temp" + System.getProperty("file.separator"))"
 							onkeyup="if(@{models.Setting.get("dp2ws.tempDir")==null} || this.value==='@models.Setting.get("dp2ws.tempDir")')document.getElementById('setWS-tempDirGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-tempDirGroup').style.backgroundColor='#DDF';"
@@ -76,15 +107,27 @@
 					<span class="help-block">This is a directory similar to the temporary directory above, but are used for temporary files. Jobs may need to store some temporary files here while running. The temporary files are deleted automatically when the job is finished. This directory is also relative to the Pipeline engines filesystem. <em>If Pipeline 2 is running in remote mode you can ignore this setting.</em></span>
 				</div>
 			</div>
-			
-			<div class="form-actions">
-				<button class="btn btn-primary" id="submit" type="submit" name="submit">Save and Continue</button>
-				@if(skipRoute != null){
-					<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Administrator.getSettings()';return false;">Skip Configuration <i class="icon-hand-right"></i></button>
-				}
-			</div>
-			
+			<div class="dp2-form-br"></div>
 		</div>
+		
+		<br/>
+		@if(skipRoute != null){
+			<div class="split">
+	     		<div class="split-left">
+	     			<div class="split-content" style="text-align:right;">
+						<button class="btn btn-primary" id="submit" type="submit" name="submit">Save and Continue</button>
+					</div>
+				</div>
+				<div class="split-right">
+					<div class="split-content" style="text-align:left;">
+						<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Administrator.getSettings()';return false;">Skip Configuration <i class="icon-hand-right"></i></button>
+					</div>
+				</div>
+				<div class="split-br"></div>
+			</div>
+		}else{
+			<button class="btn btn-primary" id="submit" type="submit" name="submit">Save and Continue</button>
+		}
 		
 	</fieldset>
 

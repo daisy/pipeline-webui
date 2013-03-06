@@ -41,7 +41,7 @@
 <ul class="nav nav-pills">
     <li class="@("active".when(Controller.flash("settings.formName")==null||Controller.flash("settings.formName")=="updateGlobalPermissions"||Controller.flash("settings.formName")=="updateGuest"||Controller.flash("settings.formName")=="updateUser"))"><a href="#usersAndPermissions" data-toggle="tab">Users and Permissions</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="setWS"))"><a href="#pipeline2WebServiceEndpoint" data-toggle="tab">Pipeline 2 Web API</a></li>
-    <li class="@("active".when(Controller.flash("settings.formName")=="setUploadDir"))"><a href="#temporaryDirectoryForUploads" data-toggle="tab">Upload directory</a></li>
+    <li class="@("active".when(Controller.flash("settings.formName")=="setStorageDirs"))"><a href="#temporaryDirectoryForUploads" data-toggle="tab">Upload directory</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="configureEmail"))"><a href="#eMailSettings" data-toggle="tab">E-mail settings</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="setMaintenance"))"><a href="#maintenance" data-toggle="tab">Maintenance</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="configureAppearance"))"><a href="#appearance" data-toggle="tab">Appearance</a></li>
@@ -98,10 +98,10 @@
 	  	@views.html.Administrator.Forms.setWS(forms.setWSForm, routes.Administrator.postSettings(), null)
 	</section>
 	
-	<section id="temporaryDirectoryForUploads" class="tab-pane @("active".when(Controller.flash("settings.formName")=="setUploadDir"))">
+	<section id="temporaryDirectoryForUploads" class="tab-pane @("active".when(Controller.flash("settings.formName")=="setStorageDirs"))">
 		<h2>Temporary directory for uploads</h2>
 		<br/>
-		@views.html.Administrator.Forms.setUploadDir(forms.setUploadDirForm, routes.Administrator.postSettings(), null)
+		@views.html.Administrator.Forms.setStorageDirs(forms.setStorageDirsForm, routes.Administrator.postSettings(), null)
 	</section>
 	
 	<section id="eMailSettings" class="tab-pane @("active".when(Controller.flash("settings.formName")=="configureEmail"))">

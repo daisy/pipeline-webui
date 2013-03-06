@@ -1,37 +1,41 @@
 @(setWSForm: Form[controllers.Administrator.SetWSForm])
 
 @main("First use", "", Array(), Array(), Array()){
-
-  	<div class="page-header">
-  		<hgroup>
-       		<h1>Connect to the Pipeline 2 Web API</h1>
-   		</hgroup>
-    </div>
-  	
-    @if(flash.contains("error")) {
-        <div role="alert" class="alert alert-error">
-        	<a class="close" data-dismiss="alert">&times;</a>
-            @flash.get("error")
-        </div>
-    }
-    
-    @if(flash.contains("success")) {
-        <div role="alert" class="alert alert-success">
-        	<a class="close" data-dismiss="alert">&times;</a>
-            @flash.get("success")
-        </div>
-    }
-    
- 	<p>Please enter the address of the Pipeline 2 Web API below, along with the authentication ID and secret token to use it.</p>
- 	<p>If you are running the Pipeline engine with the default settings on the same server as this Web UI, then the address is most likely <code>http://localhost:8182/ws</code>.</p>
-  	<hr/>
-  	
-  	<div class="alert alert-info">
-  		<p>The authentication ID and secret token were configured during the installation of the Pipeline engine. To learn more about Pipeline 2's Web API authentication, please refer to the <a href="http://code.google.com/p/daisy-pipeline/wiki/UserGuideIntro" target="_blank">Pipeline 2 User Guide</a>.</p>
-  		<!-- TODO: split this alert in two after creating the separate WS authentication page -->
-  		<p>You may skip this step now and change the address in the administrator settings at any time later; however you will not be able to use any of the Pipeline 2 features until the Web API connection is configured. If you have not yet installed the Pipeline engine, please download and install the latest version from the <a href="http://www.daisy.org/pipeline2" target="_blank">DAISY Pipeline 2 homepage</a>.</p>
-  	</div>
-  	
-  	@views.html.Administrator.Forms.setWS(setWSForm, routes.FirstUse.postFirstUse(), routes.Application.index())
+	
+	<div class="horizontally-centered">
+		
+	  	<div class="page-header">
+	  		<hgroup>
+	       		<h1>Connect to the Pipeline 2 Web API</h1>
+	   		</hgroup>
+	    </div>
+	  	
+	    @if(flash.contains("error")) {
+	        <div role="alert" class="alert alert-error">
+	        	<a class="close" data-dismiss="alert">&times;</a>
+	            @flash.get("error")
+	        </div>
+	    }
+	    
+	    @if(flash.contains("success")) {
+	        <div role="alert" class="alert alert-success">
+	        	<a class="close" data-dismiss="alert">&times;</a>
+	            @flash.get("success")
+	        </div>
+	    }
+	    
+	 	<p style="text-align:center;">Please enter the address of the Pipeline 2 Web API below, along with the authentication ID and secret token to use it.</p>
+	 	<p style="text-align:center;">If you are running the Pipeline engine with the default settings on the same server as this Web UI, then the address is most likely <code>http://localhost:8182/ws</code>.</p>
+	  	<hr/>
+	  	
+	  	<div class="alert alert-info">
+	  		<p>The authentication ID and secret token were configured during the installation of the Pipeline engine. To learn more about Pipeline 2's Web API authentication, please refer to the <a href="http://code.google.com/p/daisy-pipeline/wiki/UserGuideIntro" target="_blank">Pipeline 2 User Guide</a>.</p>
+	  		<!-- TODO: split this alert in two after creating the separate WS authentication page -->
+	  		<p>You may skip this step now and change the address in the administrator settings at any time later; however you will not be able to use any of the Pipeline 2 features until the Web API connection is configured. If you have not yet installed the Pipeline engine, please download and install the latest version from the <a href="http://www.daisy.org/pipeline2" target="_blank">DAISY Pipeline 2 homepage</a>.</p>
+	  	</div>
+	  	
+	  	@views.html.Administrator.Forms.setWS(setWSForm, routes.FirstUse.postFirstUse(), routes.Application.index())
+		
+	</div>
 
 }

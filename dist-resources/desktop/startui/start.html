@@ -68,6 +68,21 @@
 
 		<div class="STARTING message" style="text-align:center;">
 			<img src="loading.gif" alt="" style="margin:10px;"/><br/>
+			<div id="WAITING">
+				<p>This is taking a long time, an error may have occured while starting the Web UI.</p>
+				<ul style="text-align:left;">
+					<li>Most commonly this is caused by Java not being installed properly.
+						See the <a href="http://code.google.com/p/daisy-pipeline/wiki/Installation#Java">Pipeline 2 Installation Instructions</a>
+						to learn how to install Java. If you are on Windows, remember to set the PATH variable as described in the instructions.</li>
+					<li>If you are sure that you have installed Java correctly but the Web UI still won't start, try starting the Web UI from the
+						command line. In Windows:
+						<ol>
+							<li>Click the start menu, then type "cmd" in the search box (click "Run" in Windows XP) and press enter.</li>
+							<li></li>
+						</ol>
+						</li>
+				</ul>
+			</div>
 		</div>
 
 		<div class="RUNNING message" style="text-align:center;display:none;">
@@ -91,6 +106,12 @@
 						$.getJSON("http://localhost:9000/alive?callback=?");
 					},
 					1000
+				);
+				setTimeout(
+					function() {
+						$("#WAITING").show();
+					},
+					10000
 				);
 			});
 		</script>
