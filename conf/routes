@@ -69,3 +69,7 @@ GET     /assets/*file                       controllers.Assets.at(path="/public"
 
 # Application
 GET     /alive                              controllers.Alive.alive()
+
+# Log
+GET		/log								controllers.Log.getLog(shutdown: Integer ?= 0)
+

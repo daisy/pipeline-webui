@@ -22,6 +22,8 @@ public class Application extends Controller {
 	public static final String datasource = Configuration.root().getString("dp2.datasource");
 	public static org.daisy.pipeline.client.models.Alive alive = null;
 	
+	public static final String version = Configuration.root().getString("version");
+	
 	public static Result index() {
 		if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());

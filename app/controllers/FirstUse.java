@@ -43,9 +43,8 @@ public class FirstUse extends Controller {
 		}
 		
 		if ("desktop".equals(Application.deployment()) && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING) {
-			Pipeline2Engine.errorsDelivered = true;
 			user.flashBrowserId();
-			return ok(views.html.FirstUse.configureDP2.render(Pipeline2Engine.errorMessages, Pipeline2Engine.errorStacktraces));
+			return ok(views.html.FirstUse.configureDP2.render(Pipeline2Engine.errorMessages));
 		}
 		
 		if (Setting.get("dp2ws.endpoint") == null) {
@@ -175,7 +174,7 @@ public class FirstUse extends Controller {
 	 * @return
 	 */
 	public static boolean isFirstUse() {
-		return User.findAll().size() == 0 || "desktop".equals(Application.deployment()) && Pipeline2Engine.cwd == null;
+		return User.findAll().size() == 0 || "desktop".equals(Application.deployment()) && (Pipeline2Engine.cwd == null || !(Pipeline2Engine.State.RUNNING+"").equals(Pipeline2Engine.getState()));
 	}
 	
 	public static void configureDesktopDefaults() {

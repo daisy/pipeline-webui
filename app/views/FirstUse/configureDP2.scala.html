@@ -1,4 +1,4 @@
-@(errorMessages: List[String], errorStacktraces: List[String])
+@(errorMessages: List[String])
 
 @main("Starting Pipeline 2", "", Array("notifications.js"), Array(), Array()){
 
@@ -52,21 +52,12 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 
 <script type="text/javascript">
 	var errorMessages = @Html(play.libs.Json.toJson(errorMessages).toString());
-	var errorStacktraces = @Html(play.libs.Json.toJson(errorStacktraces).toString());
 	function updateErrorReport() {
-		var report = "An error occured while starting the Pipeline 2 engine in desktop mode.\n\n\n\n";
-		report = report + "########## Error Messages ##########\n";
 		for (var e in errorMessages) {
-			report = report+errorMessages[e] + "\n";
 			if (errorMessages[e].indexOf("'java'") == 0) {
 				$("#windowsPath").show();
 			}
 		}
-		report = report + "\n\n\n";
-		report = report + "########## Error Stacktrace ##########\n";
-		for (var e in errorStacktraces) report = report+errorStacktraces[e] + "\n";
-		$("#errorLink").attr("href","data:,"+encodeURIComponent(report));
-		$("#errorLink").attr("download", "log-"+new Date().getTime()+".txt");
 	}
 	updateErrorReport();
 	lastMessage = null;
@@ -89,12 +80,15 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 				$("."+state).show();
 				if (state==="ERROR") {
 					$("a").each(function(i,a){
-						// delete any links to the Web UI, the Web UI is shutting down
+						// break any links/connections to the Web UI, the Web UI is shutting down
 						var href = $(a).attr("href");
 						if (typeof href === "string" && href.indexOf("http") != 0 && href.indexOf("data") != 0) {
 							$(a).replaceWith($('<span class="'+$(a).attr("class")+'" style="'+$(a).attr("style")+'">' + a.innerHTML + '</span>'));
 						}
+						Notifications.stop();
 					});
+					if (!gettingLog)
+						getLog();
 				}
 			}
 		});
@@ -103,11 +97,19 @@ $(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong
 			errorMessages.push(errorMessage);
 			updateErrorReport();
 		});
-		Notifications.listen("engine.error.stacktrace", function(errorStacktrace){
-			errorMessages.push(errorStacktrace);
-			updateErrorReport();
-		});
 	});
+	gettingLog = false;
+	function getLog() {
+		$.ajax({
+			url: '@routes.Log.getLog()?shutdown=1',
+			dataType: 'text',
+			success: function(data, textStatus, jqXHR) {
+				$("#errorLink").attr("href","data:,"+encodeURIComponent(data));
+				$("#errorLink").attr("download", "log-"+new Date().getTime()+".txt");
+			}
+		});
+		gettingLog = true;
+	}
 </script>
 
 }

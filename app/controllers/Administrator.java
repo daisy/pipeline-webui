@@ -8,8 +8,6 @@ import java.util.concurrent.TimeUnit;
 import akka.actor.Cancellable;
 import akka.util.Duration;
 
-import models.Notification;
-import models.NotificationConnection;
 import models.Setting;
 import models.User;
 import play.Logger;
@@ -614,23 +612,25 @@ public class Administrator extends Controller {
 		return redirect(routes.Administrator.getSettings());
 	}
 	
-	public static Cancellable shutdownProgramatically() {
+	public static Cancellable shuttingDown = null;
+	public static Cancellable shutdownProgramatically(int delay) {
 		// TODO: If running in desktop mode; shutdown after a period of inactivity?
 		
 		// Shutdown only allowed in desktop mode
 		if (!"desktop".equals(Application.deployment()))
 			return null;
 		
-		return Akka.system().scheduler().scheduleOnce(
-				Duration.create(3, TimeUnit.SECONDS),
+		if (shuttingDown != null)
+			return shuttingDown;
+		
+		shuttingDown = Akka.system().scheduler().scheduleOnce(
+				Duration.create(delay, TimeUnit.SECONDS),
 				new Runnable() {
 					public void run() {
 						try {
 							// Pipeline engine
-							if (Pipeline2Engine.cwd != null) {
-								Logger.info("Attempting to stop the Pipeline engine...");
-								Pipeline2Engine.halt();
-							}
+							Logger.info("Attempting to stop the Pipeline engine...");
+							Pipeline2Engine.shutdown();
 							
 							// Web UI
 							System.exit(0);
@@ -641,10 +641,11 @@ public class Administrator extends Controller {
 						}
 					}
 				});
+		return shuttingDown;
 	}
 	
 	public static Result shutdown() {
-		Cancellable cancellable = shutdownProgramatically();
+		Cancellable cancellable = shutdownProgramatically(5);
 		if (cancellable == null)
 			Results.forbidden();
 		

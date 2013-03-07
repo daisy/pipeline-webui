@@ -71,20 +71,22 @@ public class Global extends GlobalSettings {
 							if (Setting.get("dp2ws.endpoint") == null)
 								return;
 							
-							Pipeline2WSResponse response;
-							try {
-								response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));
-								if (response.status != 200) {
+							if (Administrator.shuttingDown != null) {
+								Pipeline2WSResponse response;
+								try {
+									response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));
+									if (response.status != 200) {
+										controllers.Application.alive = null;
+										
+									} else {
+										controllers.Application.alive = new org.daisy.pipeline.client.models.Alive(response);
+										if ("desktop".equals(controllers.Application.deployment()))
+											Pipeline2Engine.setState(Pipeline2Engine.State.RUNNING);
+									}
+								} catch (Pipeline2WSException e) {
+									Logger.error(e.getMessage(), e);
 									controllers.Application.alive = null;
-									
-								} else {
-									controllers.Application.alive = new org.daisy.pipeline.client.models.Alive(response);
-									if ("desktop".equals(controllers.Application.deployment()))
-										Pipeline2Engine.setState(Pipeline2Engine.State.RUNNING);
-								}
-							} catch (Pipeline2WSException e) {
-								Logger.error(e.getMessage(), e);
-								controllers.Application.alive = null;
+							}
 							}
 						} catch (javax.persistence.PersistenceException e) {
 							// Ignores this exception that happens on shutdown:
@@ -100,9 +102,31 @@ public class Global extends GlobalSettings {
 				Duration.create(1, TimeUnit.SECONDS),
 				new Runnable() {
 					public void run() {
-						if ((utils.Pipeline2Engine.State.ERROR+"").equals(controllers.Application.getPipeline2EngineState())) {
-							Administrator.shutdownProgramatically();
+						if ("desktop".equals(controllers.Application.deployment())) {
+							if (Administrator.shuttingDown == null && (utils.Pipeline2Engine.State.ERROR+"").equals(controllers.Application.getPipeline2EngineState())) {
+								Administrator.shutdownProgramatically(30);
+							}
+							
+							// When starting the engine; check more often whether it is alive
+							if (Administrator.shuttingDown != null && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING && Setting.get("dp2ws.endpoint") != null) {
+								Pipeline2WSResponse response;
+								try {
+									response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));
+									if (response.status != 200) {
+										controllers.Application.alive = null;
+
+									} else {
+										controllers.Application.alive = new org.daisy.pipeline.client.models.Alive(response);
+										if ("desktop".equals(controllers.Application.deployment()))
+											Pipeline2Engine.setState(Pipeline2Engine.State.RUNNING);
+									}
+								} catch (Pipeline2WSException e) {
+									Logger.error(e.getMessage(), e);
+									controllers.Application.alive = null;
+								}
+							}
 						}
+						
 						try {
 							synchronized (NotificationConnection.notificationConnections) {
 								for (Long userId : NotificationConnection.notificationConnections.keySet()) {
@@ -119,25 +143,6 @@ public class Global extends GlobalSettings {
 										if (c.notifications.size() == 0) {
 	//										Logger.debug("*heartbeat* for user #"+userId+" and browser window #"+c.browserId);
 											c.push(new Notification("heartbeat", controllers.Application.getPipeline2EngineState()));
-										}
-									}
-									
-									// When starting the engine; check more often whether it is alive
-									if ("desktop".equals(controllers.Application.deployment()) && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING && Setting.get("dp2ws.endpoint") != null) {
-										Pipeline2WSResponse response;
-										try {
-											response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));
-											if (response.status != 200) {
-												controllers.Application.alive = null;
-												
-											} else {
-												controllers.Application.alive = new org.daisy.pipeline.client.models.Alive(response);
-												if ("desktop".equals(controllers.Application.deployment()))
-													Pipeline2Engine.setState(Pipeline2Engine.State.RUNNING);
-											}
-										} catch (Pipeline2WSException e) {
-											Logger.error(e.getMessage(), e);
-											controllers.Application.alive = null;
 										}
 									}
 								}
@@ -158,6 +163,8 @@ public class Global extends GlobalSettings {
 				new Runnable() {
 					public void run() {
 						try {
+							if (Administrator.shuttingDown != null) return;
+							
 							// unused uploads are deleted after one hour
 							Date timeoutDate = new Date(new Date().getTime() - 3600000L);
 							
@@ -198,6 +205,8 @@ public class Global extends GlobalSettings {
 				new Runnable() {
 					public void run() {
 						try {
+							if (Administrator.shuttingDown != null) return;
+							
 							String endpoint = Setting.get("dp2ws.endpoint");
 							if (endpoint == null)
 								return;

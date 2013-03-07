@@ -43,20 +43,28 @@ public class Pipeline2Engine {
 	
 	static Worker engine = null;
 	
-	/** Signals whether the error messages have been delivered to the user and it is safe to shut down the Web UI. */
-	public static boolean errorsDelivered = false;
+	/** True if we're shutting down. No engine will start while this is true. */
+	public static boolean shuttingDown = false;
 	
 	private Pipeline2Engine(){} // don't instantiate
 	
 	public static void start() {
 		if (engine != null)
 			halt();
-		setState(State.STARTING);
-		engine = executeCommandWithWorker(DP2_START, new File(cwd,"bin"));
+		if (!shuttingDown) {
+			setState(State.STARTING);
+			engine = executeCommandWithWorker(DP2_START, new File(cwd,"bin"));
+		}
+	}
+	
+	public static void shutdown() {
+		shuttingDown = true;
+		halt();
+		Logger.debug("halted...");
 	}
 	
 	public static void halt() {
-		if (engine != null) {
+		if (engine != null || !state.equals(State.STOPPED)) {
 			
 			// shut down through the /admin/halt API
 			try {
@@ -97,7 +105,8 @@ public class Pipeline2Engine {
 			}
 			
 			// shut down by killing the process
-			engine.process.destroy();
+			if (engine != null)
+				engine.process.destroy();
 		}
 		
 		engine = null;
@@ -241,9 +250,6 @@ public class Pipeline2Engine {
                 	else if ("TRACE".equals(streamType)) {
                 		errorStacktraces.add(line);
                 		while (errorStacktraces.size() > 100) errorStacktraces.remove(0);
-                		if (Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING) {
-                			NotificationConnection.pushAll(new Notification("engine.error.stacktrace", line));
-                		}
                 	}
                 }
                 
