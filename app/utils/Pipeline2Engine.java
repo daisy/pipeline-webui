@@ -134,7 +134,8 @@ public class Pipeline2Engine {
             this.process = process;
         }
 
-        public Integer getExitValue() {
+        @SuppressWarnings("unused")
+		public Integer getExitValue() {
             return exitValue;
         }
 

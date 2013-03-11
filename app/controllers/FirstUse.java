@@ -22,10 +22,28 @@ public class FirstUse extends Controller {
 		
 		if (isFirstUse()) {
 			if (!"desktop".equals(Application.deployment()) && !"server".equals(Application.deployment()))
+				// Application mode is not set
+				
 				return ok(views.html.FirstUse.setDeployment.render(form(Administrator.SetDeploymentForm.class)));
+			
 			else if ("server".equals(Application.deployment())) {
-				return ok(views.html.FirstUse.createAdmin.render(form(Administrator.CreateAdminForm.class)));
+				// Server mode
+				
+				if (User.find.where().eq("admin", true).findRowCount() == 0) {
+					return ok(views.html.FirstUse.createAdmin.render(form(Administrator.CreateAdminForm.class)));
+				}
+				
+				if (Setting.get("dp2ws.endpoint") == null) {
+					return ok(views.html.FirstUse.setWS.render(form(Administrator.SetWSForm.class)));
+				}
+				
+				if (Setting.get("uploads") == null) {
+					return ok(views.html.FirstUse.setStorageDirs.render(form(Administrator.SetUploadDirForm.class)));
+				}
+				
 			} else if ("desktop".equals(Application.deployment())) {
+				// Desktop mode
+				
 				User admin = User.find.where().eq("email", "email@example.com").findUnique();
 				if (admin == null) {
 					admin = new User("email@example.com", "Administrator", "password", true);
@@ -35,24 +53,17 @@ public class FirstUse extends Controller {
 				admin.save(Application.datasource);
 				admin.login(session());
 			}
+			
 		}
 		
 		User user = User.authenticate(request(), session());
 		if (user == null || !user.admin) {
-			return redirect(routes.Login.login());//loop
+			return redirect(routes.Login.login());
 		}
 		
 		if ("desktop".equals(Application.deployment()) && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING) {
 			user.flashBrowserId();
 			return ok(views.html.FirstUse.configureDP2.render(Pipeline2Engine.errorMessages));
-		}
-		
-		if (Setting.get("dp2ws.endpoint") == null) {
-			return ok(views.html.FirstUse.setWS.render(form(Administrator.SetWSForm.class)));
-		}
-		
-		if (Setting.get("uploads") == null) {
-			return ok(views.html.FirstUse.setStorageDirs.render(form(Administrator.SetUploadDirForm.class)));
 		}
 		
 		return redirect(routes.FirstUse.welcome());
@@ -174,7 +185,7 @@ public class FirstUse extends Controller {
 	 * @return
 	 */
 	public static boolean isFirstUse() {
-		return User.findAll().size() == 0 || "desktop".equals(Application.deployment()) && (Pipeline2Engine.cwd == null || !(Pipeline2Engine.State.RUNNING+"").equals(Pipeline2Engine.getState()));
+		return User.findAll().size() == 0 || Setting.get("dp2ws.endpoint") == null || Setting.get("uploads") == null || "desktop".equals(Application.deployment()) && (Pipeline2Engine.cwd == null || !Pipeline2Engine.State.RUNNING.equals(Pipeline2Engine.getState()));
 	}
 	
 	public static void configureDesktopDefaults() {
@@ -182,7 +193,7 @@ public class FirstUse extends Controller {
 		Setting.set("dp2ws.endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL);
 		Setting.set("dp2ws.authid", "");
 		Setting.set("dp2ws.secret", "");
-		Setting.set("dp2ws.tempDir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.temp" + controllers.Application.SLASH);
-		Setting.set("dp2ws.resultDir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.results" + controllers.Application.SLASH);
+		Setting.set("dp2ws.tempdir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.temp" + controllers.Application.SLASH);
+		Setting.set("dp2ws.resultdir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.results" + controllers.Application.SLASH);
 	}
 }

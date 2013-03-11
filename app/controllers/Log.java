@@ -21,7 +21,6 @@ import models.User;
 
 import play.Configuration;
 import play.mvc.*;
-import utils.Pipeline2Engine;
 
 public class Log extends Controller {
 	

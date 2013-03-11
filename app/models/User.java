@@ -6,8 +6,6 @@ import play.db.ebean.*;
 
 import javax.persistence.*;
 
-import com.avaje.ebean.ExpressionList;
-
 import controllers.Application;
 
 import java.util.*;

@@ -2,8 +2,13 @@ package controllers;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import org.daisy.pipeline.client.Pipeline2WSException;
+import org.daisy.pipeline.client.Pipeline2WSResponse;
 
 import akka.actor.Cancellable;
 import akka.util.Duration;
@@ -79,28 +84,43 @@ public class Administrator extends Controller {
         
         public String secret;
         
-        public String tempDir;
-        
-        public String resultDir;
-        
         public static void validate(Form<SetWSForm> filledForm) {
-        	if (filledForm.field("endpoint").valueOr("").equals(""))
-        		filledForm.reject("endpoint", "Invalid endpoint URL.");
-        }
+        	// Test endpoint
+        	Map<String,Object> statusMap = Alive.statusMap("probeEngine", filledForm.field("endpoint").valueOr(""));
+        	Object probeEngine = statusMap.get("probeEngine");
+        	if (!(
+        			   probeEngine instanceof Map && (Boolean)((Map<String,Object>)probeEngine).get("error") == Boolean.FALSE
+        			|| probeEngine instanceof org.daisy.pipeline.client.models.Alive && ((org.daisy.pipeline.client.models.Alive)probeEngine).error == Boolean.FALSE
+        		)) {
+        		String message = probeEngine instanceof Map ? ((Map<String,Object>)probeEngine).get("message")+"" : "Invalid endpoint URL.";
+        		filledForm.reject("endpoint", message);
+        	}
+        	
+        	// Test authentication
+        	Pipeline2WSResponse response;
+        	List<org.daisy.pipeline.client.models.Script> scripts;
+        	try {
+        	    response = org.daisy.pipeline.client.Scripts.get(filledForm.field("endpoint").valueOr(""), filledForm.field("authid").valueOr(""), filledForm.field("secret").valueOr(""));
+        	    if (response.status == 401) {
+        	    	filledForm.reject("authid", "Invalid authentication ID or secret text");
+        	    	filledForm.reject("secret", "Invalid authentication ID or secret text");
+        	    	
+        	    } else if (response.status != 200) {
+        	    	filledForm.reject("authid", "An error occured while authenticating.");
+        	    	filledForm.reject("secret", "An error occured while authenticating.");
+        	    }
 
+        	} catch (Pipeline2WSException e) {
+        		filledForm.reject("authid", "An error occured while authenticating; could not reach the Pipeline 2 Engine.");
+    	    	filledForm.reject("secret", "An error occured while authenticating; could not reach the Pipeline 2 Engine.");
+        	}
+        }
+        
 		public static void save(Form<SetWSForm> filledForm) {
 			Setting.set("dp2ws.endpoint", filledForm.field("endpoint").valueOr(""));
         	Setting.set("dp2ws.authid", filledForm.field("authid").valueOr(""));
         	if (Setting.get("dp2ws.secret") == null || !"".equals(filledForm.field("secret").value()))
         		Setting.set("dp2ws.secret", filledForm.field("secret").valueOr(""));
-        	String tempDir = filledForm.field("tempDir").valueOr("");
-        	String resultDir = filledForm.field("resultDir").valueOr("");
-        	if (tempDir.contains("/") && !tempDir.endsWith("/")) tempDir += "/";
-        	if (tempDir.contains("\\") && !tempDir.endsWith("\\")) tempDir += "\\";
-        	if (resultDir.contains("/") && !resultDir.endsWith("/")) resultDir += "/";
-        	if (resultDir.contains("\\") && !resultDir.endsWith("\\")) resultDir += "\\";
-        	Setting.set("dp2ws.tempDir", tempDir);
-        	Setting.set("dp2ws.resultDir", resultDir);
 		}
     }
 	
@@ -108,6 +128,12 @@ public class Administrator extends Controller {
 	public static class SetUploadDirForm {
         @Required
         public String uploaddir;
+        
+        @Required
+        public String tempdir;
+        
+        @Required
+        public String resultdir;
         
         public static void validate(Form<SetUploadDirForm> filledForm) {
         	String uploadPath = filledForm.field("uploaddir").valueOr("");
@@ -118,13 +144,41 @@ public class Administrator extends Controller {
         		filledForm.reject("uploaddir", "The directory does not exist.");
         	if (!dir.isDirectory())
         		filledForm.reject("uploaddir", "The path does not point to a directory.");
+        	
+        	String tempPath = filledForm.field("tempdir").valueOr("");
+        	if (!tempPath.endsWith(System.getProperty("file.separator")))
+        		tempPath += System.getProperty("file.separator");
+        	dir = new File(tempPath);
+        	if (!dir.exists())
+        		filledForm.reject("tempdir", "The directory does not exist.");
+        	if (!dir.isDirectory())
+        		filledForm.reject("tempdir", "The path does not point to a directory.");
+        	
+        	String resultPath = filledForm.field("resultdir").valueOr("");
+        	if (!resultPath.endsWith(System.getProperty("file.separator")))
+        		resultPath += System.getProperty("file.separator");
+        	dir = new File(resultPath);
+        	if (!dir.exists())
+        		filledForm.reject("resultdir", "The directory does not exist.");
+        	if (!dir.isDirectory())
+        		filledForm.reject("resultdir", "The path does not point to a directory.");
         }
-
+        
 		public static void save(Form<SetUploadDirForm> filledForm) {
 			String uploadPath = filledForm.field("uploaddir").valueOr("");
         	if (!uploadPath.endsWith(System.getProperty("file.separator")))
         		uploadPath += System.getProperty("file.separator");
         	Setting.set("uploads", uploadPath);
+        	
+        	String tempdir = filledForm.field("tempdir").valueOr("");
+        	if (tempdir.contains("/") && !tempdir.endsWith("/")) tempdir += "/";
+        	if (tempdir.contains("\\") && !tempdir.endsWith("\\")) tempdir += "\\";
+        	Setting.set("dp2ws.tempdir", tempdir);
+        	
+        	String resultdir = filledForm.field("resultdir").valueOr("");
+        	if (resultdir.contains("/") && !resultdir.endsWith("/")) resultdir += "/";
+        	if (resultdir.contains("\\") && !resultdir.endsWith("\\")) resultdir += "\\";
+        	Setting.set("dp2ws.resultdir", resultdir);
 		}
     }
 	
@@ -623,6 +677,7 @@ public class Administrator extends Controller {
 		if (shuttingDown != null)
 			return shuttingDown;
 		
+		Logger.debug("shutting down programatically in "+delay+" seconds");
 		shuttingDown = Akka.system().scheduler().scheduleOnce(
 				Duration.create(delay, TimeUnit.SECONDS),
 				new Runnable() {

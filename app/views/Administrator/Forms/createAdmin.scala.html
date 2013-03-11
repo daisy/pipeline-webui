@@ -1,4 +1,4 @@
-@(createAdminForm: Form[controllers.Administrator.CreateAdminForm], route: play.api.mvc.Call)
+@(createAdminForm: Form[controllers.Administrator.CreateAdminForm], route: play.api.mvc.Call, autofocus: Boolean)
 
 @helper.form(action = route) {
     
@@ -6,7 +6,7 @@
     
     <fieldset style="text-align:center;">
     	
-     	<div class="dp2-form @("error".when(createAdminForm.error("email") != null))">
+     	<div class="control-group dp2-form @("error".when(createAdminForm.error("email") != null))">
      		<div class="dp2-form-label">
      			<div class="dp2-form-content">
 					<label for="email" class="control-label">E-mail</label>
@@ -14,7 +14,7 @@
 			</div>
 			<div class="dp2-form-input">
 				<div class="dp2-form-content">
-					<input type="email" name="email" id="email" placeholder="Valid e-mail address required." class="input-xlarge" value="@createAdminForm.field("email").valueOr("")"/>
+					<input @if(autofocus){autofocus="autofocus"} type="email" name="email" id="email" placeholder="Valid e-mail address required." class="input-xlarge" value="@createAdminForm.field("email").valueOr("")"/>
 					@if(createAdminForm.field("email").errors().size() > 0){
 						@if(createAdminForm.error("email").message.startsWith("error.")){
 							<span class="help-inline">A valid e-mail address must be provided.</span>
@@ -27,7 +27,7 @@
 			<div class="dp2-form-br"></div>
 		</div>
 		
-		<div class="dp2-form @("error".when(createAdminForm.error("password") != null))">
+		<div class="control-group dp2-form @("error".when(createAdminForm.error("password") != null))">
 			<div class="dp2-form-label">
      			<div class="dp2-form-content">
      				<label for="password" class="control-label">Password</label>
@@ -44,7 +44,7 @@
 			<div class="dp2-form-br"></div>
 		</div>
 		
-		<div class="dp2-form @("error".when(createAdminForm.error("repeatPassword") != null))">
+		<div class="control-group dp2-form @("error".when(createAdminForm.error("repeatPassword") != null))">
 			<div class="dp2-form-label">
      			<div class="dp2-form-content">
      				<label for="repeatPassword" class="control-label">Repeat password</label>

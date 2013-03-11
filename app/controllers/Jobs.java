@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -235,11 +234,11 @@ public class Jobs extends Controller {
 		
 		if (Mode.LOCAL.equals(Application.alive.mode)) {
 			try {
-				File resultDir = new File(Setting.get("dp2ws.resultDir")+webuiJob.localDirName);
+				File resultdir = new File(Setting.get("dp2ws.resultdir")+webuiJob.localDirName);
 				File tempZip;
 				tempZip = File.createTempFile("dp2result", "zip");
-				Logger.info("zipping result directory: "+resultDir.getAbsolutePath());
-				Files.zip(resultDir, tempZip);
+				Logger.info("zipping result directory: "+resultdir.getAbsolutePath());
+				Files.zip(resultdir, tempZip);
 				
 				response().setHeader("Content-Disposition", "attachment; filename=\""+webuiJob.nicename.replaceAll("[^\\w ]","-").subSequence(0, webuiJob.nicename.length())+".zip\"");
 				response().setContentType("application/zip");
@@ -372,12 +371,12 @@ public class Jobs extends Controller {
 		String timeString = new Date().getTime()+"";
 		for (Argument arg : script.arguments) {
 			if ("result".equals(arg.output)) {
-				File href = new File(Setting.get("dp2ws.resultDir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
+				File href = new File(Setting.get("dp2ws.resultdir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
 				href.mkdirs();
 				arg.set(href.toURI().toString());
 				
 			} else if ("temp".equals(arg.output)) {
-				File href = new File(Setting.get("dp2ws.tempDir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
+				File href = new File(Setting.get("dp2ws.tempdir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
 				href.mkdirs();
 				arg.set(href.toURI().toString());
 			}
@@ -514,7 +513,7 @@ public class Jobs extends Controller {
 		}
 		
 		Map<String,String> callbacks = new HashMap<String,String>();
-		if (play.Play.isDev() && false) { // TODO: only in dev until the callback API is fully implemented
+		if (play.Play.isDev()) { // TODO: only in dev until the callback API is fully implemented
 			callbacks.put("messages", routes.Callbacks.postCallback("messages").absoluteURL(request()));
 			callbacks.put("status", routes.Callbacks.postCallback("status").absoluteURL(request()));
 		}

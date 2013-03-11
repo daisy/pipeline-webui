@@ -6,7 +6,7 @@
 	
    	<fieldset style="text-align:center;">
 		
-		<div class="dp2-form @("error".when(setStorageDirsForm.error("uploaddir") != null))" id="setStorageDirs-uploaddirGroup">
+		<div class="control-group dp2-form @("error".when(setStorageDirsForm.error("uploaddir") != null))" id="setStorageDirs-uploaddirGroup">
 			<div class="dp2-form-label">
      			<div class="dp2-form-content">
 					<label for="uploaddir" class="control-label">Upload directory</label>
@@ -18,16 +18,73 @@
 							value="@setStorageDirsForm.field("uploaddir").valueOr(if (Setting.get("uploads") != null) Setting.get("uploads") else System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"))"
 							onkeyup="if(@{models.Setting.get("uploads")==null} || this.value==='@models.Setting.get("uploads")')document.getElementById('setStorageDirs-uploaddirGroup').style.backgroundColor='#FFF';else document.getElementById('setStorageDirs-uploaddirGroup').style.backgroundColor='#DDF';"
 					/>
-					@if(models.Setting.get("uploads")==null){
-						<span class="help-inline">The upload directory is not set, a suggestion is provided.</span>
-					}
 					@if(setStorageDirsForm.field("uploaddir").errors().size() > 0){
 						@if(setStorageDirsForm.field("uploaddir").errors().get(0).message().startsWith("error.")){
-							<span class="help-inline">A valid filesystem path must be provided.</span>
+							<span class="help-block">A valid filesystem path must be provided.</span>
 						}else{
-							<span class="help-inline">@setStorageDirsForm.field("uploaddir").errors().get(0).message()</span>
+							<span class="help-block">@setStorageDirsForm.field("uploaddir").errors().get(0).message()</span>
 						}
 					}
+					@if(models.Setting.get("uploads")==null && setStorageDirsForm.field("uploaddir").value() == null){
+						<span class="help-block" style="color:black;">The upload directory is not set, a suggestion is provided.</span>
+					}
+					<span class="help-block" style="color:black;">This is where all uploaded files will be stored. The path refers to the filesystem that the Web UI runs on.</span>
+				</div>
+			</div>
+			<div class="dp2-form-br"></div>
+		</div>
+		
+		<div class="control-group dp2-form @("error".when(setStorageDirsForm.error("resultdir") != null))" id="setStorageDirs-resultdirGroup" style="display:none;">
+     		<div class="dp2-form-label">
+     			<div class="dp2-form-content">
+					<label for="tempdir" class="control-label">Result directory</label>
+				</div>
+			</div>
+			<div class="dp2-form-input">
+				<div class="dp2-form-content">
+					<input type="text" autocomplete="off" name="resultdir" id="setStorageDirs-resultdir" placeholder="Temporary directory path" class="input-xlarge"
+							value="@setStorageDirsForm.field("resultdir").valueOr(if (Setting.get("dp2ws.resultdir") != null) Setting.get("dp2ws.resultdir") else System.getProperty("user.dir") + System.getProperty("file.separator") + "local.results" + System.getProperty("file.separator"))"
+							onkeyup="if(@{models.Setting.get("dp2ws.resultdir")==null} || this.value==='@models.Setting.get("dp2ws.resultdir")')document.getElementById('setStorageDirs-resultdirGroup').style.backgroundColor='#FFF';else document.getElementById('setStorageDirs-resultdirGroup').style.backgroundColor='#DDF';"
+					/>
+					@if(setStorageDirsForm.field("resultdir").errors().size() > 0){
+						@if(setStorageDirsForm.field("resultdir").errors().get(0).message().startsWith("error.")){
+							<span class="help-block">A valid filesystem path must be provided.</span>
+						}else{
+							<span class="help-block">@setStorageDirsForm.field("resultdir").errors().get(0).message()</span>
+						}
+					}
+					@if(models.Setting.get("dp2ws.resultdir")==null && setStorageDirsForm.field("resultdir").value() == null){
+						<span class="help-block" style="color:black;">The result directory is not set, a suggestion is provided.</span>
+					}
+					<span class="help-block" style="color:black;">This is where the job results will be stored. The path refers to the filesystem that the Pipeline 2 Engine runs on.</span>
+				</div>
+			</div>
+			<div class="dp2-form-br"></div>
+		</div>
+		
+		<div class="control-group dp2-form @("error".when(setStorageDirsForm.error("tempdir") != null))" id="setStorageDirs-tempdirGroup" style="display:none;">
+     		<div class="dp2-form-label">
+     			<div class="dp2-form-content">
+					<label for="tempdir" class="control-label">Temporary directory</label>
+				</div>
+			</div>
+			<div class="dp2-form-input">
+				<div class="dp2-form-content">
+					<input type="text" autocomplete="off" name="tempdir" id="setStorageDirs-tempdir" placeholder="Temporary directory path" class="input-xlarge"
+							value="@setStorageDirsForm.field("tempdir").valueOr(if (Setting.get("dp2ws.tempdir") != null) Setting.get("dp2ws.tempdir") else System.getProperty("user.dir") + System.getProperty("file.separator") + "local.temp" + System.getProperty("file.separator"))"
+							onkeyup="if(@{models.Setting.get("dp2ws.tempdir")==null} || this.value==='@models.Setting.get("dp2ws.tempdir")')document.getElementById('setStorageDirs-tempdirGroup').style.backgroundColor='#FFF';else document.getElementById('setStorageDirs-tempdirGroup').style.backgroundColor='#DDF';"
+					/>
+					@if(setStorageDirsForm.field("tempdir").errors().size() > 0){
+						@if(setStorageDirsForm.field("tempdir").errors().get(0).message().startsWith("error.")){
+							<span class="help-block">A valid filesystem path must be provided.</span>
+						}else{
+							<span class="help-block">@setStorageDirsForm.field("tempdir").errors().get(0).message()</span>
+						}
+					}
+					@if(models.Setting.get("dp2ws.tempdir")==null && setStorageDirsForm.field("tempdir").value() == null){
+						<span class="help-block" style="color:black;">The result directory is not set, a suggestion is provided.</span>
+					}
+					<span class="help-block" style="color:black;">Most jobs will generate some temporary files, which will be stored in this directory. <!--The temporary files are deleted automatically when the job is finished.TODO--> The path refers to the filesystem that the Pipeline 2 Engine runs on.</span>
 				</div>
 			</div>
 			<div class="dp2-form-br"></div>
@@ -51,6 +108,13 @@
 		}else{
 			<button class="btn btn-primary" id="submit" type="submit" name="submit">Save Settings</button>
 		}
+		
+		<script type="text/javascript">
+			engine = @Html(play.libs.Json.toJson(controllers.Alive.statusMap("probeEngine",Setting.get("dp2ws.endpoint")).get("probeEngine"))+"")
+			if (engine.mode==="LOCAL") {
+				$("#setStorageDirs-resultdirGroup, #setStorageDirs-tempdirGroup").show(); 
+			}
+		</script>
 		
 	</fieldset>
 }

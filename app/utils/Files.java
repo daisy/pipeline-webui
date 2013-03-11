@@ -119,8 +119,9 @@ public class Files {
 	public static List<String> listZipFiles(File zipfile) {
 		List<String> files = new ArrayList<String>();
 		
+		ZipFile zip = null;
 		try {
-			ZipFile zip = new ZipFile(zipfile);
+			zip = new ZipFile(zipfile);
 			Enumeration<? extends ZipEntry> zipEntries = zip.entries();
 			
 			while (zipEntries.hasMoreElements()) {
@@ -128,9 +129,15 @@ public class Files {
 				if (!entry.isDirectory())
 					files.add(entry.getName());
 			}
-
+			
 		} catch (IOException e) {
-			e.printStackTrace();
+			Logger.error("Unable to list zip files", e);
+		} finally {
+			try {
+				zip.close();
+			} catch (IOException e) {
+				Logger.error("Unable to close zip stream", e);
+			}
 		}
 		
 		return files;
@@ -306,8 +313,9 @@ public class Files {
 		}
 		
 		ZipFile zipFile;
-		try { zipFile = new ZipFile(zip); }
-		catch (ZipException e) {
+		try {
+			zipFile = new ZipFile(zip);
+		} catch (ZipException e) {
 			Logger.error("Error while opening ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
 			throw e;
 		} catch (IOException e) {
@@ -362,6 +370,7 @@ public class Files {
 					is.close();
 				} catch (IOException e) {
 					Logger.error("Error while closing input stream from ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
+					fos.close();
 					throw e;
 				}
 				try {
@@ -373,6 +382,8 @@ public class Files {
             }
 			
 		}
+		
+		zipFile.close();
 	}
     
 	/**

@@ -1,7 +1,10 @@
 package models;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import play.db.ebean.Model;
 
 import javax.persistence.*;
@@ -27,8 +30,16 @@ public class Setting extends Model {
     
     public static Model.Finder<String,Setting> find = new Model.Finder<String, Setting>(Application.datasource, String.class, Setting.class);
     
+    @Transient
+    private static Map<String,String> cache = new HashMap<String,String>();
+    
     /** Get the value of a setting */
     public static String get(String name) {
+    	synchronized (cache) {
+    		if (cache.containsKey(name))
+        		return cache.get(name);
+		}
+    	
     	Setting setting = find.where().eq("name", name).findUnique();
     	if (setting == null)
     		return null;
@@ -54,6 +65,11 @@ public class Setting extends Model {
     		setting.delete(Application.datasource);
     	else
     		setting.save(Application.datasource);
-    }
+    	
+    	// Cache settings
+    	synchronized (cache) {
+    		cache.put(name, value);
+    	}
+   }
     
 }

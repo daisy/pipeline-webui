@@ -10,14 +10,15 @@ import java.util.concurrent.TimeUnit;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
+import org.daisy.pipeline.client.Pipeline2WSLogger;
 
 import controllers.Administrator;
 import controllers.FirstUse;
 
-import akka.actor.Cancellable;
 import akka.util.Duration;
 import play.libs.Akka;
 import utils.Pipeline2Engine;
+import utils.Pipeline2PlayLogger;
 
 public class Global extends GlobalSettings {
 	
@@ -28,6 +29,10 @@ public class Global extends GlobalSettings {
 	public synchronized void onStart(Application app) {
 		// Application has started...
 		final String datasource = Configuration.root().getString("dp2.datasource");
+		
+		Pipeline2WS.setLoggerImplementation(new Pipeline2PlayLogger());
+		if (Play.isDev())
+			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.DEBUG);
 		
 		NotificationConnection.notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>();
 		
@@ -59,9 +64,6 @@ public class Global extends GlobalSettings {
 		if (Setting.get("jobs.deleteAfterDuration") == null)
 			Setting.set("jobs.deleteAfterDuration", "0");
 		
-		if (Play.isDev())
-			Pipeline2WS.debug = true;
-		
 		Akka.system().scheduler().schedule(
 				Duration.create(0, TimeUnit.SECONDS),
 				Duration.create(10, TimeUnit.SECONDS),
@@ -71,7 +73,7 @@ public class Global extends GlobalSettings {
 							if (Setting.get("dp2ws.endpoint") == null)
 								return;
 							
-							if (Administrator.shuttingDown != null) {
+							if (Administrator.shuttingDown == null) {
 								Pipeline2WSResponse response;
 								try {
 									response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));
@@ -86,7 +88,7 @@ public class Global extends GlobalSettings {
 								} catch (Pipeline2WSException e) {
 									Logger.error(e.getMessage(), e);
 									controllers.Application.alive = null;
-							}
+								}
 							}
 						} catch (javax.persistence.PersistenceException e) {
 							// Ignores this exception that happens on shutdown:
@@ -108,7 +110,7 @@ public class Global extends GlobalSettings {
 							}
 							
 							// When starting the engine; check more often whether it is alive
-							if (Administrator.shuttingDown != null && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING && Setting.get("dp2ws.endpoint") != null) {
+							if (Administrator.shuttingDown == null && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING && Setting.get("dp2ws.endpoint") != null) {
 								Pipeline2WSResponse response;
 								try {
 									response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));

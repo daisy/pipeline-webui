@@ -6,7 +6,8 @@
 	
 	  	<div class="page-header">
 	  		<hgroup>
-	       		<h1>Set the temporary directory for uploads</h1>
+	       		<h1 class="showin-localMode" style="display:none;">Set the storage directories</h1>
+	       		<h1 class="showin-remoteMode">Set the directory for uploads</h1>
 	       	</hgroup>
 	    </div>
 	    
@@ -24,12 +25,24 @@
 	        </div>
 	    }
 	    
-	    <div class="alert alert-info">
-	    	<p>Depending on the number of users and the type of usage (especially when producing audio books), this file storage area may grow large. Please make sure that you have enough free space on your file system.</p>
+	    <div>
+	    	<p class="showin-localMode">Depending on the number of users and the type of usage (especially when producing audio books), the file storage areas may grow large. Please make sure that you have enough free space on your file system.</p>
+	    	<p class="showin-remoteMode">Depending on the number of users and the type of usage (especially when producing audio books), the upload directory may grow large. Please make sure that you have enough free space on your file system.</p>
 	  	</div>
+	  	<hr/>
 	    
 		@views.html.Administrator.Forms.setStorageDirs(setStorageDirsForm, routes.FirstUse.postFirstUse(), routes.Application.index())
-	
+		
+		<script type="text/javascript">
+			if (engine.mode==="LOCAL") {
+				$(".showin-localMode").show();
+				$(".showin-remoteMode").hide(); 
+			} else {
+				$(".showin-localMode").hide();
+				$(".showin-remoteMode").show(); 
+			}
+		</script>
+		
 	</div>
 	
 }

@@ -69,7 +69,8 @@ GET     /assets/*file                       controllers.Assets.at(path="/public"
 
 # Application
 GET     /alive                              controllers.Alive.alive()
+GET     /status                             controllers.Alive.status()
 
 # Log
-GET		/log								controllers.Log.getLog(shutdown: Integer ?= 0)
+GET		/log								controllers.Log.getLog(shutdown: java.lang.Integer ?= 0)
 

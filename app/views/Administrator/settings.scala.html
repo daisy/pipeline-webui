@@ -95,7 +95,7 @@
 	<section id="pipeline2WebServiceEndpoint" class="tab-pane @("active".when(Controller.flash("settings.formName")=="setWS"))">
 		<h2>Pipeline 2 Web API endpoint</h2>
 		<br/>
-	  	@views.html.Administrator.Forms.setWS(forms.setWSForm, routes.Administrator.postSettings(), null)
+	  	@views.html.Administrator.Forms.setWS(forms.setWSForm, routes.Administrator.postSettings(), null, Controller.flash("settings.formName")=="setWS")
 	</section>
 	
 	<section id="temporaryDirectoryForUploads" class="tab-pane @("active".when(Controller.flash("settings.formName")=="setStorageDirs"))">

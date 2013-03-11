@@ -1,12 +1,14 @@
-@(setWSForm: Form[controllers.Administrator.SetWSForm], route: play.api.mvc.Call, skipRoute: play.api.mvc.Call)
+@(setWSForm: Form[controllers.Administrator.SetWSForm], route: play.api.mvc.Call, skipRoute: play.api.mvc.Call, autofocus: Boolean)
 
 @helper.form(action = route) {
 	
 	<input type="hidden" name="formName" value="setWS"/>
     
     <fieldset style="text-align:center;">
+    
+		<div id="setWS-defaultEndpoints"></div>
     	
-      	<div class="dp2-form @("error".when(setWSForm.error("endpoint") != null))" id="setWS-endpointGroup">
+      	<div class="control-group dp2-form @("error".when(setWSForm.error("endpoint") != null))" id="setWS-endpointGroup">
      		<div class="dp2-form-label">
      			<div class="dp2-form-content">
 					<label for="endpoint" class="control-label">Address</label>
@@ -14,19 +16,115 @@
 			</div>
 			<div class="dp2-form-input">
 				<div class="dp2-form-content">
-					<input type="text" name="endpoint" id="setWS-endpoint" placeholder="URL" class="input-xlarge"
-							value="@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "http://localhost:8182/ws")"
+					<input @if(autofocus){autofocus="autofocus"} type="text" name="endpoint" id="setWS-endpoint" placeholder="URL" class="input-xlarge"
+							value="@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "")"
 							onkeyup="if(@{models.Setting.get("dp2ws.endpoint")==null} || this.value==='@models.Setting.get("dp2ws.endpoint")')document.getElementById('setWS-endpointGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-endpointGroup').style.backgroundColor='#DDF';"
 					/>
-					@if(setWSForm.field("endpoint").errors().size() > 0){
-						<span class="help-inline">A valid URL must be provided.</span>
-					}
+					<img id="setWS-endpoint-success" src="@routes.Assets.at("images/DONE.png")" alt="" style="padding-top: 8px;margin-top:0px;vertical-align:top;display:none;"/>
+					<div id="setWS-URLtester" class="help-block">
+						<span id="setWS-URLtester-message">@if(setWSForm.field("endpoint").errors().size() > 0){A valid URL must be provided.}</span>
+						<script type="text/javascript">
+							tried = {
+								"@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "")": @Html(play.libs.Json.toJson(controllers.Alive.statusMap("probeEngine",setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else ""))).get("probeEngine")+"")
+							};
+							tried["@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "")"].time = new Date().getTime();
+							defaults = {
+								"http://localhost:8181/ws": {time:0},
+								"http://localhost:8182/ws": {time:0}
+							};
+							$(function(){
+								setInterval(function(){
+									var url = $("#setWS-endpoint")[0].value;
+									if (url !== "" && (typeof tried[url] === "undefined" || new Date().getTime() - tried[url].time > 30000)) {
+										$("#setWS-URLtester-message").html("Testing URL...");
+										$("#setWS-URLtester-message").css("color","black");
+										$("#setWS-URLtester-message").data("url",url);
+										$("#setWS-endpointGroup").removeClass("success");
+										$("#setWS-endpoint-success").hide();
+										$("#setWS-URLtester-message").data("success",false);
+										$.getJSON("@routes.Alive.status()?probeEngine="+encodeURIComponent(url), function(data,textStatus,jqXHR){
+											tried[data["probeEngine.url"]] = data["probeEngine"];
+										});
+										setWS_updateWidgets(null);
+									}
+									if (url !== "" && typeof tried[url] !== "undefined" && typeof $("#setWS-URLtester-message").data("success") !== "undefined") {
+										if (tried[url].error) {
+											$("#setWS-URLtester-message").html(tried[url].message);
+											$("#setWS-URLtester-message").css("color","black");
+											$("#setWS-URLtester-message").data("url",url);
+											$("#setWS-endpointGroup").removeClass("success");
+											$("#setWS-endpoint-success").hide();
+											$("#setWS-URLtester-message").data("success",false);
+											setWS_updateWidgets(null);
+										} else {
+											if (!$("#setWS-URLtester-message").data("success")) {
+												$("#setWS-URLtester-message").html("A Pipeline 2 Engine version "+tried[url].version+" is running at the given URL. It is running in "+(tried[url].mode==="LOCAL"?"local":"server")+" mode and "+(tried[url].authentication?"requires":"does not require")+" authentication.");
+												$("#setWS-URLtester-message").css("color","");
+												$("#setWS-URLtester-message").data("url",url);
+												$("#setWS-endpointGroup").removeClass("error").addClass("success");
+												$("#setWS-endpoint-success").show();
+												$("#setWS-URLtester-message").data("success",true);
+												setWS_updateWidgets(tried[url]);
+											}
+										}
+									}
+									
+									for (url in defaults) {
+										if (new Date().getTime() - defaults[url].time > 30000) {
+											defaults[url].time = new Date().getTime();
+											$.getJSON("@routes.Alive.status()?probeEngine="+encodeURIComponent(url), function(data,textStatus,jqXHR){
+												defaults[data["probeEngine.url"]] = data["probeEngine"];
+												if (data.probeEngine.error === false) {
+													var p = $("#setWS-defaultEndpoints > p").filter(function(i){
+														return $(this).data("url") === data["probeEngine.url"];
+													})[0];
+													if (typeof p === "undefined") {
+														p = $("<p></p>");
+														$("#setWS-defaultEndpoints").append(p);
+													}
+													var newP = $(
+														'<p>'+
+														'	A Pipeline 2 Engine is running at <code>'+data["probeEngine.url"]+'</code>.'+
+														'	&nbsp; <a class="btn btn-primary" onclick="document.getElementById(\'setWS-endpoint\').value=\''+data["probeEngine.url"]+'\';$(this).hide(400);return false;">Use it</a>'+
+														'</p>'
+													);
+													$(newP).data("url",data["probeEngine.url"]);
+													$(p).replaceWith(newP);
+												}
+											});
+											break;
+										}
+									}
+									$("#setWS-defaultEndpoints > p").each(function(i,e){
+										if ($(this).data("url") !== $("#setWS-endpoint")[0].value)
+											$(this).find("a.btn").show(400);
+										else
+											$(this).find("a.btn").hide(400);
+									});
+									
+								},1000);
+							});
+							$(function(){
+								setWS_updateWidgets(tried["@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "")"]);
+							});
+							function setWS_updateWidgets(engine) {
+								if (engine === null || engine.error || !engine.authentication) {
+									$("#setWS-secretGroup").hide(400);
+									setTimeout(function(){$("#setWS-authidGroup").hide(400);},400);
+								} else {
+									$("#setWS-authidGroup").show(400);
+									setTimeout(function(){$("#setWS-secretGroup").show(400);},400);
+								}
+							}
+							
+						</script>
+					</div>
 				</div>
 			</div>
 			<div class="dp2-form-br"></div>
 		</div>
 		
-		<div class="dp2-form @("error".when(setWSForm.error("authid") != null))" id="setWS-authidGroup">
+		<div class="control-group dp2-form @("error".when(setWSForm.error("authid") != null))" id="setWS-authidGroup" style="display:none;">
      		<div class="dp2-form-label">
      			<div class="dp2-form-content">
 					<label for="authid" class="control-label">Authentication ID</label>
@@ -41,13 +139,16 @@
 					@if(setWSForm.field("authid").errors().size() > 0){
 						<span class="help-inline">A valid authentication id must be provided.</span>
 					}
-					<span class="help-block">When communicating with the Pipeline engine, the Web UI needs to authenticate. This authentication id is not to be confused with the user accounts listed under "Users and Permissions".</span>
+					<p class="help-block">This Pipeline 2 Engine requires authentication. The authentication ID is not to be confused with the user accounts in the Web UI.</p>
+					<p class="help-block">The authentication ID and secret token were configured during the installation of the Pipeline engine.
+	  		   			To learn more about Pipeline 2's Web API authentication, please refer to the
+	  		   			<a href="http://code.google.com/p/daisy-pipeline/wiki/UserGuideIntro" target="_blank">Pipeline 2 User Guide</a>.</p>
 				</div>
 			</div>
 			<div class="dp2-form-br"></div>
 		</div>
 		
-		<div class="dp2-form @("error".when(setWSForm.error("secret") != null))" id="setWS-secretGroup">
+		<div class="control-group dp2-form @("error".when(setWSForm.error("secret") != null))" id="setWS-secretGroup" style="display:none;">
      		<div class="dp2-form-label">
      			<div class="dp2-form-content">
 					<label for="secret" class="control-label">Secret token</label>
@@ -62,49 +163,7 @@
 					@if(setWSForm.field("secret").errors().size() > 0){
 						<span class="help-inline">A valid secret token must be provided.</span>
 					}
-					<span class="help-block">The password corresponding to the authentication id.</span>
-				</div>
-			</div>
-			<div class="dp2-form-br"></div>
-		</div>
-		
-		<div class="dp2-form @("error".when(setWSForm.error("resultDir") != null))" id="setWS-resultDirGroup">
-     		<div class="dp2-form-label">
-     			<div class="dp2-form-content">
-					<label for="tempDir" class="control-label">Result directory</label>
-				</div>
-			</div>
-			<div class="dp2-form-input">
-				<div class="dp2-form-content">
-					<input type="text" autocomplete="off" name="resultDir" id="setWS-resultDir" placeholder="Temporary directory path" class="input-xlarge"
-							value="@setWSForm.field("resultDir").valueOr(if (Setting.get("dp2ws.resultDir") != null) Setting.get("dp2ws.resultDir") else System.getProperty("user.dir") + System.getProperty("file.separator") + "local.results" + System.getProperty("file.separator"))"
-							onkeyup="if(@{models.Setting.get("dp2ws.resultDir")==null} || this.value==='@models.Setting.get("dp2ws.resultDir")')document.getElementById('setWS-resultDirGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-resultDirGroup').style.backgroundColor='#DDF';"
-					/>
-					@if(setWSForm.field("resultDir").errors().size() > 0){
-						<span class="help-inline">A valid result directory path must be provided.</span>
-					}
-					<span class="help-block">If Pipeline 2 is running in local mode then you need to provide a filesystem path where the results (the output of a job) will be stored. The path is relative to the filesystem of the Pipeline engine which might be different than the filesystem of the Web UI if the Pipeline engine and the Web UI are running on different servers. <em>If Pipeline 2 is running in remote mode you can ignore this setting.</em></span>
-				</div>
-			</div>
-			<div class="dp2-form-br"></div>
-		</div>
-		
-		<div class="dp2-form @("error".when(setWSForm.error("tempDir") != null))" id="setWS-tempDirGroup">
-     		<div class="dp2-form-label">
-     			<div class="dp2-form-content">
-					<label for="tempDir" class="control-label">Temporary directory</label>
-				</div>
-			</div>
-			<div class="dp2-form-input">
-				<div class="dp2-form-content">
-					<input type="text" autocomplete="off" name="tempDir" id="setWS-tempDir" placeholder="Temporary directory path" class="input-xlarge"
-							value="@setWSForm.field("tempDir").valueOr(if (Setting.get("dp2ws.tempDir") != null) Setting.get("dp2ws.tempDir") else System.getProperty("user.dir") + System.getProperty("file.separator") + "local.temp" + System.getProperty("file.separator"))"
-							onkeyup="if(@{models.Setting.get("dp2ws.tempDir")==null} || this.value==='@models.Setting.get("dp2ws.tempDir")')document.getElementById('setWS-tempDirGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-tempDirGroup').style.backgroundColor='#DDF';"
-					/>
-					@if(setWSForm.field("tempDir").errors().size() > 0){
-						<span class="help-inline">A valid temporary directory path must be provided.</span>
-					}
-					<span class="help-block">This is a directory similar to the temporary directory above, but are used for temporary files. Jobs may need to store some temporary files here while running. The temporary files are deleted automatically when the job is finished. This directory is also relative to the Pipeline engines filesystem. <em>If Pipeline 2 is running in remote mode you can ignore this setting.</em></span>
+					<span class="help-block">The secret token corresponding to the authentication ID.</span>
 				</div>
 			</div>
 			<div class="dp2-form-br"></div>
