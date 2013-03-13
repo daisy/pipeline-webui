@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.codehaus.jackson.JsonNode;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 
@@ -63,6 +64,7 @@ public class Administrator extends Controller {
 		@Constraints.MinLength(6)
 		public String password;
 		
+		@Constraints.Required
 		@Constraints.MinLength(6)
 		public String repeatPassword;
 		
@@ -73,6 +75,8 @@ public class Administrator extends Controller {
 			if (!filledForm.field("password").valueOr("").equals("") && !filledForm.field("password").valueOr("").equals(filledForm.field("repeatPassword").value()))
 				filledForm.reject("repeatPassword", "Password doesn't match.");
 		}
+		
+//		public static JsonNode validateJson()
 	}
 	
 	public final static Form<SetWSForm> setWSForm = form(SetWSForm.class);
@@ -98,7 +102,6 @@ public class Administrator extends Controller {
         	
         	// Test authentication
         	Pipeline2WSResponse response;
-        	List<org.daisy.pipeline.client.models.Script> scripts;
         	try {
         	    response = org.daisy.pipeline.client.Scripts.get(filledForm.field("endpoint").valueOr(""), filledForm.field("authid").valueOr(""), filledForm.field("secret").valueOr(""));
         	    if (response.status == 401) {

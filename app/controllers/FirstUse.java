@@ -1,7 +1,11 @@
 package controllers;
 
+import java.util.Map;
+
+import play.Logger;
 import play.mvc.*;
 import play.data.*;
+import utils.FormHelper;
 import utils.Pipeline2Engine;
 import models.*;
 
@@ -82,7 +86,10 @@ public class FirstUse extends Controller {
 	}
 	
 	public static Result postFirstUse() {
-		String formName = request().body().asFormUrlEncoded().containsKey("formName") ? request().body().asFormUrlEncoded().get("formName")[0] : "";
+		Map<String, String[]> query = request().queryString();
+		Map<String, String[]> form = request().body().asFormUrlEncoded();
+		
+		String formName = form.containsKey("formName") ? form.get("formName")[0] : "";
 		
 		if ("setDeployment".equals(formName)) {
 			if (!isFirstUse())
@@ -91,28 +98,15 @@ public class FirstUse extends Controller {
 			Form<Administrator.SetDeploymentForm> filledForm = form(Administrator.SetDeploymentForm.class).bindFromRequest();
 			Administrator.SetDeploymentForm.validate(filledForm);
 			
+			if (query.containsKey("validate"))
+				return ok(FormHelper.asJson(filledForm));
+			
 			if (filledForm.hasErrors()) {
 				return badRequest(views.html.FirstUse.setDeployment.render(filledForm));
 			
 			} else {
 				String deployment = filledForm.field("deployment").valueOr("unknown");
 				Setting.set("deployment", deployment);
-				
-				if ("desktop".equals(deployment)) {
-					User admin = new User("email@example.com", "Administrator", "password", true);
-					admin.save(Application.datasource);
-					admin.login(session());
-					
-					// Set some default configuration options
-					Setting.set("users.guest.name", "Guest");
-					Setting.set("users.guest.allowGuests", "true");
-					Setting.set("users.guest.showGuestName", "false");
-					Setting.set("users.guest.showEmailBox", "false");
-					Setting.set("users.guest.shareJobs", "true");
-					Setting.set("users.guest.automaticLogin", "true");
-					Setting.set("mail.enable", "false");
-					Setting.set("uploads", System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"));
-				}
 				
 				return redirect(routes.FirstUse.getFirstUse());
 			}
@@ -124,6 +118,9 @@ public class FirstUse extends Controller {
 			
 			Form<Administrator.CreateAdminForm> filledForm = form(Administrator.CreateAdminForm.class).bindFromRequest();
 			Administrator.CreateAdminForm.validate(filledForm);
+			
+			if (query.containsKey("validate"))
+				return ok(FormHelper.asJson(filledForm,new String[]{"password","repeatPassword"}));
 			
 			if (filledForm.hasErrors()) {
 				return badRequest(views.html.FirstUse.createAdmin.render(filledForm));
@@ -155,6 +152,9 @@ public class FirstUse extends Controller {
 			Form<Administrator.SetWSForm> filledForm = form(Administrator.SetWSForm.class).bindFromRequest();
 			Administrator.SetWSForm.validate(filledForm);
 			
+			if (query.containsKey("validate"))
+				return ok(FormHelper.asJson(filledForm));
+			
 			if (filledForm.hasErrors()) {
 	        	return badRequest(views.html.FirstUse.setWS.render(filledForm));
 	        	
@@ -167,6 +167,9 @@ public class FirstUse extends Controller {
 		if ("setStorageDirs".equals(formName)) {
 			Form<Administrator.SetUploadDirForm> filledForm = form(Administrator.SetUploadDirForm.class).bindFromRequest();
 			Administrator.SetUploadDirForm.validate(filledForm);
+			
+			if (query.containsKey("validate"))
+				return ok(FormHelper.asJson(filledForm));
 			
 			if(filledForm.hasErrors()) {
 	        	return badRequest(views.html.FirstUse.setStorageDirs.render(filledForm));
