@@ -1,6 +1,6 @@
-@(setStorageDirsForm: Form[controllers.Administrator.SetUploadDirForm])
+@(setStorageDirsForm: Form[controllers.Administrator.SetStorageDirsForm])
 
-@main("First use", "", Array(), Array(), Array()){
+@main("First use"){
 	
 	<div class="horizontally-centered">
 	
@@ -27,20 +27,29 @@
 	    
 	    <div>
 	    	<p class="showin-localMode">Depending on the number of users and the type of usage (especially when producing audio books), the file storage areas may grow large. Please make sure that you have enough free space on your file system.</p>
-	    	<p class="showin-remoteMode">Depending on the number of users and the type of usage (especially when producing audio books), the upload directory may grow large. Please make sure that you have enough free space on your file system.</p>
+	    	<p class="showin-remoteMode" style="display:none;">Depending on the number of users and the type of usage (especially when producing audio books), the upload directory may grow large. Please make sure that you have enough free space on your file system.</p>
 	  	</div>
 	  	<hr/>
 	    
-		@views.html.Administrator.Forms.setStorageDirs(setStorageDirsForm, routes.FirstUse.postFirstUse(), routes.Application.index())
+		@views.html.Administrator.Forms.setStorageDirs(setStorageDirsForm, routes.FirstUse.postFirstUse(), null, true)
 		
 		<script type="text/javascript">
-			if (engine.mode==="LOCAL") {
-				$(".showin-localMode").show();
-				$(".showin-remoteMode").hide(); 
-			} else {
-				$(".showin-localMode").hide();
-				$(".showin-remoteMode").show(); 
+			function firstUseSetStorageDirsOnEngineUpdate(engine) {
+				if (typeof engine !== "object" || engine === null)
+					return;
+				if (engine.mode==="LOCAL") {
+					$(".showin-localMode").show();
+					$(".showin-remoteMode").hide();
+				} else {
+					$(".showin-remoteMode").show();
+					$(".showin-localMode").hide();
+				}
 			}
+			firstUseSetStorageDirsOnEngineUpdate(@Html(play.libs.Json.toJson(controllers.Application.getAlive())+""));
+			$(function(){
+				Notifications.listen("dp2.engine", firstUseSetStorageDirsOnEngineUpdate);
+			});
+
 		</script>
 		
 	</div>

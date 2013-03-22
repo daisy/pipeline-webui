@@ -39,6 +39,13 @@
 			document.write(unescape("%3Cscript src='@routes.Assets.at("javascripts/jquery-1.9.1.min.js")' type='text/javascript'%3E%3C/script%3E"));
 		}
 	</script>
+	
+	<script type="text/javascript" charset="utf-8">
+	$(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
+	@if(play.Play.application().isDev()){
+		$(function(){Notifications.debug=true;DP2Forms.debug=true;});
+	}
+	</script>
   </head>
 	
   <body class="body" data-spy="scroll" data-target=".subnav" data-offset="50">
@@ -121,6 +128,9 @@
 	<script src="@routes.Assets.at("javascripts/bootstrap.min.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
 	<script src="@routes.Assets.at("javascripts/json2.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
 	<script src="@routes.Assets.at("javascripts/main.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
+	<script src="@routes.Assets.at("javascripts/formUtils.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
+	<script src="@routes.Assets.at("javascripts/notifications.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
+	<script src="@routes.Assets.at("javascripts/fuzzyDates.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
 	@for(script <- moreScripts) {
 		<script src="@routes.Assets.at("javascripts/"+script)?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
 	}

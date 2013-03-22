@@ -1,6 +1,6 @@
 @(setWSForm: Form[controllers.Administrator.SetWSForm], route: play.api.mvc.Call, skipRoute: play.api.mvc.Call, autofocus: Boolean)
 
-@helper.form(action = route) {
+@helper.form(action = route, 'id -> "setWS-form") {
 	
 	<input type="hidden" name="formName" value="setWS"/>
     
@@ -18,107 +18,11 @@
 				<div class="dp2-form-content">
 					<input @if(autofocus){autofocus="autofocus"} type="text" name="endpoint" id="setWS-endpoint" placeholder="URL" class="input-xlarge"
 							value="@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "")"
-							onkeyup="if(@{models.Setting.get("dp2ws.endpoint")==null} || this.value==='@models.Setting.get("dp2ws.endpoint")')document.getElementById('setWS-endpointGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-endpointGroup').style.backgroundColor='#DDF';"
 					/>
-					<img id="setWS-endpoint-success" src="@routes.Assets.at("images/DONE.png")" alt="" style="padding-top: 8px;margin-top:0px;vertical-align:top;display:none;"/>
-					<div id="setWS-URLtester" class="help-block">
-						<span id="setWS-URLtester-message">@if(setWSForm.field("endpoint").errors().size() > 0){A valid URL must be provided.}</span>
-						<script type="text/javascript">
-							tried = {
-								"@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "")": @Html(play.libs.Json.toJson(controllers.Alive.statusMap("probeEngine",setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else ""))).get("probeEngine")+"")
-							};
-							tried["@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "")"].time = new Date().getTime();
-							defaults = {
-								"http://localhost:8181/ws": {time:0},
-								"http://localhost:8182/ws": {time:0}
-							};
-							$(function(){
-								setInterval(function(){
-									var url = $("#setWS-endpoint")[0].value;
-									if (url !== "" && (typeof tried[url] === "undefined" || new Date().getTime() - tried[url].time > 30000)) {
-										$("#setWS-URLtester-message").html("Testing URL...");
-										$("#setWS-URLtester-message").css("color","black");
-										$("#setWS-URLtester-message").data("url",url);
-										$("#setWS-endpointGroup").removeClass("success");
-										$("#setWS-endpoint-success").hide();
-										$("#setWS-URLtester-message").data("success",false);
-										$.getJSON("@routes.Alive.status()?probeEngine="+encodeURIComponent(url), function(data,textStatus,jqXHR){
-											tried[data["probeEngine.url"]] = data["probeEngine"];
-										});
-										setWS_updateWidgets(null);
-									}
-									if (url !== "" && typeof tried[url] !== "undefined" && typeof $("#setWS-URLtester-message").data("success") !== "undefined") {
-										if (tried[url].error) {
-											$("#setWS-URLtester-message").html(tried[url].message);
-											$("#setWS-URLtester-message").css("color","black");
-											$("#setWS-URLtester-message").data("url",url);
-											$("#setWS-endpointGroup").removeClass("success");
-											$("#setWS-endpoint-success").hide();
-											$("#setWS-URLtester-message").data("success",false);
-											setWS_updateWidgets(null);
-										} else {
-											if (!$("#setWS-URLtester-message").data("success")) {
-												$("#setWS-URLtester-message").html("A Pipeline 2 Engine version "+tried[url].version+" is running at the given URL. It is running in "+(tried[url].mode==="LOCAL"?"local":"server")+" mode and "+(tried[url].authentication?"requires":"does not require")+" authentication.");
-												$("#setWS-URLtester-message").css("color","");
-												$("#setWS-URLtester-message").data("url",url);
-												$("#setWS-endpointGroup").removeClass("error").addClass("success");
-												$("#setWS-endpoint-success").show();
-												$("#setWS-URLtester-message").data("success",true);
-												setWS_updateWidgets(tried[url]);
-											}
-										}
-									}
-									
-									for (url in defaults) {
-										if (new Date().getTime() - defaults[url].time > 30000) {
-											defaults[url].time = new Date().getTime();
-											$.getJSON("@routes.Alive.status()?probeEngine="+encodeURIComponent(url), function(data,textStatus,jqXHR){
-												defaults[data["probeEngine.url"]] = data["probeEngine"];
-												if (data.probeEngine.error === false) {
-													var p = $("#setWS-defaultEndpoints > p").filter(function(i){
-														return $(this).data("url") === data["probeEngine.url"];
-													})[0];
-													if (typeof p === "undefined") {
-														p = $("<p></p>");
-														$("#setWS-defaultEndpoints").append(p);
-													}
-													var newP = $(
-														'<p>'+
-														'	A Pipeline 2 Engine is running at <code>'+data["probeEngine.url"]+'</code>.'+
-														'	&nbsp; <a class="btn btn-primary" onclick="document.getElementById(\'setWS-endpoint\').value=\''+data["probeEngine.url"]+'\';$(this).hide(400);return false;">Use it</a>'+
-														'</p>'
-													);
-													$(newP).data("url",data["probeEngine.url"]);
-													$(p).replaceWith(newP);
-												}
-											});
-											break;
-										}
-									}
-									$("#setWS-defaultEndpoints > p").each(function(i,e){
-										if ($(this).data("url") !== $("#setWS-endpoint")[0].value)
-											$(this).find("a.btn").show(400);
-										else
-											$(this).find("a.btn").hide(400);
-									});
-									
-								},1000);
-							});
-							$(function(){
-								setWS_updateWidgets(tried["@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "")"]);
-							});
-							function setWS_updateWidgets(engine) {
-								if (engine === null || engine.error || !engine.authentication) {
-									$("#setWS-secretGroup").hide(400);
-									setTimeout(function(){$("#setWS-authidGroup").hide(400);},400);
-								} else {
-									$("#setWS-authidGroup").show(400);
-									setTimeout(function(){$("#setWS-secretGroup").show(400);},400);
-								}
-							}
-							
-						</script>
-					</div>
+					<p class="help-block">
+						<img id="setWS-endpointHelpLoading" src="@routes.Assets.at("images/loading-inline.gif")" alt="" style="display:none;"/>
+						<span id="setWS-endpointHelp"></span>
+					</p>
 				</div>
 			</div>
 			<div class="dp2-form-br"></div>
@@ -134,13 +38,13 @@
 				<div class="dp2-form-content">
 					<input type="text" autocomplete="off" name="authid" id="setWS-authid" placeholder="Authentication ID" class="input-xlarge"
 							value="@setWSForm.field("authid").valueOr(models.Setting.get("dp2ws.authid"))"
-							onkeyup="if(@{models.Setting.get("dp2ws.authid")==null} || this.value==='@models.Setting.get("dp2ws.authid")')document.getElementById('setWS-authidGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-authidGroup').style.backgroundColor='#DDF';"
 					/>
-					@if(setWSForm.field("authid").errors().size() > 0){
-						<span class="help-inline">A valid authentication id must be provided.</span>
-					}
-					<p class="help-block">This Pipeline 2 Engine requires authentication. The authentication ID is not to be confused with the user accounts in the Web UI.</p>
-					<p class="help-block">The authentication ID and secret token were configured during the installation of the Pipeline engine.
+					<p class="help-block">
+						<img id="setWS-authidHelpLoading" src="@routes.Assets.at("images/loading-inline.gif")" alt="" style="display:none;"/>
+						<span id="setWS-authidHelp"></span>
+					</p>
+					<p class="help-block" style="color:black;">This Pipeline 2 Engine requires authentication. The authentication ID is not to be confused with the user accounts in the Web UI.</p>
+					<p class="help-block" style="color:black;">The authentication ID and secret token were configured during the installation of the Pipeline engine.
 	  		   			To learn more about Pipeline 2's Web API authentication, please refer to the
 	  		   			<a href="http://code.google.com/p/daisy-pipeline/wiki/UserGuideIntro" target="_blank">Pipeline 2 User Guide</a>.</p>
 				</div>
@@ -158,12 +62,12 @@
 				<div class="dp2-form-content">
 					<input type="password" autocomplete="off" name="secret" id="setWS-secret" value=""
 							placeholder="@if(models.Setting.get("dp2ws.secret")==null){Secret token}else{**********}" class="input-xlarge"
-							onkeyup="if(@{models.Setting.get("dp2ws.secret")==null} || this.value==='')document.getElementById('setWS-secretGroup').style.backgroundColor='#FFF';else document.getElementById('setWS-secretGroup').style.backgroundColor='#DDF';"
 					/>
-					@if(setWSForm.field("secret").errors().size() > 0){
-						<span class="help-inline">A valid secret token must be provided.</span>
-					}
-					<span class="help-block">The secret token corresponding to the authentication ID.</span>
+					<p class="help-block">
+						<img id="setWS-secretHelpLoading" src="@routes.Assets.at("images/loading-inline.gif")" alt="" style="display:none;"/>
+						<span id="setWS-secretHelp"></span>
+					</p>
+					<p class="help-block" style="color:black;">The secret token corresponding to the authentication ID.</p>
 				</div>
 			</div>
 			<div class="dp2-form-br"></div>
@@ -174,19 +78,96 @@
 			<div class="split">
 	     		<div class="split-left">
 	     			<div class="split-content" style="text-align:right;">
-						<button class="btn btn-primary" id="submit" type="submit" name="submit">Save and Continue</button>
+						<button class="btn btn-primary" id="setWS-submit" type="submit" name="submit">Save and Continue</button>
 					</div>
 				</div>
 				<div class="split-right">
 					<div class="split-content" style="text-align:left;">
-						<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Administrator.getSettings()';return false;">Skip Configuration <i class="icon-hand-right"></i></button>
+						<button class="btn" id="setWS-skip" type="button" name="skip" onclick="window.location='@routes.Administrator.getSettings()';return false;">Skip Configuration <i class="icon-hand-right"></i></button>
 					</div>
 				</div>
 				<div class="split-br"></div>
 			</div>
 		}else{
-			<button class="btn btn-primary" id="submit" type="submit" name="submit">Save and Continue</button>
+			<button class="btn btn-primary" id="setWS-submit" type="submit" name="submit">Save and Continue</button>
 		}
+		
+		<script type="text/javascript">
+			defaults = {
+				"http://localhost:8181/ws": {time:0},
+				"http://localhost:8182/ws": {time:0}
+			};
+			$(function(){
+				@if(play.Play.application().isDev()){DP2Forms.debug=true;}
+				
+				DP2Forms.startValidation("setWS", "@routes.FirstUse.postFirstUse()?validate", ["endpoint","authid","secret"]);
+				DP2Forms.validateAsTextField("setWS", "endpoint", "@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "")");
+				DP2Forms.validateAsTextField("setWS", "authid", "@setWSForm.field("authid").valueOr(if (Setting.get("dp2ws.authid")!=null) Setting.get("dp2ws.authid") else "")");
+				DP2Forms.validateAsTextField("setWS", "secret", "");
+				DP2Forms.disableButtonOnErrors("setWS", "submit");
+				
+				DP2Forms.onValidationReport("setWS", function(form, data){
+					var engine = form.data.engine !== undefined ? $.parseJSON(form.data.engine) : undefined;
+					
+					// endpoint success message
+					if (typeof engine !== "undefined" && typeof form.errors["endpoint"] === "undefined") {
+						var text = "A Pipeline 2 Engine version "+engine.version+" is running at the given URL. It is running in "+(engine.mode==="LOCAL"?"local":"server")+" mode and "+(engine.authentication?"requires":"does not require")+" authentication.";
+						$("#setWS-endpoint").data("messages",[text]);
+					}
+					
+					// show/hide authentication input fields
+					if (typeof engine === "undefined" || engine.error || !engine.authentication) {
+						$("#setWS-secretGroup").hide(400);
+						setTimeout(function(){$("#setWS-authidGroup").hide(400);},400);
+					} else {
+						$("#setWS-authidGroup").show(400);
+						setTimeout(function(){$("#setWS-secretGroup").show(400);},400);
+					}
+				});
+				
+				setInterval(function(){
+					for (url in defaults) {
+						if (new Date().getTime() - defaults[url].time > 30000) {
+							defaults[url].time = new Date().getTime();
+							$.ajax({
+								dataType: "json",
+								url: "@routes.SystemStatus.engineStatus()?url="+encodeURIComponent(url),
+								success: function(data,textStatus,jqXHR){
+											var url = this.url;
+											defaults[url] = data;
+											if (data.error === false) {
+												var p = $("#setWS-defaultEndpoints > p").filter(function(i){
+													return $(this).data("url") === url;
+												})[0];
+												if (typeof p === "undefined") {
+													p = $("<p></p>");
+													$("#setWS-defaultEndpoints").append(p);
+												}
+												var newP = $(
+													'<p>'+
+													'	A Pipeline 2 Engine is running at <code>'+url+'</code>.'+
+													'	&nbsp; <a class="btn btn-primary" onclick="$(\'#setWS-endpoint\')[0].value=\''+url+'\';$(\'#setWS-endpoint\').change();$(this).hide(400);return false;">Use it</a>'+
+													'</p>'
+												);
+												$(newP).data("url",url);
+												$(p).replaceWith(newP);
+											}
+										},
+								context: {url:url}
+							});
+							break;
+						}
+					}
+					$("#setWS-defaultEndpoints > p").each(function(i,e){
+						if ($(this).data("url") !== $("#setWS-endpoint")[0].value)
+							$(this).find("a.btn").show(400);
+						else
+							$(this).find("a.btn").hide(400);
+					});
+					
+				},1000);
+			});
+		</script>
 		
 	</fieldset>
 

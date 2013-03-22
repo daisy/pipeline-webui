@@ -115,10 +115,10 @@ public class User extends Model {
 		this.password = Crypto.sign(password);
 	}
 	
-	public Long flashBrowserId() {
+	public static Long flashBrowserId(User user) {
 		Long browserId = new Random().nextLong();
-		NotificationConnection.createBrowserIfAbsent(id, browserId);
-		Logger.debug("Browser: user #"+id+" opened browser window #"+browserId);
+		NotificationConnection.createBrowserIfAbsent(user.id, browserId);
+		Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
 		Controller.flash("browserId",""+browserId);
 		return browserId;
 	}

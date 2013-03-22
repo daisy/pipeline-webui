@@ -78,16 +78,16 @@ public class Global extends GlobalSettings {
 								try {
 									response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));
 									if (response.status != 200) {
-										controllers.Application.alive = null;
+										controllers.Application.setAlive(null);
 										
 									} else {
-										controllers.Application.alive = new org.daisy.pipeline.client.models.Alive(response);
+										controllers.Application.setAlive(new org.daisy.pipeline.client.models.Alive(response));
 										if ("desktop".equals(controllers.Application.deployment()))
 											Pipeline2Engine.setState(Pipeline2Engine.State.RUNNING);
 									}
 								} catch (Pipeline2WSException e) {
 									Logger.error(e.getMessage(), e);
-									controllers.Application.alive = null;
+									controllers.Application.setAlive(null);
 								}
 							}
 						} catch (javax.persistence.PersistenceException e) {
@@ -115,16 +115,16 @@ public class Global extends GlobalSettings {
 								try {
 									response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));
 									if (response.status != 200) {
-										controllers.Application.alive = null;
+										controllers.Application.setAlive(null);
 
 									} else {
-										controllers.Application.alive = new org.daisy.pipeline.client.models.Alive(response);
+										controllers.Application.setAlive(new org.daisy.pipeline.client.models.Alive(response));
 										if ("desktop".equals(controllers.Application.deployment()))
 											Pipeline2Engine.setState(Pipeline2Engine.State.RUNNING);
 									}
 								} catch (Pipeline2WSException e) {
 									Logger.error(e.getMessage(), e);
-									controllers.Application.alive = null;
+									controllers.Application.setAlive(null);
 								}
 							}
 						}

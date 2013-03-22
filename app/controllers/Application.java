@@ -4,6 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
+import org.daisy.pipeline.client.models.Alive;
+
+import models.Notification;
+import models.NotificationConnection;
 import models.Setting;
 import models.User;
 import play.Configuration;
@@ -20,7 +24,7 @@ public class Application extends Controller {
 	public static final String SLASH = System.getProperty("file.separator");
 	
 	public static final String datasource = Configuration.root().getString("dp2.datasource");
-	public static org.daisy.pipeline.client.models.Alive alive = null;
+	private static Alive alive = null;
 	
 	public static final String version = Configuration.root().getString("version");
 	
@@ -39,6 +43,8 @@ public class Application extends Controller {
 		if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());
 		
+		User user = User.authenticate(request(), session());
+		User.flashBrowserId(user);
 		return ok(views.html.about.render());
 	}
 	
@@ -75,6 +81,8 @@ public class Application extends Controller {
 	}
 	
 	public static Result error(int status, String name, String description, String message) {
+		User user = User.authenticate(request(), session());
+		User.flashBrowserId(user);
 		return status(status, views.html.error.render(status, name, description, message));
 	}
 	
@@ -106,5 +114,14 @@ public class Application extends Controller {
 			return Pipeline2Engine.State.STOPPED+"";
 		
 		return Pipeline2Engine.State.RUNNING+"";
+	}
+	
+	public static Alive getAlive() {
+		return alive;
+	}
+	
+	public static void setAlive(Alive alive) {
+		Application.alive = alive;
+		NotificationConnection.pushAll(new Notification("dp2.engine", alive));
 	}
 }

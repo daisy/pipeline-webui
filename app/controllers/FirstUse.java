@@ -2,7 +2,6 @@ package controllers;
 
 import java.util.Map;
 
-import play.Logger;
 import play.mvc.*;
 import play.data.*;
 import utils.FormHelper;
@@ -24,25 +23,37 @@ public class FirstUse extends Controller {
 	 */
 	public static Result getFirstUse() {
 		
+		User user = null;
+		
 		if (isFirstUse()) {
-			if (!"desktop".equals(Application.deployment()) && !"server".equals(Application.deployment()))
+			if (!"desktop".equals(Application.deployment()) && !"server".equals(Application.deployment())) {
 				// Application mode is not set
 				
+				User.flashBrowserId(user);
 				return ok(views.html.FirstUse.setDeployment.render(form(Administrator.SetDeploymentForm.class)));
 			
-			else if ("server".equals(Application.deployment())) {
+			} else if ("server".equals(Application.deployment())) {
 				// Server mode
 				
 				if (User.find.where().eq("admin", true).findRowCount() == 0) {
+					User.flashBrowserId(user);
 					return ok(views.html.FirstUse.createAdmin.render(form(Administrator.CreateAdminForm.class)));
 				}
 				
+				// require authentication to complete the rest of the first use wizard
+				user = User.authenticate(request(), session());
+				if (user == null || !user.admin) {
+					return redirect(routes.Login.login());
+				}
+				
 				if (Setting.get("dp2ws.endpoint") == null) {
+					User.flashBrowserId(user);
 					return ok(views.html.FirstUse.setWS.render(form(Administrator.SetWSForm.class)));
 				}
 				
 				if (Setting.get("uploads") == null) {
-					return ok(views.html.FirstUse.setStorageDirs.render(form(Administrator.SetUploadDirForm.class)));
+					User.flashBrowserId(user);
+					return ok(views.html.FirstUse.setStorageDirs.render(form(Administrator.SetStorageDirsForm.class)));
 				}
 				
 			} else if ("desktop".equals(Application.deployment())) {
@@ -60,13 +71,13 @@ public class FirstUse extends Controller {
 			
 		}
 		
-		User user = User.authenticate(request(), session());
+		user = User.authenticate(request(), session());
 		if (user == null || !user.admin) {
 			return redirect(routes.Login.login());
 		}
 		
 		if ("desktop".equals(Application.deployment()) && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING) {
-			user.flashBrowserId();
+			User.flashBrowserId(user);
 			return ok(views.html.FirstUse.configureDP2.render(Pipeline2Engine.errorMessages));
 		}
 		
@@ -81,7 +92,7 @@ public class FirstUse extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 
-		user.flashBrowserId();
+		User.flashBrowserId(user);
 		return ok(views.html.FirstUse.welcome.render());
 	}
 	
@@ -98,10 +109,12 @@ public class FirstUse extends Controller {
 			Form<Administrator.SetDeploymentForm> filledForm = form(Administrator.SetDeploymentForm.class).bindFromRequest();
 			Administrator.SetDeploymentForm.validate(filledForm);
 			
-			if (query.containsKey("validate"))
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(null);
 				return ok(FormHelper.asJson(filledForm));
 			
-			if (filledForm.hasErrors()) {
+			} else if (filledForm.hasErrors()) {
+				User.flashBrowserId(null);
 				return badRequest(views.html.FirstUse.setDeployment.render(filledForm));
 			
 			} else {
@@ -119,10 +132,12 @@ public class FirstUse extends Controller {
 			Form<Administrator.CreateAdminForm> filledForm = form(Administrator.CreateAdminForm.class).bindFromRequest();
 			Administrator.CreateAdminForm.validate(filledForm);
 			
-			if (query.containsKey("validate"))
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(null);
 				return ok(FormHelper.asJson(filledForm,new String[]{"password","repeatPassword"}));
 			
-			if (filledForm.hasErrors()) {
+			} else if (filledForm.hasErrors()) {
+				User.flashBrowserId(null);
 				return badRequest(views.html.FirstUse.createAdmin.render(filledForm));
 			
 			} else {
@@ -152,10 +167,12 @@ public class FirstUse extends Controller {
 			Form<Administrator.SetWSForm> filledForm = form(Administrator.SetWSForm.class).bindFromRequest();
 			Administrator.SetWSForm.validate(filledForm);
 			
-			if (query.containsKey("validate"))
-				return ok(FormHelper.asJson(filledForm));
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(user);
+				return ok(FormHelper.asJson(filledForm,new String[]{"authid","secret"}));
 			
-			if (filledForm.hasErrors()) {
+			} if (filledForm.hasErrors()) {
+				User.flashBrowserId(user);
 	        	return badRequest(views.html.FirstUse.setWS.render(filledForm));
 	        	
 	        } else {
@@ -165,17 +182,19 @@ public class FirstUse extends Controller {
 		}
 		
 		if ("setStorageDirs".equals(formName)) {
-			Form<Administrator.SetUploadDirForm> filledForm = form(Administrator.SetUploadDirForm.class).bindFromRequest();
-			Administrator.SetUploadDirForm.validate(filledForm);
+			Form<Administrator.SetStorageDirsForm> filledForm = form(Administrator.SetStorageDirsForm.class).bindFromRequest();
+			Administrator.SetStorageDirsForm.validate(filledForm);
 			
-			if (query.containsKey("validate"))
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(user);
 				return ok(FormHelper.asJson(filledForm));
 			
-			if(filledForm.hasErrors()) {
+			} else if (filledForm.hasErrors()) {
+				User.flashBrowserId(user);
 	        	return badRequest(views.html.FirstUse.setStorageDirs.render(filledForm));
 	        	
 	        } else {
-	        	Administrator.SetUploadDirForm.save(filledForm);
+	        	Administrator.SetStorageDirsForm.save(filledForm);
 	        	return redirect(routes.FirstUse.getFirstUse());
 	        }
 		}

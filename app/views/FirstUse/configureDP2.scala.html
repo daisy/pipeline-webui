@@ -1,10 +1,6 @@
 @(errorMessages: List[String])
 
-@main("Starting Pipeline 2", "", Array("notifications.js"), Array(), Array()){
-
-<script type="text/javascript" charset="utf-8">
-$(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
-</script>
+@main("Starting Pipeline 2", "", Array(), Array(), Array()){
 
 <div class="page-header">
   <hgroup>

@@ -25,8 +25,12 @@ public class Login extends Controller {
      * Login page.
      */
     public static Result login() {
-    	if (FirstUse.isFirstUse())
-    		return redirect(routes.FirstUse.getFirstUse());//loop
+    	if (FirstUse.isFirstUse()) {
+    		if ("server".equals(Application.deployment()) && User.find.where().eq("admin", true).findRowCount() > 0);
+    			// Server mode and admin exists; require login
+    		else
+    			return redirect(routes.FirstUse.getFirstUse());
+    	}
     	
     	if ("desktop".equals(Application.deployment())) {
 			User.find.where().eq("admin", true).findUnique().login(session());
@@ -34,7 +38,8 @@ public class Login extends Controller {
 		}
     	
     	User.parseUserId(session());
-    	
+    	User user = User.authenticate(request(), session());
+    	User.flashBrowserId(user);
 		return ok(views.html.Login.login.render(form(LoginForm.class)));
     }
     
@@ -46,6 +51,7 @@ public class Login extends Controller {
         
     	User user = User.authenticateUnencrypted(loginForm.field("email").valueOr(""), loginForm.field("password").valueOr(""), session());
         if (loginForm.hasErrors()) {
+        	User.flashBrowserId(user);
             return badRequest(views.html.Login.login.render(loginForm));
         } else {
         	user.login(Controller.session());
@@ -57,8 +63,10 @@ public class Login extends Controller {
      * Handle login form submission for guest logins.
      */
     public static Result authenticateGuest() {
-    	if (!"true".equals(models.Setting.get("users.guest.allowGuests")))
+    	if (!"true".equals(models.Setting.get("users.guest.allowGuests"))) {
+    		User.flashBrowserId(null);
     		return badRequest(views.html.Login.login.render(form(LoginForm.class)));
+    	}
     	
     	User.loginAsGuest(Controller.session());
     	
@@ -71,10 +79,12 @@ public class Login extends Controller {
     	
     	if ("".equals(email)) {
     		flash("error", "You must enter an e-mail address.");
+    		User.flashBrowserId(user);
     		return badRequest(views.html.Login.login.render(form(LoginForm.class)));
     		
     	} else if (user == null) {
     		flash("error", "There is no user using that e-mail address; did you type it correctly?");
+    		User.flashBrowserId(user);
     		return badRequest(views.html.Login.login.render(form(LoginForm.class)));
     		
     	} else {
@@ -87,6 +97,7 @@ public class Login extends Controller {
 				flash("success", "An e-mail has been sent to "+email+" with further instructions. Please check your e-mail.");
 			else
 				flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
+			User.flashBrowserId(user);
     		return ok(views.html.Login.login.render(form(LoginForm.class)));
     	}
     }

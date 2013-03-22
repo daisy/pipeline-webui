@@ -1,14 +1,13 @@
 @(frameworkState: String)
 
 @main("Scripts", "scripts", 
-Array("jquery-ui-1.9.2.custom.min.js","jquery.ui.widget.js","jquery.iframe-transport.js","jquery.fileupload.js","jquery.fileupload-ui.js","notifications.js","createJob.js"),
+Array("jquery-ui-1.9.2.custom.min.js","jquery.ui.widget.js","jquery.iframe-transport.js","jquery.fileupload.js","jquery.fileupload-ui.js","createJob.js"),
 Array("jquery-ui-1.10.0.custom.css","jquery.fileupload-ui.css")){
 
 <script type="text/javascript" charset="utf-8">
 @if(play.Play.application().isDev()){
 	$(function(){Job.debug = true;});
 }
-$(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
 </script>
 
 <style type="text/css">

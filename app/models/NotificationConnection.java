@@ -107,7 +107,7 @@ public class NotificationConnection {
 	public static void pushAdmins(Notification notification) {
 		synchronized (notificationConnections) {
 			for (Long userId : notificationConnections.keySet()) {
-				User user = User.findById(userId);
+				User user = userId == null ? null : User.findById(userId);
 				if (user != null && user.admin)
 					for (NotificationConnection connection : notificationConnections.get(userId))
 						connection.push(notification);
@@ -118,7 +118,7 @@ public class NotificationConnection {
 	public static void pushPublic(Notification notification) {
 		synchronized (notificationConnections) {
 			for (Long userId : notificationConnections.keySet())
-				if (userId < 0)
+				if (userId != null && userId < 0)
 					for (NotificationConnection connection : notificationConnections.get(userId))
 						connection.push(notification);
 		}
@@ -126,7 +126,7 @@ public class NotificationConnection {
 	
 	public static void pushJobNotification(Long userId, Notification notification) {
 		NotificationConnection.pushAdmins(notification);
-		if (userId < 0 && "true".equals(Setting.get("users.guest.shareJobs"))) {
+		if (userId != null && userId < 0 && "true".equals(Setting.get("users.guest.shareJobs"))) {
 				NotificationConnection.pushPublic(notification); // push to all public users
 		} else {
 			NotificationConnection.push(userId, notification); // push to current user only
@@ -158,7 +158,7 @@ public class NotificationConnection {
 		Logger.debug("pushing message to user #"+userId+" (browser #"+browserId+"): "+notification.toString());
 		synchronized (notificationConnections) {
 			if (!notificationConnections.containsKey(userId)) {
-				Logger.debug("Can't push notification to user #"+userId+": no such user connected.");
+//				Logger.debug("Can't push notification to user #"+userId+": no such user connected.");
 				return;
 			}
 			

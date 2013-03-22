@@ -101,7 +101,7 @@
 	<section id="temporaryDirectoryForUploads" class="tab-pane @("active".when(Controller.flash("settings.formName")=="setStorageDirs"))">
 		<h2>Temporary directory for uploads</h2>
 		<br/>
-		@views.html.Administrator.Forms.setStorageDirs(forms.setStorageDirsForm, routes.Administrator.postSettings(), null)
+		@views.html.Administrator.Forms.setStorageDirs(forms.setStorageDirsForm, routes.Administrator.postSettings(), null, Controller.flash("settings.formName")=="setStorageDirs")
 	</section>
 	
 	<section id="eMailSettings" class="tab-pane @("active".when(Controller.flash("settings.formName")=="configureEmail"))">

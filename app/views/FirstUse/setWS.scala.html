@@ -1,6 +1,6 @@
 @(setWSForm: Form[controllers.Administrator.SetWSForm])
 
-@main("First use", "", Array(), Array(), Array()){
+@main("First use"){
 	
 	<div class="horizontally-centered">
 		
@@ -31,7 +31,7 @@
 	  	</div>
 	  	<hr/>
 	  	
-	  	@views.html.Administrator.Forms.setWS(setWSForm, routes.FirstUse.postFirstUse(), routes.Application.index(), true)
+	  	@views.html.Administrator.Forms.setWS(setWSForm, routes.FirstUse.postFirstUse(), null, true)
 		
 	</div>
 

@@ -233,7 +233,7 @@ public class Log extends Controller {
 	/** Helper function to create main headline in the plaintext logs */
 	private static String h1(String title) {
 		String time = "Time: "+df.format(new Date());
-		String engineVersion = "Pipeline 2 Engine Version: "+(Application.alive == null ? "unknown" : Application.alive.version);
+		String engineVersion = "Pipeline 2 Engine Version: "+(Application.getAlive() == null ? "unknown" : Application.getAlive().version);
 		String webuiVersion = "Pipeline 2 Web UI Version: "+Application.version;
 		int width = Math.max(title.length(), Math.max(time.length(), Math.max(engineVersion.length(), webuiVersion.length())));
 		while (title.length() < width) title += " ";

@@ -22,7 +22,7 @@ import play.mvc.*;
 
 public class Scripts extends Controller {
 
-		public static Result getScriptsJson() {
+	public static Result getScriptsJson() {
 		if (FirstUse.isFirstUse())
 			return unauthorized("unauthorized");
 
@@ -119,7 +119,7 @@ public class Scripts extends Controller {
 			}
 		}
 
-		user.flashBrowserId();
+		User.flashBrowserId(user);
 		return ok(views.html.Scripts.getScript.render(script, uploadFiles, hasAdvancedOptions, hideAdvancedOptions, mediaTypeBlacklist));
 	}
 	

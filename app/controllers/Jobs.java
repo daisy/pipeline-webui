@@ -47,7 +47,7 @@ public class Jobs extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 
-		user.flashBrowserId();
+		User.flashBrowserId(user);
 		return ok(views.html.Jobs.newJob.render(Application.getPipeline2EngineState()));
 	}
 	
@@ -62,7 +62,7 @@ public class Jobs extends Controller {
 		if (user.admin)
 			flash("showOwner", "true");
 		
-		user.flashBrowserId();
+		User.flashBrowserId(user);
 		return ok(views.html.Jobs.getJobs.render());
 	}
 	
@@ -146,8 +146,9 @@ public class Jobs extends Controller {
 		if (!(	user.admin
 			||	webuiJob.user.equals(user.id)
 			||	webuiJob.user < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
-				))
+				)) {
 			return forbidden("You are not allowed to view this job.");
+		}
 		
 		webuiJob.status = job.status.toString();
 		webuiJob.messages = job.messages;
@@ -159,7 +160,7 @@ public class Jobs extends Controller {
 			Job.lastStatus.put(job.id, job.status);
 		}
 		
-		user.flashBrowserId();
+		User.flashBrowserId(user);
 		return ok(views.html.Jobs.getJob.render(job, webuiJob));
 	}
 	
@@ -232,7 +233,7 @@ public class Jobs extends Controller {
 					))
 				return forbidden("You are not allowed to view this job.");
 		
-		if (Mode.LOCAL.equals(Application.alive.mode)) {
+		if (Mode.LOCAL.equals(Application.getAlive().mode)) {
 			try {
 				File resultdir = new File(Setting.get("dp2ws.resultdir")+webuiJob.localDirName);
 				File tempZip;
@@ -455,7 +456,7 @@ public class Jobs extends Controller {
 				}
 			}
 			
-			if (Mode.LOCAL.equals(Application.alive.mode)) {
+			if (Mode.LOCAL.equals(Application.getAlive().mode)) {
 				Logger.debug("Running the Web UI and fwk on the same filesystem, no need to ZIP files...");
 				for (Argument arg : script.arguments) {
 					if (arg.output != null) {
@@ -586,7 +587,6 @@ public class Jobs extends Controller {
 				flash("error", "Was unable to send the e-mail.");
 		}
 		
-//		return getJob(jobId);
 		return redirect(controllers.routes.Jobs.getJob(jobId));
 	}
 	

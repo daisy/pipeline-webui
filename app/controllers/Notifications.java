@@ -15,9 +15,6 @@ public class Notifications extends Controller {
 	 * Handle WebSocket pushing.
 	 */
 	public static WebSocket<JsonNode> websocket(Long browserId) {
-		if (FirstUse.isFirstUse() && "server".equals(Application.deployment()))
-    		return null; // forbidden
-		
 		User user = User.authenticate(request(), session());
 		if (user == null)
 			return null; // forbidden
@@ -30,9 +27,6 @@ public class Notifications extends Controller {
 	 * @return
 	 */
 	public static Result xhr(Long browserId) {
-		if (FirstUse.isFirstUse() && "server".equals(Application.deployment()))
-			return forbidden();
-		
 		User user = User.authenticate(request(), session());
 		if (user == null)
 			return forbidden();

@@ -30,6 +30,7 @@ public class Account extends Controller {
 		if (user == null || user.id < 0)
 			return redirect(routes.Login.login());
     	
+		User.flashBrowserId(user);
 		return ok(views.html.Account.overview.render(form(User.class)));
 	}
 	
@@ -93,6 +94,7 @@ public class Account extends Controller {
 			return redirect(routes.Account.overview());
 			
 		} else if (filledForm.hasErrors()) {
+			User.flashBrowserId(user);
         	return badRequest(views.html.Account.overview.render(filledForm));
         	
         } else {
@@ -126,9 +128,12 @@ public class Account extends Controller {
 		if (user == null || user.id < 0)
 			return redirect(routes.Login.login());
 		
-		if (resetUid == null || !resetUid.equals(user.getActivationUid()))
+		if (resetUid == null || !resetUid.equals(user.getActivationUid())) {
+			User.flashBrowserId(user);
 			return forbidden();
+		}
 		
+		User.flashBrowserId(user);
 		return ok(views.html.Account.resetPassword.render(form(User.class), email, resetUid, user.active));
 	}
 	
@@ -162,6 +167,7 @@ public class Account extends Controller {
     		filledForm.reject("repeatPassword", "Password doesn't match.");
         
         if (filledForm.hasErrors()) {
+        	User.flashBrowserId(user);
         	return badRequest(views.html.Account.resetPassword.render(filledForm, email, resetUid, user.active));
         	
         } else {

@@ -30,8 +30,8 @@
 
 <div class="well">
 	<em>Pipeline 2 Web UI version: @Application.version</em><br/>
-	@if(Application.alive!=null){
-		<em>Pipeline 2 Engine version: @Application.alive.version</em>
+	@if(Application.getAlive()!=null){
+		<em>Pipeline 2 Engine version: @@Application.getAlive().version</em>
 	}
 </div>
 

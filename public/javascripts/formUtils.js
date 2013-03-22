@@ -1,18 +1,20 @@
 DP2Forms = {
+	debug: false,
+
 	forms: [],
 	validators: {},
 	listeners: {},
 	lastReport: {},
 
 	onValidationReport: function(formName, listener, data) {
-		console.log("adding event listener for validation of "+formName);
+		if (DP2Forms.debug) console.log("adding event listener for validation of "+formName);
 		if (!$.isArray(DP2Forms.listeners[formName])) DP2Forms.listeners[formName] = new Array();
 		DP2Forms.listeners[formName].push({ fn: listener, data: data});
 		if (typeof DP2Forms.lastReport[formName] !== "undefined") listener(lastReport[formName],data);
 	},
 
 	startValidation: function(formName, url, fields) {
-		console.log("starting validation of "+formName);
+		if (DP2Forms.debug) console.log("starting validation of "+formName);
 		DP2Forms.forms.push(formName);
 		DP2Forms.validators[formName] = {
 			url: url,
@@ -21,10 +23,31 @@ DP2Forms = {
 			lastValidationRequestTime: 0,
 			interval: setInterval(DP2Forms._scheduleValidation, 5000, formName)
 		};
+		for (var f in fields) {
+			var fieldName = fields[f];
+			var field = $("#"+formName+"-"+fieldName);
+			field.data("validationValue", field[0].value);
+			field.data("lastValueChange", 0);
+			field.data("messages", []);
+			field.data("messagesText", "");
+			field.data("initial", "");
+			field.data("state", "");
+			field.data("lastValidationPause", 0);
+
+			var group = $("#"+formName+"-"+fieldName+"Group");
+			if (group.hasClass("error")) {
+				field.data("state", "error");
+				field.data("initial",null);
+			} else if (group.hasClass("success")) {
+				field.data("state", "success");
+				field.data("initial",null);
+			}
+		}
+		setTimeout(DP2Forms._scheduleValidation, 500, formName);
 	},
 
 	stopValidation: function(formName) {
-		console.log("stopping validation of "+formName);
+		if (DP2Forms.debug) console.log("stopping validation of "+formName);
 		DP2Forms.forms.splice($.inArray(formName,DP2Forms.forms),1)
 		clearInterval(DP2Forms.validators[formName]);
 		DP2Forms.validators.splice($.inArray(formName,DP2Forms.validators),1)
@@ -38,36 +61,16 @@ DP2Forms = {
 			field: field,
 			initial: initial
 		};
+		if ($("#"+formName+"-"+field).data("initial") !== null)
+			$("#"+formName+"-"+field).data("initial",initial);
 		$("#"+formName+"-"+field).on('change keyup', data, function(event){
-			$(this).data("text", $(this)[0].value);
 			DP2Forms._scheduleValidation(formName);
-			if ($(this).data("text") !== $(this)[0].value) {
-				setTimeout(function(event){
-					if (new Date().getTime() - DP2Forms.validators[event.data.formName].lastValidation >= 1000) {
-						console.log("text in form field "+event.data.field+" changed; showing loading animation");
-						$("#"+event.data.formName+"-"+event.data.field+"Group").removeClass("success error");
-						$("#"+event.data.formName+"-"+event.data.field+"Help").html("");
-						$("#"+event.data.formName+"-"+event.data.field+"HelpLoading").show();
-					}
-				},1000,event);
-			}
+		});
+		$("#"+formName+"-"+field).on('focus', data, function(event){
+			$(this).data("initial",null);
 		});
 		DP2Forms.onValidationReport(formName, function(form, data){
-			for (var p in DP2Forms.validators[form.data.formName].fields) {
-				var field = DP2Forms.validators[form.data.formName].fields[p];
-				console.log("report for form field "+field+" received; hiding loading animation");
-				$("#"+form.data.formName+"-"+field+"HelpLoading").hide();
-				if ($("#"+form.data.formName+"-"+field)[0].value === data.initial) {
-					$("#"+form.data.formName+"-"+field+"Group").removeClass("error success");
-					$("#"+form.data.formName+"-"+field+"Help").html("");
-				} else if (form.errors.hasOwnProperty(field)) {
-					$("#"+form.data.formName+"-"+field+"Group").removeClass("success").addClass("error");
-					$("#"+form.data.formName+"-"+field+"Help").html(form.errors[field].join("<br/>"));
-				} else {
-					$("#"+form.data.formName+"-"+field+"Group").removeClass("error").addClass("success");
-					$("#"+form.data.formName+"-"+field+"Help").html("");
-				}
-			}
+			// nothing special to do for text fields
 		}, data);
 	},
 
@@ -91,6 +94,7 @@ DP2Forms = {
 				$("#"+data.formName+"-"+data.field).removeAttr("disabled");
 			}
 		}, data);
+		$("#"+formName+"-"+field).attr("disabled","");
 	},
 
 	_scheduleValidation: function(formName) {
@@ -104,27 +108,98 @@ DP2Forms = {
 	},
 
 	_validate: function(formName) {
-		console.log("validating "+formName);
+		var form = $("#"+formName+"-form").serializeArray();
+		var validationRequestTime = new Date().getTime();
+		form.push({ name: '_validationRequestTime', value: validationRequestTime });
+
+		for (var f in DP2Forms.validators[formName].fields) {
+			var fieldName = DP2Forms.validators[formName].fields[f];
+			var field = $("#"+formName+"-"+fieldName);
+			if (field.data("validationValue") !== field[0].value) {
+				field.data("lastValueChange", validationRequestTime);
+				field.data("validationValue", field[0].value);
+			}
+		}
+
 		DP2Forms.validators[formName].lastValidation = new Date().getTime();
 		DP2Forms.validators[formName].validating = true;
-		var form = $("#"+formName+"-form").serializeArray();
-		form.push({ name: '_validationRequestTime', value: new Date().getTime() });
+		
 		$.post(
 			DP2Forms.validators[formName].url,
 			$.param(form),
 			function(form, textStatus, jqXHR) {
+				var now = new Date().getTime();
 				if (DP2Forms.validators[form.data.formName].lastValidationRequestTime <= parseInt(form.data._validationRequestTime)) {
 					DP2Forms.validators[form.data.formName].lastValidationRequestTime = parseInt(form.data._validationRequestTime);
-					DP2Forms.validators[form.data.formName].lastValidation = new Date().getTime();
+					DP2Forms.validators[form.data.formName].lastValidation = now;
 					DP2Forms.validators[form.data.formName].validating = false;
-					if ($.isArray(DP2Forms.listeners[form.data.formName])) {
-						for (var l in DP2Forms.listeners[formName]) {
-							DP2Forms.listeners[formName][l].fn(form, DP2Forms.listeners[formName][l].data);
+
+					// update form field data
+					for (var f in DP2Forms.validators[form.data.formName].fields) {
+						var fieldName = DP2Forms.validators[form.data.formName].fields[f];
+						var field = $("#"+form.data.formName+"-"+fieldName);
+
+						field.data("messages", typeof form.errors[fieldName] !== "undefined" ? form.errors[fieldName] : []);
+						if (field[0].value === field.data("initial")) {
+							field.data("state","initial");
+						} else  if (form.errors.hasOwnProperty(fieldName)) {
+							field.data("state","error");
+						} else {
+							field.data("state","success");
 						}
+					}
+
+					// external listeners
+					if ($.isArray(DP2Forms.listeners[form.data.formName])) {
+						for (var l in DP2Forms.listeners[form.data.formName]) {
+							DP2Forms.listeners[form.data.formName][l].fn(form, DP2Forms.listeners[form.data.formName][l].data);
+						}
+					}
+
+					// update form field display
+					for (var f in DP2Forms.validators[form.data.formName].fields) {
+						var fieldName = DP2Forms.validators[form.data.formName].fields[f];
+						var field = $("#"+form.data.formName+"-"+fieldName);
+
+						DP2Forms._updateFieldDisplay(form.data.formName, fieldName);
 					}
 				}
 			},
 			"json"
 		);
+	},
+
+	_updateFieldDisplay: function(formName, fieldName) {
+		var field = $("#"+formName+"-"+fieldName);
+		var now = new Date().getTime();
+
+		// loading-animations
+		if (now - field.data("lastValueChange") > 1000 && field.data("validationValue") === field[0].value) {
+			field.data("lastValidationPause", now);
+		}
+		if (now - field.data("lastValidationPause") > 1000) {
+			$("#"+formName+"-"+fieldName+"Group").removeClass("success error");
+			$("#"+formName+"-"+fieldName+"HelpLoading").show();
+			setTimeout(DP2Forms._updateFieldDisplay, 1000, formName, fieldName);
+		} else {
+			$("#"+formName+"-"+fieldName+"HelpLoading").hide();
+		}
+		
+		// validation messages
+		var text = $.isArray(field.data("messages")) ? field.data("messages").join("<br/>") : "";
+		if (field.data("messagesText") !== text) {
+			field.data("messagesText", text);
+			$("#"+formName+"-"+fieldName+"Help").html(text);
+		}
+
+		// validation state
+		if (field.data("state") === "success") {
+			$("#"+formName+"-"+fieldName+"Group").removeClass("error").addClass("success");
+		} else if (field.data("state") === "error") {
+			$("#"+formName+"-"+fieldName+"Group").removeClass("success").addClass("error");
+		} else {
+			$("#"+formName+"-"+fieldName+"Group").removeClass("error success");
+		}
 	}
+
 };
