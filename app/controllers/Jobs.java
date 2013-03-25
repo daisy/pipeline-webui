@@ -3,6 +3,8 @@ package controllers;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -466,7 +468,7 @@ public class Jobs extends Controller {
 					if ("anyFileURI".equals(arg.xsdType)) {
 						Logger.debug(arg.name+" is file(s); resolve URI(s)");
 						for (int i = 0; i < arg.size(); i++) {
-							arg.set(i, contextDir.toURI().resolve(arg.get(i)));
+							arg.set(i, contextDir.toURI().resolve(Files.encodeURI(arg.get(i))));
 						}
 					}
 				}

@@ -6,7 +6,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -439,6 +441,31 @@ public class Files {
 	            destination.close();
 	        }
 	    }
+	}
+	
+	/**
+	 * Encodes a file path for use as a URI. The "/" directory separator is not escaped.
+	 * Example: encodeURI("dir1/dir 2/file [  ]].xml") returns "dir1/dir%202/file%20%5B%20%20%5D%5D.xml"
+	 * @param path
+	 * @return
+	 */
+	public static String encodeURI(String path) {
+		try {
+			String url = "";
+			String[] dirSplit = path.split("/");
+			for (int d = 0; d < dirSplit.length; d++) {
+				if (d > 0) url += "/";
+				String[] spaceSplit = dirSplit[d].split(" ");
+				for (int s = 0; s < spaceSplit.length; s++) {
+					if (s > 0) url += "%20";
+					url += URLEncoder.encode(spaceSplit[s], "UTF-8");
+				}
+			}
+			return url;
+		} catch (UnsupportedEncodingException e) {
+			Logger.warn("Could not create URI from '"+path+"'", e);
+			return path;
+		}
 	}
 	
 }
