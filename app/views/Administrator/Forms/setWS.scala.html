@@ -98,9 +98,6 @@
 				"http://localhost:8182/ws": {time:0}
 			};
 			$(function(){
-				@if(play.Play.application().isDev()){DP2Forms.debug=true;}
-				
-				DP2Forms.startValidation("setWS", "@routes.FirstUse.postFirstUse()?validate", ["endpoint","authid","secret"]);
 				DP2Forms.validateAsTextField("setWS", "endpoint", "@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "")");
 				DP2Forms.validateAsTextField("setWS", "authid", "@setWSForm.field("authid").valueOr(if (Setting.get("dp2ws.authid")!=null) Setting.get("dp2ws.authid") else "")");
 				DP2Forms.validateAsTextField("setWS", "secret", "");

@@ -26,11 +26,14 @@
 	    }
 	    
 	    <div>
-	    	<p class="showin-localMode">Depending on the number of users and the type of usage (especially when producing audio books), the file storage areas may grow large. Please make sure that you have enough free space on your file system.</p>
-	    	<p class="showin-remoteMode" style="display:none;">Depending on the number of users and the type of usage (especially when producing audio books), the upload directory may grow large. Please make sure that you have enough free space on your file system.</p>
+	    	<p class="showin-localMode" style="display:none;">Depending on the number of users and the type of usage (especially when producing audio books), the file storage areas may grow large. Please make sure that you have enough free space on your file system.</p>
+	    	<p class="showin-remoteMode">Depending on the number of users and the type of usage (especially when producing audio books), the upload directory may grow large. Please make sure that you have enough free space on your file system.</p>
 	  	</div>
 	  	<hr/>
 	    
+	    <script type="text/javascript">
+	  		$(function(){ DP2Forms.startValidation("setStorageDirs", "@routes.FirstUse.postFirstUse()?validate", ["uploaddir","resultdir","tempdir"]); });
+		</script>
 		@views.html.Administrator.Forms.setStorageDirs(setStorageDirsForm, routes.FirstUse.postFirstUse(), null, true)
 		
 		<script type="text/javascript">

@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import PlayProject._
+import play.Project._
 
 object ApplicationBuild extends Build {
 
@@ -8,6 +8,10 @@ object ApplicationBuild extends Build {
     val appVersion      = "1.0-SNAPSHOT"
 
     val appDependencies = Seq(
+      javaCore,
+      javaJdbc,
+      javaEbean,
+      
       // project dependencies
       "org.apache.derby" % "derby" % "10.9.1.0",
       "mysql" % "mysql-connector-java" % "5.1.18",
@@ -16,7 +20,7 @@ object ApplicationBuild extends Build {
       "org.apache.commons" % "commons-email" % "1.2"
     )
 
-    val main = PlayProject(appName, appVersion, appDependencies, mainLang = JAVA).settings(
+    val main = play.Project(appName, appVersion, appDependencies).settings(
       // project settings
       ebeanEnabled := true,
       resolvers += ("Local Maven Repository" at "file:///"+Path.userHome.absolutePath+"/.m2/repository"),

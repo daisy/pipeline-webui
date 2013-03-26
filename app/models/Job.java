@@ -21,9 +21,9 @@ import org.w3c.dom.Document;
 import controllers.Application;
 
 import akka.actor.Cancellable;
-import akka.util.Duration;
 import play.data.validation.*;
 import play.libs.Akka;
+import scala.concurrent.duration.Duration;
 import utils.XML;
 
 @Entity
@@ -181,7 +181,8 @@ public class Job extends Model implements Comparable<Job> {
 							// Should be safe to ignore I think...
 						}
 					}
-				}
+				},
+				Akka.system().dispatcher()
 				);
 	}
 	

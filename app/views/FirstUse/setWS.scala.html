@@ -31,6 +31,9 @@
 	  	</div>
 	  	<hr/>
 	  	
+	  	<script type="text/javascript">
+	  		$(function(){ DP2Forms.startValidation("setWS", "@routes.FirstUse.postFirstUse()?validate", ["endpoint","authid","secret"]); });
+		</script>
 	  	@views.html.Administrator.Forms.setWS(setWSForm, routes.FirstUse.postFirstUse(), null, true)
 		
 	</div>

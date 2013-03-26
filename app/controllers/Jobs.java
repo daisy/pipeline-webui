@@ -3,8 +3,6 @@ package controllers;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -31,6 +29,7 @@ import org.daisy.pipeline.client.models.Alive.Mode;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.script.Argument;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import play.Logger;
 import play.libs.XPath;
@@ -77,7 +76,7 @@ public class Jobs extends Controller {
 			return unauthorized("unauthorized");
 		
 		Pipeline2WSResponse jobs;
-		List<Node> jobNodes;
+		NodeList jobNodes;
 		try {
 			jobs = org.daisy.pipeline.client.Jobs.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
 			
@@ -94,7 +93,8 @@ public class Jobs extends Controller {
 		}
 		
 		List<Job> jobList = new ArrayList<Job>();
-		for (Node jobNode : jobNodes) {
+		for (int n = 0; n < jobNodes.getLength(); n++) {
+			Node jobNode = jobNodes.item(n);
 			
 			Job job = Job.findById(XPath.selectText("@id", jobNode, Pipeline2WS.ns));
 			if (job == null) {
@@ -316,30 +316,7 @@ public class Jobs extends Controller {
 		}
 	}
 
-    /*
-     * @Transactional - annotation gives:
-     * 
-     * Execution Exception
-     * [PersistenceException: The default EbeanServer has not been defined? This is normally set via the ebean.datasource.default property. Otherwise it should be registered programatically via registerServer()]
-     * 
-     * ! @6blglm0lm - Internal server error, for request [POST /jobs] ->
-	 *
-	 *	play.core.ActionInvoker$$anonfun$receive$1$$anon$1: Execution exception [[PersistenceException: The default EbeanServer has not been defined? This is normally set via the ebean.datasource.default property. Otherwise it should be registered programatically via registerServer()]]
-	 *		at play.core.ActionInvoker$$anonfun$receive$1.apply(Invoker.scala:134) [play_2.9.1.jar:2.0.3]
-	 *		at play.core.ActionInvoker$$anonfun$receive$1.apply(Invoker.scala:115) [play_2.9.1.jar:2.0.3]
-	 *		at akka.actor.Actor$class.apply(Actor.scala:318) [akka-actor.jar:2.0.2]
-	 *		at play.core.ActionInvoker.apply(Invoker.scala:113) [play_2.9.1.jar:2.0.3]
-	 *		at akka.actor.ActorCell.invoke(ActorCell.scala:626) [akka-actor.jar:2.0.2]
-	 *		at akka.dispatch.Mailbox.processMailbox(Mailbox.scala:197) [akka-actor.jar:2.0.2]
-	 *	Caused by: javax.persistence.PersistenceException: The default EbeanServer has not been defined? This is normally set via the ebean.datasource.default property. Otherwise it should be registered programatically via registerServer()
-	 *		at com.avaje.ebean.Ebean$ServerManager.getPrimaryServer(Ebean.java:209) ~[ebean.jar:na]
-	 *		at com.avaje.ebean.Ebean$ServerManager.access$300(Ebean.java:159) ~[ebean.jar:na]
-	 *		at com.avaje.ebean.Ebean.execute(Ebean.java:1348) ~[ebean.jar:na]
-	 *		at play.db.ebean.TransactionalAction.call(TransactionalAction.java:14) ~[play_2.9.1.jar:2.0.3]
-	 *		at play.core.j.JavaAction$class.apply(JavaAction.scala:74) ~[play_2.9.1.jar:2.0.3]
-	 *		at play.core.Router$HandlerInvoker$$anon$4$$anon$1.apply(Router.scala:1085) ~[play_2.9.1.jar:2.0.3]
-     */
-	public static Result postJob() {
+    public static Result postJob() {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
 

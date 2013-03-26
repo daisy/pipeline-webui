@@ -40,14 +40,14 @@ public class Login extends Controller {
     	User.parseUserId(session());
     	User user = User.authenticate(request(), session());
     	User.flashBrowserId(user);
-		return ok(views.html.Login.login.render(form(LoginForm.class)));
+		return ok(views.html.Login.login.render(play.data.Form.form(LoginForm.class)));
     }
     
     /**
      * Handle login form submission.
      */
     public static Result authenticate() {
-        Form<LoginForm> loginForm = form(LoginForm.class).bindFromRequest();
+        Form<LoginForm> loginForm = play.data.Form.form(LoginForm.class).bindFromRequest();
         
     	User user = User.authenticateUnencrypted(loginForm.field("email").valueOr(""), loginForm.field("password").valueOr(""), session());
         if (loginForm.hasErrors()) {
@@ -65,7 +65,7 @@ public class Login extends Controller {
     public static Result authenticateGuest() {
     	if (!"true".equals(models.Setting.get("users.guest.allowGuests"))) {
     		User.flashBrowserId(null);
-    		return badRequest(views.html.Login.login.render(form(LoginForm.class)));
+    		return badRequest(views.html.Login.login.render(play.data.Form.form(LoginForm.class)));
     	}
     	
     	User.loginAsGuest(Controller.session());
@@ -80,12 +80,12 @@ public class Login extends Controller {
     	if ("".equals(email)) {
     		flash("error", "You must enter an e-mail address.");
     		User.flashBrowserId(user);
-    		return badRequest(views.html.Login.login.render(form(LoginForm.class)));
+    		return badRequest(views.html.Login.login.render(play.data.Form.form(LoginForm.class)));
     		
     	} else if (user == null) {
     		flash("error", "There is no user using that e-mail address; did you type it correctly?");
     		User.flashBrowserId(user);
-    		return badRequest(views.html.Login.login.render(form(LoginForm.class)));
+    		return badRequest(views.html.Login.login.render(play.data.Form.form(LoginForm.class)));
     		
     	} else {
     		user.makeNewActivationUid();
@@ -98,7 +98,7 @@ public class Login extends Controller {
 			else
 				flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
 			User.flashBrowserId(user);
-    		return ok(views.html.Login.login.render(form(LoginForm.class)));
+    		return ok(views.html.Login.login.render(play.data.Form.form(LoginForm.class)));
     	}
     }
 

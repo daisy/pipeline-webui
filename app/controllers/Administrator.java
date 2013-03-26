@@ -12,7 +12,6 @@ import javax.persistence.Transient;
 import controllers.SystemStatus.EngineAttempt;
 
 import akka.actor.Cancellable;
-import akka.util.Duration;
 
 import models.Setting;
 import models.User;
@@ -25,6 +24,8 @@ import play.data.validation.ValidationError;
 import play.libs.Akka;
 import play.libs.Json;
 import play.mvc.*;
+import scala.concurrent.duration.Duration;
+import utils.FormHelper;
 import utils.Pipeline2Engine;
 
 public class Administrator extends Controller {
@@ -41,7 +42,7 @@ public class Administrator extends Controller {
 		public Form<ConfigureAppearanceForm> configureAppearanceForm = Administrator.configureAppearanceForm;
 	}
 
-	public final static Form<SetDeploymentForm> setDeploymentForm = form(SetDeploymentForm.class);
+	public final static Form<SetDeploymentForm> setDeploymentForm = play.data.Form.form(SetDeploymentForm.class);
 	public static class SetDeploymentForm {
 		@Constraints.Required
 		@Formats.NonEmpty
@@ -54,7 +55,7 @@ public class Administrator extends Controller {
 		}
 	}
 
-	public final static Form<CreateAdminForm> createAdminForm = form(CreateAdminForm.class);
+	public final static Form<CreateAdminForm> createAdminForm = play.data.Form.form(CreateAdminForm.class);
 	public static class CreateAdminForm {
 		@Constraints.Required
 		@Formats.NonEmpty
@@ -80,7 +81,7 @@ public class Administrator extends Controller {
 		//		public static JsonNode validateJson()
 	}
 
-	public final static Form<SetWSForm> setWSForm = form(SetWSForm.class);
+	public final static Form<SetWSForm> setWSForm = play.data.Form.form(SetWSForm.class);
 	public static class SetWSForm {
 		@Required
 		public String endpoint;
@@ -125,7 +126,7 @@ public class Administrator extends Controller {
 		}
 	}
 
-	public final static Form<SetStorageDirsForm> setStorageDirsForm = form(SetStorageDirsForm.class);
+	public final static Form<SetStorageDirsForm> setStorageDirsForm = play.data.Form.form(SetStorageDirsForm.class);
 	public static class SetStorageDirsForm {
 		@Required
 		public String uploaddir;
@@ -183,7 +184,7 @@ public class Administrator extends Controller {
 		}
 	}
 
-	public final static Form<ConfigureEmailForm> configureEmailForm = form(ConfigureEmailForm.class);
+	public final static Form<ConfigureEmailForm> configureEmailForm = play.data.Form.form(ConfigureEmailForm.class);
 	public static class ConfigureEmailForm {
 		@Required
 		public String smtp;
@@ -221,7 +222,7 @@ public class Administrator extends Controller {
 		}
 	}
 
-	public final static Form<SetMaintenanceForm> setMaintenanceForm = form(SetMaintenanceForm.class);
+	public final static Form<SetMaintenanceForm> setMaintenanceForm = play.data.Form.form(SetMaintenanceForm.class);
 	public static class SetMaintenanceForm {
 		@Required
 		public String maintenance;
@@ -244,7 +245,7 @@ public class Administrator extends Controller {
 		}
 	}
 
-	public final static Form<ConfigureAppearanceForm> configureAppearanceForm = form(ConfigureAppearanceForm.class);
+	public final static Form<ConfigureAppearanceForm> configureAppearanceForm = play.data.Form.form(ConfigureAppearanceForm.class);
 	public static class ConfigureAppearanceForm {
 
 		public String title;
@@ -286,16 +287,16 @@ public class Administrator extends Controller {
 		}
 	}
 
-	final static Form<User> userForm = form(User.class);
+	final static Form<User> userForm = play.data.Form.form(User.class);
 
-	final static Form<GuestUser> guestForm = form(GuestUser.class);
+	final static Form<GuestUser> guestForm = play.data.Form.form(GuestUser.class);
 	public static class GuestUser {
 		@Constraints.MinLength(1)
 		@Constraints.Pattern("[^{}\\[\\]();:'\"<>]+") // Avoid breaking JavaScript code in templates
 		public String name;
 	}
 
-	final static Form<GlobalPermissions> globalForm = form(GlobalPermissions.class);
+	final static Form<GlobalPermissions> globalForm = play.data.Form.form(GlobalPermissions.class);
 	public static class GlobalPermissions {
 		public boolean hideAdvancedOptions;
 
@@ -330,6 +331,9 @@ public class Administrator extends Controller {
 		User user = User.authenticate(request(), session());
 		if (user == null || !user.admin)
 			return redirect(routes.Login.login());
+		
+		Map<String, String[]> query = request().queryString();
+		Map<String, String[]> form = request().body().asFormUrlEncoded();
 
 		ConfigureAppearanceForm.refreshList();
 
@@ -350,8 +354,12 @@ public class Administrator extends Controller {
 				//			GlobalPermissions.validate(filledForm);
 
 				flash("settings.usertab", "global");
-
-				if (filledForm.hasErrors()) {
+				
+				if (query.containsKey("validate")) {
+					User.flashBrowserId(user);
+					return ok(FormHelper.asJson(filledForm));
+				
+				} else if (filledForm.hasErrors()) {
 					forms.globalForm = filledForm;
 					List<User> users = User.find.orderBy("admin, name, email").findList();
 					User.flashBrowserId(user);
@@ -392,8 +400,12 @@ public class Administrator extends Controller {
 				//			GuestUser.validate(filledForm);
 
 				flash("settings.usertab", "guest");
-
-				if (filledForm.hasErrors()) {
+				
+				if (query.containsKey("validate")) {
+					User.flashBrowserId(user);
+					return ok(FormHelper.asJson(filledForm));
+				
+				} else if (filledForm.hasErrors()) {
 					forms.guestForm = filledForm;
 					List<User> users = User.find.orderBy("admin, name, email").findList();
 					User.flashBrowserId(user);
@@ -418,13 +430,11 @@ public class Administrator extends Controller {
 							flash("success", "Hmm, that's weird; the user was not found. Nothing was changed...");
 							return redirect(routes.Administrator.getSettings());
 						}
-
-						updateUser.validateChange(filledForm, user);
-
-						if (!updateUser.hasChanges(filledForm)) {
-							flash("success", "You did not submit any changes. No changes were made.");
-							return redirect(routes.Administrator.getSettings());
-
+						
+						if (query.containsKey("validate")) {
+							User.flashBrowserId(user);
+							return ok(FormHelper.asJson(filledForm));
+						
 						} else if (filledForm.hasErrors()) {
 							List<User> users = User.find.orderBy("admin, name, email").findList();
 							forms.userForm = filledForm;
@@ -531,8 +541,12 @@ public class Administrator extends Controller {
 			if ("createUser".equals(formName)) {
 				Form<User> filledForm = userForm.bindFromRequest();
 				User.validateNew(filledForm);
-
-				if (filledForm.hasErrors()) {
+				
+				if (query.containsKey("validate")) {
+					User.flashBrowserId(user);
+					return ok(FormHelper.asJson(filledForm));
+				
+				} else if (filledForm.hasErrors()) {
 					flash("settings.usertab", "adduser");
 					List<User> users = User.find.orderBy("admin, name, email").findList();
 					forms.userForm = filledForm;
@@ -557,7 +571,7 @@ public class Administrator extends Controller {
 
 					}
 
-					flash("settings.usertab", newUser.id + "");
+					flash("settings.usertab", newUser.id  + "");
 					flash("success", "User " + newUser.name + " created successfully!");
 
 					return redirect(routes.Administrator.getSettings());
@@ -565,10 +579,25 @@ public class Administrator extends Controller {
 			}
 
 			if ("setWS".equals(formName)) {
+				Logger.debug("-------------------- A");
 				Form<Administrator.SetWSForm> filledForm = setWSForm.bindFromRequest();
+				Logger.debug("-------------------- B");
 				Administrator.SetWSForm.validate(filledForm);
-
-				if (filledForm.hasErrors()) {
+				Logger.debug("-------------------- C");
+				
+				if (query.containsKey("validate")) {
+					Logger.debug("-------------------- D");
+					User.flashBrowserId(user);
+					Logger.debug("-------------------- E");
+					try {
+						Logger.debug("-------------------- F");
+						return ok(FormHelper.asJson(filledForm));
+					} catch (RuntimeException e) {
+						Logger.error("validation failed", e);
+						return internalServerError("validation failed");
+					}
+				
+				} else if (filledForm.hasErrors()) {
 					List<User> users = User.find.orderBy("admin, name, email").findList();
 					forms.setWSForm = filledForm;
 					User.flashBrowserId(user);
@@ -584,8 +613,12 @@ public class Administrator extends Controller {
 			if ("setStorageDirs".equals(formName)) {
 				Form<Administrator.SetStorageDirsForm> filledForm = setStorageDirsForm.bindFromRequest();
 				Administrator.SetStorageDirsForm.validate(filledForm);
-
-				if(filledForm.hasErrors()) {
+				
+				if (query.containsKey("validate")) {
+					User.flashBrowserId(user);
+					return ok(FormHelper.asJson(filledForm));
+				
+				} else if (filledForm.hasErrors()) {
 					List<User> users = User.find.orderBy("admin, name, email").findList();
 					forms.setStorageDirsForm = filledForm;
 					User.flashBrowserId(user);
@@ -601,14 +634,19 @@ public class Administrator extends Controller {
 			if ("configureEmail".equals(formName)) {
 				Form<Administrator.ConfigureEmailForm> filledForm = configureEmailForm.bindFromRequest();
 				Administrator.ConfigureEmailForm.validate(filledForm);
-
+				
 				if (filledForm.field("enable").value() != null) {
 					Setting.set("mail.enable", filledForm.field("enable").valueOr(""));
 					flash("success", "E-mail is now "+("true".equals(filledForm.field("enable").valueOr("false"))?"enabled":"disabled")+".");
 					return redirect(routes.Administrator.getSettings());
 
 				} else {
-					if(filledForm.hasErrors()) {
+					
+					if (query.containsKey("validate")) {
+						User.flashBrowserId(user);
+						return ok(FormHelper.asJson(filledForm));
+						
+					} else if (filledForm.hasErrors()) {
 						List<User> users = User.find.orderBy("admin, name, email").findList();
 						forms.configureEmailForm = filledForm;
 						User.flashBrowserId(user);
@@ -625,8 +663,12 @@ public class Administrator extends Controller {
 			if ("setMaintenance".equals(formName)) {
 				Form<Administrator.SetMaintenanceForm> filledForm = setMaintenanceForm.bindFromRequest();
 				Administrator.SetMaintenanceForm.validate(filledForm);
-
-				if(filledForm.hasErrors()) {
+				
+				if (query.containsKey("validate")) {
+					User.flashBrowserId(user);
+					return ok(FormHelper.asJson(filledForm));
+				
+				} else if (filledForm.hasErrors()) {
 					List<User> users = User.find.orderBy("admin, name, email").findList();
 					forms.setMaintenanceForm  = filledForm;
 					User.flashBrowserId(user);
@@ -642,8 +684,12 @@ public class Administrator extends Controller {
 			if ("configureAppearance".equals(formName)) {
 				Form<Administrator.ConfigureAppearanceForm> filledForm = configureAppearanceForm.bindFromRequest();
 				Administrator.ConfigureAppearanceForm.validate(filledForm);
-
-				if(filledForm.hasErrors()) {
+				
+				if (query.containsKey("validate")) {
+					User.flashBrowserId(user);
+					return ok(FormHelper.asJson(filledForm));
+				
+				} else if (filledForm.hasErrors()) {
 					for (String key : filledForm.errors().keySet()) {
 						for (ValidationError error : filledForm.errors().get(key)) {
 							Logger.debug(key+": "+error.message());
@@ -706,7 +752,9 @@ public class Administrator extends Controller {
 							// Should be safe to ignore I think...
 						}
 					}
-				});
+				},
+				Akka.system().dispatcher()
+				);
 		return shuttingDown;
 	}
 

@@ -118,7 +118,7 @@ public class NotificationConnection {
 	public static void pushPublic(Notification notification) {
 		synchronized (notificationConnections) {
 			for (Long userId : notificationConnections.keySet())
-				if (userId != null && userId < 0)
+				if (userId < 0)
 					for (NotificationConnection connection : notificationConnections.get(userId))
 						connection.push(notification);
 		}
@@ -138,6 +138,7 @@ public class NotificationConnection {
 	 * @param notification
 	 */
 	public static void push(Long userId, Notification notification) {
+		if (userId == null) userId = -1L;
 //		Logger.debug("pushing message to user #"+userId+": "+notification.toString());
 		synchronized (notificationConnections) {
 			if (!notificationConnections.containsKey(userId)) {
@@ -155,6 +156,7 @@ public class NotificationConnection {
 	 * @param notification
 	 */
 	public static void push(Long userId, Long browserId, Notification notification) {
+		if (userId == null) userId = -1L;
 		Logger.debug("pushing message to user #"+userId+" (browser #"+browserId+"): "+notification.toString());
 		synchronized (notificationConnections) {
 			if (!notificationConnections.containsKey(userId)) {
@@ -176,7 +178,8 @@ public class NotificationConnection {
 	 * @return
 	 */
 	public static WebSocket<JsonNode> createWebSocket(final Long userId, final Long browserId) {
-
+		final Long userIdNotNull = userId == null ? -1L : userId;
+		
 		// Create WebSocket
 		WebSocket<JsonNode> ws = new WebSocket<JsonNode>() {
 			// Called when the Websocket Handshake is done.
@@ -194,10 +197,10 @@ public class NotificationConnection {
 				in.onClose(new Callback0() {
 					public void invoke() {
 						synchronized (notificationConnections) {
-							if (!notificationConnections.containsKey(userId))
+							if (!notificationConnections.containsKey(userIdNotNull))
 								return;
 							
-							for (NotificationConnection c : notificationConnections.get(userId)) {
+							for (NotificationConnection c : notificationConnections.get(userIdNotNull)) {
 								if (c.browserId.equals(browserId))
 									c.websocket = null;
 							}
@@ -208,7 +211,7 @@ public class NotificationConnection {
 
 				// Remember socket
 				synchronized (notificationConnections) {
-					NotificationConnection connection = createBrowserIfAbsent(userId, browserId);
+					NotificationConnection connection = createBrowserIfAbsent(userIdNotNull, browserId);
 					
 					connection.websocket = out;
 					
@@ -238,6 +241,7 @@ public class NotificationConnection {
 	}
 	
 	public static NotificationConnection createBrowserIfAbsent(Long userId, Long browserId) {
+		if (userId == null) userId = -1L;
 		if (notificationConnections == null)
 			notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>(); // not sure why it is not initialized in Global.java...
 		synchronized (notificationConnections) {

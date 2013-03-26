@@ -95,24 +95,36 @@
 	<section id="pipeline2WebServiceEndpoint" class="tab-pane @("active".when(Controller.flash("settings.formName")=="setWS"))">
 		<h2>Pipeline 2 Web API endpoint</h2>
 		<br/>
+		<script type="text/javascript">
+	  		$(function(){ DP2Forms.startValidation("setWS", "@routes.Administrator.postSettings()?validate", ["endpoint","authid","secret"]); });
+		</script>
 	  	@views.html.Administrator.Forms.setWS(forms.setWSForm, routes.Administrator.postSettings(), null, Controller.flash("settings.formName")=="setWS")
 	</section>
 	
 	<section id="temporaryDirectoryForUploads" class="tab-pane @("active".when(Controller.flash("settings.formName")=="setStorageDirs"))">
 		<h2>Temporary directory for uploads</h2>
 		<br/>
+		<script type="text/javascript">
+	  		//$(function(){ DP2Forms.startValidation("setStorageDirs", "@routes.Administrator.postSettings()?validate", ["uploaddir","resultdir","tempdir"]); });
+		</script>
 		@views.html.Administrator.Forms.setStorageDirs(forms.setStorageDirsForm, routes.Administrator.postSettings(), null, Controller.flash("settings.formName")=="setStorageDirs")
 	</section>
 	
 	<section id="eMailSettings" class="tab-pane @("active".when(Controller.flash("settings.formName")=="configureEmail"))">
 		<h2>E-mail settings</h2>
 		<br/>
+		<script type="text/javascript">
+	  		//$(function(){ DP2Forms.startValidation("configureEmailForm", "@routes.Administrator.postSettings()?validate", ["TODO"]); });
+		</script>
 		@views.html.Administrator.Forms.configureEmail(forms.configureEmailForm, routes.Administrator.postSettings(), null)
 	</section>
 	
 	<section id="maintenance" class="tab-pane @("active".when(Controller.flash("settings.formName")=="setMaintenance"))">
 		<h2>Maintenance</h2>
 		<br/>
+		<script type="text/javascript">
+	  		//$(function(){ DP2Forms.startValidation("setMaintenance", "@routes.Administrator.postSettings()?validate", ["maintenance"]); });
+		</script>
 		@views.html.Administrator.Forms.setMaintenance(forms.setMaintenanceForm, routes.Administrator.postSettings(), null)
 	</section>
 
@@ -121,6 +133,9 @@
 <section id="appearance" class="tab-pane @("active".when(Controller.flash("settings.formName")=="configureAppearance"||controllers.Application.deployment()=="desktop"))">
 	<h2>Appearance</h2>
 	<br/>
+	<script type="text/javascript">
+  		//$(function(){ DP2Forms.startValidation("configureAppearance", "@routes.Administrator.postSettings()?validate", ["TODO"]); });
+	</script>
 	@views.html.Administrator.Forms.configureAppearance(forms.configureAppearanceForm, routes.Administrator.postSettings(), null)
 </section>
 

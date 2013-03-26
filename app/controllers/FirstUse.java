@@ -30,14 +30,14 @@ public class FirstUse extends Controller {
 				// Application mode is not set
 				
 				User.flashBrowserId(user);
-				return ok(views.html.FirstUse.setDeployment.render(form(Administrator.SetDeploymentForm.class)));
+				return ok(views.html.FirstUse.setDeployment.render(play.data.Form.form(Administrator.SetDeploymentForm.class)));
 			
 			} else if ("server".equals(Application.deployment())) {
 				// Server mode
 				
 				if (User.find.where().eq("admin", true).findRowCount() == 0) {
 					User.flashBrowserId(user);
-					return ok(views.html.FirstUse.createAdmin.render(form(Administrator.CreateAdminForm.class)));
+					return ok(views.html.FirstUse.createAdmin.render(play.data.Form.form(Administrator.CreateAdminForm.class)));
 				}
 				
 				// require authentication to complete the rest of the first use wizard
@@ -48,12 +48,12 @@ public class FirstUse extends Controller {
 				
 				if (Setting.get("dp2ws.endpoint") == null) {
 					User.flashBrowserId(user);
-					return ok(views.html.FirstUse.setWS.render(form(Administrator.SetWSForm.class)));
+					return ok(views.html.FirstUse.setWS.render(play.data.Form.form(Administrator.SetWSForm.class)));
 				}
 				
 				if (Setting.get("uploads") == null) {
 					User.flashBrowserId(user);
-					return ok(views.html.FirstUse.setStorageDirs.render(form(Administrator.SetStorageDirsForm.class)));
+					return ok(views.html.FirstUse.setStorageDirs.render(play.data.Form.form(Administrator.SetStorageDirsForm.class)));
 				}
 				
 			} else if ("desktop".equals(Application.deployment())) {
@@ -106,7 +106,7 @@ public class FirstUse extends Controller {
 			if (!isFirstUse())
 				return redirect(routes.FirstUse.getFirstUse());
 			
-			Form<Administrator.SetDeploymentForm> filledForm = form(Administrator.SetDeploymentForm.class).bindFromRequest();
+			Form<Administrator.SetDeploymentForm> filledForm = play.data.Form.form(Administrator.SetDeploymentForm.class).bindFromRequest();
 			Administrator.SetDeploymentForm.validate(filledForm);
 			
 			if (query.containsKey("validate")) {
@@ -129,7 +129,7 @@ public class FirstUse extends Controller {
 			if (!isFirstUse())
 				return redirect(routes.FirstUse.getFirstUse());
 			
-			Form<Administrator.CreateAdminForm> filledForm = form(Administrator.CreateAdminForm.class).bindFromRequest();
+			Form<Administrator.CreateAdminForm> filledForm = play.data.Form.form(Administrator.CreateAdminForm.class).bindFromRequest();
 			Administrator.CreateAdminForm.validate(filledForm);
 			
 			if (query.containsKey("validate")) {
@@ -164,7 +164,7 @@ public class FirstUse extends Controller {
 		}
 		
 		if ("setWS".equals(formName)) {
-			Form<Administrator.SetWSForm> filledForm = form(Administrator.SetWSForm.class).bindFromRequest();
+			Form<Administrator.SetWSForm> filledForm = play.data.Form.form(Administrator.SetWSForm.class).bindFromRequest();
 			Administrator.SetWSForm.validate(filledForm);
 			
 			if (query.containsKey("validate")) {
@@ -182,7 +182,7 @@ public class FirstUse extends Controller {
 		}
 		
 		if ("setStorageDirs".equals(formName)) {
-			Form<Administrator.SetStorageDirsForm> filledForm = form(Administrator.SetStorageDirsForm.class).bindFromRequest();
+			Form<Administrator.SetStorageDirsForm> filledForm = play.data.Form.form(Administrator.SetStorageDirsForm.class).bindFromRequest();
 			Administrator.SetStorageDirsForm.validate(filledForm);
 			
 			if (query.containsKey("validate")) {

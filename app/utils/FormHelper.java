@@ -1,15 +1,12 @@
 package utils;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jackson.JsonNode;
 
 import play.data.Form;
 import play.mvc.Http.Request;
-import scala.actors.threadpool.Arrays;
 
 public class FormHelper {
 	

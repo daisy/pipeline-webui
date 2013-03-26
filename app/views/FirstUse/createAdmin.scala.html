@@ -2,7 +2,7 @@
 
 @main("First use", "", Array(), Array(), Array()){
 	
-	<div class="centered">
+	<div class="horizontally-centered">
 		
 	  	<div class="page-header" style="text-align:center;">
 	  		<hgroup>
@@ -27,6 +27,9 @@
 	        </div>
 	    }
 	    
+	    <script type="text/javascript">
+	  		$(function(){ DP2Forms.startValidation("createAdmin", "@routes.FirstUse.postFirstUse()?validate", ["email","password","repeatPassword"]); }
+		</script>
 	    <div>
 	  		@views.html.Administrator.Forms.createAdmin(createAdminForm, routes.FirstUse.postFirstUse(), true)
 		</div>

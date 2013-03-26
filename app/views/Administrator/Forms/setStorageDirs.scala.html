@@ -105,14 +105,13 @@
 				if (typeof engine !== "object" || engine === null)
 					return;
 				if (engine.mode==="LOCAL") {
-					$("#setStorageDirs-resultdirGroup, #setStorageDirs-tempdirGroup").show(); 
+					$("#setStorageDirs-resultdirGroup, #setStorageDirs-tempdirGroup").show(400); 
+				} else {
+					$("#setStorageDirs-resultdirGroup, #setStorageDirs-tempdirGroup").hide(400);
 				}
 			}
 			setStorageDirsOnEngineUpdate(@Html(play.libs.Json.toJson(controllers.Application.getAlive())+""));
 			$(function(){
-				@if(play.Play.application().isDev()){DP2Forms.debug=true;}
-				
-				DP2Forms.startValidation("setStorageDirs", "@routes.FirstUse.postFirstUse()?validate", ["uploaddir","resultdir","tempdir"]);
 				DP2Forms.validateAsTextField("setStorageDirs", "uploaddir", "@setStorageDirsForm.field("uploaddir").valueOr(if (Setting.get("uploaddir")!=null) Setting.get("uploads") else "")");
 				DP2Forms.validateAsTextField("setStorageDirs", "resultdir", "@setStorageDirsForm.field("resultdir").valueOr(if (Setting.get("dp2ws.resultdir")!=null) Setting.get("dp2ws.resultdir") else "")");
 				DP2Forms.validateAsTextField("setStorageDirs", "tempdir", "@setStorageDirsForm.field("tempdir").valueOr(if (Setting.get("dp2ws.tempdir")!=null) Setting.get("dp2ws.tempdir") else "")");

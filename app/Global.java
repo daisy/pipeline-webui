@@ -15,8 +15,8 @@ import org.daisy.pipeline.client.Pipeline2WSLogger;
 import controllers.Administrator;
 import controllers.FirstUse;
 
-import akka.util.Duration;
 import play.libs.Akka;
+import scala.concurrent.duration.Duration;
 import utils.Pipeline2Engine;
 import utils.Pipeline2PlayLogger;
 
@@ -42,11 +42,14 @@ public class Global extends GlobalSettings {
 			Logger.info("STARTING....");
 			Pipeline2Engine.setState(Pipeline2Engine.State.STOPPED);
 			FirstUse.configureDesktopDefaults();
-			Akka.system().scheduler().scheduleOnce(Duration.create(0, TimeUnit.SECONDS),new Runnable() {
-				public void run() {
-					Pipeline2Engine.start();
-				}
-			});
+			Akka.system().scheduler().scheduleOnce(Duration.create(0, TimeUnit.SECONDS),
+			 	new Runnable() {
+					public void run() {
+						Pipeline2Engine.start();
+					}
+				},
+				Akka.system().dispatcher()
+				);
 		}
 		
 		if (User.findAll().size() > 0 && controllers.Application.deployment() == null)
@@ -96,7 +99,9 @@ public class Global extends GlobalSettings {
 							// Should be safe to ignore I think...
 						}
 					}
-				});
+				},
+				Akka.system().dispatcher()
+				);
 		
 		// Push "heartbeat" notifications (keeping the push notification connections alive). Hopefully this scales...
 		Akka.system().scheduler().schedule(
@@ -155,7 +160,8 @@ public class Global extends GlobalSettings {
 							// Should be safe to ignore I think...
 						}
 					}
-				}
+				},
+				Akka.system().dispatcher()
 			);
 		
 		// Delete jobs and uploads after a certain time. Configurable by administrators.
@@ -197,7 +203,8 @@ public class Global extends GlobalSettings {
 							// Should be safe to ignore I think...
 						}
 					}
-				}
+				},
+				Akka.system().dispatcher()
 				);
 		
 		// If jobs.deleteAfterDuration is not set; clean up jobs that no longer exists in the Pipeline engine. This typically happens if the Pipeline engine is restarted.
@@ -257,7 +264,8 @@ public class Global extends GlobalSettings {
 							// Should be safe to ignore I think...
 						}
 					}
-				}
+				},
+				Akka.system().dispatcher()
 			);
 	}
 	

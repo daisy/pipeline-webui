@@ -116,9 +116,10 @@ public class User extends Model {
 	}
 	
 	public static Long flashBrowserId(User user) {
+		Long userId = user == null ? null : user.id;
 		Long browserId = new Random().nextLong();
-		NotificationConnection.createBrowserIfAbsent(user.id, browserId);
-		Logger.debug("Browser: user #"+user.id+" opened browser window #"+browserId);
+		NotificationConnection.createBrowserIfAbsent(userId, browserId);
+		Logger.debug("Browser: user #"+userId+" opened browser window #"+browserId);
 		Controller.flash("browserId",""+browserId);
 		return browserId;
 	}
@@ -212,7 +213,7 @@ public class User extends Model {
 			
 		} else {
 			User guest = new User("", models.Setting.get("users.guest.name"), "", false);
-			guest.id = -1-(long)randomGuestUserId.nextInt(2147483640);
+			guest.id = -2-(long)randomGuestUserId.nextInt(2147483639); // <= -2: logged in guest, -1: not logged in, >= 0: logged in user
 			guest.login(session);
 			return guest;
 		}

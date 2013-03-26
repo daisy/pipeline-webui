@@ -13,9 +13,9 @@ import play.mvc.*;
 
 public class Account extends Controller {
 	
-	final static Form<User> editDetailsForm = form(User.class);
-	final static Form<User> resetPasswordForm = form(User.class);
-	final static Form<User> activateAccountForm = form(User.class);
+	final static Form<User> editDetailsForm = play.data.Form.form(User.class);
+	final static Form<User> resetPasswordForm = play.data.Form.form(User.class);
+	final static Form<User> activateAccountForm = play.data.Form.form(User.class);
 	
 	/**
 	 * GET /account
@@ -31,7 +31,7 @@ public class Account extends Controller {
 			return redirect(routes.Login.login());
     	
 		User.flashBrowserId(user);
-		return ok(views.html.Account.overview.render(form(User.class)));
+		return ok(views.html.Account.overview.render(play.data.Form.form(User.class)));
 	}
 	
 	/**
@@ -134,7 +134,7 @@ public class Account extends Controller {
 		}
 		
 		User.flashBrowserId(user);
-		return ok(views.html.Account.resetPassword.render(form(User.class), email, resetUid, user.active));
+		return ok(views.html.Account.resetPassword.render(play.data.Form.form(User.class), email, resetUid, user.active));
 	}
 	
 	/**
