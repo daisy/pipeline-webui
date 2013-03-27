@@ -41,7 +41,7 @@
 <ul class="nav nav-pills">
     <li class="@("active".when(Controller.flash("settings.formName")==null||Controller.flash("settings.formName")=="updateGlobalPermissions"||Controller.flash("settings.formName")=="updateGuest"||Controller.flash("settings.formName")=="updateUser"))"><a href="#usersAndPermissions" data-toggle="tab">Users and Permissions</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="setWS"))"><a href="#pipeline2WebServiceEndpoint" data-toggle="tab">Pipeline 2 Web API</a></li>
-    <li class="@("active".when(Controller.flash("settings.formName")=="setStorageDirs"))"><a href="#temporaryDirectoryForUploads" data-toggle="tab">Upload directory</a></li>
+    <li class="@("active".when(Controller.flash("settings.formName")=="setStorageDirs"))"><a href="#storageDirectories" data-toggle="tab">Storage directories</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="configureEmail"))"><a href="#eMailSettings" data-toggle="tab">E-mail settings</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="setMaintenance"))"><a href="#maintenance" data-toggle="tab">Maintenance</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="configureAppearance"))"><a href="#appearance" data-toggle="tab">Appearance</a></li>
@@ -101,11 +101,11 @@
 	  	@views.html.Administrator.Forms.setWS(forms.setWSForm, routes.Administrator.postSettings(), null, Controller.flash("settings.formName")=="setWS")
 	</section>
 	
-	<section id="temporaryDirectoryForUploads" class="tab-pane @("active".when(Controller.flash("settings.formName")=="setStorageDirs"))">
-		<h2>Temporary directory for uploads</h2>
+	<section id="storageDirectories" class="tab-pane @("active".when(Controller.flash("settings.formName")=="setStorageDirs"))">
+		<h2>Storage directories</h2>
 		<br/>
 		<script type="text/javascript">
-	  		//$(function(){ DP2Forms.startValidation("setStorageDirs", "@routes.Administrator.postSettings()?validate", ["uploaddir","resultdir","tempdir"]); });
+	  		$(function(){ DP2Forms.startValidation("setStorageDirs", "@routes.Administrator.postSettings()?validate", ["uploaddir","resultdir","tempdir"]); });
 		</script>
 		@views.html.Administrator.Forms.setStorageDirs(forms.setStorageDirsForm, routes.Administrator.postSettings(), null, Controller.flash("settings.formName")=="setStorageDirs")
 	</section>
@@ -123,7 +123,7 @@
 		<h2>Maintenance</h2>
 		<br/>
 		<script type="text/javascript">
-	  		//$(function(){ DP2Forms.startValidation("setMaintenance", "@routes.Administrator.postSettings()?validate", ["maintenance"]); });
+	  		$(function(){ DP2Forms.startValidation("setMaintenance", "@routes.Administrator.postSettings()?validate", ["maintenance"]); });
 		</script>
 		@views.html.Administrator.Forms.setMaintenance(forms.setMaintenanceForm, routes.Administrator.postSettings(), null)
 	</section>

@@ -2,6 +2,7 @@ DP2Forms = {
 	debug: false,
 
 	forms: [],
+	submissionHandlers: {},
 	validators: {},
 	listeners: {},
 	lastReport: {},
@@ -97,6 +98,22 @@ DP2Forms = {
 		$("#"+formName+"-"+field).attr("disabled","");
 	},
 
+	beforeSubmit: function(formName, handler, data) {
+		if (DP2Forms.debug) console.log("adding form widget submission handler for "+formName);
+		if (!$.isArray(DP2Forms.submissionHandlers[formName])) DP2Forms.submissionHandlers[formName] = new Array();
+		DP2Forms.submissionHandlers[formName].push({ fn: handler, data: data});
+		if (typeof DP2Forms.lastReport[formName] !== "undefined") handler(data);
+	},
+
+	prepareSubmission: function(formName) {
+		if ($.isArray(DP2Forms.submissionHandlers[formName])) {
+			for (var l in DP2Forms.submissionHandlers[formName]) {
+				DP2Forms.submissionHandlers[formName][l].fn(DP2Forms.submissionHandlers[formName][l].data);
+			}
+		}
+		return true;
+	},
+
 	_scheduleValidation: function(formName) {
 		if (new Date().getTime() - DP2Forms.validators[formName].lastValidation >= 490)
 			DP2Forms._validate(formName);
@@ -108,6 +125,10 @@ DP2Forms = {
 	},
 
 	_validate: function(formName) {
+		// prepare form fields
+		DP2Forms.prepareSubmission(formName);
+
+		// serialize form
 		var form = $("#"+formName+"-form").serializeArray();
 		var validationRequestTime = new Date().getTime();
 		form.push({ name: '_validationRequestTime', value: validationRequestTime });
@@ -120,10 +141,10 @@ DP2Forms = {
 				field.data("validationValue", field[0].value);
 			}
 		}
-
 		DP2Forms.validators[formName].lastValidation = new Date().getTime();
 		DP2Forms.validators[formName].validating = true;
 		
+		// post validation request
 		$.post(
 			DP2Forms.validators[formName].url,
 			$.param(form),

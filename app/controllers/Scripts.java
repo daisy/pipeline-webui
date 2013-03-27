@@ -182,8 +182,9 @@ public class Scripts extends Controller {
 				if ("".equals(uploadId))
 					continue;
 				Upload upload = Upload.findById(Long.parseLong(uploadId));
-				if (upload != null && upload.user.equals(userId))
+				if (upload != null && upload.user.equals(userId)) {
 					uploads.put(upload.id, upload);
+				}
 			}
 
 			// Parse all arguments
@@ -194,7 +195,7 @@ public class Scripts extends Controller {
 				} else {
 					String kind = matcher.group(1);
 					String name = matcher.group(4);
-					Logger.debug(kind+": "+name);
+					Logger.debug("script form: "+kind+": "+name);
 
 					Argument argument = script.getArgument(name, kind);
 					//					for (Argument arg : script.arguments) {

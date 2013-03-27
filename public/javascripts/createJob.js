@@ -38,23 +38,7 @@ var Job = {
 	},
 	
 	submit: function() {
-		var uploads = [];
-		for (var id in Job.uploads) uploads.push(Job.uploads[id].id);
-		$("input[name=uploads]").attr("value",uploads.join());
-		
-		var result = {valid: true, messages: []};
-		
-		for (var i = 0; i < Job.validators.length; i++) {
-			var thisResult = Job.validators[i]();
-			result.valid = result.valid && thisResult.valid; 
-			for (var j = 0; j < thisResult.messages.length; j++) {
-				result.messages.push(thisResult.messages[j]);
-			}
-		}
-		
-		// TODO: display validation messages
-		
-		return result.valid;
+		return true;
 	},
 
 	upload: function(fileset, id) {

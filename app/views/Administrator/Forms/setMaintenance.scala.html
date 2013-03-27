@@ -14,11 +14,11 @@
 				<label class="control-label">Job persistence</label>
 				<div class="controls">
 					<label class="radio">
-						<input type="radio" name="optionsRadios" id="setMaintenance-delete-false" value="false">
+						<input type="radio" name="delete" id="setMaintenance-delete-false" value="false">
 						<span>Never delete jobs</span>
 					</label>
 					<label class="radio">
-						<input type="radio" name="optionsRadios" id="setMaintenance-delete-true" value="true">
+						<input type="radio" name="delete" id="setMaintenance-delete-true" value="true">
 						<span>Delete jobs that are</span>
 						<input type="number" step="1" min="1" style="width:75px;" name="maintenance-minutes" id="setMaintenance-maintenance-minutes" placeholder="Number of minutes" class="input-xlarge"
 							onkeyup="if(this.value==='@{if (models.Setting.get("jobs.deleteAfterDuration")==null) "0" else Long.parseLong(models.Setting.get("jobs.deleteAfterDuration"))/60000L}')document.getElementById('setMaintenance-maintenanceGroup').style.backgroundColor='#FFF';else document.getElementById('setMaintenance-maintenanceGroup').style.backgroundColor='#DDF';"
@@ -41,6 +41,20 @@
 								$("#setMaintenance-delete-true").removeAttr("checked");
 								$("#setMaintenance-delete-false").attr("checked","");
 							}
+							
+							$("#setMaintenance-maintenanceGroup input[name=delete]").change(function(){
+								if (this.value === "false")
+									$("#setMaintenance-maintenance")[0].value = 0;
+								else
+									$("#setMaintenance-maintenance")[0].value = $("#setMaintenance-maintenance-minutes")[0].value;
+							});
+							$("#setMaintenance-maintenanceGroup input[name=maintenance-minutes]").change(function(){
+								if ($("#setMaintenance-delete-false:checked").size()>0)
+									$("#setMaintenance-maintenance")[0].value = 0;
+								else
+									$("#setMaintenance-maintenance")[0].value = $("#setMaintenance-maintenance-minutes")[0].value;
+							});
+							
 							setInterval(function(){
 								console.log(document.getElementById("setMaintenance-maintenance").value);
 							},1000);

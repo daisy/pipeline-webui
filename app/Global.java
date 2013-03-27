@@ -79,7 +79,13 @@ public class Global extends GlobalSettings {
 							if (Administrator.shuttingDown == null) {
 								Pipeline2WSResponse response;
 								try {
-									response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));
+									String endpoint = Setting.get("dp2ws.endpoint");
+									if (endpoint == null) {
+										controllers.Application.setAlive(null);
+										return;
+									}
+									
+									response = org.daisy.pipeline.client.Alive.get(endpoint);
 									if (response.status != 200) {
 										controllers.Application.setAlive(null);
 										

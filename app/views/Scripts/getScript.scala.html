@@ -13,9 +13,19 @@
 }
 </hgroup>
 
-<form action="@routes.Jobs.postJob().unique()" method="POST" id="script-@script.id-form" class="form-horizontal" onsubmit="Job.submit();">
-	<input type="hidden" id="@script.id-id" name="id" value="@script.id" />
-	<input type="hidden" id="@script.id-uploads" name="uploads" value=""/>
+<form action="@routes.Jobs.postJob().unique()" method="POST" id="script-@script.id-form" class="form-horizontal" onsubmit="DP2Forms.prepareSubmission('script-@script.id')">
+	<input type="hidden" id="script-@script.id-id" name="id" value="@script.id" />
+	<input type="hidden" id="script-@script.id-uploads" name="uploads" value=""/>
+	<script type="text/javascript">
+		/* Prepare upload widget for validation and submission */
+		var onSubmit = function() {
+			var uploads = [];
+			for (var id in Job.uploads) uploads.push(Job.uploads[id].id);
+			console.log("changing uploads from '"+$("#script-@script.id-uploads").attr("value")+"' to '"+uploads.join()+"'");
+			$("#script-@script.id-uploads").attr("value",uploads.join());
+		}
+		DP2Forms.beforeSubmit("script-@script.id",onSubmit);
+	</script>
 	
 	<fieldset>
 		

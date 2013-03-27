@@ -126,25 +126,16 @@
 						}
 					});
 					
-					/* Prepare and validate widget */
-					var validator = function(){
-						var result = {valid: true, messages: []};
-						
+					/* Prepare form widget for validation and submission */
+					var beforeSubmit = function(){
 						var value = [];
 						$.each($("#script-@script.id-@{arg.kind}-@{arg.name}-selected option"), function(i, e) {
 							value.push($(e).attr("value"));
 						});
+						console.log("changing @{arg.name} from '"+$('#script-@script.id-@{arg.kind}-@{arg.name}').attr("value")+"' to '"+value.join()+"'");
 						$('#script-@script.id-@{arg.kind}-@{arg.name}').attr("value", value.join());
-						
-						//TODO: validate #script-@script.id-@{arg.kind}-@{arg.name}
-						/*
-						mediaType
-							$("@{arg.kind}-@{arg.name}-selected option") - WARN: check the media type of each option against supported types 
-						*/
-						
-						return result;
 					}
-					Job.onValidate(validator);
+					DP2Forms.beforeSubmit("script-@script.id",beforeSubmit);
 				});
 			</script>
 		</div>
