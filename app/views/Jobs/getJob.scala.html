@@ -2,6 +2,20 @@
 
 @main("View job") {
 
+@if(flash.contains("error")) {
+    <div role="alert" class="alert alert-error">
+    	<a class="close" data-dismiss="alert">&times;</a>
+        @flash.get("error")
+    </div>
+}
+
+@if(flash.contains("success")) {
+    <div role="alert" class="alert alert-success">
+    	<a class="close" data-dismiss="alert">&times;</a>
+        @flash.get("success")
+    </div>
+}
+
 <hgroup>
 	<h1>Job Summary<br>
 	<small id="header-nicename">@uiJob.nicename</small></h1>

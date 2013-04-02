@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import play.Logger;
+import play.Play;
 import play.db.ebean.*;
 
 import javax.persistence.*;
@@ -114,7 +115,7 @@ public class Job extends Model implements Comparable<Job> {
 					public void run() {
 						try {
 							Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) : 0;
-							Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
+//							Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
 							
 							Pipeline2WSResponse wsJob;
 							org.daisy.pipeline.client.models.Job job;
@@ -128,7 +129,9 @@ public class Job extends Model implements Comparable<Job> {
 								
 								Document xml = wsJob.asXml();
 								job = new org.daisy.pipeline.client.models.Job(xml);
-								Logger.debug(XML.toString(xml));
+								
+								if (Play.isDev())
+									Logger.debug(XML.toString(xml));
 								
 							} catch (Pipeline2WSException e) {
 								Logger.error(e.getMessage(), e);
@@ -164,10 +167,14 @@ public class Job extends Model implements Comparable<Job> {
 								lastStatus.put(job.id, job.status);
 								NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-status-"+job.id, job.status));
 								
+								webUiJob.status = job.status.toString();
+								webUiJob.save(Application.datasource);
+								
 								if (job.status == Status.RUNNING) {
+									// job status changed from IDLE to RUNNING
 									Map<String,String> startedMap = new HashMap<String,String>();
-									startedMap.put("text", webUiJob.finished.toString());
-									startedMap.put("number", webUiJob.finished.getTime()+"");
+									startedMap.put("text", webUiJob.started.toString());
+									startedMap.put("number", webUiJob.started.getTime()+"");
 									NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-started-"+job.id, startedMap));
 								}
 							}
@@ -187,7 +194,7 @@ public class Job extends Model implements Comparable<Job> {
 	}
 	
 	public List<Upload> getUploads() {
-		return Upload.find.where("job = '"+id+"'").findList();
+		return Upload.find.where().eq("job", id).findList();
 	}
 	
 	@Override

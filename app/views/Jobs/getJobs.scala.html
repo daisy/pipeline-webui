@@ -74,13 +74,13 @@ addJob = function(job) {
 	
 	updateFuzzy("created-"+job.id+"-fuzzy",new Date( job.created === null ? 999999999999999 : job.created ));
 	
-	Notifications.listen("job-status-"+job.id, function(status){
+	Notifications.listen("job-status-"+job.id, function(status, id){
 		var statusText = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-		$("#job-status-"+job.id).html('<img src="@routes.Assets.at("images/")'+status+'.png" alt="'+statusText+'" title="'+statusText+'"/>');
+		$("#job-status-"+id).html('<img src="@routes.Assets.at("images/")'+status+'.png" alt="'+statusText+'" title="'+statusText+'"/>');
 		if (status==="DONE") {
-			$("#job-results-"+job.id).html(' <span><a class="btn btn-mini btn-success" href="'+'@routes.Jobs.getResult("JOBID")'.replace('JOBID',job.id)+'"><i class="icon-download-alt icon-white"></i> Download</a></span>');
+			$("#job-results-"+id).html(' <span><a class="btn btn-mini btn-success" href="'+'@routes.Jobs.getResult("JOBID")'.replace('JOBID',id)+'"><i class="icon-download-alt icon-white"></i> Download</a></span>');
 		}
-	});
+	}, job.id);
 }
 
 $(function(){

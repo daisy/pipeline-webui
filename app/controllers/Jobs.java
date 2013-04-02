@@ -103,7 +103,6 @@ public class Jobs extends Controller {
 				job.href = XPath.selectText("@href", jobNode, Pipeline2WS.ns);
 				job.status = XPath.selectText("@status", jobNode, Pipeline2WS.ns);
 				if (user.admin || user.id >= 0 && user.id.equals(job.user) || user.id < 0 && job.user < 0 && "true".equals(Setting.get("users.guest.shareJobs"))) {
-					Logger.debug(user.id+" >= 0 && "+user.id+".equals("+job.user+")");
 					jobList.add(job);
 				}
 			}
@@ -152,15 +151,15 @@ public class Jobs extends Controller {
 			return forbidden("You are not allowed to view this job.");
 		}
 		
-		webuiJob.status = job.status.toString();
-		webuiJob.messages = job.messages;
-		if (!Job.lastMessageSequence.containsKey(job.id) && job.messages.size() > 0) {
-			Collections.sort(job.messages);
-			Job.lastMessageSequence.put(job.id, job.messages.get(job.messages.size()-1).sequence);
-		}
-		if (!Job.lastStatus.containsKey(job.id)) {
-			Job.lastStatus.put(job.id, job.status);
-		}
+//		webuiJob.status = job.status.toString();
+//		webuiJob.messages = job.messages;
+//		if (!Job.lastMessageSequence.containsKey(job.id) && job.messages.size() > 0) {
+//			Collections.sort(job.messages);
+//			Job.lastMessageSequence.put(job.id, job.messages.get(job.messages.size()-1).sequence);
+//		}
+//		if (!Job.lastStatus.containsKey(job.id)) {
+//			Job.lastStatus.put(job.id, job.status);
+//		}
 		
 		User.flashBrowserId(user);
 		return ok(views.html.Jobs.getJob.render(job, webuiJob));
@@ -204,13 +203,13 @@ public class Jobs extends Controller {
 		
 		webuiJob.status = job.status.toString();
 		webuiJob.messages = job.messages;
-		if (!Job.lastMessageSequence.containsKey(job.id) && job.messages.size() > 0) {
+//		if (!Job.lastMessageSequence.containsKey(job.id) && job.messages.size() > 0) {
 			Collections.sort(job.messages);
-			Job.lastMessageSequence.put(job.id, job.messages.get(job.messages.size()-1).sequence);
-		}
-		if (!Job.lastStatus.containsKey(job.id)) {
-			Job.lastStatus.put(job.id, job.status);
-		}
+//			Job.lastMessageSequence.put(job.id, job.messages.get(job.messages.size()-1).sequence);
+//		}
+//		if (!Job.lastStatus.containsKey(job.id)) {
+//			Job.lastStatus.put(job.id, job.status);
+//		}
 		
 		JsonNode jobJson = play.libs.Json.toJson(webuiJob);
 		return ok(jobJson);
@@ -542,8 +541,10 @@ public class Jobs extends Controller {
 			if (filenames.length() > 0)
 				webUiJob.nicename = filenames;
 		}
+		webUiJob.created = new Date();
 		webUiJob.started = new Date();
 		webUiJob.save(Application.datasource);
+		NotificationConnection.push(webUiJob.user, new Notification("job-created-"+webUiJob.id, webUiJob.created.toString()));
 		NotificationConnection.push(webUiJob.user, new Notification("job-started-"+webUiJob.id, webUiJob.started.toString()));
 		for (Long uploadId : scriptForm.uploads.keySet()) {
 			// associate uploads with job
@@ -553,17 +554,20 @@ public class Jobs extends Controller {
 		
 		webUiJob.status = "IDLE";
 		
-		webUiJob.pushNotifications();
 		JsonNode jobJson = play.libs.Json.toJson(webUiJob);
 		Notification jobNotification = new Notification("new-job", jobJson);
+		Logger.debug("pushed new-job notification with status=IDLE for job #"+jobId);
 		NotificationConnection.pushJobNotification(webUiJob.user, jobNotification);
+		webUiJob.pushNotifications();
 		
-		if (user.id < 0 && scriptForm.guestEmail != null) {
+		if (user.id < 0 && scriptForm.guestEmail != null && scriptForm.guestEmail.length() > 0) {
 			String jobUrl = routes.Jobs.getJob(jobId).absoluteURL(request())+"?guestid="+(models.User.parseUserId(session())!=null?-models.User.parseUserId(session()):"");
 			String html = views.html.Account.emailJobCreated.render(jobUrl, webUiJob.nicename).body();
 			String text = "To view your Pipeline 2 job, go to this web address: " + jobUrl;
-			if (!Account.sendEmail("Job started: "+webUiJob.nicename, html, text, scriptForm.guestEmail, scriptForm.guestEmail))
-				flash("error", "Was unable to send the e-mail.");
+			if (Account.sendEmail("Job started: "+webUiJob.nicename, html, text, scriptForm.guestEmail, scriptForm.guestEmail))
+				flash("success", "An e-mail was sent to "+scriptForm.guestEmail+" with a link to this job.");
+			else
+				flash("error", "Was unable to send an e-mail with a link to this job.");
 		}
 		
 		return redirect(controllers.routes.Jobs.getJob(jobId));

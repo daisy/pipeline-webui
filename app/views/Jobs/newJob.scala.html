@@ -50,11 +50,11 @@ h2 {
 						</tr>
 					</thead>
 					<tbody></tbody>
-					<tfoot>
+					<!--<tfoot>
 						<tr>
 							<td colspan="2">More</td>
 						</tr>
-					</tfoot>
+					</tfoot>-->
 				</table>
 				
 				<div role="alert" class="noScripts alert alert-info" style="display:none;">
@@ -160,8 +160,10 @@ h2 {
 									$.ajax({
 										url: "@routes.Scripts.getScript("")"+$(this).data("id"),
 										success: function(data) {
-											$('#optionsGroup').append(data);
-											chooseScript(this);
+											if ($("#script-"+$(this).data("id")).size()===0) {
+												$('#optionsGroup').append(data);
+												chooseScript(this);
+											}
 										},
 										context: this
 									});
@@ -181,17 +183,21 @@ h2 {
 			$("#script-"+$(this).data("id")).show();
 			$("#scriptsDetails").html($(linkElement).data("nicename"));
 			
-			if ($("#script-"+$(linkElement).data("id")).data("fileinput")==="false" || !$.isEmptyObject(Job.uploads)) {
-				// go to options accordion group if the script does not accept files or files have already been added
-				$("#doesNotAcceptFilesScriptName").html($(linkElement).data("nicename"));
+			if ($("#script-"+$(linkElement).data("id")).data("fileinput")===true) {
+				$("#doesNotAcceptFiles").hide();
+				$("#acceptsFiles").show();
+			} else {
 				$("#acceptsFiles").hide();
 				$("#doesNotAcceptFiles").show();
+			}
+			
+			if ($("#script-"+$(linkElement).data("id")).data("fileinput")===false || !$.isEmptyObject(Job.uploads)) {
+				// go to options accordion group if the script does not accept files or files have already been added
+				$("#doesNotAcceptFilesScriptName").html($(linkElement).data("nicename"));
 				$("#hOptions").click();
 				
 			} else {
 				// go to files accordion group if the script accepts input files and no files have been added
-				$("#doesNotAcceptFiles").hide();
-				$("#acceptsFiles").show();
 				$("#hFiles").click();
 			}
 		}

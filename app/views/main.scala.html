@@ -44,6 +44,7 @@
 	$(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
 	@if(play.Play.application().isDev()){
 		$(function(){Notifications.debug=true;DP2Forms.debug=true;});
+		console.log("browser id", @Long.parseLong(flash().get("browserId")));
 	}
 	</script>
   </head>

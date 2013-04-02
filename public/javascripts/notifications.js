@@ -76,7 +76,8 @@ Notifications = {
         	
         	if (Notifications.handlers[notification.kind]) {
         		for (var i = 0; i < Notifications.handlers[notification.kind].length; i++) {
-        			Notifications.handlers[notification.kind][i](notification.data);
+                    var handler = Notifications.handlers[notification.kind][i];
+                    handler.fn(notification.data, handler.data);
         		}
         	}
         }
@@ -90,10 +91,9 @@ Notifications = {
         Notifications.websocket.onclose = function() {Notifications.websocket = null;}
 	},
 	
-	listen: function(kind, fn) {
-		if (Notifications.handlers[kind])
-			Notifications.handlers[kind].push(fn);
-		else
-			Notifications.handlers[kind] = [fn];
+	listen: function(kind, fn, data) {
+        if (!$.isArray(Notifications.handlers[kind]))
+            Notifications.handlers[kind] = new Array();
+		Notifications.handlers[kind].push({ fn:fn, data:data });
 	}
 };

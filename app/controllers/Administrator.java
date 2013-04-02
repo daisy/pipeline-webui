@@ -77,8 +77,6 @@ public class Administrator extends Controller {
 			if (!filledForm.field("password").valueOr("").equals("") && !filledForm.field("password").valueOr("").equals(filledForm.field("repeatPassword").value()))
 				filledForm.reject("repeatPassword", "Password doesn't match.");
 		}
-
-		//		public static JsonNode validateJson()
 	}
 
 	public final static Form<SetWSForm> setWSForm = play.data.Form.form(SetWSForm.class);
@@ -333,7 +331,7 @@ public class Administrator extends Controller {
 			return redirect(routes.Login.login());
 		
 		Map<String, String[]> query = request().queryString();
-		Map<String, String[]> form = request().body().asFormUrlEncoded();
+//		Map<String, String[]> form = request().body().asFormUrlEncoded();
 
 		ConfigureAppearanceForm.refreshList();
 

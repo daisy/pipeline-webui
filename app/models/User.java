@@ -27,7 +27,9 @@ public class User extends Model {
 
 
 	public static final Long LINK_TIMEOUT = 24*3600*1000L; // TODO: make as admin setting instead
-
+	
+	public static final Long JS_MAX_INT = +9007199254740992L;
+	public static final Long JS_MIN_INT = -9007199254740992L;
 
 	// ---------- Instance stuff ----------
 
@@ -115,9 +117,10 @@ public class User extends Model {
 		this.password = Crypto.sign(password);
 	}
 	
+	private static Random randomBrowserId = new Random(new Date().getTime());
 	public static Long flashBrowserId(User user) {
 		Long userId = user == null ? null : user.id;
-		Long browserId = new Random().nextLong();
+		Long browserId = JS_MIN_INT + (long)(randomBrowserId.nextDouble() * ((JS_MAX_INT - JS_MIN_INT) + 1)); // Random integer in range [JS_MIN_INT,JS_MAX_INT] 
 		NotificationConnection.createBrowserIfAbsent(userId, browserId);
 		Logger.debug("Browser: user #"+userId+" opened browser window #"+browserId);
 		Controller.flash("browserId",""+browserId);
@@ -201,7 +204,7 @@ public class User extends Model {
 		}
 	}
 	
-	private static Random randomGuestUserId = new Random();
+	private static Random randomGuestUserId = new Random(new Date().getTime());
 	public static User loginAsGuest(Session session) {
 		if (!"true".equals(models.Setting.get("users.guest.allowGuests")))
 			return null;

@@ -114,7 +114,8 @@
 		<h2>E-mail settings</h2>
 		<br/>
 		<script type="text/javascript">
-	  		//$(function(){ DP2Forms.startValidation("configureEmailForm", "@routes.Administrator.postSettings()?validate", ["TODO"]); });
+			// TODO: dynamic validation of configureEmail form
+	  		//$(function(){ DP2Forms.startValidation("configureEmail", "@routes.Administrator.postSettings()?validate", ["TODO"]); });
 		</script>
 		@views.html.Administrator.Forms.configureEmail(forms.configureEmailForm, routes.Administrator.postSettings(), null)
 	</section>
@@ -134,6 +135,7 @@
 	<h2>Appearance</h2>
 	<br/>
 	<script type="text/javascript">
+		// TODO: dynamic validation of configureAppearance form
   		//$(function(){ DP2Forms.startValidation("configureAppearance", "@routes.Administrator.postSettings()?validate", ["TODO"]); });
 	</script>
 	@views.html.Administrator.Forms.configureAppearance(forms.configureAppearanceForm, routes.Administrator.postSettings(), null)

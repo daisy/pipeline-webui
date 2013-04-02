@@ -204,22 +204,35 @@ public class Account extends Controller {
 	
 	public static boolean sendEmail(String subject, String html, String text, String recipientName, String recipientEmail) {
 		try {
+			String host = Setting.get("mail.smtp.host");
+			String port = Setting.get("mail.smtp.port");
+			String from = Setting.get("mail.from.email");
+			String fromName = Setting.get("mail.from.name");
+			String ssl = Setting.get("mail.smtp.ssl");
+			String username = Setting.get("mail.username");
+			if (host == null || port == null || from == null || fromName == null || ssl == null || username == null) {
+				Logger.error("Either host, port, e-mail, sender name, username or ssl missing.", new Exception("E-mail misconfigured"));
+				return false;
+			}
+			
 			HtmlEmail email = new HtmlEmail();
-			email.setHostName(Setting.get("mail.smtp.host"));
+			email.setHostName(host);
 			email.setDebug(Play.application().isDev());
-			email.setFrom(Setting.get("mail.from.email"), Setting.get("mail.from.name"));
+			email.setFrom(from, fromName);
 			email.setSubject("[DAISY Pipeline 2] "+subject); // TODO: customizable subject prefix
 			email.setHtmlMsg(html);
 			email.setTextMsg(text);
 			email.addTo(recipientEmail, recipientName);
 			
-			String prefix = "true".equals(Setting.get("mail.smtp.ssl")) ? "mail.smtps" : "mail.smtp";
-			email.setSSL("true".equals(Setting.get("mail.smtp.ssl")));
-			email.setTLS("true".equals(Setting.get("mail.smtp.ssl")));
+			String prefix = "true".equals(ssl) ? "mail.smtps" : "mail.smtp";
+			email.setSSL("true".equals(ssl));
+			email.setTLS("true".equals(ssl));
 			
 			// AUTH
 			if (Setting.get("mail.username").length() > 0) {
-				email.setAuthenticator(new DefaultAuthenticator(Setting.get("mail.username"), Setting.get("mail.password")));
+				String password = Setting.get("mail.password")+"";
+				
+				email.setAuthenticator(new DefaultAuthenticator(username, password));
 				email.getMailSession().getProperties().put(prefix+".auth", "true");
 			} else {
 				email.getMailSession().getProperties().put(prefix+".auth", "false");
@@ -230,11 +243,11 @@ public class Account extends Controller {
 			email.getMailSession().getProperties().put("mail.debug", Play.application().isDev()+"");
 			email.getMailSession().getProperties().put(prefix+".debug", Play.application().isDev()+"");
 			
-			email.getMailSession().getProperties().put(prefix+".user", Setting.get("mail.username"));
-			email.getMailSession().getProperties().put(prefix+".host", Setting.get("mail.smtp.host"));
-			email.getMailSession().getProperties().put(prefix+".port", Setting.get("mail.smtp.port"));
-			if ("true".equals(Setting.get("mail.smtp.ssl"))) {
-				email.getMailSession().getProperties().put(prefix+".socketFactory.port", Setting.get("mail.smtp.port"));
+			email.getMailSession().getProperties().put(prefix+".user", username);
+			email.getMailSession().getProperties().put(prefix+".host", host);
+			email.getMailSession().getProperties().put(prefix+".port", port);
+			if ("true".equals(ssl)) {
+				email.getMailSession().getProperties().put(prefix+".socketFactory.port", port);
 				email.getMailSession().getProperties().put(prefix+".socketFactory.class", "javax.net.ssl.SSLSocketFactory");
 				email.getMailSession().getProperties().put(prefix+".socketFactory.fallback", "false");
 			}
@@ -242,7 +255,6 @@ public class Account extends Controller {
 			return true;
 		} catch (EmailException e) {
 			Logger.error("EmailException occured while trying to send an e-mail!", e);
-			e.printStackTrace();
 			return false;
 		}
 	}

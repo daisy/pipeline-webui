@@ -8,7 +8,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.codehaus.jackson.JsonNode;
 
-import play.Logger;
 import play.libs.F.Callback;
 import play.libs.F.Callback0;
 import play.mvc.WebSocket;
@@ -117,17 +116,20 @@ public class NotificationConnection {
 	
 	public static void pushPublic(Notification notification) {
 		synchronized (notificationConnections) {
-			for (Long userId : notificationConnections.keySet())
-				if (userId < 0)
-					for (NotificationConnection connection : notificationConnections.get(userId))
+			for (Long userId : notificationConnections.keySet()) {
+				if (userId < 0) {
+					for (NotificationConnection connection : notificationConnections.get(userId)) {
 						connection.push(notification);
+					}
+				}
+			}
 		}
 	}
 	
 	public static void pushJobNotification(Long userId, Notification notification) {
 		NotificationConnection.pushAdmins(notification);
 		if (userId != null && userId < 0 && "true".equals(Setting.get("users.guest.shareJobs"))) {
-				NotificationConnection.pushPublic(notification); // push to all public users
+			NotificationConnection.pushPublic(notification); // push to all public users
 		} else {
 			NotificationConnection.push(userId, notification); // push to current user only
 		}
@@ -157,7 +159,7 @@ public class NotificationConnection {
 	 */
 	public static void push(Long userId, Long browserId, Notification notification) {
 		if (userId == null) userId = -1L;
-		Logger.debug("pushing message to user #"+userId+" (browser #"+browserId+"): "+notification.toString());
+//		Logger.debug("pushing message to user #"+userId+" (browser #"+browserId+"): "+notification.toString());
 		synchronized (notificationConnections) {
 			if (!notificationConnections.containsKey(userId)) {
 //				Logger.debug("Can't push notification to user #"+userId+": no such user connected.");
