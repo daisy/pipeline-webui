@@ -16,10 +16,16 @@
 	
 	<!-- Styles -->
 	<link href="@routes.Application.theme("stylesheets/bootstrap.min.css")?@Application.themeName()&version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" rel="stylesheet" type="text/css"/>
+	@if(controllers.Application.themeName()!=""){
+		<link href="@routes.Application.theme("stylesheets/bootstrap-responsive.css")?@Application.themeName()&version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" rel="stylesheet" type="text/css"/>
+	}
 	@for(style <- moreStyles) {
 		<link href="@routes.Application.theme("stylesheets/"+style)?@Application.themeName()&version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" rel="stylesheet" type="text/css"/>
 	}
-	<link href="@routes.Application.theme("stylesheets/main.min.css")?@Application.themeName()&version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" rel="stylesheet" type="text/css"/>
+	<link href="@routes.Assets.at("stylesheets/main.min.css")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" rel="stylesheet" type="text/css"/>
+	@if(controllers.Application.themeName()!=""){
+		<link href="@routes.Application.theme("stylesheets/main.css")?@Application.themeName()&version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" rel="stylesheet" type="text/css"/>
+	}
 	
 	<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
 	<!--[if lt IE 9]>
