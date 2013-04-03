@@ -47,15 +47,15 @@
     </issueManagement>
 
     <properties>
-        <pipeline.webui.version>1.4-beta</pipeline.webui.version>
+        <pipeline.webui.version>1.5</pipeline.webui.version>
     </properties>
 
     <build>
         <plugins>
             <plugin>
-                <groupId>de.akquinet.innovation.play2</groupId>
+                <groupId>org.nanoko.playframework</groupId>
                 <artifactId>play2-maven-plugin</artifactId>
-                <version>1.2.0</version>
+                <version>1.2.2</version>
                 <extensions>true</extensions>
             </plugin>
 

@@ -1,6 +1,7 @@
 package utils;
 
 import org.daisy.pipeline.client.Pipeline2WSLogger;
+import org.daisy.pipeline.client.Pipeline2WSLogger.LEVEL;
 
 import play.Logger;
 

@@ -217,7 +217,7 @@ public class Account extends Controller {
 			
 			HtmlEmail email = new HtmlEmail();
 			email.setHostName(host);
-			email.setDebug(Play.application().isDev());
+			email.setDebug(Application.debug);
 			email.setFrom(from, fromName);
 			email.setSubject("[DAISY Pipeline 2] "+subject); // TODO: customizable subject prefix
 			email.setHtmlMsg(html);
@@ -240,8 +240,8 @@ public class Account extends Controller {
 			
 			email.getMailSession().getProperties().put(prefix+".starttls.enable", Setting.get("mail.smtp.ssl"));
 			
-			email.getMailSession().getProperties().put("mail.debug", Play.application().isDev()+"");
-			email.getMailSession().getProperties().put(prefix+".debug", Play.application().isDev()+"");
+			email.getMailSession().getProperties().put("mail.debug", Application.debug+"");
+			email.getMailSession().getProperties().put(prefix+".debug", Application.debug+"");
 			
 			email.getMailSession().getProperties().put(prefix+".user", username);
 			email.getMailSession().getProperties().put(prefix+".host", host);

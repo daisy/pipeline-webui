@@ -130,7 +130,7 @@ public class Job extends Model implements Comparable<Job> {
 								Document xml = wsJob.asXml();
 								job = new org.daisy.pipeline.client.models.Job(xml);
 								
-								if (Play.isDev())
+								if (Application.debug)
 									Logger.debug(XML.toString(xml));
 								
 							} catch (Pipeline2WSException e) {

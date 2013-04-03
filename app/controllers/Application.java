@@ -17,6 +17,8 @@ import utils.Pipeline2Engine;
 
 public class Application extends Controller {
 	
+	public static final boolean debug = "DEBUG".equals(Configuration.root().getString("logger.application"));
+	
 	Pipeline2Engine localEngine = null;
 	
 	public static final String DEFAULT_DP2_ENDPOINT_LOCAL = "http://localhost:8181/ws";

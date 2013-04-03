@@ -13,6 +13,7 @@ import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.Pipeline2WSLogger;
 
 import controllers.Administrator;
+import controllers.Application;
 import controllers.FirstUse;
 
 import play.libs.Akka;
@@ -31,7 +32,7 @@ public class Global extends GlobalSettings {
 		final String datasource = Configuration.root().getString("dp2.datasource");
 		
 		Pipeline2WS.setLoggerImplementation(new Pipeline2PlayLogger());
-		if (Play.isDev())
+		if ("DEBUG".equals(Configuration.root().getString("logger.application")))
 			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.DEBUG);
 		
 		NotificationConnection.notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>();
