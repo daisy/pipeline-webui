@@ -25,10 +25,7 @@ public class Notifications extends Controller {
 	 */
 	public static Result xhr(Long browserId) {
 		User user = User.authenticate(request(), session());
-		if (user == null)
-			return forbidden();
-		
-		return ok(NotificationConnection.pullJson(user.id, browserId));
+		return ok(NotificationConnection.pullJson(user==null?null:user.id, browserId));
 	}
 	
 }

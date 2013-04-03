@@ -86,22 +86,22 @@ public class Pipeline2Engine {
                 Logger.debug("Shutdown key: "+key);
 				
 				if (key == null) {
-					Logger.error("Could not read the Pipeline 2 engine key file");
+					Logger.warn("Could not read the Pipeline 2 engine key file");
 					
 				} else {
 					Pipeline2WSResponse response = org.daisy.pipeline.client.Admin.halt(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), key);
 					if (response.status != 204) {
-						Logger.error("Could not shut down the Pipeline 2 engine:");
-						Logger.error(response.asText());
+						Logger.warn("Could not shut down the Pipeline 2 engine:");
+						Logger.warn(response.asText());
 						
 					} else {
-						Logger.error("Successfully shut down the Pipeline 2 engine!");
+						Logger.info("Successfully shut down the Pipeline 2 engine!");
 					}
 				}
 			} catch (Pipeline2WSException e) {
-				Logger.error(e.getLocalizedMessage(), e);
+				Logger.warn(e.getLocalizedMessage(), e);
 			} catch (FileNotFoundException e) {
-				Logger.error("Could not read Pipelne 2 engine key file; "+e.getLocalizedMessage(), e);
+				Logger.warn("Could not read Pipelne 2 engine key file; "+e.getLocalizedMessage(), e);
 			}
 			
 			// shut down by killing the process
@@ -236,7 +236,7 @@ public class Pipeline2Engine {
                 String line = null;
                 while ((line = bufferedReader.readLine()) != null) {
                 	if ("INFO".equals(streamType)) Logger.info(line);
-                	else if ("ERROR".equals(streamType)) Logger.error("|||"+line);
+                	else if ("ERROR".equals(streamType)) Logger.error(line);
                 	else if ("DEBUG".equals(streamType)) Logger.debug(line);
                 	else if ("TRACE".equals(streamType)) Logger.trace(line);
                 	else if ("WARN".equals(streamType)) Logger.warn(line);

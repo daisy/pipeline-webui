@@ -52,7 +52,7 @@
 	}
 	@if(play.Play.application().isDev()){
 		$(function(){Notifications.debug=true;DP2Forms.debug=true;});
-		console.log("browser id", @Long.parseLong(flash().get("browserId")));
+		console.log("browser id", flash().get("browserId"));
 	}
 	</script>
   </head>

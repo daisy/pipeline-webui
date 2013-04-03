@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import play.Logger;
-import play.Play;
 import play.db.ebean.*;
 
 import javax.persistence.*;
@@ -168,15 +167,17 @@ public class Job extends Model implements Comparable<Job> {
 								NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-status-"+job.id, job.status));
 								
 								webUiJob.status = job.status.toString();
-								webUiJob.save(Application.datasource);
 								
 								if (job.status == Status.RUNNING) {
 									// job status changed from IDLE to RUNNING
+									webUiJob.started = new Date();
 									Map<String,String> startedMap = new HashMap<String,String>();
 									startedMap.put("text", webUiJob.started.toString());
 									startedMap.put("number", webUiJob.started.getTime()+"");
 									NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-started-"+job.id, startedMap));
 								}
+								
+								webUiJob.save(Application.datasource);
 							}
 							
 							if (job.messages.size() > 0) {

@@ -54,7 +54,7 @@
 				<td>Created:</td>
 				<td>
 					<span id="created-fuzzy" aria-live="timer"></span><br/>
-					<small id="created" class="muted">@uiJob.created</small>
+					<small id="created" class="muted">@if(uiJob.created==null){""}else{uiJob.created}</small>
 					<script type="text/javascript">
 						updateFuzzyCreatedInterval = null;
 						updateFuzzyCreated = function(){updateFuzzyCreatedInterval=updateFuzzy("created-fuzzy",new Date(@if(uiJob.created==null){ 999999999999999 }else{ @uiJob.created.getTime() } ));};
@@ -67,7 +67,7 @@
 				<td>Started:</td>
 				<td>
 					<span id="started-fuzzy" aria-live="timer"></span><br/>
-					<small id="started" class="muted">@uiJob.started</small>
+					<small id="started" class="muted">@if(uiJob.started==null){""}else{uiJob.started}</small>
 					<script type="text/javascript">
 						updateFuzzyStartedInterval = null;
 						updateFuzzyStarted = function(){updateFuzzyStartedInterval=updateFuzzy("started-fuzzy",new Date(@if(uiJob.started==null){ 999999999999999 }else{ @uiJob.started.getTime() } ));};

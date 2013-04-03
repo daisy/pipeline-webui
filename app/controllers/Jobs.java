@@ -541,11 +541,10 @@ public class Jobs extends Controller {
 			if (filenames.length() > 0)
 				webUiJob.nicename = filenames;
 		}
-		webUiJob.created = new Date();
-		webUiJob.started = new Date();
+//		webUiJob.started = new Date();
 		webUiJob.save(Application.datasource);
 		NotificationConnection.push(webUiJob.user, new Notification("job-created-"+webUiJob.id, webUiJob.created.toString()));
-		NotificationConnection.push(webUiJob.user, new Notification("job-started-"+webUiJob.id, webUiJob.started.toString()));
+//		NotificationConnection.push(webUiJob.user, new Notification("job-started-"+webUiJob.id, webUiJob.started.toString()));
 		for (Long uploadId : scriptForm.uploads.keySet()) {
 			// associate uploads with job
 			scriptForm.uploads.get(uploadId).job = jobId;
@@ -564,7 +563,7 @@ public class Jobs extends Controller {
 			String jobUrl = routes.Jobs.getJob(jobId).absoluteURL(request())+"?guestid="+(models.User.parseUserId(session())!=null?-models.User.parseUserId(session()):"");
 			String html = views.html.Account.emailJobCreated.render(jobUrl, webUiJob.nicename).body();
 			String text = "To view your Pipeline 2 job, go to this web address: " + jobUrl;
-			if (Account.sendEmail("Job started: "+webUiJob.nicename, html, text, scriptForm.guestEmail, scriptForm.guestEmail))
+			if (Account.sendEmail("Job created: "+webUiJob.nicename, html, text, scriptForm.guestEmail, scriptForm.guestEmail))
 				flash("success", "An e-mail was sent to "+scriptForm.guestEmail+" with a link to this job.");
 			else
 				flash("error", "Was unable to send an e-mail with a link to this job.");

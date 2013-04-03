@@ -23,12 +23,16 @@ import utils.Pipeline2PlayLogger;
 
 public class Global extends GlobalSettings {
 	
-	public synchronized void beforeStart(Application app) {
-		
+	@Override
+	public synchronized void beforeStart(play.Application app) {
+		Logger.info("beforeStart");
 	}
 	
-	public synchronized void onStart(Application app) {
+	@Override
+	public synchronized void onStart(play.Application app) {
+		Logger.info("onStart");
 		// Application has started...
+		
 		final String datasource = Configuration.root().getString("dp2.datasource");
 		
 		Pipeline2WS.setLoggerImplementation(new Pipeline2PlayLogger());
@@ -37,6 +41,7 @@ public class Global extends GlobalSettings {
 		
 		NotificationConnection.notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>();
 		
+		Logger.debug("deployment: "+controllers.Application.deployment());
 		if ("desktop".equals(controllers.Application.deployment())) {
 			// reconfigure fwk dir each time, in case the install dir has changed
 			Pipeline2Engine.cwd = new File(Configuration.root().getString("dp2engine.dir")).getAbsoluteFile();
@@ -276,7 +281,8 @@ public class Global extends GlobalSettings {
 			);
 	}
 	
-	public void onStop(Application app) {
+	@Override
+	public void onStop(play.Application app) {
 		// Application shutdown...
 		
 		// Halts the Pipeline 2 engine if present

@@ -210,14 +210,16 @@ public class NotificationConnection {
 						}
 					}
 				});
-
+				
 				// Remember socket
+				if (notificationConnections == null)
+					notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>(); // not sure why it is not initialized in Global.java...
 				synchronized (notificationConnections) {
 					NotificationConnection connection = createBrowserIfAbsent(userIdNotNull, browserId);
 					
 					connection.websocket = out;
 					
-//					Logger.debug("WebSocket: user #"+userId+" connected websocket to window #"+browserId);
+//						Logger.debug("WebSocket: user #"+userId+" connected websocket to window #"+browserId);
 					
 					connection.flushWebSocket();
 				}
@@ -235,6 +237,9 @@ public class NotificationConnection {
 	 * @return
 	 */
 	public static JsonNode pullJson(Long userId, Long browserId) {
+		if (notificationConnections == null)
+			notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>(); // not sure why it is not initialized in Global.java...
+		
 		synchronized (notificationConnections) {
 			NotificationConnection connection = createBrowserIfAbsent(userId, browserId);
 			
@@ -245,7 +250,7 @@ public class NotificationConnection {
 	public static NotificationConnection createBrowserIfAbsent(Long userId, Long browserId) {
 		if (userId == null) userId = -1L;
 		if (notificationConnections == null)
-			notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>(); // not sure why it is not initialized in Global.java...
+			notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>();
 		synchronized (notificationConnections) {
 			notificationConnections.putIfAbsent(userId, new ArrayList<NotificationConnection>());
 			NotificationConnection connection = null;
