@@ -16,10 +16,7 @@ public class Notifications extends Controller {
 	 */
 	public static WebSocket<JsonNode> websocket(Long browserId) {
 		User user = User.authenticate(request(), session());
-		if (user == null)
-			return null; // forbidden
-		
-		return NotificationConnection.createWebSocket(user.id, browserId);
+		return NotificationConnection.createWebSocket(user==null?null:user.id, browserId);
 	}
 	
 	/**
