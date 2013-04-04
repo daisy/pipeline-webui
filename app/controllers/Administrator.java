@@ -144,24 +144,26 @@ public class Administrator extends Controller {
 				filledForm.reject("uploaddir", "The directory does not exist.");
 			else if (!dir.isDirectory())
 				filledForm.reject("uploaddir", "The path does not point to a directory.");
-
-			String tempPath = filledForm.field("tempdir").valueOr("");
-			if (!tempPath.endsWith(System.getProperty("file.separator")))
-				tempPath += System.getProperty("file.separator");
-			dir = new File(tempPath);
-			if (!dir.exists())
-				filledForm.reject("tempdir", "The directory does not exist.");
-			else if (!dir.isDirectory())
-				filledForm.reject("tempdir", "The path does not point to a directory.");
-
-			String resultPath = filledForm.field("resultdir").valueOr("");
-			if (!resultPath.endsWith(System.getProperty("file.separator")))
-				resultPath += System.getProperty("file.separator");
-			dir = new File(resultPath);
-			if (!dir.exists())
-				filledForm.reject("resultdir", "The directory does not exist.");
-			else if (!dir.isDirectory())
-				filledForm.reject("resultdir", "The path does not point to a directory.");
+			
+			if (Application.getAlive() == null || Application.getAlive().authentication) {
+				String tempPath = filledForm.field("tempdir").valueOr("");
+				if (!tempPath.endsWith(System.getProperty("file.separator")))
+					tempPath += System.getProperty("file.separator");
+				dir = new File(tempPath);
+				if (!dir.exists())
+					filledForm.reject("tempdir", "The directory does not exist.");
+				else if (!dir.isDirectory())
+					filledForm.reject("tempdir", "The path does not point to a directory.");
+				
+				String resultPath = filledForm.field("resultdir").valueOr("");
+				if (!resultPath.endsWith(System.getProperty("file.separator")))
+					resultPath += System.getProperty("file.separator");
+				dir = new File(resultPath);
+				if (!dir.exists())
+					filledForm.reject("resultdir", "The directory does not exist.");
+				else if (!dir.isDirectory())
+					filledForm.reject("resultdir", "The path does not point to a directory.");
+			}
 		}
 
 		public static void save(Form<SetStorageDirsForm> filledForm) {

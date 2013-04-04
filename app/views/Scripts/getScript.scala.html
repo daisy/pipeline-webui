@@ -21,7 +21,6 @@
 		var onSubmit = function() {
 			var uploads = [];
 			for (var id in Job.uploads) uploads.push(Job.uploads[id].id);
-			console.log("changing uploads from '"+$("#script-@script.id-uploads").attr("value")+"' to '"+uploads.join()+"'");
 			$("#script-@script.id-uploads").attr("value",uploads.join());
 		}
 		DP2Forms.beforeSubmit("script-@script.id",onSubmit);
@@ -98,7 +97,7 @@
 		}
 		
 		<div class="form-actions">
-			<button type="submit" value="Start job" data-loading-text="Starting job..." class="btn btn-large btn-primary" onclick="$(this).button('loading');">Start job</button>
+			<button type="submit" value="Start job" data-loading-text="Starting job..." class="btn btn-large btn-primary" onclick="$(this).btn('loading');">Start job</button>
 		</div>
 	</fieldset>
 	

@@ -132,7 +132,6 @@
 						$.each($("#script-@script.id-@{arg.kind}-@{arg.name}-selected option"), function(i, e) {
 							value.push($(e).attr("value"));
 						});
-						console.log("changing @{arg.name} from '"+$('#script-@script.id-@{arg.kind}-@{arg.name}').attr("value")+"' to '"+value.join()+"'");
 						$('#script-@script.id-@{arg.kind}-@{arg.name}').attr("value", value.join());
 					}
 					DP2Forms.beforeSubmit("script-@script.id",beforeSubmit);

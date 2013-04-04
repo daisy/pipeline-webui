@@ -107,6 +107,7 @@ public class SystemStatus extends Controller {
 					if (attempt.aliveResponse.status == 200) {
 						attempt.alive = new org.daisy.pipeline.client.models.Alive(attempt.aliveResponse);
 						attempt.aliveError = null;
+						attempt.authError = null;
 						
 					} else {
 						attempt.aliveError = attempt.aliveResponse.status+" - "+attempt.aliveResponse.statusName+": "+attempt.aliveResponse .statusDescription;

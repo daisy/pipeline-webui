@@ -39,20 +39,25 @@
 	<link rel="apple-touch-icon" sizes="114x114" href="routes.Assets.at("images/apple-touch-icon-114x114.png")"/>-->
 	
 	<!-- Load jQuery before the content (so other templates may use jQuery) -->
-	<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-	<script type="text/javascript">
-		if (typeof jQuery == 'undefined') {
-			document.write(unescape("%3Cscript src='@routes.Assets.at("javascripts/jquery-1.9.1.min.js")' type='text/javascript'%3E%3C/script%3E"));
-		}
-	</script>
+	<script type="text/javascript" src="@routes.Assets.at("javascripts/jquery-1.9.1.min.js")"></script>
+	@if(play.Play.application().isDev()){
+		<script type="text/javascript" src="@routes.Assets.at("javascripts/jquery-migrate-1.1.1.min.js")"></script>
+		<!--[if lt IE 9]>
+			<script type="text/javascript" src="http://fbug.googlecode.com/svn/lite/branches/firebug1.4/content/firebug-lite-dev.js"></script>
+		<![endif]-->
+	}else{
+		<!--[if lt IE 9]>
+		  <script type="text/javascript" src="@routes.Assets.at("javascripts/jquery-migrate-1.1.1.min.js")"></script>
+		<![endif]-->
+	}
 	
 	<script type="text/javascript" charset="utf-8">
 	@if(flash()!=null && flash().containsKey("browserId")){
 		$(function(){Notifications.init("@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}", "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId"))).absoluteURL(request)}");});
 	}
-	@if(play.Play.application().isDev()){
+	@if(controllers.Application.debug){
 		$(function(){Notifications.debug=true;DP2Forms.debug=true;});
-		console.log("browser id", flash().get("browserId"));
+		if (typeof console == "object") console.log("browser id", @flash().get("browserId"));
 	}
 	</script>
   </head>
@@ -135,6 +140,11 @@
 	
 	<!-- Scripts -->
 	<script src="@routes.Assets.at("javascripts/bootstrap.min.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
+	<script type="text/javascript">
+		// avoid namespace conflict between jQuery-UI and Bootstrap
+		var btn = $.fn.button.noConflict();
+		$.fn.btn = btn;
+	</script>
 	<script src="@routes.Assets.at("javascripts/json2.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
 	<script src="@routes.Assets.at("javascripts/main.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
 	<script src="@routes.Assets.at("javascripts/formUtils.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>

@@ -9,26 +9,13 @@
 	    <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
 	    <div class="row">
 		    <div class="span6">
-		        <div class="fileupload-buttonbar" id="fileupload-buttonbar" style="@if(play.Play.application().isDev()){ width:400px; }else{ 200px; }">
+		        <div class="fileupload-buttonbar" id="fileupload-buttonbar" style="width:200px;">
 		            <!-- The fileinput-button span is used to style the file input field as button -->
 		            <span class="btn btn-success fileinput-button" style="width:173px;">
 		                <i class="icon-plus icon-white"></i>
 		                <span id="upload-button-label">Upload Files</span>
 		                <input type="file" name="files" multiple="" aria-labelledby="upload-button-label"/>
 		            </span>
-		            @if(play.Play.application().isDev() && false){
-			            <script type="text/javascript">
-			            	if (Boolean(window.chrome)){
-				            	(function(){
-				            		var button = $('<span class="btn btn-success fileinput-button" style="width:173px;">');
-				            		$(button).append('<i class="icon-plus icon-white"></i>');
-				            		$(button).append('<span id="upload-directory-button-label">Upload Directory</span>');
-				            		$(button).append('<input type="file" name="files[]" multiple="" aria-labelledby="upload-directory-button-label" directory="" webkitdirectory="" mozdirectory=""/>');
-				            		$("#fileupload-buttonbar").append(button);
-				            	})();
-			            	}
-			            </script>
-			        }
 		            <a id="fileupload-help-link" class="accordion-toggle" data-toggle="collapse" href="#fileupload-help" title="Help" style="position:absolute;"><i class="icon-question-sign">&nbsp;</i></a>
 		        </div>
 	        </div>
@@ -38,18 +25,7 @@
 			<div class="span6">
 			    <div class="accordion-body collapse" id="fileupload-help">
 	        		<p>In modern browsers you can drag and drop files from your desktop into the browser window.</p>
-	        		@if(play.Play.application().isDev() && false){
-			            <script type="text/javascript">
-			            	if (Boolean(window.chrome)){
-			            		$("#fileupload-help").append('<p>Directory upload is an experimental feature in Google Chrome. You can use the "Upload Directory" button to upload an entire directory directly without zipping it first.</p>');
-				            } else {
-				            	$("#fileupload-help").append('<p>If you need to upload lots of files or if you need to preserve the folder structure of your fileset, please compress your files as a ZIP archive before uploading them. ZIP files will be unzipped on the server.</p>');
-				            	$("#fileupload-help").append('<p>If you use <a href="http://www.google.com/chrome">Google Chrome</a>, you can upload entire directories directly without zipping them first.</p>');
-				            }
-			            </script>
-			        }else{
-			        	<p>If you need to upload lots of files or if you need to preserve the folder structure of your fileset, please compress your files as a ZIP archive before uploading them. ZIP files will be unzipped on the server.</p>
-			        }
+		        	<p>If you need to upload lots of files or if you need to preserve the folder structure of your fileset, please compress your files as a ZIP archive before uploading them. ZIP files will be unzipped on the server.</p>
 			    </div>
 		    </div>
 	    </div>

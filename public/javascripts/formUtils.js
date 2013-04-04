@@ -8,14 +8,14 @@ DP2Forms = {
 	lastReport: {},
 
 	onValidationReport: function(formName, listener, data) {
-		if (DP2Forms.debug) console.log("adding event listener for validation of "+formName);
+		if (DP2Forms.debug && window.console && console.log) console.log("adding event listener for validation of "+formName);
 		if (!$.isArray(DP2Forms.listeners[formName])) DP2Forms.listeners[formName] = new Array();
 		DP2Forms.listeners[formName].push({ fn: listener, data: data});
 		if (typeof DP2Forms.lastReport[formName] !== "undefined") listener(lastReport[formName],data);
 	},
 
 	startValidation: function(formName, url, fields) {
-		if (DP2Forms.debug) console.log("starting validation of "+formName);
+		if (DP2Forms.debug && window.console && console.log) console.log("starting validation of "+formName);
 		DP2Forms.forms.push(formName);
 		DP2Forms.validators[formName] = {
 			url: url,
@@ -48,7 +48,7 @@ DP2Forms = {
 	},
 
 	stopValidation: function(formName) {
-		if (DP2Forms.debug) console.log("stopping validation of "+formName);
+		if (DP2Forms.debug && window.console && console.log) console.log("stopping validation of "+formName);
 		DP2Forms.forms.splice($.inArray(formName,DP2Forms.forms),1)
 		clearInterval(DP2Forms.validators[formName]);
 		DP2Forms.validators.splice($.inArray(formName,DP2Forms.validators),1)
@@ -99,7 +99,7 @@ DP2Forms = {
 	},
 
 	beforeSubmit: function(formName, handler, data) {
-		if (DP2Forms.debug) console.log("adding form widget submission handler for "+formName);
+		if (DP2Forms.debug && window.console && console.log) console.log("adding form widget submission handler for "+formName);
 		if (!$.isArray(DP2Forms.submissionHandlers[formName])) DP2Forms.submissionHandlers[formName] = new Array();
 		DP2Forms.submissionHandlers[formName].push({ fn: handler, data: data});
 		if (typeof DP2Forms.lastReport[formName] !== "undefined") handler(data);

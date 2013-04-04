@@ -28,7 +28,7 @@
 	    }
 	    
 	    <script type="text/javascript">
-	  		$(function(){ DP2Forms.startValidation("createAdmin", "@routes.FirstUse.postFirstUse()?validate", ["email","password","repeatPassword"]); }
+	  		$(function(){ DP2Forms.startValidation("createAdmin", "@routes.FirstUse.postFirstUse()?validate", ["email","password","repeatPassword"]); });
 		</script>
 	    <div>
 	  		@views.html.Administrator.Forms.createAdmin(createAdminForm, routes.FirstUse.postFirstUse(), true)

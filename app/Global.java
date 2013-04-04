@@ -13,7 +13,6 @@ import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.Pipeline2WSLogger;
 
 import controllers.Administrator;
-import controllers.Application;
 import controllers.FirstUse;
 
 import play.libs.Akka;
@@ -25,12 +24,11 @@ public class Global extends GlobalSettings {
 	
 	@Override
 	public synchronized void beforeStart(play.Application app) {
-		Logger.info("beforeStart");
+		
 	}
 	
 	@Override
 	public synchronized void onStart(play.Application app) {
-		Logger.info("onStart");
 		// Application has started...
 		
 		final String datasource = Configuration.root().getString("dp2.datasource");
