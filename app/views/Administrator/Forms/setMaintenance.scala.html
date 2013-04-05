@@ -78,7 +78,7 @@
 			<!-- TODO: add checkbox or on/off switch for enabling/disabling maintenance. It can be done already by setting the cleanup time to 0 minutes, but it should be more obvious. -->
 			
 			<div class="form-actions">
-				<button class="btn btn-primary" id="submit" type="submit" name="submit">Save Settings</button>
+				<button class="btn btn-primary" id="submit" type="submit" name="submit" disabled="">Save Settings</button>
 				@if(skipRoute != null){
 					<button class="btn" id="skip" type="button" name="skip" onclick="window.location='@routes.Application.index()';return false;">I'll configure it later <i class="icon-hand-right"></i></button>
 				}

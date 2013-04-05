@@ -122,7 +122,6 @@ public class User extends Model {
 		Long userId = user == null ? null : user.id;
 		Long browserId = JS_MIN_INT + (long)(randomBrowserId.nextDouble() * ((JS_MAX_INT - JS_MIN_INT) + 1)); // Random integer in range [JS_MIN_INT,JS_MAX_INT] 
 		NotificationConnection.createBrowserIfAbsent(userId, browserId);
-		Logger.debug("Browser: user #"+userId+" opened browser window #"+browserId);
 		Controller.flash("browserId",""+browserId);
 		return browserId;
 	}
@@ -231,7 +230,7 @@ public class User extends Model {
 	    	session.put("admin", admin+"");
 		} else {
 			session.remove("userid");
-			Logger.warn("Could not log in user '"+name+"' ('"+email+"'); userid is null.");
+			Logger.of("logger.application").warn("Could not log in user '"+name+"' ('"+email+"'); userid is null.");
 		}
 	}
 
@@ -343,7 +342,7 @@ public class User extends Model {
 				job.delete(datasource);
 			super.delete(datasource);
 		} catch (javax.persistence.OptimisticLockException e) {
-			Logger.warn("Could not delete user "+this.id+" ("+this.name+" / "+this.email+")", e);
+			Logger.of("logger.application").warn("Could not delete user "+this.id+" ("+this.name+" / "+this.email+")", e);
 		}
 	}
 	

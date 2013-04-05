@@ -41,7 +41,7 @@ public class NotificationConnection {
 	 */
 	public void push(Notification notification) {
 		notifications.add(notification);
-//		Logger.debug("added notification to user #"+userId+" + browser #"+browserId+". New size: "+notifications.size()+". Notification: "+notification);
+//		Logger.of("logger.application").debug("added notification to user #"+userId+" + browser #"+browserId+". New size: "+notifications.size()+". Notification: "+notification);
 		flushWebSocket();
 	}
 	
@@ -52,7 +52,7 @@ public class NotificationConnection {
 		if (websocket != null) {
 			for (Notification n : notifications) {
 				JsonNode jsonNotification = n.toJson();
-//				Logger.debug("Writing to WebSocket (user:"+userId+",browser:"+browserId+"): "+jsonNotification+". New size: "+notifications.size());
+//				Logger.of("logger.application").debug("Writing to WebSocket (user:"+userId+",browser:"+browserId+"): "+jsonNotification+". New size: "+notifications.size());
 				websocket.write(jsonNotification);
 			}
 			notifications.clear();
@@ -73,7 +73,7 @@ public class NotificationConnection {
 		JsonNode resultJson = play.libs.Json.toJson(result);
 		notifications.clear();
 		lastRead = new Date();
-//		Logger.debug("Pulling with XHR (user:"+userId+",browser:"+browserId+"): "+resultJson);
+//		Logger.of("logger.application").debug("Pulling with XHR (user:"+userId+",browser:"+browserId+"): "+resultJson);
 		return resultJson;
 	}
 	
@@ -141,10 +141,10 @@ public class NotificationConnection {
 	 */
 	public static void push(Long userId, Notification notification) {
 		if (userId == null) userId = -1L;
-//		Logger.debug("pushing message to user #"+userId+": "+notification.toString());
+//		Logger.of("logger.application").debug("pushing message to user #"+userId+": "+notification.toString());
 		synchronized (notificationConnections) {
 			if (!notificationConnections.containsKey(userId)) {
-//				Logger.debug("Can't push notification to user #"+userId+": no such user connected.");
+//				Logger.of("logger.application").debug("Can't push notification to user #"+userId+": no such user connected.");
 				return;
 			}
 			
@@ -159,10 +159,10 @@ public class NotificationConnection {
 	 */
 	public static void push(Long userId, Long browserId, Notification notification) {
 		if (userId == null) userId = -1L;
-//		Logger.debug("pushing message to user #"+userId+" (browser #"+browserId+"): "+notification.toString());
+//		Logger.of("logger.application").debug("pushing message to user #"+userId+" (browser #"+browserId+"): "+notification.toString());
 		synchronized (notificationConnections) {
 			if (!notificationConnections.containsKey(userId)) {
-//				Logger.debug("Can't push notification to user #"+userId+": no such user connected.");
+//				Logger.of("logger.application").debug("Can't push notification to user #"+userId+": no such user connected.");
 				return;
 			}
 			
@@ -191,7 +191,7 @@ public class NotificationConnection {
 				in.onMessage(new Callback<JsonNode>() {
 					public void invoke(JsonNode event) {
 						// Log events to the console
-//						Logger.debug(event.asText());
+//						Logger.of("logger.application").debug(event.asText());
 					}
 				});
 
@@ -206,7 +206,7 @@ public class NotificationConnection {
 								if (c.browserId.equals(browserId))
 									c.websocket = null;
 							}
-//							Logger.debug("WebSocket: user #"+userId+" disconnected websocket from window #"+browserId);
+//							Logger.of("logger.application").debug("WebSocket: user #"+userId+" disconnected websocket from window #"+browserId);
 						}
 					}
 				});
@@ -219,7 +219,7 @@ public class NotificationConnection {
 					
 					connection.websocket = out;
 					
-//						Logger.debug("WebSocket: user #"+userId+" connected websocket to window #"+browserId);
+//						Logger.of("logger.application").debug("WebSocket: user #"+userId+" connected websocket to window #"+browserId);
 					
 					connection.flushWebSocket();
 				}
@@ -261,7 +261,7 @@ public class NotificationConnection {
 				}
 			}
 			if (connection == null) {
-//				Logger.debug("Creating new notification connection for user #"+userId+" + browser #"+browserId);
+//				Logger.of("logger.application").debug("Creating new notification connection for user #"+userId+" + browser #"+browserId);
 				connection = new NotificationConnection(userId, browserId);
 				notificationConnections.get(userId).add(connection);
 			}

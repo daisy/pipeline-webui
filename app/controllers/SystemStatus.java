@@ -85,8 +85,8 @@ public class SystemStatus extends Controller {
 		}
 
 		// Ping endpoint
-		if (attempt.lastAliveTime == null || new Date().getTime() - attempt.lastAliveTime.getTime() > 30000) {
-			Logger.debug("trying endpoint: "+url);
+		if (attempt.lastAliveTime == null || new Date().getTime() - attempt.lastAliveTime.getTime() > 5000) {
+			Logger.of("logger.application").debug("trying endpoint: "+url);
 			attempt.lastAliveTime = new Date();
 			
 			// Check URL
@@ -121,12 +121,16 @@ public class SystemStatus extends Controller {
 			if (attempt.aliveResponse == null && attempt.aliveError == null)
 				attempt.aliveError = "Something unexpected occured while communicating with the Pipeline 2 framework";
 		}
+		if (attempt.aliveError != null)
+			attempt.alive = null;
 
 		// Test authentication
-		if (attempt.lastAuthTime == null || new Date().getTime() - attempt.lastAuthTime.getTime() > 500) {
+		if (attempt.aliveError != null) {
+			attempt.authError = "Invalid endpoint; cannot authenticate.";
+		} else if (attempt.lastAuthTime == null || new Date().getTime() - attempt.lastAuthTime.getTime() > 500) {
 			attempt.lastAuthTime = new Date();
 			if (attempt.alive != null && authid != null && secret != null && !attempt.alive.error && attempt.alive.authentication) {
-				Logger.debug("authenticating endpoint: "+url);
+				Logger.of("logger.application").debug("authenticating endpoint: "+url);
 				try {
 					attempt.authResponse = org.daisy.pipeline.client.Scripts.get(url, authid, secret);
 					if (attempt.authResponse.status == 401) {
@@ -144,6 +148,8 @@ public class SystemStatus extends Controller {
 				}
 			}
 		}
+		if (attempt.authError != null)
+			attempt.authResponse = null;
 
 		return attempt;
 	}

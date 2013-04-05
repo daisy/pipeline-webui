@@ -35,6 +35,7 @@ DP2Forms = {
 			field.data("state", "");
 			field.data("lastValidationPause", 0);
 
+
 			var group = $("#"+formName+"-"+fieldName+"Group");
 			if (group.hasClass("error")) {
 				field.data("state", "error");
@@ -50,8 +51,8 @@ DP2Forms = {
 	stopValidation: function(formName) {
 		if (DP2Forms.debug && window.console && console.log) console.log("stopping validation of "+formName);
 		DP2Forms.forms.splice($.inArray(formName,DP2Forms.forms),1)
-		clearInterval(DP2Forms.validators[formName]);
-		DP2Forms.validators.splice($.inArray(formName,DP2Forms.validators),1)
+		clearInterval(DP2Forms.validators[formName].interval);
+		delete DP2Forms.validators[formName];
 	},
 
 	/** No error will be reported when the value is the same as `initial`
@@ -115,13 +116,20 @@ DP2Forms = {
 	},
 
 	_scheduleValidation: function(formName) {
-		if (new Date().getTime() - DP2Forms.validators[formName].lastValidation >= 490)
+		if (typeof DP2Forms.validators[formName] === "undefined" || DP2Forms.validators[formName] === null) {
+			if (DP2Forms.debug && window.console && console.log) console.log("can't validate "+formName+" - it's not created yet");
+		} else if (typeof DP2Forms.validators[formName].lastValidation === "undefined" || DP2Forms.validators[formName].lastValidation === null || new Date().getTime() - DP2Forms.validators[formName].lastValidation >= 490) {
 			DP2Forms._validate(formName);
-		else
+
+		} else {
 			setTimeout(function(formName){
-				if (new Date().getTime() - DP2Forms.validators[formName].lastValidation >= 490)
+				if (typeof DP2Forms.validators[formName] === "undefined" || DP2Forms.validators[formName] === null) {
+					if (DP2Forms.debug && window.console && console.log) console.log("can't validate "+formName+" - it's not created yet");
+				} else if (typeof DP2Forms.validators[formName].lastValidation === "undefined" || DP2Forms.validators[formName].lastValidation === null || new Date().getTime() - DP2Forms.validators[formName].lastValidation >= 490) {
 					DP2Forms._validate(formName);
+				}
 			},510,formName);
+		}
 	},
 
 	_validate: function(formName) {
@@ -191,11 +199,13 @@ DP2Forms = {
 	},
 
 	_updateFieldDisplay: function(formName, fieldName) {
+		if (formName === undefined || fieldName === undefined || formName === null || fieldName === null)
+			return;
 		var field = $("#"+formName+"-"+fieldName);
 		var now = new Date().getTime();
 
 		// loading-animations
-		if (now - field.data("lastValueChange") > 1000 && field.data("validationValue") === field[0].value) {
+		if (now - field.data("lastValueChange") > 1000 && field.data("validationValue") === field.get(0).value) {
 			field.data("lastValidationPause", now);
 		}
 		if (now - field.data("lastValidationPause") > 1000) {

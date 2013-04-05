@@ -145,7 +145,11 @@ public class Administrator extends Controller {
 			else if (!dir.isDirectory())
 				filledForm.reject("uploaddir", "The path does not point to a directory.");
 			
-			if (Application.getAlive() == null || Application.getAlive().authentication) {
+			if (Application.getAlive() == null) {
+				filledForm.reject("tempdir", "Cannot determine whether or not the Pipeline 2 Engine is running in local mode.");
+				filledForm.reject("resultdir", "Cannot determine whether or not the Pipeline 2 Engine is running in local mode.");
+				
+			} else if (Application.getAlive().authentication) {
 				String tempPath = filledForm.field("tempdir").valueOr("");
 				if (!tempPath.endsWith(System.getProperty("file.separator")))
 					tempPath += System.getProperty("file.separator");
@@ -579,18 +583,12 @@ public class Administrator extends Controller {
 			}
 
 			if ("setWS".equals(formName)) {
-				Logger.debug("-------------------- A");
 				Form<Administrator.SetWSForm> filledForm = setWSForm.bindFromRequest();
-				Logger.debug("-------------------- B");
 				Administrator.SetWSForm.validate(filledForm);
-				Logger.debug("-------------------- C");
 				
 				if (query.containsKey("validate")) {
-					Logger.debug("-------------------- D");
 					User.flashBrowserId(user);
-					Logger.debug("-------------------- E");
 					try {
-						Logger.debug("-------------------- F");
 						return ok(FormHelper.asJson(filledForm));
 					} catch (RuntimeException e) {
 						Logger.error("validation failed", e);

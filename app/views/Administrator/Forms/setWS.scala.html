@@ -123,34 +123,40 @@
 				});
 				
 				setInterval(function(){
-					for (url in defaults) {
-						if (new Date().getTime() - defaults[url].time > 30000) {
+					for (var url in defaults) {
+						if (new Date().getTime() - defaults[url].time > 10000 || typeof defaults[url].time === "undefined") {
 							defaults[url].time = new Date().getTime();
 							$.ajax({
 								dataType: "json",
 								url: "@routes.SystemStatus.engineStatus()?url="+encodeURIComponent(url),
 								success: function(data,textStatus,jqXHR){
 											var url = this.url;
-											defaults[url] = data;
-											if (data.error === false) {
+											defaults[url].data = data;
+											if (this.time < defaults[url].time) {
+												// ignore; the request is old
+											} else if (typeof data === "string") {
+												var p = $("#setWS-defaultEndpoints > p").filter(function(i){
+													return $(this).data("url") === url;
+												}).hide();
+											} else if (data.error === false) {
 												var p = $("#setWS-defaultEndpoints > p").filter(function(i){
 													return $(this).data("url") === url;
 												})[0];
 												if (typeof p === "undefined") {
-													p = $("<p></p>");
+													p = $(
+														'<p>'+
+														'	A Pipeline 2 Engine is running at <code>'+url+'</code>.'+
+														'	&nbsp; <a class="btn btn-primary" onclick="$(\'#setWS-endpoint\')[0].value=\''+url+'\';$(\'#setWS-endpoint\').change();$(this).hide(400);return false;">Use it</a>'+
+														'</p>'
+													);
+													$(p).data("url",url);
 													$("#setWS-defaultEndpoints").append(p);
+												} else {
+													$(p).show();
 												}
-												var newP = $(
-													'<p>'+
-													'	A Pipeline 2 Engine is running at <code>'+url+'</code>.'+
-													'	&nbsp; <a class="btn btn-primary" onclick="$(\'#setWS-endpoint\')[0].value=\''+url+'\';$(\'#setWS-endpoint\').change();$(this).hide(400);return false;">Use it</a>'+
-													'</p>'
-												);
-												$(newP).data("url",url);
-												$(p).replaceWith(newP);
 											}
 										},
-								context: {url:url}
+								context: {url:url,time:defaults[url].time}
 							});
 							break;
 						}

@@ -60,7 +60,7 @@ public class Pipeline2Engine {
 	public static void shutdown() {
 		shuttingDown = true;
 		halt();
-		Logger.debug("halted...");
+		Logger.of("logger.application").debug("halted...");
 	}
 	
 	public static void halt() {
@@ -83,25 +83,25 @@ public class Pipeline2Engine {
                   scanner.close();
                 }
                 
-                Logger.debug("Shutdown key: "+key);
+                Logger.of("logger.application").debug("Shutdown key: "+key);
 				
 				if (key == null) {
-					Logger.warn("Could not read the Pipeline 2 engine key file");
+					Logger.of("logger.application").warn("Could not read the Pipeline 2 engine key file");
 					
 				} else {
 					Pipeline2WSResponse response = org.daisy.pipeline.client.Admin.halt(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), key);
 					if (response.status != 204) {
-						Logger.warn("Could not shut down the Pipeline 2 engine:");
-						Logger.warn(response.asText());
+						Logger.of("logger.application").warn("Could not shut down the Pipeline 2 engine:");
+						Logger.of("logger.application").warn(response.asText());
 						
 					} else {
-						Logger.info("Successfully shut down the Pipeline 2 engine!");
+						Logger.of("logger.application").info("Successfully shut down the Pipeline 2 engine!");
 					}
 				}
 			} catch (Pipeline2WSException e) {
-				Logger.warn(e.getLocalizedMessage(), e);
+				Logger.of("logger.application").warn(e.getLocalizedMessage(), e);
 			} catch (FileNotFoundException e) {
-				Logger.warn("Could not read Pipelne 2 engine key file; "+e.getLocalizedMessage(), e);
+				Logger.of("logger.application").warn("Could not read Pipelne 2 engine key file; "+e.getLocalizedMessage(), e);
 			}
 			
 			// shut down by killing the process
@@ -120,7 +120,7 @@ public class Pipeline2Engine {
 	public static void setState(State state) {
 		Pipeline2Engine.state = state;
 		NotificationConnection.pushAll(new Notification("heartbeat", Pipeline2Engine.state.toString()));
-		Logger.debug("Pipeline 2 engine state: "+Pipeline2Engine.state);
+		Logger.of("logger.application").debug("Pipeline 2 engine state: "+Pipeline2Engine.state);
 	}
 	
 	/**
@@ -162,7 +162,7 @@ public class Pipeline2Engine {
      */
     private static Worker executeCommandWithWorker(final String command, final File cwd) {
     	
-    	Logger.info("Running command '"+command+"' from directory '"+cwd.getAbsolutePath()+"'");
+    	Logger.of("logger.application").info("Running command '"+command+"' from directory '"+cwd.getAbsolutePath()+"'");
     	
         // create the process which will run the command
         Runtime runtime = Runtime.getRuntime();
@@ -186,7 +186,7 @@ public class Pipeline2Engine {
     			NotificationConnection.pushAll(new Notification("engine.error.message", errorMessage));
     		}
     		
-            Logger.error(errorMessage, e);
+            Logger.of("logger.application").error(errorMessage, e);
             
             setState(State.ERROR);
             
@@ -235,11 +235,11 @@ public class Pipeline2Engine {
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
                 String line = null;
                 while ((line = bufferedReader.readLine()) != null) {
-                	if ("INFO".equals(streamType)) Logger.info(line);
-                	else if ("ERROR".equals(streamType)) Logger.error(line);
-                	else if ("DEBUG".equals(streamType)) Logger.debug(line);
-                	else if ("TRACE".equals(streamType)) Logger.trace(line);
-                	else if ("WARN".equals(streamType)) Logger.warn(line);
+                	if ("INFO".equals(streamType)) Logger.of("logger.application").info(line);
+                	else if ("ERROR".equals(streamType)) Logger.of("logger.application").error(line);
+                	else if ("DEBUG".equals(streamType)) Logger.of("logger.application").debug(line);
+                	else if ("TRACE".equals(streamType)) Logger.of("logger.application").trace(line);
+                	else if ("WARN".equals(streamType)) Logger.of("logger.application").warn(line);
                 	
                 	if ("ERROR".equals(streamType)) {
                 		errorMessages.add(line);
@@ -255,7 +255,7 @@ public class Pipeline2Engine {
                 }
                 
             } catch (IOException e) {
-                Logger.warn("Could not completely consume and display the "+streamType+" input stream");
+                Logger.of("logger.application").warn("Could not completely consume and display the "+streamType+" input stream");
             }
         }
     }

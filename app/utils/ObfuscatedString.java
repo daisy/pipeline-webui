@@ -242,11 +242,11 @@ public final class ObfuscatedString {
 	            obfuscatedLongArray[i] = Long.parseLong(splitString[i]);
         } catch (NumberFormatException e) {
         	// Create new exception to avoid listing the unobfuscated value in logs etc
-        	Logger.error("Unable to parse unobfuscated string", new NumberFormatException("Unable to parse unobfuscated string"));
+        	Logger.of("logger.application").error("Unable to parse unobfuscated string", new NumberFormatException("Unable to parse unobfuscated string"));
         	return null;
         } catch (Exception e) {
         	// Catch all exceptions and create a new generic exception to avoid listing the unobfuscated value in logs etc
-        	Logger.error("Unable to parse unobfuscated string", new Exception(e.getClass().getName()+" occured while parsing the unobfuscated string"));
+        	Logger.of("logger.application").error("Unable to parse unobfuscated string", new Exception(e.getClass().getName()+" occured while parsing the unobfuscated string"));
         	return null;
         }
         return new ObfuscatedString(obfuscatedLongArray).toString();

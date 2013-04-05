@@ -56,19 +56,19 @@ public class Upload extends Model {
         File file = upload.getFile();
 		File newFile = new File(uploadDir, upload.getFilename());
 		if (!file.renameTo(newFile)) {
-			Logger.debug("Was unable to move uploaded file to the upload directory, will try to copy it instead...");
+			Logger.of("logger.application").debug("Was unable to move uploaded file to the upload directory, will try to copy it instead...");
 			try {
 				Files.copy(file, newFile);
 			} catch (IOException e) {
-				Logger.error("Was unable to copy uploaded file to new file", e);
+				Logger.of("logger.application").error("Was unable to copy uploaded file to new file", e);
 			}
 		}
 		file = newFile;
-		Logger.debug("Stored uploaded file as: "+file.getAbsolutePath()+" (=="+new File(uploadDir, upload.getFilename()).getAbsolutePath()+")");
+		Logger.of("logger.application").debug("Stored uploaded file as: "+file.getAbsolutePath()+" (=="+new File(uploadDir, upload.getFilename()).getAbsolutePath()+")");
 		try {
 			u.contentType = ContentType.probe(file.getName(), new FileInputStream(file));
 		} catch (FileNotFoundException e) {
-			Logger.error("Was unable to probe "+file.getAbsolutePath()+" : "+e.getMessage());
+			Logger.of("logger.application").error("Was unable to probe "+file.getAbsolutePath()+" : "+e.getMessage());
 			u.contentType = upload.getContentType();
 		}
 		
@@ -83,21 +83,21 @@ public class Upload extends Model {
 		
 		fileList = new ArrayList<FileInfo>();
 		
-		Logger.debug("opening "+this.absolutePath);
+		Logger.of("logger.application").debug("opening "+this.absolutePath);
 		File uploadDir = new File(this.absolutePath);
 		if (uploadDir.isDirectory()) {
-			Logger.debug(this.absolutePath+" is a directory...");
+			Logger.of("logger.application").debug(this.absolutePath+" is a directory...");
 			File[] dirContents = uploadDir.listFiles();
 			if (dirContents.length > 0) {
-				Logger.debug(this.absolutePath+" contains 1 or more files...");
+				Logger.of("logger.application").debug(this.absolutePath+" contains 1 or more files...");
 				File file = dirContents[0];
 				
 				if (isZip()) {
-					Logger.debug(this.absolutePath+" is a ZIP file, listing ZIP entries...");
+					Logger.of("logger.application").debug(this.absolutePath+" is a ZIP file, listing ZIP entries...");
 					fileList = Files.listZipFilesWithContentType(file);
 					
 				} else {
-					Logger.debug(this.absolutePath+" is a normal file...");
+					Logger.of("logger.application").debug(this.absolutePath+" is a normal file...");
 					fileList.add(new FileInfo(file.getName(), this.contentType, file.length()));
 				}
 			}
@@ -116,7 +116,7 @@ public class Upload extends Model {
 				return dirContents[0];
 			}
 		}
-		Logger.debug("Could not retrieve the upload with id "+this.id+" from "+this.absolutePath);
+		Logger.of("logger.application").debug("Could not retrieve the upload with id "+this.id+" from "+this.absolutePath);
 		return null;
 	}
 	

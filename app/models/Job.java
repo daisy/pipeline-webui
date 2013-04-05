@@ -114,7 +114,7 @@ public class Job extends Model implements Comparable<Job> {
 					public void run() {
 						try {
 							Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) : 0;
-//							Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
+//							Logger.of("logger.application").debug("checking job #"+id+" for updates from message #"+fromSequence);
 							
 							Pipeline2WSResponse wsJob;
 							org.daisy.pipeline.client.models.Job job;
@@ -130,10 +130,10 @@ public class Job extends Model implements Comparable<Job> {
 								job = new org.daisy.pipeline.client.models.Job(xml);
 								
 								if (Application.debug)
-									Logger.debug(XML.toString(xml));
+									Logger.of("logger.application").debug(XML.toString(xml));
 								
 							} catch (Pipeline2WSException e) {
-								Logger.error(e.getMessage(), e);
+								Logger.of("logger.application").error(e.getMessage(), e);
 								return;
 							}
 							

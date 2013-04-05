@@ -34,12 +34,12 @@ public class Uploads extends Controller {
 		models.Upload upload = models.Upload.find.byId(id);
 		List<FileInfo> fileList;
 		if (upload == null) {
-			Logger.debug("Upload #"+id+" was not found.");
+			Logger.of("logger.application").debug("Upload #"+id+" was not found.");
 			fileList = new ArrayList<FileInfo>();
 		} else {
-			Logger.debug("Listing files from upload #"+id+"...");
+			Logger.of("logger.application").debug("Listing files from upload #"+id+"...");
 			fileList = upload.listFiles();
-			Logger.debug("Found "+fileList.size()+" files in upload #"+id);
+			Logger.of("logger.application").debug("Found "+fileList.size()+" files in upload #"+id);
 		}
 		
 		Map<String,Object> result = new HashMap<String,Object>();
