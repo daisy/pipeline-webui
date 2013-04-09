@@ -22,7 +22,7 @@ DP2Forms = {
 			fields: fields,
 			lastValidation: 0,
 			lastValidationRequestTime: 0,
-			interval: setInterval(DP2Forms._scheduleValidation, 5000, formName)
+			interval: setInterval(DP2Forms.scheduleValidation, 5000, formName)
 		};
 		for (var f in fields) {
 			var fieldName = fields[f];
@@ -45,7 +45,7 @@ DP2Forms = {
 				field.data("initial",null);
 			}
 		}
-		setTimeout(DP2Forms._scheduleValidation, 500, formName);
+		setTimeout(DP2Forms.scheduleValidation, 500, formName);
 	},
 
 	stopValidation: function(formName) {
@@ -66,7 +66,7 @@ DP2Forms = {
 		if ($("#"+formName+"-"+field).data("initial") !== null)
 			$("#"+formName+"-"+field).data("initial",initial);
 		$("#"+formName+"-"+field).on('change keyup', data, function(event){
-			DP2Forms._scheduleValidation(formName);
+			DP2Forms.scheduleValidation(formName);
 		});
 		$("#"+formName+"-"+field).on('focus', data, function(event){
 			$(this).data("initial",null);
@@ -115,7 +115,7 @@ DP2Forms = {
 		return true;
 	},
 
-	_scheduleValidation: function(formName) {
+	scheduleValidation: function(formName) {
 		if (typeof DP2Forms.validators[formName] === "undefined" || DP2Forms.validators[formName] === null) {
 			if (DP2Forms.debug && window.console && console.log) console.log("can't validate "+formName+" - it's not created yet");
 		} else if (typeof DP2Forms.validators[formName].lastValidation === "undefined" || DP2Forms.validators[formName].lastValidation === null || new Date().getTime() - DP2Forms.validators[formName].lastValidation >= 490) {
