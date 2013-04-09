@@ -283,8 +283,9 @@ public class Global extends GlobalSettings {
 	public void onStop(play.Application app) {
 		// Application shutdown...
 		
-		// Halts the Pipeline 2 engine if present
-		Pipeline2Engine.halt();
+		// Halt the Pipeline 2 engine if running in desktop mode
+		if ("desktop".equals(controllers.Application.deployment()))
+			Pipeline2Engine.halt();
 	}
 
 }

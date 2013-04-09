@@ -1,12 +1,6 @@
-if (!Date.now) {
-	Date.now = function now() {
-		return +(new Date);
-	};
-}
-
 Notifications = {
-	lastWebSocketHeartbeat: Date.now(),
-	lastXHRHeartbeat: Date.now(),
+	lastWebSocketHeartbeat: new Date().getTime(),
+	lastXHRHeartbeat: new Date().getTime(),
 	WebSocket: typeof MozWebSocket !== "undefined" ? MozWebSocket : typeof WebSocket !== "undefined" ? WebSocket : null,
 	websocket: null,
 	websocketURL: "",
@@ -23,7 +17,7 @@ Notifications = {
         // Watchdog timer (switches to XHR if WebSockets are unavailable or disconnected)
         window.clearInterval(Notifications.stopWatchdog);
         Notifications.watchdog = window.setInterval(function(){
-            if (Date.now() - Notifications.lastWebSocketHeartbeat > 5000) {
+            if (new Date().getTime() - Notifications.lastWebSocketHeartbeat > 5000) {
                 // More than 5 seconds since last heartbeat; switch to XHR
                 if (Notifications.websocket !== null) {
                     Notifications.websocket.close();
@@ -33,7 +27,7 @@ Notifications = {
                     url: Notifications.xhrURL,
                     dataType: 'json',
                     cache: false,
-                    data: Date.now()+"",
+                    data: new Date().getTime()+"",
                     success: function(data, textStatus, jqXHR){
                         for (var i = 0; i < data.length; i++) {
                             Notifications.handleNotifications(data[i]);
@@ -41,9 +35,9 @@ Notifications = {
                     }
                 });
             }
-            if (Notifications.WebSocket && Date.now() - Notifications.lastWebSocketHeartbeat > 30000) {
+            if (Notifications.WebSocket && new Date().getTime() - Notifications.lastWebSocketHeartbeat > 30000) {
                 // retry websockets
-                Notifications.lastWebSocketHeartbeat = Date.now() - 5000;
+                Notifications.lastWebSocketHeartbeat = new Date().getTime() - 5000;
                 Notifications.openWebSocket();
             }
         }, 1000);
@@ -69,9 +63,9 @@ Notifications = {
             
         } else {
         	if (Notifications.websocket !== null) {
-        		Notifications.lastWebSocketHeartbeat = Date.now();
+        		Notifications.lastWebSocketHeartbeat = new Date().getTime();
         	} else {
-        		Notifications.lastXHRHeartbeat = Date.now();
+        		Notifications.lastXHRHeartbeat = new Date().getTime();
         	}
         	
         	if (Notifications.handlers[notification.kind]) {

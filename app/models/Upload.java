@@ -70,6 +70,8 @@ public class Upload extends Model {
 		} catch (FileNotFoundException e) {
 			Logger.of("logger.application").error("Was unable to probe "+file.getAbsolutePath()+" : "+e.getMessage());
 			u.contentType = upload.getContentType();
+			if ("application/x-zip-compressed".equals(u.contentType))
+				u.contentType = "application/zip";
 		}
 		
 		u.save(Application.datasource);
