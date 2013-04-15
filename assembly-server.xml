@@ -8,12 +8,8 @@
     <baseDirectory>daisy-pipeline-webui</baseDirectory>
     <fileSets>
         <fileSet>
-            <directory>target/pipeline2-webui</directory>
-            <excludes>
-                <exclude>start</exclude>
-                <exclude>start.bat</exclude>
-            </excludes>
-            <outputDirectory>/</outputDirectory>
+            <directory>target/pipeline2-webui/lib</directory>
+            <outputDirectory>/lib/</outputDirectory>
         </fileSet>
         
         <fileSet>

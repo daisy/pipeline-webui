@@ -12,12 +12,8 @@
             <outputDirectory>/</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>target/pipeline2-webui</directory>
-            <excludes>
-                <exclude>start</exclude>
-                <exclude>start.bat</exclude>
-            </excludes>
-            <outputDirectory>/daisy-pipeline/webui</outputDirectory>
+            <directory>target/pipeline2-webui/lib</directory>
+            <outputDirectory>/daisy-pipeline/webui/lib</outputDirectory>
         </fileSet>
         
         <fileSet>
