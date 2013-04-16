@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+echo date "+%Y-%d-%m %H:%M:%S" > startui/log.txt
+echo `uname -s` `uname -m` >> startui/log.txt
 
 echo "Starting browser..."
 if [ "`uname -s`" == "Darwin" ]
@@ -8,5 +10,5 @@ else
     xdg-open "`dirname "$0"`/startui/start.html"
 fi
 
-echo "Starting Web UI..."
-( cd "`dirname "$0"`" && exec java -Dconfig.file="`pwd`/application.conf" $@ -cp "`pwd`/lib/*" play.core.server.NettyServer "`pwd`" )
+echo "Starting Web UI..." >> startui/log.txt
+( cd "`dirname "$0"`" && exec java -Dconfig.file="`pwd`/application.conf" $@ -cp "`pwd`/lib/*" play.core.server.NettyServer "`pwd`" >> startui/log.txt 2>&1 )

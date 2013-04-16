@@ -7,4 +7,7 @@ echo Starting browser...
 start startui\start.html
 
 echo Starting Web UI...
-java -Dconfig.file="application.conf" %* -cp "lib\*;" play.core.server.NettyServer .
+echo %date% %time% > startui\log.txt
+ver >> startui\log.txt
+echo %processor_architecture% >> startui\log.txt
+java -Dconfig.file="application.conf" %* -cp "lib\*;" play.core.server.NettyServer . >> startui\log.txt 2>&1
