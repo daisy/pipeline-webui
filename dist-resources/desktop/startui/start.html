@@ -69,10 +69,18 @@
 		<div class="STARTING message" style="text-align:center;">
 			<img src="loading.gif" alt="" style="margin:10px;"/><br/>
 			<div id="WAITING" style="display:none;">
-				<p>This is taking a long time, an error may have occured while starting the Web UI. Most commonly this is caused by Java not being configured properly.
-				   See the <a href="http://code.google.com/p/daisy-pipeline/wiki/Installation#Java">Pipeline 2 Installation Instructions</a>
-                   to learn how to install and configure Java. See the log file for more details. If you are unable to solve the problem by yourself, please download
-                   the log file and post its contents to the <a href="http://www.daisy.org/forums/pipeline-2">Pipeline 2 forum</a>.</p>
+				<div style="text-align:left;">
+					<p>This is taking a long time, an error may have occured while starting the Web UI.</p>
+					<ul>
+						<li>If this is the first time you start the Web UI then this is probably caused by Java not being configured properly.
+					   See the <a href="http://code.google.com/p/daisy-pipeline/wiki/Installation#Java">Pipeline 2 Installation Instructions</a>
+	                   to learn how to install and configure Java.</li>
+	                   <li>If you have previously started the Web UI then it may not have been shut down properly, in which case there will
+	                   	be a file called "RUNNING_PID" present in the "webui" directory. Delete the file and try again.</li>
+	                </ul>
+	                <p>See the log file for more details. If you are unable to solve the problem by yourself, please download
+	                   the log file and post its contents to the <a href="http://www.daisy.org/forums/pipeline-2">Pipeline 2 forum</a>.</p>
+               </div>
 				<a class="btn btn-xlarge" href="log.txt" target="_blank" download="log.txt">Download log file</a>
 			</div>
 		</div>
