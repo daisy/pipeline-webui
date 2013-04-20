@@ -8,10 +8,10 @@
 		<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="@{arg.kind}-@{arg.name}-label" id="script-@script.id-@{arg.kind}-@{arg.name}">
 			<button type="button" name="@{arg.kind}-@{arg.name}-on" class="btn active" id="script-@script.id-@{arg.kind}-@{arg.name}-on"
 				aria-role="radio" aria-checked="true"
-				onclick="toggleRadio('@{arg.kind}-@{arg.name}', true, 'true');return false;">Yes</button>
+				onclick="toggleRadio('script-@script.id-@{arg.kind}-@{arg.name}', true, 'true');return false;">Yes</button>
 			<button type="button" name="@{arg.kind}-@{arg.name}-off" class="btn" id="script-@script.id-@{arg.kind}-@{arg.name}-off"
 				aria-role="radio" aria-checked="false"
-				onclick="toggleRadio('@{arg.kind}-@{arg.name}', false, 'false');return false;">No</button>
+				onclick="toggleRadio('script-@script.id-@{arg.kind}-@{arg.name}', false, 'false');return false;">No</button>
 		</div>
 		@if(arg.desc.length > 0){
 			<span class="help-block">@arg.desc</span>

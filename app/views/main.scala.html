@@ -15,6 +15,7 @@
 	<meta http-equiv="pragma" content="no-cache" />
 	
 	<!-- Styles -->
+	<link href="@routes.Application.theme("stylesheets/jquery-ui-1.10.0.custom.css")?@Application.themeName()&version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" rel="stylesheet" type="text/css"/>
 	<link href="@routes.Application.theme("stylesheets/bootstrap.min.css")?@Application.themeName()&version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" rel="stylesheet" type="text/css"/>
 	@if(controllers.Application.themeName()!=""){
 		<link href="@routes.Application.theme("stylesheets/bootstrap-responsive.css")?@Application.themeName()&version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" rel="stylesheet" type="text/css"/>
@@ -143,12 +144,8 @@
 	</div>
 	
 	<!-- Scripts -->
+	<script src="@routes.Assets.at("javascripts/jquery-ui-1.9.2.custom.min.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
 	<script src="@routes.Assets.at("javascripts/bootstrap.min.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
-	<script type="text/javascript">
-		// avoid namespace conflict between jQuery-UI and Bootstrap
-		var btn = $.fn.button.noConflict();
-		$.fn.btn = btn;
-	</script>
 	<script src="@routes.Assets.at("javascripts/json2.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
 	<script src="@routes.Assets.at("javascripts/main.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
 	<script src="@routes.Assets.at("javascripts/formUtils.js")?version=@Application.version@if(play.Play.application().isDev()){-@(new Date().getTime())}" type="text/javascript"></script>
