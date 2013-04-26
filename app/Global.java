@@ -185,7 +185,7 @@ public class Global extends GlobalSettings {
 							if (Administrator.shuttingDown != null) return;
 							
 							// unused uploads are deleted after one hour
-							Date timeoutDate = new Date(new Date().getTime() - 3600000L);
+							Date timeoutDate = new Date(new Date().getTime() - 600000L);
 							
 							List<Upload> uploads = Upload.find.all();
 							for (Upload upload : uploads) {
