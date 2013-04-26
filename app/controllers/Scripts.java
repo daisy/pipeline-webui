@@ -191,22 +191,22 @@ public class Scripts extends Controller {
 			for (String param : params.keySet()) {
 				Matcher matcher = PARAM_NAME.matcher(param);
 				if (!matcher.find()) {
-					Logger.of("logger.application").debug("Unable to parse argument parameter: "+param);
+					Logger.debug("Unable to parse argument parameter: "+param);
 				} else {
 					String kind = matcher.group(1);
 					String name = matcher.group(4);
-					Logger.of("logger.application").debug("script form: "+kind+": "+name);
+					Logger.debug("script form: "+kind+": "+name);
 
 					Argument argument = script.getArgument(name, kind);
 					//					for (Argument arg : script.arguments) {
-					//						Logger.of("logger.application").debug(arg.name+" equals "+name+" ?");
+					//						Logger.debug(arg.name+" equals "+name+" ?");
 					//						if (arg.name.equals(name)) {
 					//							argument = arg;
 					//							break;
 					//						}
 					//					}
 					if (argument == null) {
-						Logger.of("logger.application").debug("'"+name+"' is not an argument for the script '"+script.id+"'; ignoring it");
+						Logger.debug("'"+name+"' is not an argument for the script '"+script.id+"'; ignoring it");
 						continue;
 					}
 
@@ -215,7 +215,7 @@ public class Scripts extends Controller {
 							for (int i = 0; i < params.get(param).length; i++) {
 								matcher = FILE_REFERENCE.matcher(params.get(param)[i]);
 								if (!matcher.find()) {
-									Logger.of("logger.application").debug("Unable to parse file reference: "+params.get(param)[i]);
+									Logger.debug("Unable to parse file reference: "+params.get(param)[i]);
 								} else {
 									Long uploadId = Long.parseLong(matcher.group(1));
 									Integer fileNr = Integer.parseInt(matcher.group(2));
@@ -226,7 +226,7 @@ public class Scripts extends Controller {
 						} else { // Single file
 							matcher = FILE_REFERENCE.matcher(params.get(param)[0]);
 							if (!matcher.find()) {
-								Logger.of("logger.application").debug("Unable to parse file reference: "+params.get(param)[0]);
+								Logger.debug("Unable to parse file reference: "+params.get(param)[0]);
 							} else {
 								Long uploadId = Long.parseLong(matcher.group(1));
 								Integer fileNr = Integer.parseInt(matcher.group(2));
@@ -235,7 +235,7 @@ public class Scripts extends Controller {
 									argument.set(uploads.get(uploadId).listFiles().get(fileNr).href);
 
 								} else {
-									Logger.of("logger.application").warn("No such upload: "+uploadId);
+									Logger.warn("No such upload: "+uploadId);
 								}
 
 							}

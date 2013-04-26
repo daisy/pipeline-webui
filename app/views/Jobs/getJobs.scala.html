@@ -60,6 +60,9 @@ addJob = function(job) {
 		}
 		html += '    </td>'+"\n";
 	}
+	html += '    <td>'+"\n";
+	html += '        <span><a id="job-delete-'+job.id+'" class="btn btn-mini" data-jobid="'+job.id+'" href=\"javascript:void(0)\"><i class="icon-trash"></i> Delete</a></span>'+"\n";
+	html += '    </td>'+"\n";
 	html += '</tr>'+"\n";
 	
 	if ($("#job-"+job.id).length > 0) {
@@ -68,6 +71,29 @@ addJob = function(job) {
 	else {
 		$("#joblist tbody").prepend(html);
 	}
+	
+	console.log("adding click listener for #job-delete-"+job.id);
+	$(function(){
+		$("#job-delete-"+job.id).click(function(){
+			console.log("clicked #job-delete-"+job.id);
+			var jobId = $(this).data("jobid");
+			$("#job-delete-"+jobId).hide();
+			$.ajax({
+				url: "@routes.Jobs.delete("JOBID")".replace("JOBID",jobId),
+				success: function(data) {
+					$("#job-"+jobId).hide();
+					if ($("#joblist tbody tr").filter(":visible").size() === 0) {
+						$("#joblist").hide();
+						$("#nojobs").show();
+					} 
+				},
+				error: function() {
+					$("#job-delete-"+jobId).show();
+				},
+				context: this
+			});
+		});
+	});
 	
 	$("#nojobs").hide();
 	$("#joblist").show();

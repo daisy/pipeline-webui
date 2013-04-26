@@ -1,5 +1,6 @@
 package models;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -67,6 +68,7 @@ public class Job extends Model implements Comparable<Job> {
 	@Transient
 	private Cancellable pushNotifier;
 	
+	/** Make job belonging to user */
 	public Job(String id, User user) {
 		this.id = id;
 		this.user = user.id;
@@ -78,6 +80,27 @@ public class Job extends Model implements Comparable<Job> {
 			this.userNicename = Setting.get("users.guest.name");
 		else
 			this.userNicename = User.findById(user.id).name;
+	}
+	
+	/** Make job from engine job */
+	public Job(org.daisy.pipeline.client.models.Job fwkJob) {
+		this.id = fwkJob.id;
+		this.user = -1L;
+		this.nicename = fwkJob.script.id+" (Command Line Interface)";
+		this.created = new Date();
+		this.notifiedCreated = false;
+		this.notifiedComplete = false;
+		this.userNicename = "Command Line Interface"; // could be something other than the CLI, but in 99% of the cases it will be the CLI
+		
+		if (!org.daisy.pipeline.client.models.Job.Status.IDLE.equals(fwkJob.status)) {
+			this.started = this.created;
+			if (!org.daisy.pipeline.client.models.Job.Status.RUNNING.equals(fwkJob.status)) {
+				this.finished = this.started;
+			}
+		}
+		
+		this.scriptId = fwkJob.script.id;
+		this.scriptName = fwkJob.script.nicename;
 	}
 
 	public int compareTo(Job other) {
@@ -114,7 +137,7 @@ public class Job extends Model implements Comparable<Job> {
 					public void run() {
 						try {
 							Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) : 0;
-//							Logger.of("logger.application").debug("checking job #"+id+" for updates from message #"+fromSequence);
+//							Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
 							
 							Pipeline2WSResponse wsJob;
 							org.daisy.pipeline.client.models.Job job;
@@ -130,10 +153,10 @@ public class Job extends Model implements Comparable<Job> {
 								job = new org.daisy.pipeline.client.models.Job(xml);
 								
 								if (Application.debug)
-									Logger.of("logger.application").debug(XML.toString(xml));
+									Logger.debug(XML.toString(xml));
 								
 							} catch (Pipeline2WSException e) {
-								Logger.of("logger.application").error(e.getMessage(), e);
+								Logger.error(e.getMessage(), e);
 								return;
 							}
 							
@@ -154,6 +177,11 @@ public class Job extends Model implements Comparable<Job> {
 									finishedMap.put("text", webUiJob.finished.toString());
 									finishedMap.put("number", webUiJob.finished.getTime()+"");
 									NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-finished-"+job.id, finishedMap));
+									
+									// Delete temporary files when job execution has finished
+									File results = new File(Setting.get("dp2ws.tempdir")+webUiJob.localDirName);
+									if (results.exists() && results.isDirectory())
+										recursivelyDeleteDirectory(results);
 								}
 							}
 							
@@ -200,11 +228,34 @@ public class Job extends Model implements Comparable<Job> {
 	
 	@Override
 	public void delete(String datasource) {
+		Logger.debug("deleting "+this.id+" (sending DELETE request)");
+		try {
+			org.daisy.pipeline.client.Jobs.delete(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), this.id);
+		} catch (Pipeline2WSException e) {
+			Logger.warn("Unable to send DELETE request for deleting the job #"+this.id+" from the Pipeline 2 Engine",e);
+		}
 		List<Upload> uploads = getUploads();
 		for (Upload upload : uploads)
 			upload.delete(datasource);
-		org.daisy.pipeline.client.Jobs.delete(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), this.id);
+		File results = new File(Setting.get("dp2ws.resultdir")+this.localDirName);
+		if (results.exists() && results.isDirectory())
+			recursivelyDeleteDirectory(results);
 		super.delete(datasource);
+	}
+	
+	private void recursivelyDeleteDirectory(File dir) {
+		for (File file : dir.listFiles()) {
+			if (file.isDirectory()) {
+				recursivelyDeleteDirectory(file);
+			} else {
+				if (!file.delete()) {
+					Logger.error("Failed to delete file: " + file);
+				}
+			}
+		}
+		if (!dir.delete()) {
+			Logger.error("Failed to delete directory: " + dir);
+		}
 	}
 
 }

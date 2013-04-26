@@ -69,9 +69,9 @@ public class ContentType {
 				if (len > 0)
 					headBuilder.append(buf, 0, len);
 			} catch (UnsupportedEncodingException e) {
-				Logger.of("logger.application").error("Encoding not supported (while reading filestream)", e);
+				Logger.error("Encoding not supported (while reading filestream)", e);
 			} catch (IOException e) {
-				Logger.of("logger.application").error("Could not read filestream", e);
+				Logger.error("Could not read filestream", e);
 			}
 			String head = headBuilder.toString();
 			
@@ -148,7 +148,7 @@ public class ContentType {
 		Map<String, String> map = new HashMap<String,String>();
 		
 		if (head == null) {
-			Logger.of("logger.application").warn("Document head string == null", new Exception());
+			Logger.warn("Document head string == null", new Exception());
 			return map;
 		}
 		
@@ -164,7 +164,7 @@ public class ContentType {
 		}
 		
 		if (head.length() == 0) {
-			Logger.of("logger.application").warn("Document head empty", new Exception());
+			Logger.warn("Document head empty", new Exception());
 			return map;
 		}
 		

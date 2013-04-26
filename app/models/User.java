@@ -230,7 +230,7 @@ public class User extends Model {
 	    	session.put("admin", admin+"");
 		} else {
 			session.remove("userid");
-			Logger.of("logger.application").warn("Could not log in user '"+name+"' ('"+email+"'); userid is null.");
+			Logger.warn("Could not log in user '"+name+"' ('"+email+"'); userid is null.");
 		}
 	}
 
@@ -342,7 +342,7 @@ public class User extends Model {
 				job.delete(datasource);
 			super.delete(datasource);
 		} catch (javax.persistence.OptimisticLockException e) {
-			Logger.of("logger.application").warn("Could not delete user "+this.id+" ("+this.name+" / "+this.email+")", e);
+			Logger.warn("Could not delete user "+this.id+" ("+this.name+" / "+this.email+")", e);
 		}
 	}
 	

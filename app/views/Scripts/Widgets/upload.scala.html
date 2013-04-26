@@ -104,7 +104,10 @@
         		fileCount++;
     		}
     		if (fileCount > 3) filename += " and "+(fileCount-3)+" more";
-        	$(fileWidgetId+" td.size").html(Job.prettySize(size));
+    		if (isNaN(size))
+    			$(fileWidgetId+" td.size").html("unknown filesize");
+    		else
+        		$(fileWidgetId+" td.size").html(Job.prettySize(size));
         	$(fileWidgetId+" td.name").html(filename);
 	    })
 	    .bind('fileuploadsubmit', function (e, data) {
@@ -208,7 +211,7 @@
 	    	$(fileWidgetId+" td div.error").text(statusText+": "+errorText).show();
 	    	
 	    	var fileCount = Number($("#filesNicename").data("fileCount"));
-			fileCount = isNaN(fileCount) ? 0 : fileCount-1; 
+			fileCount = (isNaN(fileCount) ? 0 : fileCount) - 1; 
 	    	$("#filesNicename").data("fileCount", fileCount);
 	    	$("#filesNicename").html(fileCount === 0 ? "No files" : fileCount === 1 ? "1 file" : fileCount+" files");
 	    })
@@ -242,7 +245,7 @@
 		var fileRow = $(e.currentTarget).closest('.fileRow');
 		
 		var fileCount = Number($("#filesNicename").data("fileCount"));
-		fileCount = isNaN(fileCount) ? 0 : fileCount-1; 
+		fileCount = (isNaN(fileCount) ? 0 : fileCount) - 1;
     	$("#filesNicename").data("fileCount", fileCount);
     	$("#filesNicename").html(fileCount === 0 ? "No files" : fileCount === 1 ? "1 file" : fileCount+" files");
 		

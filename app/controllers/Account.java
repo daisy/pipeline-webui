@@ -210,7 +210,7 @@ public class Account extends Controller {
 			String ssl = Setting.get("mail.smtp.ssl");
 			String username = Setting.get("mail.username");
 			if (host == null || port == null || from == null || fromName == null || ssl == null || username == null) {
-				Logger.of("logger.application").error("Either host, port, e-mail, sender name, username or ssl missing.", new Exception("E-mail misconfigured"));
+				Logger.error("Either host, port, e-mail, sender name, username or ssl missing.", new Exception("E-mail misconfigured"));
 				return false;
 			}
 			
@@ -253,7 +253,7 @@ public class Account extends Controller {
 			email.send();
 			return true;
 		} catch (EmailException e) {
-			Logger.of("logger.application").error("EmailException occured while trying to send an e-mail!", e);
+			Logger.error("EmailException occured while trying to send an e-mail!", e);
 			return false;
 		}
 	}

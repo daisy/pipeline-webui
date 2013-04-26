@@ -42,7 +42,8 @@ public class Log extends Controller {
 		Result result = ok(logText("Pipeline 2 Web UI Log", null));
 		
 		if (shutdown == 1) {
-			Administrator.shuttingDown.cancel();
+			if (Administrator.shuttingDown != null)
+				Administrator.shuttingDown.cancel();
 			Administrator.shuttingDown = null;
 			Administrator.shutdownProgramatically(5);
 		}

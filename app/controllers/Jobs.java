@@ -366,26 +366,6 @@ public class Jobs extends Controller {
 
 		if (scriptForm.uploads.size() > 0) {
 
-			// ---------- See if there's an existing ZIP we can use as the context ----------
-			//	models.Upload contextZipUpload = null;
-			//	Long biggestZipSoFar = 0L;
-			//	
-			//	for (Long uploadId : uploads.keySet()) {
-			//		Upload upload = uploads.get(uploadId);
-			//		if (upload.isZip()) {
-			//			File file = upload.getFile();
-			//			if (file.length() > biggestZipSoFar) {
-			//				biggestZipSoFar = file.length();
-			//				contextZipUpload = upload;
-			//			}
-			//		}
-			//	}
-			//	
-			//	if (contextZipUpload == null)
-			//		Logger.debug("There's no ZIP files available to use as context");
-			//	else
-			//		Logger.debug("The ZIP file '"+contextZipUpload.getFile().getAbsolutePath()+"' is the biggest ZIP file available and will be used as context");
-
 			// ---------- Create a temporary directory ("the context") ----------
 			File contextDir = null;
 			try {
@@ -399,8 +379,8 @@ public class Jobs extends Controller {
 				}
 
 			} catch (IOException e) {
-				Logger.error("Could not create temporary file (context directory): "+e.getMessage(), e);
-				return internalServerError("Could not create temporary file (context directory)");
+				Logger.error("Could not create temporary context directory: "+e.getMessage(), e);
+				return internalServerError("Could not create temporary context directory");
 			}
 
 			Logger.debug("Created context directory: "+contextDir.getAbsolutePath());
@@ -410,10 +390,6 @@ public class Jobs extends Controller {
 			for (Long uploadId : scriptForm.uploads.keySet()) {
 				Upload upload = scriptForm.uploads.get(uploadId);
 				if (upload.isZip()) {
-					//					if (contextZipUpload != null && contextZipUpload.id == upload.id) {
-					//						Logger.debug("not unzipping context zip ("+upload.getFile().getAbsolutePath()+")");
-					//						continue;
-					//					}
 					Logger.debug("unzipping "+upload.getFile()+" to contextDir");
 					try {
 						utils.Files.unzip(upload.getFile(), contextDir);
@@ -477,16 +453,6 @@ public class Jobs extends Controller {
 						throw new RuntimeErrorException(new Error(e), "Unable to zip context directory.");
 					}
 				}
-				//	} else {
-				//		contextZipFile = contextZipUpload.getFile();
-				//		try {
-				//			Logger.debug("adding contents of '"+contextDir+"' to the ZIP '"+contextZipFile+"'");
-				//			utils.Files.addDirectoryContentsToZip(contextZipFile, contextDir);
-				//		} catch (IOException e) {
-				//			Logger.error("Unable to add files to existing context ZIP file.", e);
-				//			throw new RuntimeErrorException(new Error(e), "Unable to add files to existing context ZIP file.");
-				//		}
-				//	}
 			}
 
 		}
@@ -541,10 +507,8 @@ public class Jobs extends Controller {
 			if (filenames.length() > 0)
 				webUiJob.nicename = filenames;
 		}
-//		webUiJob.started = new Date();
 		webUiJob.save(Application.datasource);
 		NotificationConnection.push(webUiJob.user, new Notification("job-created-"+webUiJob.id, webUiJob.created.toString()));
-//		NotificationConnection.push(webUiJob.user, new Notification("job-started-"+webUiJob.id, webUiJob.started.toString()));
 		for (Long uploadId : scriptForm.uploads.keySet()) {
 			// associate uploads with job
 			scriptForm.uploads.get(uploadId).job = jobId;
@@ -571,5 +535,17 @@ public class Jobs extends Controller {
 		
 		return redirect(controllers.routes.Jobs.getJob(jobId));
 	}
+    
+    public static Result delete(String jobId) {
+    	Job job = Job.findById(jobId);
+    	if (job != null) {
+    		Logger.debug("deleting "+jobId);
+    		job.delete(Application.datasource);
+    		return ok();
+    	} else {
+    		Logger.debug("no such job: "+jobId);
+    		return badRequest();
+    	}
+    }
 	
 }

@@ -86,7 +86,7 @@ public class SystemStatus extends Controller {
 
 		// Ping endpoint
 		if (attempt.lastAliveTime == null || new Date().getTime() - attempt.lastAliveTime.getTime() > 5000) {
-			Logger.of("logger.application").debug("trying endpoint: "+url);
+			Logger.debug("trying endpoint: "+url);
 			attempt.lastAliveTime = new Date();
 			
 			// Check URL
@@ -130,7 +130,7 @@ public class SystemStatus extends Controller {
 		} else if (attempt.lastAuthTime == null || new Date().getTime() - attempt.lastAuthTime.getTime() > 500) {
 			attempt.lastAuthTime = new Date();
 			if (attempt.alive != null && authid != null && secret != null && !attempt.alive.error && attempt.alive.authentication) {
-				Logger.of("logger.application").debug("authenticating endpoint: "+url);
+				Logger.debug("authenticating endpoint: "+url);
 				try {
 					attempt.authResponse = org.daisy.pipeline.client.Scripts.get(url, authid, secret);
 					if (attempt.authResponse.status == 401) {

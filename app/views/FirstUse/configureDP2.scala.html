@@ -15,7 +15,14 @@
 
 <div class="STARTING message" style="text-align:center;">
 	<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/><br/>
-	<!-- TODO: show error message if unable to start pipeline 2 engine. also suggest solutions like installing the engine and getting support on the mailinglist. -->
+	<div id="WAITING" style="display:none;">
+		<div>
+			<p>This is taking a long time, an error may have occured while attempting to start the Pipeline 2 Engine.</p>
+            <p>See the log file for more details. If you are unable to solve the problem by yourself, please download
+               the log file and post its contents to the <a href="http://www.daisy.org/forums/pipeline-2">Pipeline 2 forum</a>.</p>
+       </div>
+		<a id="waitingLink" class="btn btn-xlarge" href="data:," target="_blank" download="log.txt" style="display:none;">Download log file</a>
+	</div>
 </div>
 
 <div class="SUCCESS message" style="text-align:center;display:none;">
@@ -31,7 +38,7 @@
 	<p style="text-align:left;">The Pipeline 2 Web UI has been shut down since it was unable to start the Pipeline 2 Engine.
 	   If you are unable to solve the problem based on the error messages above, please download
 	   the error report and post its contents to the <a href="http://www.daisy.org/forums/pipeline-2">Pipeline 2 forum</a>.</p>
-	<a id="errorLink" class="btn btn-danger btn-xlarge" href="data:," download="log.txt">Download error report</a>
+	<a id="errorLink" class="btn btn-danger btn-xlarge" target="_blank" href="data:," download="log.txt" style="display:none;">Download error report</a>
 	<div style="text-align:left;display:none;" id="windowsPath">
 	    <hr>
 	    <h2>Is Java in your PATH?</h2>
@@ -57,6 +64,7 @@
 	}
 	updateErrorReport();
 	lastMessage = null;
+	lastLog = Date.now();
 	started = null;
 	$(function(){
 		started = new Date();
@@ -84,8 +92,12 @@
 						Notifications.stop();
 					});
 					if (!gettingLog)
-						getLog();
+						getLog(1);
 				}
+			}
+			
+			if ($("#WAITING").filter(":visible") && lastLog < Date.now()-10000) {
+				getLog(0);
 			}
 		});
 		Notifications.listen("engine.error.message", function(errorMessage){
@@ -94,14 +106,17 @@
 			updateErrorReport();
 		});
 	});
+	setTimeout(function(){$("#WAITING").show();}, 30000);
+	
 	gettingLog = false;
-	function getLog() {
+	function getLog(shutdown) {
 		$.ajax({
-			url: '@routes.Log.getLog()?shutdown=1',
+			url: '@routes.Log.getLog()?shutdown='+(shutdown?"1":"0"),
 			dataType: 'text',
 			success: function(data, textStatus, jqXHR) {
-				$("#errorLink").attr("href","data:,"+encodeURIComponent(data));
-				$("#errorLink").attr("download", "log-"+new Date().getTime()+".txt");
+				$("#errorLink,#waitingLink").attr("href","data:,"+encodeURIComponent(data));
+				$("#errorLink,#waitingLink").attr("download", "log-"+new Date().getTime()+".txt");
+				$("#errorLink,#waitingLink").show();
 			}
 		});
 		gettingLog = true;

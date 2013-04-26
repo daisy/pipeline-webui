@@ -133,12 +133,12 @@ public class Files {
 			}
 			
 		} catch (IOException e) {
-			Logger.of("logger.application").error("Unable to list zip files", e);
+			Logger.error("Unable to list zip files", e);
 		} finally {
 			try {
 				zip.close();
 			} catch (IOException e) {
-				Logger.of("logger.application").error("Unable to close zip stream", e);
+				Logger.error("Unable to close zip stream", e);
 			}
 		}
 		
@@ -165,7 +165,7 @@ public class Files {
 					String entryName = entry.getName();
 					String contentType = ContentType.probe(entryName, zin);
 					Long entrySize = entry.getSize();
-					Logger.of("logger.application").debug("file: "+entryName+" | contentType: "+contentType+" | "+entrySize);
+					Logger.debug("file: "+entryName+" | contentType: "+contentType+" | "+entrySize);
 					files.add(new FileInfo(entryName, contentType, entrySize));
 				}
 				
@@ -248,7 +248,7 @@ public class Files {
 				}
 			}
 			if (notInFiles) {
-				Logger.of("logger.application").debug("keeping in ZIP: "+entryName);
+				Logger.debug("keeping in ZIP: "+entryName);
 				// Add ZIP entry to output stream.
 				out.putNextEntry(new ZipEntry(entryName));
 				// Transfer bytes from the ZIP file to the output file
@@ -264,7 +264,7 @@ public class Files {
 
 		// Compress the files
 		for (String fileName : files.keySet()) {
-			Logger.of("logger.application").debug("adding to ZIP: "+fileName);
+			Logger.debug("adding to ZIP: "+fileName);
 			if (files.get(fileName).isDirectory()) {
 				// TODO
 			} else {
@@ -297,17 +297,17 @@ public class Files {
 	public static void unzip(File zip, File dir) throws IOException {
 		if (!zip.exists()) {
 			IOException e = new IOException("ZIP file does not exist: "+(zip!=null?zip.getAbsolutePath():"[null]"));
-			Logger.of("logger.application").error("ZIP file does not exist: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
+			Logger.error("ZIP file does not exist: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
 			throw e;
 		}
 		if (!zip.isFile()) {
 			IOException e = new IOException("ZIP file is not a file: "+(zip!=null?zip.getAbsolutePath():"[null]"));
-			Logger.of("logger.application").error("ZIP file is not a file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
+			Logger.error("ZIP file is not a file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
 			throw e;
 		}
 		if (dir.exists() && !dir.isDirectory()) {
 			IOException e = new IOException("ZIP output is not a directory: "+(dir!=null?dir.getAbsolutePath():"[null]"));
-			Logger.of("logger.application").error("ZIP output is not a directory: "+(dir!=null?dir.getAbsolutePath():"[null]"), e);
+			Logger.error("ZIP output is not a directory: "+(dir!=null?dir.getAbsolutePath():"[null]"), e);
 			throw e;
 		}
 		if (!dir.exists()) {
@@ -318,10 +318,10 @@ public class Files {
 		try {
 			zipFile = new ZipFile(zip);
 		} catch (ZipException e) {
-			Logger.of("logger.application").error("Error while opening ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
+			Logger.error("Error while opening ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
 			throw e;
 		} catch (IOException e) {
-			Logger.of("logger.application").error("Error while opening ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
+			Logger.error("Error while opening ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
 			throw e;
 		}
 		Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
@@ -342,7 +342,7 @@ public class Files {
             	InputStream is;
 				try { is = zipFile.getInputStream(entry); }
 				catch (IOException e) {
-					Logger.of("logger.application").error("Error while opening ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
+					Logger.error("Error while opening ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
 					throw e;
 				}
             	FileOutputStream fos;
@@ -350,7 +350,7 @@ public class Files {
             	entryFile.getParentFile().mkdirs();
 				try { fos = new FileOutputStream(entryFile); }
 				catch (FileNotFoundException e) {
-					Logger.of("logger.application").error("Error while opening output file '"+(entryFile!=null?entryFile.getAbsolutePath():"[null]")+"' for ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
+					Logger.error("Error while opening output file '"+(entryFile!=null?entryFile.getAbsolutePath():"[null]")+"' for ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
 					throw e;
 				}
             	
@@ -359,26 +359,26 @@ public class Files {
 					while ((len = is.read(buf)) > 0) {
 						try { fos.write(buf, 0, len); }
 						catch (IOException e) {
-							Logger.of("logger.application").error("Error while writing output file '"+(entryFile!=null?entryFile.getAbsolutePath():"[null]")+"' for ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
+							Logger.error("Error while writing output file '"+(entryFile!=null?entryFile.getAbsolutePath():"[null]")+"' for ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
 							throw e;
 						}
 					}
 				} catch (IOException e) {
-					Logger.of("logger.application").error("Error while reading ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
+					Logger.error("Error while reading ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
 					throw e;
 				}
 				
 				try {
 					is.close();
 				} catch (IOException e) {
-					Logger.of("logger.application").error("Error while closing input stream from ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
+					Logger.error("Error while closing input stream from ZIP entry '"+(entry!=null?entry.getName():"[null]")+"' from ZIP file: "+(zip!=null?zip.getAbsolutePath():"[null]"), e);
 					fos.close();
 					throw e;
 				}
 				try {
 					fos.close();
 				} catch (IOException e) {
-					Logger.of("logger.application").error("Error while closing output file '"+(entryFile!=null?entryFile.getAbsolutePath():"[null]"), e);
+					Logger.error("Error while closing output file '"+(entryFile!=null?entryFile.getAbsolutePath():"[null]"), e);
 					throw e;
 				}
             }
@@ -463,7 +463,7 @@ public class Files {
 			}
 			return url;
 		} catch (UnsupportedEncodingException e) {
-			Logger.of("logger.application").warn("Could not create URI from '"+path+"'", e);
+			Logger.warn("Could not create URI from '"+path+"'", e);
 			return path;
 		}
 	}
