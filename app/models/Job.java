@@ -132,11 +132,11 @@ public class Job extends Model implements Comparable<Job> {
 
 		pushNotifier = Akka.system().scheduler().schedule(
 				Duration.create(0, TimeUnit.SECONDS),
-				Duration.create(1000, TimeUnit.MILLISECONDS),
+				Duration.create(1000, TimeUnit.MILLISECONDS), // change to maybe every 10s when callbacks are activated?
 				new Runnable() {
 					public void run() {
 						try {
-							Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) : 0;
+							Integer fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) : null;
 //							Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
 							
 							Pipeline2WSResponse wsJob;
