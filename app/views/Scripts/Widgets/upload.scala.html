@@ -91,12 +91,14 @@
 						           });
         	data.context.data('data',{data: data, jqXHR: xhr});
         	var fileCount = Number($("#filesNicename").data("fileCount"));
-        	$("#filesNicename").data("fileCount", (isNaN(fileCount) ? 0 : fileCount) + 1);
+        	fileCount = (!isNaN(fileCount) ? fileCount : 0) + 1;
+        	$("#filesNicename").data("fileCount", fileCount);
         	var plural = !isNaN(fileCount);
         	$("#filesNicename").html($("#filesNicename").data("fileCount")+" "+(plural?"files":"file"));
+        	
         	var size = 0;
         	var filename = "";
-        	var fileCount = 0;
+        	fileCount = 0;
         	for (var i = 0; i < data.files.length; i++) {
         		size += data.files[i].size;
         		if (i === 0) filename = data.files[i].name;
@@ -211,7 +213,7 @@
 	    	$(fileWidgetId+" td div.error").text(statusText+": "+errorText).show();
 	    	
 	    	var fileCount = Number($("#filesNicename").data("fileCount"));
-			fileCount = (isNaN(fileCount) ? 0 : fileCount) - 1; 
+			fileCount = (!isNaN(fileCount) ? fileCount : 0) - 1;
 	    	$("#filesNicename").data("fileCount", fileCount);
 	    	$("#filesNicename").html(fileCount === 0 ? "No files" : fileCount === 1 ? "1 file" : fileCount+" files");
 	    })
@@ -243,11 +245,6 @@
 	function abortUpload (e) {
 		e.preventDefault();
 		var fileRow = $(e.currentTarget).closest('.fileRow');
-		
-		var fileCount = Number($("#filesNicename").data("fileCount"));
-		fileCount = (isNaN(fileCount) ? 0 : fileCount) - 1;
-    	$("#filesNicename").data("fileCount", fileCount);
-    	$("#filesNicename").html(fileCount === 0 ? "No files" : fileCount === 1 ? "1 file" : fileCount+" files");
 		
 		var data = fileRow.data('data') || {};
 		if (!data.jqXHR) {
