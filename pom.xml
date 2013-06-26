@@ -47,7 +47,7 @@
     </issueManagement>
 
     <properties>
-        <pipeline.webui.version>1.5</pipeline.webui.version>
+        <pipeline.webui.version>1.5.1-BETA</pipeline.webui.version>
     </properties>
 
     <build>

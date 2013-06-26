@@ -215,7 +215,9 @@ public class FirstUse extends Controller {
 		Setting.set("dp2ws.endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL);
 		Setting.set("dp2ws.authid", "");
 		Setting.set("dp2ws.secret", "");
-		Setting.set("dp2ws.tempdir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.temp" + controllers.Application.SLASH);
-		Setting.set("dp2ws.resultdir", System.getProperty("user.dir") + controllers.Application.SLASH + "local.results" + controllers.Application.SLASH);
+		String tempdir = new File(System.getProperty("user.dir") + controllers.Application.SLASH + "local.temp" + controllers.Application.SLASH).getCanonicalPath();
+		String resultdir = new File(System.getProperty("user.dir") + controllers.Application.SLASH + "local.results" + controllers.Application.SLASH).getCanonicalPath();
+		Setting.set("dp2ws.tempdir", tempdir + (tempdir.endsWith(controllers.Application.SLASH) ? "" : controllers.Application.SLASH));
+		Setting.set("dp2ws.resultdir", resultdir + (resultdir.endsWith(controllers.Application.SLASH) ? "" : controllers.Application.SLASH));
 	}
 }

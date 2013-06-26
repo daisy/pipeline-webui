@@ -25,8 +25,17 @@
             <excludes>
                 <exclude>start</exclude>
                 <exclude>start.bat</exclude>
+                <exclude>application.conf</exclude>
             </excludes>
             <outputDirectory>/daisy-pipeline/webui</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>dist-resources/both</directory>
+            <includes>
+                <include>application.conf</include>
+            </includes>
+            <outputDirectory>/</outputDirectory>
+            <filtered>true</filtered>
         </fileSet>
         <fileSet>
             <directory>themes</directory>
