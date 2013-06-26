@@ -1,9 +1,12 @@
 package controllers;
 
 import java.util.Map;
+import java.io.File;
+import java.io.IOException;
 
 import play.mvc.*;
 import play.data.*;
+import play.Logger;
 import utils.FormHelper;
 import utils.Pipeline2Engine;
 import models.*;
@@ -215,8 +218,14 @@ public class FirstUse extends Controller {
 		Setting.set("dp2ws.endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL);
 		Setting.set("dp2ws.authid", "");
 		Setting.set("dp2ws.secret", "");
-		String tempdir = new File(System.getProperty("user.dir") + controllers.Application.SLASH + "local.temp" + controllers.Application.SLASH).getCanonicalPath();
-		String resultdir = new File(System.getProperty("user.dir") + controllers.Application.SLASH + "local.results" + controllers.Application.SLASH).getCanonicalPath();
+		String tempdir = System.getProperty("user.dir") + controllers.Application.SLASH + "local.temp" + controllers.Application.SLASH;
+		String resultdir = System.getProperty("user.dir") + controllers.Application.SLASH + "local.results" + controllers.Application.SLASH;
+		try {
+			tempdir = new File(tempdir).getCanonicalPath();
+			resultdir = new File(resultdir).getCanonicalPath();
+		} catch (IOException e) {
+			Logger.error("Was not able to use the system property 'user.dir' to create temp and result directories ('user.dir'='"+System.getProperty("user.dir")+"')");
+		}
 		Setting.set("dp2ws.tempdir", tempdir + (tempdir.endsWith(controllers.Application.SLASH) ? "" : controllers.Application.SLASH));
 		Setting.set("dp2ws.resultdir", resultdir + (resultdir.endsWith(controllers.Application.SLASH) ? "" : controllers.Application.SLASH));
 	}

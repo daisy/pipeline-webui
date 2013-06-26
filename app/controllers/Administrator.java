@@ -427,94 +427,94 @@ public class Administrator extends Controller {
 				Long userId = request().queryString().containsKey("userid") ? Long.parseLong(request().queryString().get("userid")[0])
 						: request().body().asFormUrlEncoded().containsKey("userid") ? Long.parseLong(request().body().asFormUrlEncoded().get("userid")[0])
 								: 0L;
-						flash("settings.usertab", userId + "");
+				flash("settings.usertab", ""+userId);
 
-						User updateUser = User.findById(userId);
-						if (updateUser == null) {
-							flash("success", "Hmm, that's weird; the user was not found. Nothing was changed...");
-							return redirect(routes.Administrator.getSettings());
+				User updateUser = User.findById(userId);
+				if (updateUser == null) {
+					flash("success", "Hmm, that's weird; the user was not found. Nothing was changed...");
+					return redirect(routes.Administrator.getSettings());
+				}
+				
+				if (query.containsKey("validate")) {
+					User.flashBrowserId(user);
+					return ok(FormHelper.asJson(filledForm,new String[]{"password"}));
+				
+				} else if (filledForm.hasErrors()) {
+					List<User> users = User.find.orderBy("admin, name, email").findList();
+					forms.userForm = filledForm;
+					flash("error", "Could not edit user, please review the form and make sure it is filled out properly.");
+					User.flashBrowserId(user);
+					return badRequest(views.html.Administrator.settings.render(forms, users));
+
+				} else {
+					updateUser.name = filledForm.field("name").valueOr("");
+					updateUser.admin = filledForm.field("admin").valueOr("").equals("true");
+
+					String oldEmail = updateUser.email;
+					updateUser.email = filledForm.field("email").valueOr("");
+
+					if ("true".equals(Setting.get("mail.enable"))) {
+						if (!updateUser.email.equals(oldEmail)) {
+							updateUser.active = false;
+							updateUser.makeNewActivationUid();
+
+							String activateUrl = routes.Account.showActivateForm(updateUser.email, updateUser.getActivationUid()).absoluteURL(request());
+							String html = views.html.Account.emailActivate.render(activateUrl).body();
+							String text = "Go to this link to activate your account: " + activateUrl;
+							if (!Account.sendEmail("Activate your account", html, text, updateUser.name, updateUser.email))
+								flash("error", "Was unable to send the e-mail.");
 						}
-						
-						if (query.containsKey("validate")) {
-							User.flashBrowserId(user);
-							return ok(FormHelper.asJson(filledForm));
-						
-						} else if (filledForm.hasErrors()) {
-							List<User> users = User.find.orderBy("admin, name, email").findList();
-							forms.userForm = filledForm;
-							flash("error", "Could not edit user, please review the form and make sure it is filled out properly.");
-							User.flashBrowserId(user);
-							return badRequest(views.html.Administrator.settings.render(forms, users));
 
-						} else {
-							updateUser.name = filledForm.field("name").valueOr("");
-							updateUser.admin = filledForm.field("admin").valueOr("").equals("true");
+					} else {
+						String newPassword = filledForm.field("password").valueOr("");
+						if (newPassword.length() > 0)
+							updateUser.setPassword(newPassword);
+					}
 
-							String oldEmail = updateUser.email;
-							updateUser.email = filledForm.field("email").valueOr("");
+					updateUser.save(Application.datasource);
+					if (updateUser.id.equals(user.id)) {
+						session("name", user.name);
+						session("email", user.email);
+					}
 
-							if ("true".equals(Setting.get("mail.enable"))) {
-								if (!updateUser.email.equals(oldEmail)) {
-									updateUser.active = false;
-									updateUser.makeNewActivationUid();
-
-									String activateUrl = routes.Account.showActivateForm(updateUser.email, updateUser.getActivationUid()).absoluteURL(request());
-									String html = views.html.Account.emailActivate.render(activateUrl).body();
-									String text = "Go to this link to activate your account: " + activateUrl;
-									if (!Account.sendEmail("Activate your account", html, text, updateUser.name, updateUser.email))
-										flash("error", "Was unable to send the e-mail.");
-								}
-
-							} else {
-								String newPassword = filledForm.field("password").valueOr("");
-								if (newPassword.length() > 0)
-									updateUser.setPassword(newPassword);
-							}
-
-							updateUser.save(Application.datasource);
-							if (updateUser.id.equals(user.id)) {
-								session("name", user.name);
-								session("email", user.email);
-							}
-
-							flash("success", "Your changes were saved successfully!");
-							return redirect(routes.Administrator.getSettings());
-						}
+					flash("success", "Your changes were saved successfully!");
+					return redirect(routes.Administrator.getSettings());
+				}
 			}
 
 			if ("resetPassword".equals(formName)) {
 				Long userId = request().queryString().containsKey("userid") ? Long.parseLong(request().queryString().get("userid")[0])
 						: request().body().asFormUrlEncoded().containsKey("userid") ? Long.parseLong(request().body().asFormUrlEncoded().get("userid")[0])
 								: 0L;
-						flash("settings.usertab", userId + "");
+				flash("settings.usertab", userId + "");
 
-						User resetUser = User.findById(userId);
+				User resetUser = User.findById(userId);
 
-						if (resetUser.active) {
-							resetUser.makeNewActivationUid();
-							resetUser.save(Application.datasource);
-							String resetUrl = routes.Account.showResetPasswordForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
-							String html = views.html.Account.emailResetPassword.render(resetUrl).body();
-							String text = "Go to this link to change your password: " + resetUrl;
-							if (Account.sendEmail("Reset your password", html, text, resetUser.name, resetUser.email))
-								flash("success", "A password reset link was sent to " + resetUser.name);
-							else
-								flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
+				if (resetUser.active) {
+					resetUser.makeNewActivationUid();
+					resetUser.save(Application.datasource);
+					String resetUrl = routes.Account.showResetPasswordForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
+					String html = views.html.Account.emailResetPassword.render(resetUrl).body();
+					String text = "Go to this link to change your password: " + resetUrl;
+					if (Account.sendEmail("Reset your password", html, text, resetUser.name, resetUser.email))
+						flash("success", "A password reset link was sent to " + resetUser.name);
+					else
+						flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
 
-						} else {
-							resetUser.makeNewActivationUid();
-							resetUser.save(Application.datasource);
-							String activateUrl = routes.Account.showActivateForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
-							String html = views.html.Account.emailActivate.render(activateUrl).body();
-							String text = "Go to this link to activate your account: " + activateUrl;
+				} else {
+					resetUser.makeNewActivationUid();
+					resetUser.save(Application.datasource);
+					String activateUrl = routes.Account.showActivateForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
+					String html = views.html.Account.emailActivate.render(activateUrl).body();
+					String text = "Go to this link to activate your account: " + activateUrl;
 
-							if (Account.sendEmail("Activate your account", html, text, resetUser.name, resetUser.email))
-								flash("success", "An account activation link was sent to " + resetUser.name);
-							else
-								flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
-						}
+					if (Account.sendEmail("Activate your account", html, text, resetUser.name, resetUser.email))
+						flash("success", "An account activation link was sent to " + resetUser.name);
+					else
+						flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
+				}
 
-						return redirect(routes.Administrator.getSettings());
+				return redirect(routes.Administrator.getSettings());
 			}
 
 			if ("deleteUser".equals(formName)) {
@@ -522,24 +522,24 @@ public class Administrator extends Controller {
 						: request().body().asFormUrlEncoded().containsKey("userid") ? Long.parseLong(request().body().asFormUrlEncoded().get("userid")[0])
 								: 0L;
 
-						User deleteUser = User.findById(userId);
+				User deleteUser = User.findById(userId);
 
-						if (deleteUser == null) {
-							flash("success", "Hmm, that's weird. The user was not found; nothing was changed...");
-							return redirect(routes.Administrator.getSettings());
-						}
+				if (deleteUser == null) {
+					flash("success", "Hmm, that's weird. The user was not found; nothing was changed...");
+					return redirect(routes.Administrator.getSettings());
+				}
 
-						flash("settings.usertab", deleteUser.id + "");
+				flash("settings.usertab", deleteUser.id + "");
 
-						if (deleteUser.id.equals(user.id)) {
-							flash("error", "Only other admins can delete you, you cannot do it yourself");
-							return redirect(routes.Administrator.getSettings());
-						}
+				if (deleteUser.id.equals(user.id)) {
+					flash("error", "Only other admins can delete you, you cannot do it yourself");
+					return redirect(routes.Administrator.getSettings());
+				}
 
-						deleteUser.delete(Application.datasource);
-						flash("settings.usertab", "global");
-						flash("success", deleteUser.name + " was deleted");
-						return redirect(routes.Administrator.getSettings());
+				deleteUser.delete(Application.datasource);
+				flash("settings.usertab", "global");
+				flash("success", deleteUser.name + " was deleted");
+				return redirect(routes.Administrator.getSettings());
 			}
 
 			if ("createUser".equals(formName)) {
@@ -548,7 +548,7 @@ public class Administrator extends Controller {
 				
 				if (query.containsKey("validate")) {
 					User.flashBrowserId(user);
-					return ok(FormHelper.asJson(filledForm));
+					return ok(FormHelper.asJson(filledForm,new String[]{"password"}));
 				
 				} else if (filledForm.hasErrors()) {
 					flash("settings.usertab", "adduser");

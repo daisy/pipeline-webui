@@ -41,7 +41,8 @@ public class User extends Model {
 	@Formats.NonEmpty
 	@Constraints.Email
 	public String email;
-
+	
+	@Constraints.Required
 	@Constraints.MinLength(1)
 	@Constraints.Pattern("[^{}\\[\\]();:'\"<>]+") // Avoid breaking JavaScript code in templates
 	public String name;

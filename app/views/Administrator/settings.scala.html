@@ -39,7 +39,7 @@
 </hgroup>
 @if(controllers.Application.deployment()=="server"){
 <ul class="nav nav-pills">
-    <li class="@("active".when(Controller.flash("settings.formName")==null||Controller.flash("settings.formName")=="updateGlobalPermissions"||Controller.flash("settings.formName")=="updateGuest"||Controller.flash("settings.formName")=="updateUser"))"><a href="#usersAndPermissions" data-toggle="tab">Users and Permissions</a></li>
+    <li class="@("active".when(Controller.flash("settings.formName")==null||Controller.flash("settings.formName")=="updateGlobalPermissions"||Controller.flash("settings.formName")=="updateGuest"||Controller.flash("settings.formName")=="updateUser"||Controller.flash("settings.formName")=="deleteUser"||Controller.flash("settings.formName")=="createUser"))"><a href="#usersAndPermissions" data-toggle="tab">Users and Permissions</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="setWS"))"><a href="#pipeline2WebServiceEndpoint" data-toggle="tab">Pipeline 2 Web API</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="setStorageDirs"))"><a href="#storageDirectories" data-toggle="tab">Storage directories</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="configureEmail"))"><a href="#eMailSettings" data-toggle="tab">E-mail settings</a></li>
@@ -52,7 +52,7 @@
 
 @if(controllers.Application.deployment()=="server"){
 	
-	<section id="usersAndPermissions" class="tab-pane @("active".when(Controller.flash("settings.formName")==null||Controller.flash("settings.formName")=="updateGlobalPermissions"||Controller.flash("settings.formName")=="updateGuest"||Controller.flash("settings.formName")=="updateUser"))">
+	<section id="usersAndPermissions" class="tab-pane @("active".when(Controller.flash("settings.formName")==null||Controller.flash("settings.formName")=="updateGlobalPermissions"||Controller.flash("settings.formName")=="updateGuest"||Controller.flash("settings.formName")=="updateUser"||Controller.flash("settings.formName")=="deleteUser"||Controller.flash("settings.formName")=="createUser"))">
 		<div class="tabbable tabs-left">
 			<h2>Users and permissions</h2>
 			<br/>
