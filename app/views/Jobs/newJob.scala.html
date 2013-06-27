@@ -148,17 +148,19 @@ h2 {
 						var table = $("#scriptTable tbody");
 						var list = $("#scriptList");
 						for (var s = 0; s < scripts.length; s++) {
-							$(list).append("	<li><a data-description=\""+scripts[s].desc+"\" data-nicename=\""+scripts[s].nicename+"\" data-id=\""+scripts[s].id+"\" class=\"script-button-"+scripts[s].id+"\" href=\"javascript:void(0)\">"+scripts[s].nicename+"</a></li>\n");
+							var scriptId = scripts[s].id.replace(/:/g,'\\x3A');
+							var scriptIdEscaped = scripts[s].id.replace(/:/g,'\\\\x3A');
+							$(list).append("	<li><a data-description=\""+scripts[s].desc+"\" data-nicename=\""+scripts[s].nicename+"\" data-id=\""+scriptId+"\" class=\"script-button-"+scriptId+"\" href=\"javascript:void(0)\">"+scripts[s].nicename+"</a></li>\n");
 							$(table).append(
 								"	<tr>\n"+
-								"		<td><a data-description=\""+scripts[s].desc+"\" data-nicename=\""+scripts[s].nicename+"\" data-id=\""+scripts[s].id+"\" class=\"script-button-"+scripts[s].id+"\" href=\"javascript:void(0)\">"+scripts[s].nicename+"</a></td>\n"+
+								"		<td><a data-description=\""+scripts[s].desc+"\" data-nicename=\""+scripts[s].nicename+"\" data-id=\""+scriptId+"\" class=\"script-button-"+scriptId+"\" href=\"javascript:void(0)\">"+scripts[s].nicename+"</a></td>\n"+
 								"		<td>"+scripts[s].desc+"</td>\n"+
 								"	</tr>\n");
-							$(".script-button-"+scripts[s].id).click(function(){
+							$(".script-button-"+scriptIdEscaped).click(function(){
 								if (firstFileOrScriptChosen !== null) firstFileOrScriptChosen();
 								if ($("#script-"+$(this).data("id")).size()===0) {
 									$.ajax({
-										url: "@routes.Scripts.getScript("")"+$(this).data("id"),
+										url: "@routes.Scripts.getScript("")"+$(this).data("id").replace(/\\x3A/g,'%3A'),
 										success: function(data) {
 											if ($("#script-"+$(this).data("id")).size()===0) {
 												$('#optionsGroup').append(data);

@@ -72,10 +72,8 @@ addJob = function(job) {
 		$("#joblist tbody").prepend(html);
 	}
 	
-	console.log("adding click listener for #job-delete-"+job.id);
 	$(function(){
 		$("#job-delete-"+job.id).click(function(){
-			console.log("clicked #job-delete-"+job.id);
 			var jobId = $(this).data("jobid");
 			$("#job-delete-"+jobId).hide();
 			$.ajax({

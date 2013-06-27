@@ -1,4 +1,4 @@
-@(arg: org.daisy.pipeline.client.models.script.Argument, script: org.daisy.pipeline.client.models.Script)
+@(arg: org.daisy.pipeline.client.models.script.Argument, script: org.daisy.pipeline.client.models.Script, scriptId: String)
 
 @if(arg.sequence==Boolean.TRUE){
 
@@ -32,7 +32,7 @@
 	<div class="control-group @("advanced-argument".when(!arg.required))">
 		<label class="control-label" for="@{arg.kind}-@{arg.name}">@arg.nicename</label>
 		<div class="controls">
-			<input name="@{arg.kind}-@{arg.name}" id="script-@script.id-@{arg.kind}-@{arg.name}" type="text"/>
+			<input name="@{arg.kind}-@{arg.name}" id="script-@scriptId-@{arg.kind}-@{arg.name}" type="text"/>
 			@if(arg.desc.length > 0){
 				<span class="help-block">@arg.desc</span>
 			}

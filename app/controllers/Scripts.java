@@ -120,7 +120,7 @@ public class Scripts extends Controller {
 		}
 
 		User.flashBrowserId(user);
-		return ok(views.html.Scripts.getScript.render(script, uploadFiles, hasAdvancedOptions, hideAdvancedOptions, mediaTypeBlacklist));
+		return ok(views.html.Scripts.getScript.render(script, script.id.replaceAll(":", "\\x3A"), uploadFiles, hasAdvancedOptions, hideAdvancedOptions, mediaTypeBlacklist));
 	}
 	
 	public static Result getScriptJson(String id) {

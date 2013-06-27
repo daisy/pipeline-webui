@@ -1,4 +1,4 @@
-@(arg: org.daisy.pipeline.client.models.script.Argument, script: org.daisy.pipeline.client.models.Script)
+@(arg: org.daisy.pipeline.client.models.script.Argument, script: org.daisy.pipeline.client.models.Script, scriptId: String)
 
 <div class="control-group @("advanced-argument".when(!arg.required))">
 	<label class="control-label">@arg.nicename</label>
