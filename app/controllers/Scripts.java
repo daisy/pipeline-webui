@@ -198,53 +198,34 @@ public class Scripts extends Controller {
 					Logger.debug("script form: "+kind+": "+name);
 
 					Argument argument = script.getArgument(name, kind);
-					//					for (Argument arg : script.arguments) {
-					//						Logger.debug(arg.name+" equals "+name+" ?");
-					//						if (arg.name.equals(name)) {
-					//							argument = arg;
-					//							break;
-					//						}
-					//					}
 					if (argument == null) {
 						Logger.debug("'"+name+"' is not an argument for the script '"+script.id+"'; ignoring it");
 						continue;
 					}
 
 					if ("anyFileURI".equals(argument.xsdType)) {
-						if (argument.sequence) { // Multiple files
-							for (int i = 0; i < params.get(param).length; i++) {
-								matcher = FILE_REFERENCE.matcher(params.get(param)[i]);
-								if (!matcher.find()) {
-									Logger.debug("Unable to parse file reference: "+params.get(param)[i]);
-								} else {
-									Long uploadId = Long.parseLong(matcher.group(1));
-									Integer fileNr = Integer.parseInt(matcher.group(2));
-									argument.add(uploads.get(uploadId).listFiles().get(fileNr).href);
-								}
-							}
-
-						} else { // Single file
-							matcher = FILE_REFERENCE.matcher(params.get(param)[0]);
+						String[] filerefs = params.get(param)[0].split(",");
+						for (String fileref : filerefs) {
+							matcher = FILE_REFERENCE.matcher(fileref);
 							if (!matcher.find()) {
-								Logger.debug("Unable to parse file reference: "+params.get(param)[0]);
+								Logger.debug("Unable to parse file reference: "+fileref);
 							} else {
 								Long uploadId = Long.parseLong(matcher.group(1));
 								Integer fileNr = Integer.parseInt(matcher.group(2));
 
 								if (uploads.containsKey(uploadId)) {
-									argument.set(uploads.get(uploadId).listFiles().get(fileNr).href);
+									argument.add(uploads.get(uploadId).listFiles().get(fileNr).href);
 
 								} else {
 									Logger.warn("No such upload: "+uploadId);
 								}
-
 							}
 						}
 
 					} else if ("parameters".equals(argument.xsdType)) {
 						// TODO: parameters are not implemented yet
 
-					} else { // All other types are treated the same name
+					} else { // All other types are treated the same
 						for (int i = 0; i < params.get(param).length; i++) {
 							argument.add(params.get(param)[i]);
 						}
