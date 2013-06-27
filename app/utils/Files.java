@@ -1,9 +1,11 @@
 package utils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -466,6 +468,41 @@ public class Files {
 			Logger.warn("Could not create URI from '"+path+"'", e);
 			return path;
 		}
+	}
+	
+	/**
+	 * Read text from file
+	 * @param about
+	 */
+	public static String read(File file) {
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(file));
+			StringBuilder sb = new StringBuilder();
+			String line = br.readLine();
+
+			while (line != null) {
+				sb.append(line);
+				sb.append("\n");
+				line = br.readLine();
+			}
+			return sb.toString();
+			
+		} catch (FileNotFoundException e) {
+			Logger.error("File not found", e);
+			
+		} catch (IOException e) {
+			Logger.error("An error occured while reading the file", e);
+			
+		} finally {
+			try {
+				if (br != null)
+					br.close();
+			} catch (IOException e) {
+				Logger.error("Could not close FileReader", e);
+			}
+		}
+		return null;
 	}
 	
 }

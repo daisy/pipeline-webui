@@ -45,7 +45,13 @@ public class Application extends Controller {
 		
 		User user = User.authenticate(request(), session());
 		User.flashBrowserId(user);
-		return ok(views.html.about.render());
+		
+		File about = new File("about.html");
+		if (about.exists()) {
+			return ok(views.html.about.render(utils.Files.read(about)));
+		} else {
+			return ok(views.html.about.render(null));
+		}
 	}
 	
 	public static Result theme(String filename) {
