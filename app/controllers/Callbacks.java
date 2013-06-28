@@ -11,7 +11,8 @@ public class Callbacks extends Controller {
 	 * @return
 	 */
 	public static Result postCallback(String type) {
-		Logger.debug("Received callback of type '"+type+"': "+utils.XML.toString(request().body().asXml()));
+		Logger.debug("Received callback of type '"+type+"': "+request().body().asText());
+//		Logger.debug("Received callback of type '"+type+"': "+utils.XML.toString(request().body().asXml()));
 		
 		return ok();
 	}

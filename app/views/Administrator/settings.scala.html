@@ -136,7 +136,7 @@
 	<br/>
 	<script type="text/javascript">
 		// TODO: dynamic validation of configureAppearance form
-  		//$(function(){ DP2Forms.startValidation("configureAppearance", "@routes.Administrator.postSettings()?validate", ["TODO"]); });
+		$(function(){ DP2Forms.startValidation("configureAppearance", "@routes.Administrator.postSettings()?validate", ["title", "titleLink", "landingPage", "theme"]); });
 	</script>
 	@views.html.Administrator.Forms.configureAppearance(forms.configureAppearanceForm, routes.Administrator.postSettings(), null)
 </section>

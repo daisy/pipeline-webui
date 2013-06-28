@@ -12,6 +12,7 @@ import models.Setting;
 import models.User;
 import play.Configuration;
 import play.Logger;
+import play.api.mvc.Call;
 import play.mvc.*;
 import utils.Pipeline2Engine;
 
@@ -35,6 +36,14 @@ public class Application extends Controller {
 		User user = User.authenticate(request(), session());
 		if (user == null)
 			return redirect(routes.Login.login());
+		
+		String landingPage = Setting.get("appearance.landingPage");
+		if ("welcome".equals(landingPage)) return redirect(routes.FirstUse.welcome());
+		if ("scripts".equals(landingPage)) return redirect(routes.Jobs.newJob());
+		if ("jobs".equals(landingPage) && !(user.id <= -2 && !"true".equals(Setting.get("users.guest.shareJobs")))) return redirect(routes.Jobs.getJobs());
+		if ("about".equals(landingPage)) return redirect(routes.Application.about());
+		if ("admin".equals(landingPage) && user.admin) return redirect(routes.Administrator.getSettings());
+		if ("account".equals(landingPage) && user.id >= 0) return redirect(routes.Account.overview());
 		
 		return redirect(routes.Jobs.newJob());
 	}
@@ -101,6 +110,17 @@ public class Application extends Controller {
 		if (themeName == null)
 			themeName = Setting.get("appearance.theme");
 		return themeName;
+	}
+	
+	public static String titleLink() {
+		String titleLink = Setting.get("appearance.titleLink");
+		if ("welcome".equals(titleLink)) titleLink = routes.FirstUse.welcome().absoluteURL(request());
+		else if ("scripts".equals(titleLink)) titleLink = routes.Jobs.newJob().absoluteURL(request());
+		else if ("jobs".equals(titleLink)) titleLink = routes.Jobs.getJobs().absoluteURL(request());
+		else if ("about".equals(titleLink)) titleLink = routes.Application.about().absoluteURL(request());
+		else if ("admin".equals(titleLink)) titleLink = routes.Administrator.getSettings().absoluteURL(request());
+		else if ("account".equals(titleLink)) titleLink = routes.Account.overview().absoluteURL(request());
+		return titleLink;
 	}
 	
 	private static String deployment = null;

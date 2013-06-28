@@ -77,10 +77,10 @@
 	                <span class="icon-bar"></span>
 	                <span class="icon-bar"></span>
 	            </a>
-                @if(Controller.flash("shutdown")=="true"){
+                @if(Controller.flash("shutdown")=="true" || models.Setting.get("appearance.titleLink")==""){
 	            	<span class="brand">@Setting.get("appearance.title")</span>
 	            }else{
-	   				<a class="brand" href="@routes.Application.index()">@Setting.get("appearance.title")</a>
+	   				<a class="brand" href="@Application.titleLink()" @if(models.Setting.get("appearance.titleLink.newWindow")=="true"){target="_blank"}>@Setting.get("appearance.title")</a>
 	   			}
 	   			<nav class="nav-collapse">
 		   			<ul class="nav">

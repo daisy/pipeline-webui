@@ -3,16 +3,15 @@
 @helper.form(action = route, 'id -> "setMaintenance-form") {
 	
 	<input type="hidden" name="formName" value="setMaintenance"/>
+	<input type="hidden" name="maintenance" id="setMaintenance-maintenance"/>
 	
    	<fieldset>
    		
    		<div class="form-horizontal">
-   			
-   			<input type="hidden" name="maintenance" id="setMaintenance-maintenance"/>
 			
 			<div class="control-group @("error".when(setMaintenanceForm.error("maintenance") != null))" id="setMaintenance-maintenanceGroup">
-				<label class="control-label">Job persistence</label>
-				<div class="controls">
+				<label class="control-label" id="setMaintenance-maintenance-label">Job persistence</label>
+				<div class="controls" aria-role="radiogroup" aria-labelledby="setMaintenance-maintenance-label">
 					<label class="radio">
 						<input type="radio" name="delete" id="setMaintenance-delete-false" value="false">
 						<span>Never delete jobs</span>
@@ -55,7 +54,7 @@
 									$("#setMaintenance-maintenance")[0].value = $("#setMaintenance-maintenance-minutes")[0].value;
 							});
 							
-							$("#setMaintenance-maintenanceGroup input").on('change keyup', function(event){
+							$("#setMaintenance-maintenanceGroup input").on('input change paste keyup mouseup', function(event){
 								DP2Forms.scheduleValidation("setMaintenance");
 							});
 							DP2Forms.disableButtonOnErrors("setMaintenance", "submit");

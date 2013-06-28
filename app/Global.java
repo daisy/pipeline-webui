@@ -63,6 +63,15 @@ public class Global extends GlobalSettings {
 		if (Setting.get("appearance.title") == null)
 			Setting.set("appearance.title", "DAISY Pipeline 2");
 		
+		if (Setting.get("appearance.titleLink") == null)
+			Setting.set("appearance.titleLink", "scripts");
+		
+		if (Setting.get("appearance.titleLink.newWindow") == null)
+			Setting.set("appearance.titleLink.newWindow", "false");
+		
+		if (Setting.get("appearance.landingPage") == null)
+			Setting.set("appearance.landingPage", "welcome");
+		
 		if (Setting.get("appearance.theme") == null)
 			Setting.set("appearance.theme", "");
 		

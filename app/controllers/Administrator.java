@@ -1,6 +1,7 @@
 package controllers;
 
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -251,14 +252,30 @@ public class Administrator extends Controller {
 
 	public final static Form<ConfigureAppearanceForm> configureAppearanceForm = play.data.Form.form(ConfigureAppearanceForm.class);
 	public static class ConfigureAppearanceForm {
-
+		
+		@Formats.NonEmpty
 		public String title;
+		
+		public String titleLink;
+		
+		public String titleLinkNewWindow;
+		
+		public String landingPage;
+		
 		public String theme;
 
 		public static void validate(Form<ConfigureAppearanceForm> filledForm) {
 			String title = filledForm.field("title").valueOr("");
 			if ("".equals(title)) {
 				filledForm.reject("title", "The website must have a title.");
+			}
+			
+			// any string is valid for titleLink - it is up to the administrator to set a proper one
+			
+			String landingPage = filledForm.field("landingPage").valueOr("");
+			if (!"welcome".equals(landingPage) && !"scripts".equals(landingPage) && !"jobs".equals(landingPage) &&
+											!"about".equals(landingPage) && !"admin".equals(landingPage) && !"account".equals(landingPage)) {
+				filledForm.reject("landingPage", "Please select a valid landing page.");
 			}
 
 			String theme = filledForm.field("theme").valueOr("");
@@ -287,6 +304,9 @@ public class Administrator extends Controller {
 				theme += "/";
 			Application.themeName = theme;
 			Setting.set("appearance.theme", theme);
+			Setting.set("appearance.titleLink", filledForm.field("titleLink").valueOr(Setting.get("appearance.titleLink")));
+			Setting.set("appearance.titleLink.newWindow", ("on".equals(filledForm.field("titleLinkNewWindow").value())?"true":"false"));
+			Setting.set("appearance.landingPage", filledForm.field("landingPage").valueOr(Setting.get("appearance.landingPage")));
 			Setting.set("appearance.title", filledForm.field("title").valueOr(Setting.get("appearance.title")));
 		}
 	}
@@ -700,16 +720,25 @@ public class Administrator extends Controller {
 					return badRequest(views.html.Administrator.settings.render(forms, users));
 
 				} else {
-					String theme = Application.themeName();
-					String title = Setting.get("appearance.title");
+					String title = Setting.get("appearance.title")+"";
+					String titleLink = Setting.get("appearance.titleLink")+"";
+					String titleLinkNewWindow = Setting.get("appearance.titleLink.newWindow")+"";
+					String landingPage = Setting.get("appearance.landingPage")+"";
+					String theme = Application.themeName()+"";
 
 					Administrator.ConfigureAppearanceForm.save(filledForm);
 
 					String successString = "";
-					if (!theme.equals(Application.themeName()))
-						successString += "Theme changed to "+("".equals(Application.themeName())?"default":"\""+Application.themeName().substring(0, Application.themeName().length()-1)+"\"")+" !";
 					if (!title.equals(Setting.get("appearance.title")))
 						successString += " Title changed to \""+Setting.get("appearance.title")+"\" !";
+					if (!titleLink.equals(Setting.get("appearance.titleLink")))
+						successString += " Title link changed to \""+Setting.get("appearance.titleLink")+"\" !";
+					if (!titleLinkNewWindow.equals(Setting.get("appearance.titleLink.newWindow")))
+						successString += " Title link will "+ ("true".equals(titleLinkNewWindow)? "not open in a new window anymore" : "now open in a new window") +" !";
+					if (!landingPage.equals(Setting.get("appearance.landingPage")))
+						successString += " Landing page changed to \""+Setting.get("appearance.landingPage")+"\" !";
+					if (!theme.equals(Application.themeName()))
+						successString += " Theme changed to "+("".equals(Application.themeName())?"default":"\""+Application.themeName().substring(0, Application.themeName().length()-1)+"\"")+" !";
 					if ("".equals(successString))
 						successString = "Nothing changed";
 					flash("success", successString);

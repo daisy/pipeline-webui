@@ -34,7 +34,7 @@ public class Login extends Controller {
     	
     	if ("desktop".equals(Application.deployment())) {
 			User.find.where().eq("admin", true).findUnique().login(session());
-			return redirect(routes.FirstUse.welcome());
+			return redirect(routes.Application.index());
 		}
     	
     	User.parseUserId(session());
@@ -55,7 +55,7 @@ public class Login extends Controller {
             return badRequest(views.html.Login.login.render(loginForm));
         } else {
         	user.login(Controller.session());
-            return redirect(routes.Jobs.newJob());
+        	return redirect(routes.Application.index());
         }
     }
     
@@ -70,7 +70,7 @@ public class Login extends Controller {
     	
     	User.loginAsGuest(Controller.session());
     	
-        return redirect(routes.Jobs.newJob());
+    	return redirect(routes.Application.index());
     }
     
     public static Result resetPassword() {

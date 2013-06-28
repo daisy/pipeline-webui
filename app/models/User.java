@@ -35,7 +35,7 @@ public class User extends Model {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE)
-	public Long id;
+	public Long id; // <= -2: logged in as guest, -1: not logged in, >= 0: logged in as user
 
 	@Constraints.Required
 	@Formats.NonEmpty
