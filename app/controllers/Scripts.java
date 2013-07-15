@@ -62,7 +62,7 @@ public class Scripts extends Controller {
 	public static Result getScript(String id) {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
-
+		
 		User user = User.authenticate(request(), session());
 		if (user == null)
 			return redirect(routes.Login.login());
