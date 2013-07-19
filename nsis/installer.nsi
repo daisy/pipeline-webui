@@ -71,7 +71,7 @@ var SMGROUP
 
 !define env_hklm 'HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"'
 !define env_hkcu 'HKCU "Environment"'
-
+!include EnvVarUpdate.nsh
 
 
 ;----------------------------------------------------------
@@ -223,7 +223,7 @@ section -Main SEC01
 	# Start Menu
 	createDirectory "$SMPROGRAMS\${COMPANYNAME}"
 	createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}.lnk" "$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline\webui\start.bat" "" "$INSTDIR\logo.ico"
-	CreateShortCut "$SMPROGRAMS\$SMGROUP\${COMPANYNAME}\unistall.lnk" "$INSTDIR\unistall.exe"
+	CreateShortCut "$SMPROGRAMS\${COMPANYNAME}\unistall.lnk" "$INSTDIR\uninstall.exe"
 
 	############### 
 	# Registry information for add/remove programs
@@ -241,7 +241,10 @@ section -Main SEC01
 	WriteRegDWORD HKLM "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "NoRepair" 1
 	#pipelinehome registry entry
 	WriteRegStr HKLM "${PRODUCT_REG_KEY}" "Pipeline2Home" "$\"$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline$\""
+	#Update path env variable
 
+	${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline\cli"  
+	${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline\bin"  
 	; make sure windows knows about the change
 	SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
 sectionEnd
@@ -252,7 +255,6 @@ sectionEnd
  
 function un.onInit
 	SetShellVarContext all
- 
 	!insertmacro VerifyUserIsAdmin
 functionEnd
  
@@ -261,12 +263,14 @@ section "uninstall"
 	# Remove Start Menu launcher
 	delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}.lnk"
 	# Try to remove the Start Menu folder - this will only happen if it is empty
-	rmDir "$SMPROGRAMS\${COMPANYNAME}"
+	rmDir "$SMPROGRAMS\${COMPANYNAME}\uninstall.lnk"
  
 	# Remove files
 	rmDir /r "$INSTDIR\${PROJECT_ARTIFACT_ID}"
 	#delete conf file	
 	delete $INSTDIR\application.conf
+	#delete logo 
+	delete $INSTDIR\logo.ico
  
 	# Always delete uninstaller as the last action
 	delete $INSTDIR\uninstall.exe
@@ -278,5 +282,8 @@ section "uninstall"
 	DeleteRegKey HKLM "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}"
 	#Remove pipeline home 
 	DeleteRegKey HKLM "Software\${APPNAME}"
+	#Remove cli for the path
 	
+	${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline\cli"  
+	${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline\bin"  
 sectionEnd
