@@ -21,8 +21,19 @@
             <excludes>
                 <exclude>start</exclude>
                 <exclude>start.bat</exclude>
+                <exclude>uninstall</exclude>
+                <exclude>uninstall.bat</exclude>
                 <exclude>application.conf</exclude>
             </excludes>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>dist-resources/both</directory>
+            <includes>
+                <include>uninstall</include>
+                <include>uninstall.bat</include>
+            </includes>
+            <fileMode>0755</fileMode>
             <outputDirectory>/</outputDirectory>
         </fileSet>
         <fileSet>
