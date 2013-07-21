@@ -37,7 +37,40 @@
 	<![endif]-->
 
 	<!-- Load jQuery before the content (so other templates may use jQuery) -->
-	<script type="text/javascript" src="jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="jquery-1.9.1.min.js"></script>
+    <script type="text/javascript">
+        DP2 = {
+            slash: "/"
+        };
+        var set = function(name, value) {
+            var pattern = new RegExp(name, "g");
+            
+            switch (name) {
+                case "DP2DATA":
+                    value = value.replace(/\//g, DP2.slash);
+                    break;
+            }
+
+            DP2[name] = value;
+            $("span.gettext."+name).html(value);
+            $("a.gettext."+name).each(function(index){
+                var a = $(this);
+                var href = null;
+                if (a.data("href")) {
+                    href = a.data("href").replace(pattern,value);
+                    
+                    if (href.match(/^\s+:/i) !== null) {
+                        href = "file://///"+href;
+                        
+                    } else if (href.indexOf("/") === 0) {
+                        href = "file://"+href;
+                    }
+                    
+                    a.attr("href",href);
+                }
+            });
+        };
+    </script>
   </head>
 	
   <body class="body">
@@ -61,23 +94,20 @@
 		  <hgroup>
 			  <h1 id="h1" aria-live="polite">
 			  	<span class="STARTING state">Starting the Pipeline 2 Web UI...</span>
-			  	<span class="RUNNING state" style="display:none;">Successfully started the Pipeline 2 engine!</span>
+			  	<span class="RUNNING state" style="display:none;">Successfully started the Pipeline 2 Web UI!</span>
+			  	<span class="ALREADY_RUNNING state" style="display:none;">The Pipeline 2 Web UI seems to be already running...</span>
 			  </h1>
 		  </hgroup>
 		</div>
 
 		<div class="STARTING message" style="text-align:center;">
 			<img src="loading.gif" alt="" style="margin:10px;"/><br/>
-			<div id="WAITING" style="display:none;">
+			<div class="WAITING" style="display:none;">
 				<div style="text-align:left;">
-					<p>This is taking a long time, an error may have occured while starting the Web UI.</p>
-					<ul>
-						<li>If this is the first time you start the Web UI then this is probably caused by Java not being configured properly.
+					<p>This is taking a long time; either you have a slow computer or an error has occured while starting the Web UI.</p>
+				    <p>If this is the first time you start the Web UI then maybe Java has not been configured properly.
 					   See the <a href="http://code.google.com/p/daisy-pipeline/wiki/Installation#Java">Pipeline 2 Installation Instructions</a>
-	                   to learn how to install and configure Java.</li>
-	                   <li>If you have previously started the Web UI then it may not have been shut down properly, in which case there will
-	                   	be a file called "RUNNING_PID" present in the "webui" directory. Delete the file and try again.</li>
-	                </ul>
+	                   to learn how to install and configure Java.</p>
 	                <p>See the log file for more details. If you are unable to solve the problem by yourself, please download
 	                   the log file and post its contents to the <a href="http://www.daisy.org/forums/pipeline-2">Pipeline 2 forum</a>.</p>
                </div>
@@ -86,14 +116,31 @@
 		</div>
 
 		<div class="RUNNING message" style="text-align:center;display:none;">
-			<a href="http://localhost:9000/firstuse"><small class="muted">Click here if you are not redirected automatically...</small></a>
-		</div>
+            <p><a href="http://localhost:9000/firstuse"><small class="muted">Click here if you are not redirected automatically...</small></a></p>
+        </div>
+
+        <div class="ALREADY_RUNNING message" style="text-align:center;display:none;">
+            <p><a href="http://localhost:9000/firstuse"><small class="muted">Click here if you are not redirected automatically...</small></a></p>
+			<div class="WAITING" style="display:none;">
+                <div style="text-align:left;">
+                    <p>The Web UI is not responding. If it was not shut down properly the last time it was used, there will be a file called
+                    <code>RUNNING_PID</code> present in the
+                    <code style="white-space:nowrap;"><a class="gettext DP2DATA" data-href="DP2DATA/webui/" href="#"><span class="gettext DP2DATA"></span><span class="gettext slash"></span>webui<span class="gettext slash"></span></a></code>
+                    directory. Please delete the <code>RUNNING_PID</code> file and try again.</p>
+               </div>
+				<a class="btn btn-xlarge" href="log.txt" target="_blank" download="log.txt">Download log file</a>
+           </div>
+        </div>
 
 		<script type="text/javascript">
 			alive = function(message) {
 				setTimeout(function() {
-					$(".state, .message").hide();
-					$(".RUNNING").show();
+                    $(".state, .message").hide();
+                    if (DP2.ALREADY_RUNNING === "true") {
+                        $(".ALREADY_RUNNING").show();
+                    } else {
+    					$(".RUNNING").show();
+                    }
 				},1000);
 				window.location = "http://localhost:9000/firstuse";
 			}
@@ -109,10 +156,23 @@
 				);
 				setTimeout(
 					function() {
-						$("#WAITING").show();
+						$(".WAITING").show();
 					},
 					30000
-				);
+                );
+				setTimeout(
+                    function() {
+                        if (DP2.ALREADY_RUNNING === "true") {
+    						$(".WAITING").show();
+                        } else console.log(DP2.ALREADY_RUNNING);
+					},
+					5000
+                );
+                
+                if (DP2.ALREADY_RUNNING === "true") {
+                    $(".state, .message").hide();
+                    $(".ALREADY_RUNNING").show();
+                }
 			});
 		</script>
 	
@@ -121,3 +181,4 @@
 	<script src="bootstrap.min.js"></script>
   </body>
 </html>
+

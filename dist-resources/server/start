@@ -1,4 +1,23 @@
 #!/usr/bin/env bash
 
+if [ "`uname -s`" == "Darwin" ]
+then
+    export DP2DATA="`echo ~`/Library/Application Support/daisy-pipeline"
+else
+    export DP2DATA="`echo ~`/.daisy-pipeline"
+fi
+
+if [ ! -d "$DP2DATA/webui" ]; then
+
+    echo "Creating application data directory..."
+    mkdir -p "$DP2DATA/webui"
+
+    echo "Copying default database..."
+    cp -r dp2webui "$DP2DATA/webui/"
+
+    echo "Copying loading page..."
+    cp -r startui "$DP2DATA/webui/"
+fi
+
 echo "Starting Web UI..."
-( cd "`dirname "$0"`" && exec java -Dconfig.file="`pwd`/application.conf" $@ -cp "`pwd`/lib/*" play.core.server.NettyServer "`pwd`" )
+( cd "`dirname "$0"`" && exec java -Dderby.stream.error.file="$DP2DATA/log/webui-database.log" -Dlogger.file="`pwd`/logger.xml" -Dpidfile.path="$DP2DATA/webui/RUNNING_PID" -Dconfig.file="`pwd`/application.conf" $@ -cp "`pwd`/lib/*" play.core.server.NettyServer "`pwd`")

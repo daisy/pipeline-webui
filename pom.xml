@@ -70,8 +70,8 @@
                         <configuration>
                             <tasks>
                                 <echo message="Unzipping ZIP distributable created by Play 2.0..."/>
-                                <unzip src="target/pipeline2-webui-${version}.zip" dest="target/webui-unpacked"/>
-                                <move file="target/webui-unpacked/pipeline2-webui-${version}" tofile="target/pipeline2-webui"/>
+                                <unzip src="target/pipeline2-webui-${project.version}.zip" dest="target/webui-unpacked"/>
+                                <move file="target/webui-unpacked/pipeline2-webui-${project.version}" tofile="target/pipeline2-webui"/>
                             </tasks>
                         </configuration>
                         <goals>

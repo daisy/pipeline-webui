@@ -1,14 +1,50 @@
 #!/usr/bin/env bash
-echo date "+%Y-%d-%m %H:%M:%S" > startui/log.txt
-echo `uname -s` `uname -m` >> startui/log.txt
+
+if [ "`uname -s`" == "Darwin" ]
+then
+    export DP2DATA="`echo ~`/Library/Application Support/daisy-pipeline"
+else
+    export DP2DATA="`echo ~`/.daisy-pipeline"
+fi
+
+if [ ! -d "$DP2DATA/webui" ]; then
+
+    echo "Creating application data directory..."
+    mkdir -p "$DP2DATA/webui"
+
+    echo "Copying default database..."
+    cp -r dp2webui "$DP2DATA/webui/"
+
+    echo "Copying loading page..."
+    cp -r startui "$DP2DATA/webui/"
+fi
+
+export DP2WEBUILOGFILE="$DP2DATA/webui/startui/log.txt"
+date "+%Y-%d-%m %H:%M:%S" > $DP2WEBUILOGFILE
+echo `uname -s` `uname -m` >> $DP2WEBUILOGFILE
+
+# add variables to the DP2 object in the startui page
+cp startui/start.html "$DP2DATA/webui/startui/"
+echo "<script type=\"text/javascript\">set('DP2DATA','/');</script>" >> "$DP2DATA/webui/startui/start.html"
+echo "<script type=\"text/javascript\">set('DP2DATA','$DP2DATA');</script>" >> "$DP2DATA/webui/startui/start.html"
+if [ -f "$DP2DATA/webui/RUNNING_PID" ]; then
+    echo "<script type=\"text/javascript\">set('ALREADY_RUNNING','true');</script>" >> "$DP2DATA/webui/startui/start.html"
+else
+    echo "<script type=\"text/javascript\">set('ALREADY_RUNNING','false');</script>" >> "$DP2DATA/webui/startui/start.html"
+fi
 
 echo "Starting browser..."
 if [ "`uname -s`" == "Darwin" ]
 then
-    open "`dirname "$0"`/startui/start.html"
+    open "$DP2DATA/webui/startui/start.html"
 else
-    xdg-open "`dirname "$0"`/startui/start.html"
+    xdg-open "$DP2DATA/webui/startui/start.html"
 fi
 
-echo "Starting Web UI..." >> startui/log.txt
-( cd "`dirname "$0"`" && exec java -Dconfig.file="`pwd`/application.conf" $@ -cp "`pwd`/lib/*" play.core.server.NettyServer "`pwd`" >> startui/log.txt 2>&1 )
+
+if [ ! -f "$DP2DATA/webui/RUNNING_PID" ]; then
+    echo "Starting Web UI..."
+    ( cd "`dirname "$0"`" && exec java -Dderby.stream.error.file="$DP2DATA/log/webui-database.log" -Dlogger.file="`pwd`/logger.xml" -Dpidfile.path="$DP2DATA/webui/RUNNING_PID" -Dconfig.file="`pwd`/application.conf" $@ -cp "`pwd`/lib/*" play.core.server.NettyServer "`pwd`" >> "$DP2DATA/webui/log.txt" 2>&1 )
+else
+    echo "Web UI is already running."
+fi

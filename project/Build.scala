@@ -17,7 +17,8 @@ object ApplicationBuild extends Build {
       "mysql" % "mysql-connector-java" % "5.1.18",
       "org.daisy.pipeline" % "clientlib-java" % "1.0-SNAPSHOT",
       "org.apache.commons" % "commons-compress" % "1.4.1",
-      "org.apache.commons" % "commons-email" % "1.2"
+      "org.apache.commons" % "commons-email" % "1.2",
+      "log4j" % "apache-log4j-extras" % "1.0"
     )
 
     val main = play.Project(appName, appVersion, appDependencies).settings(
