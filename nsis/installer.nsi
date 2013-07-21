@@ -219,7 +219,6 @@ section -Main SEC01
 	setOutPath "$INSTDIR\${PROJECT_ARTIFACT_ID}"
  
 	file /r "${PROJECT_BUILD_DIR}\${PROJECT_ARTIFACT_ID}-${VERSION}-desktop\daisy-pipeline" 
-	file "${PROJECT_BUILD_DIR}\${PROJECT_ARTIFACT_ID}-${VERSION}-desktop\application.conf"
 	# Start Menu
 	createDirectory "$SMPROGRAMS\${COMPANYNAME}"
 	createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}.lnk" "$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline\webui\start.bat" "" "$INSTDIR\logo.ico"
@@ -267,8 +266,6 @@ section "uninstall"
  
 	# Remove files
 	rmDir /r "$INSTDIR\${PROJECT_ARTIFACT_ID}"
-	#delete conf file	
-	delete $INSTDIR\application.conf
 	#delete logo 
 	delete $INSTDIR\logo.ico
  
