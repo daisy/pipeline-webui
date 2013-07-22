@@ -6,6 +6,7 @@ then
 else
     export DP2DATA="`echo ~`/.daisy-pipeline"
 fi
+export DP2DATA_SLASH=$DP2DATA
 
 if [ ! -d "$DP2DATA/webui" ]; then
 

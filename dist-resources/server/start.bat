@@ -5,6 +5,7 @@ title Pipeline 2 Web UI
 cd /d "%~dp0"
 
 set DP2DATA=%APPDATA%\DAISY Pipeline 2
+set DP2DATA_SLASH=%DP2DATA:\=/%
 
 IF EXIST !DP2DATA!\webui GOTO CONFIGURATION_DONE
 

@@ -36,8 +36,10 @@ public class Global extends GlobalSettings {
 		final String datasource = Configuration.root().getString("dp2.datasource");
 		
 		Pipeline2WS.setLoggerImplementation(new Pipeline2PlayLogger());
-		if ("DEBUG".equals(Configuration.root().getString("logger.application")))
+		if ("DEBUG".equals(Configuration.root().getString("logger.application"))) {
+			Logger.debug("Enabling clientlib debug mode");
 			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.DEBUG);
+		}
 		
 		NotificationConnection.notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>();
 		

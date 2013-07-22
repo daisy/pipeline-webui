@@ -5,6 +5,7 @@ title Pipeline 2 Web UI
 cd /d "%~dp0"
 
 set DP2DATA=%APPDATA%\DAISY Pipeline 2
+set DP2DATA_SLASH=%DP2DATA:\=/%
 
 IF EXIST "!DP2DATA!\webui" GOTO CONFIGURATION_DONE
 
@@ -29,7 +30,6 @@ echo %processor_architecture% >> %DP2WEBUILOGFILE%
 rem add variables to the DP2 object in the startui page
 copy /Y startui\start.html "%DP2DATA%\webui\startui" >> %DP2WEBUILOGFILE%
 echo ^<script type=^"text/javascript^"^>set^('slash','\\'^);^</script^> >> "%DP2DATA%\webui\startui\start.html"
-set DP2DATA_SLASH=%DP2DATA:\=/%
 echo ^<script type=^"text/javascript^"^>set^('DP2DATA','%DP2DATA_SLASH%'^);^</script^> >> "%DP2DATA%\webui\startui\start.html"
 IF EXIST "!DP2DATA!\webui\RUNNING_PID" (
 echo ^<script type=^"text/javascript^"^>set^('ALREADY_RUNNING','true'^);^</script^> >> "%DP2DATA%\webui\startui\start.html"

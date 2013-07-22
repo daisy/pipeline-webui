@@ -14,5 +14,6 @@ if [ -d "$DP2DATA" ]; then
     read -p "Press any key to continue..."
 else
     echo "There is no DAISY Pipeline 2 data to remove."
+    read -p "Press any key to continue..."
 fi
 

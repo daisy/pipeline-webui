@@ -32,9 +32,12 @@ public class Application extends Controller {
 		String home = System.getProperty("user.home");
 		
 		// create temporary dir for webui
-		SYSTEM_TEMP = System.getProperty("java.io.tmpdir");
-		String dp2temp = SYSTEM_TEMP;
+		String systemTemp = System.getProperty("java.io.tmpdir");
+		String dp2temp = systemTemp;
 		try {
+			File systemTempDir = new File(systemTemp);
+			systemTemp = systemTempDir.getCanonicalPath();
+			
 			File dp2tempDir = File.createTempFile("daisy-pipeline-webui-", null);
 			if (dp2tempDir.exists()) {
 				dp2tempDir.delete();
@@ -42,8 +45,9 @@ public class Application extends Controller {
 			dp2tempDir.mkdirs();
 			dp2temp = dp2tempDir.getCanonicalPath();
 		} catch (IOException e) {
-			Logger.error("Could not create temporary directory", e);
+			Logger.error("Could not get canonical path for temporary directory", e);
 		}
+		SYSTEM_TEMP = systemTemp;
 		DP2TEMP = dp2temp;
 		
 		// get data directory for webui
@@ -58,6 +62,16 @@ public class Application extends Controller {
 			} else { // Linux etc.
 				dp2data = home + SLASH + ".daisy-pipeline";
 			}
+		}
+		try {
+			File dp2dataDir = File.createTempFile("daisy-pipeline-webui-", null);
+			if (dp2dataDir.exists()) {
+				dp2dataDir.delete();
+			}
+			dp2dataDir.mkdirs();
+			dp2data = dp2dataDir.getCanonicalPath();
+		} catch (IOException e) {
+			Logger.error("Could not get canonical path for "+dp2data, e);
 		}
 		DP2DATA = dp2data;
 	}

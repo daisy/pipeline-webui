@@ -215,7 +215,7 @@ public class FirstUse extends Controller {
 	
 	public static void configureDesktopDefaults() {
 		String slash = controllers.Application.SLASH;
-		String dp2temp = controllers.Application.SYSTEM_TEMP;
+		String dp2temp = controllers.Application.DP2TEMP;
 		String dp2data = controllers.Application.DP2DATA;
 		
 		String resultsdir = dp2data + slash + "webui" + slash + "local.results" + slash;
