@@ -15,6 +15,9 @@ if [ ! -d "$DP2DATA/webui" ]; then
     echo "Creating application data directory..."
     mkdir -p "$DP2DATA/webui"
 
+    echo "Creating directory for log files..."
+    mkdir -p "$DP2DATA/log"
+
     echo "Copying default database..."
     cp -r "$WEBUI_HOME/dp2webui" "$DP2DATA/webui/" > /dev/null
 

@@ -12,6 +12,9 @@ IF EXIST !DP2DATA!\webui GOTO CONFIGURATION_DONE
 echo Creating application data directory...
 mkdir "%DP2DATA%\webui"
 
+echo Creating directory for log files...
+mkdir "%DP2DATA%\log"
+
 echo Copying default database...
 mkdir "%DP2DATA%\webui\dp2webui"
 xcopy /E /Y dp2webui "%DP2DATA%\webui\dp2webui"
