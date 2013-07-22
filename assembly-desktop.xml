@@ -25,6 +25,8 @@
             <excludes>
                 <exclude>start</exclude>
                 <exclude>start.bat</exclude>
+                <exclude>uninstall</exclude>
+                <exclude>uninstall.bat</exclude>
                 <exclude>application.conf</exclude>
             </excludes>
             <outputDirectory>/daisy-pipeline/webui</outputDirectory>
@@ -32,9 +34,18 @@
         <fileSet>
             <directory>dist-resources/both</directory>
             <includes>
+                <include>uninstall</include>
+                <include>uninstall.bat</include>
+            </includes>
+            <fileMode>0755</fileMode>
+            <outputDirectory>/daisy-pipeline/webui</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>dist-resources/both</directory>
+            <includes>
                 <include>application.conf</include>
             </includes>
-            <outputDirectory>/</outputDirectory>
+            <outputDirectory>/daisy-pipeline/webui</outputDirectory>
             <filtered>true</filtered>
         </fileSet>
         <fileSet>

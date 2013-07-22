@@ -219,11 +219,10 @@ section -Main SEC01
  
 	#Copy the whole daisy-pipeline dir
 	file /r "${PROJECT_BUILD_DIR}\${PROJECT_ARTIFACT_ID}-${VERSION}-desktop\daisy-pipeline" 
-	file "${PROJECT_BUILD_DIR}\${PROJECT_ARTIFACT_ID}-${VERSION}-desktop\application.conf"
 	# Start Menu
 	createDirectory "$SMPROGRAMS\${APPNAME}"
 	createShortCut "$SMPROGRAMS\${APPNAME}\${APPNAME}.lnk" "$INSTDIR\daisy-pipeline\webui\start.bat" "" "$INSTDIR\logo.ico"
-	CreateShortCut "$SMPROGRAMS\${APPNAME}\unistall.lnk" "$INSTDIR\uninstall.exe"
+	CreateShortCut "$SMPROGRAMS\${APPNAME}\uninstall.lnk" "$INSTDIR\uninstall.exe"
 
 	############### 
 	# Registry information for add/remove programs

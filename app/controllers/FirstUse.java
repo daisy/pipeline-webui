@@ -78,12 +78,12 @@ public class FirstUse extends Controller {
 		if (user == null || !user.admin) {
 			return redirect(routes.Login.login());
 		}
-		
+
 		if ("desktop".equals(Application.deployment()) && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING) {
 			User.flashBrowserId(user);
 			return ok(views.html.FirstUse.configureDP2.render(Pipeline2Engine.errorMessages));
 		}
-		
+
 		return redirect(routes.FirstUse.welcome());
 	}
 	
@@ -214,19 +214,45 @@ public class FirstUse extends Controller {
 	}
 	
 	public static void configureDesktopDefaults() {
-		Setting.set("uploads", System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"));
+		String slash = controllers.Application.SLASH;
+		String dp2temp = controllers.Application.SYSTEM_TEMP;
+		String dp2data = controllers.Application.DP2DATA;
+		
+		String resultsdir = dp2data + slash + "webui" + slash + "local.results" + slash;
+		String tempdir = dp2temp + slash + "local.temp" + slash;
+		String uploads = dp2temp + slash + "uploads" + slash;
+		
+		try {
+			File resultsdirFile = new File(resultsdir);
+			File tempdirFile = new File(tempdir);
+			File uploadsFile = new File(uploads);
+			
+			resultsdirFile.mkdirs();
+			tempdirFile.mkdirs();
+			uploadsFile.mkdirs();
+			
+			resultsdir = resultsdirFile.getCanonicalPath();
+			tempdir = tempdirFile.getCanonicalPath();
+			uploads = uploadsFile.getCanonicalPath();
+			
+		} catch (IOException e) {
+			Logger.error("Was not able to create directory", e);
+		}
+		
+		if (!tempdir.endsWith(slash)) tempdir += slash;
+		if (!resultsdir.endsWith(slash)) resultsdir += slash;
+		if (!uploads.endsWith(slash)) uploads += slash;
+		
+		Logger.info("Using as job result files directory: "+resultsdir);
+		Logger.info("Using as job temporary files directory: "+tempdir);
+		Logger.info("Using as uploaded files directory: "+uploads);
+		
+		Setting.set("uploads", uploads);
+		Setting.set("dp2ws.tempdir", tempdir);
+		Setting.set("dp2ws.resultdir", resultsdir);
+		
 		Setting.set("dp2ws.endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL);
 		Setting.set("dp2ws.authid", "");
 		Setting.set("dp2ws.secret", "");
-		String tempdir = System.getProperty("user.dir") + controllers.Application.SLASH + "local.temp" + controllers.Application.SLASH;
-		String resultdir = System.getProperty("user.dir") + controllers.Application.SLASH + "local.results" + controllers.Application.SLASH;
-		try {
-			tempdir = new File(tempdir).getCanonicalPath();
-			resultdir = new File(resultdir).getCanonicalPath();
-		} catch (IOException e) {
-			Logger.error("Was not able to use the system property 'user.dir' to create temp and result directories ('user.dir'='"+System.getProperty("user.dir")+"')");
-		}
-		Setting.set("dp2ws.tempdir", tempdir + (tempdir.endsWith(controllers.Application.SLASH) ? "" : controllers.Application.SLASH));
-		Setting.set("dp2ws.resultdir", resultdir + (resultdir.endsWith(controllers.Application.SLASH) ? "" : controllers.Application.SLASH));
 	}
 }

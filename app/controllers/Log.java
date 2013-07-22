@@ -52,7 +52,7 @@ public class Log extends Controller {
 	}
 	
 	/**
-	 * Aggregate application.log, derby.log, Pipeline 2 engine logs as well as any additional logs
+	 * Aggregate webui.log, webui-database.log, Pipeline 2 engine logs as well as any additional logs
 	 */
 	public static String logText(String title, List<Map<String,List<String>>> additionalLogs) {
 		List<Map<String,List<String>>> logs = additionalLogs == null ? new ArrayList<Map<String,List<String>>>() : additionalLogs;
@@ -83,30 +83,30 @@ public class Log extends Controller {
 			logs.add(log);
 		}
 		
-		// application.log
+		// webui.log
 		{
-			List<String> applicationLog = new ArrayList<String>();
-			File applicationLogFile = new File("logs/application.log");
+			List<String> webuiLog = new ArrayList<String>();
+			File webuiLogFile = new File(controllers.Application.DP2DATA+controllers.Application.SLASH+"log"+controllers.Application.SLASH+"webui.log");
 			try {
-				FileInputStream stream = new FileInputStream(applicationLogFile);
+				FileInputStream stream = new FileInputStream(webuiLogFile);
 				try {
 					FileChannel fc = stream.getChannel();
 					MappedByteBuffer bb = fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size());
 					/* Instead of using default, pass in a decoder. */
-					applicationLog.add(Charset.defaultCharset().decode(bb).toString());
+					webuiLog.add(Charset.defaultCharset().decode(bb).toString());
 				}
 				finally {
 					stream.close();
 				}
 			} catch (IOException e) {
-				applicationLog.add("An error occured while trying to read "+applicationLogFile.getAbsolutePath());
+				webuiLog.add("An error occured while trying to read "+webuiLogFile.getAbsolutePath());
 				StringWriter sw = new StringWriter();
 	            PrintWriter pw = new PrintWriter(sw);
 	            e.printStackTrace(pw);
-	            applicationLog.add(sw.toString()); // stack trace as a string
+	            webuiLog.add(sw.toString()); // stack trace as a string
 			}
 			Map<String,List<String>> log = new HashMap<String,List<String>>();
-			log.put("Pipeline 2 Web UI - application.log", applicationLog);
+			log.put("Pipeline 2 Web UI - webui.log", webuiLog);
 			logs.add(log);
 		}
 		
@@ -114,11 +114,11 @@ public class Log extends Controller {
 		if ("server".equals(Application.deployment())) {
 			// if engine directory specified: retrieve engine logs manually
 			if (Setting.get("dp2.engineDir") != null) {
-				File engineDir = new File(Setting.get("dp2.engineDir"));
+//				File engineDir = new File(Setting.get("dp2.engineDir"));
 				
 				{
 					List<String> daisyPipelineLog = new ArrayList<String>();
-					File daisyPipelineLogFile = new File(engineDir, "log/daisy-pipeline.log");
+					File daisyPipelineLogFile = new File(controllers.Application.DP2DATA+controllers.Application.SLASH+"log"+controllers.Application.SLASH+"daisy-pipeline.log");
 					try {
 						FileInputStream stream = new FileInputStream(daisyPipelineLogFile);
 						try {
@@ -144,7 +144,7 @@ public class Log extends Controller {
 				
 				{
 					List<String> derbyLog = new ArrayList<String>();
-					File derbyLogFile = new File(engineDir, "log/derby.log");
+					File derbyLogFile = new File(controllers.Application.DP2DATA+controllers.Application.SLASH+"log"+controllers.Application.SLASH+"derby.log");
 					if (derbyLogFile.exists()) {
 						try {
 							FileInputStream stream = new FileInputStream(derbyLogFile);
@@ -181,7 +181,7 @@ public class Log extends Controller {
 		// if using Derby: derby.log
 		if ("derby".equals(Application.datasource)) {
 			List<String> derbyLog = new ArrayList<String>();
-			File derbyLogFile = new File("derby.log");
+			File derbyLogFile = new File(controllers.Application.DP2DATA+controllers.Application.SLASH+"log"+controllers.Application.SLASH+"webui-database.log");
 			try {
 				FileInputStream stream = new FileInputStream(derbyLogFile);
 				try {
