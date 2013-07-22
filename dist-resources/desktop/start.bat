@@ -4,7 +4,7 @@ SETLOCAL ENABLEDELAYEDEXPANSION
 title Pipeline 2 Web UI
 cd /d "%~dp0"
 
-set DP2DATA=%APPDATA%\daisy-pipeline
+set DP2DATA=%APPDATA%\DAISY Pipeline 2
 
 IF EXIST "!DP2DATA!\webui" GOTO CONFIGURATION_DONE
 
@@ -13,11 +13,11 @@ mkdir "%DP2DATA%\webui"
 
 echo Copying default database...
 mkdir "%DP2DATA%\webui\dp2webui"
-xcopy /E /Y dp2webui "%DP2DATA%\webui\dp2webui"
+xcopy /E /Y dp2webui "%DP2DATA%\webui\dp2webui" >NUL
 
 echo Copying loading page...
 mkdir "%DP2DATA%\webui\startui"
-xcopy /E /Y startui "%DP2DATA%\webui\startui"
+xcopy /E /Y startui "%DP2DATA%\webui\startui" >NUL
 
 :CONFIGURATION_DONE
 

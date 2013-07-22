@@ -1,138 +1,155 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
-    <modelVersion>4.0.0</modelVersion>
-
-    <parent>
-        <groupId>org.daisy</groupId>
-        <artifactId>daisy</artifactId>
-        <version>2</version>
-        <relativePath/>
-    </parent>
-
-    <groupId>org.daisy.pipeline</groupId>
-    <artifactId>pipeline2-webui</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>play2</packaging>
-
-    <name>DAISY Pipeline 2 :: Web User Interface</name>
-    <description>A web-based user interface for the DAISY Pipeline 2.</description>
-    <url>https://github.com/daisy-consortium/pipeline-webui</url>
-    <inceptionYear>2012</inceptionYear>
-    <organization>
-    	<name>The DAISY Consortium</name>
-    	<url>http://www.daisy.org/</url>
-    </organization>
-    <licenses>
-        <license>
-            <name>GNU Lesser General Public License, Version 3</name>
-            <url>http://www.gnu.org/copyleft/lesser.html</url>
-            <distribution>manual</distribution>
-        </license>
-    </licenses>
-
-    <mailingLists>
-        <mailingList>
-            <name>DAISY Pipeline Developers</name>
-            <subscribe>http://groups.google.com/group/daisy-pipeline-dev/subscribe</subscribe>
-            <unsubscribe>daisy-pipeline-dev+unsubscribe@googlegroups.com</unsubscribe>
-            <post>daisy-pipeline-dev@googlegroups.com</post>
-            <archive>http://groups.google.com/group/daisy-pipeline-dev</archive>
-        </mailingList>
-    </mailingLists>
-
-    <issueManagement>
-        <system>Google Code Issue Tracker</system>
-        <url>http://code.google.com/p/daisy-pipeline/issues/list</url>
-    </issueManagement>
-
-    <properties>
-        <pipeline.webui.version>1.6-BETA</pipeline.webui.version>
-    </properties>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.nanoko.playframework</groupId>
-                <artifactId>play2-maven-plugin</artifactId>
-                <version>1.2.2</version>
-                <extensions>true</extensions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>1.6</version>
-                <executions>
-                    <execution>
-                        <id>prepare</id>
-                        <phase>package</phase>
-                        <configuration>
-                            <tasks>
-                                <echo message="Unzipping ZIP distributable created by Play 2.0..."/>
-                                <unzip src="target/pipeline2-webui-${project.version}.zip" dest="target/webui-unpacked"/>
-                                <move file="target/webui-unpacked/pipeline2-webui-${project.version}" tofile="target/pipeline2-webui"/>
-                            </tasks>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>package</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>assembly-server.xml</descriptor>
-                                <descriptor>assembly-desktop.xml</descriptor>
-                            </descriptors>
-                            <appendAssemblyId>true</appendAssemblyId>
-                            <finalName>pipeline2-webui-${pipeline.webui.version}</finalName>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-        </plugins>
-    </build>
-    
-    <dependencies>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.daisy</groupId>
+    <artifactId>daisy</artifactId>
+    <version>2</version>
+    <relativePath/>
+  </parent>
+  <groupId>org.daisy.pipeline</groupId>
+  <artifactId>pipeline2-webui</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>play2</packaging>
+  <name>DAISY Pipeline 2 :: Web User Interface</name>
+  <description>A web-based user interface for the DAISY Pipeline 2.</description>
+  <url>https://github.com/daisy-consortium/pipeline-webui</url>
+  <inceptionYear>2012</inceptionYear>
+  <organization>
+    <name>The DAISY Consortium</name>
+    <url>http://www.daisy.org/</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>GNU Lesser General Public License, Version 3</name>
+      <url>http://www.gnu.org/copyleft/lesser.html</url>
+      <distribution>manual</distribution>
+    </license>
+  </licenses>
+  <mailingLists>
+    <mailingList>
+      <name>DAISY Pipeline Developers</name>
+      <subscribe>http://groups.google.com/group/daisy-pipeline-dev/subscribe</subscribe>
+      <unsubscribe>daisy-pipeline-dev+unsubscribe@googlegroups.com</unsubscribe>
+      <post>daisy-pipeline-dev@googlegroups.com</post>
+      <archive>http://groups.google.com/group/daisy-pipeline-dev</archive>
+    </mailingList>
+  </mailingLists>
+  <issueManagement>
+    <system>Google Code Issue Tracker</system>
+    <url>http://code.google.com/p/daisy-pipeline/issues/list</url>
+  </issueManagement>
+  <properties>
+    <pipeline.webui.version>1.6-BETA</pipeline.webui.version>
+  </properties>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.nanoko.playframework</groupId>
+        <artifactId>play2-maven-plugin</artifactId>
+        <version>1.2.2</version>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <id>prepare</id>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                <echo message="Unzipping ZIP distributable created by Play 2.0..."/>
+                <unzip src="target/pipeline2-webui-${version}.zip" dest="target/webui-unpacked"/>
+                <move file="target/webui-unpacked/pipeline2-webui-${version}" tofile="target/pipeline2-webui"/>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>package</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>assembly-server.xml</descriptor>
+                <descriptor>assembly-desktop.xml</descriptor>
+              </descriptors>
+              <appendAssemblyId>true</appendAssemblyId>
+              <finalName>pipeline2-webui-${pipeline.webui.version}</finalName>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <dependency>
+      <groupId>org.daisy.pipeline</groupId>
+      <artifactId>assembly</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <type>zip</type>
+    </dependency>
+  </dependencies>
+  <profiles>
+    <profile>
+      <id>incl-braille</id>
+      <activation>
+        <property>
+          <name>includeBrailleModules</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <dependencies>
         <dependency>
-            <groupId>org.daisy.pipeline</groupId>
-            <artifactId>assembly</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <type>zip</type>
+          <groupId>org.daisy.pipeline</groupId>
+          <artifactId>assembly</artifactId>
+          <version>1.0-SNAPSHOT</version>
+          <type>zip</type>
+          <classifier>incl-braille</classifier>
         </dependency>
-    </dependencies>
-    
-    <profiles>
-        <profile>
-            <id>incl-braille</id>
-            <activation>
-              <property>
-                <name>includeBrailleModules</name>
-                <value>true</value>
-              </property>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.daisy.pipeline</groupId>
-                    <artifactId>assembly</artifactId>
-                    <version>1.0-SNAPSHOT</version>
-                    <type>zip</type>
-                    <classifier>incl-braille</classifier>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>    
-
+      </dependencies>
+    </profile>
+    <profile>
+      <id>installer</id>
+      <activation>
+        <property>
+          <name>withInstaller</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <properties>
+        <nsis.scriptfile>nsis/installer.nsi</nsis.scriptfile>
+        <nsis.output.file>pipeline2-webui-${pipeline.webui.version}.exe</nsis.output.file>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>nsis-maven-plugin</artifactId>
+            <version>1.0-alpha-1</version>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>generate-headerfile</goal>
+                  <goal>make</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

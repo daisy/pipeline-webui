@@ -3,6 +3,7 @@ package controllers;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import org.daisy.pipeline.client.models.Alive;
 
@@ -23,6 +24,43 @@ public class Application extends Controller {
 	public static final String DEFAULT_DP2_ENDPOINT_LOCAL = "http://localhost:8181/ws";
 	public static final String DEFAULT_DP2_ENDPOINT_REMOTE = "http://localhost:8182/ws";
 	public static final String SLASH = System.getProperty("file.separator");
+	public static final String SYSTEM_TEMP;
+	public static final String DP2TEMP;
+	public static final String DP2DATA;
+	static {
+		String os = System.getProperty("os.name");
+		String home = System.getProperty("user.home");
+		
+		// create temporary dir for webui
+		SYSTEM_TEMP = System.getProperty("java.io.tmpdir");
+		String dp2temp = SYSTEM_TEMP;
+		try {
+			File dp2tempDir = File.createTempFile("daisy-pipeline-webui-", null);
+			if (dp2tempDir.exists()) {
+				dp2tempDir.delete();
+			}
+			dp2tempDir.mkdirs();
+			dp2temp = dp2tempDir.getCanonicalPath();
+		} catch (IOException e) {
+			Logger.error("Could not create temporary directory", e);
+		}
+		DP2TEMP = dp2temp;
+		
+		// get data directory for webui
+		String dp2data = System.getenv("DP2DATA");
+		if (dp2data == null || "".equals(dp2data)) {
+			if (os.startsWith("Windows")) {
+				dp2data = System.getenv("APPDATA") + SLASH + "DAISY Pipeline 2";
+				
+			} else if (os.startsWith("Mac OS X")) {
+				dp2data = home + "/Library/Application Support/DAISY Pipeline 2";
+				
+			} else { // Linux etc.
+				dp2data = home + SLASH + ".daisy-pipeline";
+			}
+		}
+		DP2DATA = dp2data;
+	}
 	
 	public static final String datasource = Configuration.root().getString("dp2.datasource");
 	private static Alive alive = null;
