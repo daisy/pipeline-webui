@@ -10,7 +10,7 @@
 !define APPNAME "DAISY Pipeline 2"
 !define VERSION "1.6-BETA"
 !define COMPANYNAME "DAISY Consortium"
-!define DESCRIPTION "Diasy Pipeline 2 windows distribution"
+!define DESCRIPTION "Daisy Pipeline 2 windows distribution"
 !define PRODUCT_WEB_SITE "http://www.daisy.org/"
 !define PRODUCT_REG_ROOT SHCTX
 !define PRODUCT_REG_KEY "SOFTWARE\${APPNAME}"
@@ -215,15 +215,15 @@ section -Main SEC01
 	SetOverwrite on
 	file ./logo.ico 
 	writeUninstaller "$INSTDIR\uninstall.exe"
-	#Copy the whole daisy-pipeline dir
-	setOutPath "$INSTDIR\${PROJECT_ARTIFACT_ID}"
+	#setOutPath "$INSTDIR\${PROJECT_ARTIFACT_ID}"
  
+	#Copy the whole daisy-pipeline dir
 	file /r "${PROJECT_BUILD_DIR}\${PROJECT_ARTIFACT_ID}-${VERSION}-desktop\daisy-pipeline" 
 	file "${PROJECT_BUILD_DIR}\${PROJECT_ARTIFACT_ID}-${VERSION}-desktop\application.conf"
 	# Start Menu
-	createDirectory "$SMPROGRAMS\${COMPANYNAME}"
-	createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}.lnk" "$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline\webui\start.bat" "" "$INSTDIR\logo.ico"
-	CreateShortCut "$SMPROGRAMS\${COMPANYNAME}\unistall.lnk" "$INSTDIR\uninstall.exe"
+	createDirectory "$SMPROGRAMS\${APPNAME}"
+	createShortCut "$SMPROGRAMS\${APPNAME}\${APPNAME}.lnk" "$INSTDIR\daisy-pipeline\webui\start.bat" "" "$INSTDIR\logo.ico"
+	CreateShortCut "$SMPROGRAMS\${APPNAME}\unistall.lnk" "$INSTDIR\uninstall.exe"
 
 	############### 
 	# Registry information for add/remove programs
@@ -243,8 +243,8 @@ section -Main SEC01
 	WriteRegStr HKLM "${PRODUCT_REG_KEY}" "Pipeline2Home" "$\"$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline$\""
 	#Update path env variable
 
-	${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline\cli"  
-	${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline\bin"  
+	${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\daisy-pipeline\cli"  
+	${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\daisy-pipeline\bin"  
 	; make sure windows knows about the change
 	SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
 sectionEnd
@@ -261,12 +261,16 @@ functionEnd
 section "uninstall"
  
 	# Remove Start Menu launcher
-	delete "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}.lnk"
+	delete "$SMPROGRAMS\${APPNAME}\${APPNAME}.lnk"
 	# Try to remove the Start Menu folder - this will only happen if it is empty
-	rmDir "$SMPROGRAMS\${COMPANYNAME}\uninstall.lnk"
- 
+	rmDir "$SMPROGRAMS\${APPNAME}\uninstall.lnk"
+	 
 	# Remove files
-	rmDir /r "$INSTDIR\${PROJECT_ARTIFACT_ID}"
+	rmDir /r "$INSTDIR\daisy-pipeline"
+	#Remove data dir
+	ReadEnvStr $0 APPDATA 
+	rmDir /r "$0\DAISY Pipeline 2"
+
 	#delete conf file	
 	delete $INSTDIR\application.conf
 	#delete logo 
@@ -284,6 +288,6 @@ section "uninstall"
 	DeleteRegKey HKLM "Software\${APPNAME}"
 	#Remove cli for the path
 	
-	${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline\cli"  
-	${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline\bin"  
+	${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\daisy-pipeline\cli"  
+	${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\daisy-pipeline\bin"  
 sectionEnd
