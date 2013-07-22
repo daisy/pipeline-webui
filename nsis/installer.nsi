@@ -222,7 +222,7 @@ section -Main SEC01
 	# Start Menu
 	createDirectory "$SMPROGRAMS\${COMPANYNAME}"
 	createShortCut "$SMPROGRAMS\${COMPANYNAME}\${APPNAME}.lnk" "$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline\webui\start.bat" "" "$INSTDIR\logo.ico"
-	CreateShortCut "$SMPROGRAMS\${COMPANYNAME}\unistall.lnk" "$INSTDIR\uninstall.exe"
+	CreateShortCut "$SMPROGRAMS\${COMPANYNAME}\uninstall.lnk" "$INSTDIR\uninstall.exe"
 
 	############### 
 	# Registry information for add/remove programs
