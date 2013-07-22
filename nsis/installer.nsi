@@ -1,20 +1,18 @@
 # This installs two files, app.exe and logo.ico, creates a start menu shortcut, builds an uninstaller, and
 # adds uninstall information to the registry for Add/Remove Programs
- 
-# To get started, put this script into a folder with the two files (app.exe, logo.ico, and license.rtf -
-# You'll have to create these yourself) and run makensis on it
- 
-# If you change the names "app.exe", "logo.ico", or "license.rtf" you should do a search and replace - they
-# show up in a few places.
-# All the other settings can be tweaked by editing the !defines at the top of this script
+
+;----------------------------------------------------------
+;   General Defines
+;----------------------------------------------------------
 !define APPNAME "DAISY Pipeline 2"
 !define VERSION "1.6-BETA"
 !define COMPANYNAME "DAISY Consortium"
-!define DESCRIPTION "Daisy Pipeline 2 windows distribution"
-!define PRODUCT_WEB_SITE "http://www.daisy.org/"
-!define PRODUCT_REG_ROOT SHCTX
+!define DESCRIPTION "DAISY Pipeline 2 windows distribution"
+!define PRODUCT_WEB_SITE "http://www.daisy.org/pipeline2"
+!define PRODUCT_REG_ROOT HKLM
 !define PRODUCT_REG_KEY "SOFTWARE\${APPNAME}"
-!define PRODUCT_REG_VALUENAME_INSTDIR "Path"
+!define PRODUCT_REG_VALUENAME_INSTDIR "InstallDir"
+!define PRODUCT_REG_VALUENAME_HOMEDIR "Pipeline2Home"
 !define PRODUCT_REG_VALUENAME_STARTMENU "StartMenuGroup"
 !define PRODUCT_REG_KEY_UNINST "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"
 !define UNINSTALLER_NAME "Uninstall ${APPNAME}"
@@ -210,6 +208,11 @@ Section -JRECheck SEC00-1
   
   End:
 SectionEnd
+
+;----------------------------------------------------------
+;   Main Section
+;----------------------------------------------------------
+
 section -Main SEC01 
 	setOutPath $INSTDIR
 	SetOverwrite on
@@ -218,28 +221,26 @@ section -Main SEC01
 	#setOutPath "$INSTDIR\${PROJECT_ARTIFACT_ID}"
  
 	#Copy the whole daisy-pipeline dir
-	file /r "${PROJECT_BUILD_DIR}\${PROJECT_ARTIFACT_ID}-${VERSION}-desktop\daisy-pipeline" 
-	# Start Menu
-	createDirectory "$SMPROGRAMS\${APPNAME}"
-	createShortCut "$SMPROGRAMS\${APPNAME}\${APPNAME}.lnk" "$INSTDIR\daisy-pipeline\webui\start.bat" "" "$INSTDIR\logo.ico"
-	CreateShortCut "$SMPROGRAMS\${APPNAME}\uninstall.lnk" "$INSTDIR\uninstall.exe"
+	file /r "${PROJECT_BUILD_DIR}\${PROJECT_ARTIFACT_ID}-${VERSION}-desktop\daisy-pipeline"
 
 	############### 
 	# Registry information for add/remove programs
 	############### 
 
-	WriteRegStr HKLM "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "DisplayName" "${COMPANYNAME} - ${APPNAME} - ${DESCRIPTION}"
-	WriteRegStr HKLM "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
-	WriteRegStr HKLM "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "QuietUninstallString" "$\"$INSTDIR\uninstall.exe$\" /S"
-	WriteRegStr HKLM "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "InstallLocation" "$\"$INSTDIR$\""
-	WriteRegStr HKLM "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "DisplayIcon" "$\"$INSTDIR\logo.ico$\""
-	WriteRegStr HKLM "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "Publisher" "$\"${COMPANYNAME}$\""
-	WriteRegStr HKLM "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "DisplayVersion" "$\"${VERSION}$\""
+	WriteRegStr ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "DisplayName" "${APPNAME}"
+	WriteRegStr ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
+	WriteRegStr ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "QuietUninstallString" "$\"$INSTDIR\uninstall.exe$\" /S"
+	WriteRegStr ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "InstallLocation" "$\"$INSTDIR$\""
+	WriteRegStr ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "DisplayIcon" "$\"$INSTDIR\logo.ico$\""
+	WriteRegStr ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "Publisher" "${COMPANYNAME}"
+	WriteRegStr ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "DisplayVersion" "${VERSION}"
+	WriteRegStr ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
 	# There is no option for modifying or repairing the install
-	WriteRegDWORD HKLM "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "NoModify" 1
-	WriteRegDWORD HKLM "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "NoRepair" 1
+	WriteRegDWORD ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "NoModify" 1
+	WriteRegDWORD ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}" "NoRepair" 1
 	#pipelinehome registry entry
-	WriteRegStr HKLM "${PRODUCT_REG_KEY}" "Pipeline2Home" "$\"$INSTDIR\${PROJECT_ARTIFACT_ID}\daisy-pipeline$\""
+	WriteRegStr ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY}" "${PRODUCT_REG_VALUENAME_INSTDIR}" $INSTDIR
+	WriteRegStr ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY}" "${PRODUCT_REG_VALUENAME_HOMEDIR}" "$INSTDIR\daisy-pipeline"
 	#Update path env variable
 
 	${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\daisy-pipeline\cli"  
@@ -249,8 +250,21 @@ section -Main SEC01
 sectionEnd
 
 ;----------------------------------------------------------
+;   Start Menu
+;----------------------------------------------------------
+Section -StartMenu
+	SetOutPath $INSTDIR
+	!insertmacro MUI_STARTMENU_WRITE_BEGIN Application
+	createDirectory "$SMPROGRAMS\${APPNAME}"
+	createShortCut "$SMPROGRAMS\${APPNAME}\${APPNAME}.lnk" "$INSTDIR\daisy-pipeline\webui\start.bat" "" "$INSTDIR\logo.ico"
+	CreateShortCut "$SMPROGRAMS\${APPNAME}\uninstall.lnk" "$INSTDIR\uninstall.exe"
+	!insertmacro MUI_STARTMENU_WRITE_END
+SectionEnd
 
-# Uninstaller
+
+;----------------------------------------------------------
+;   Uninstaller
+;----------------------------------------------------------
  
 function un.onInit
 	SetShellVarContext all
@@ -282,9 +296,9 @@ section "uninstall"
 	rmDir $INSTDIR
  
 	# Remove uninstaller information from the registry
-	DeleteRegKey HKLM "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}"
+	DeleteRegKey ${PRODUCT_REG_ROOT} "${PRODUCT_REG_KEY_UNINST}${COMPANYNAME} ${APPNAME}"
 	#Remove pipeline home 
-	DeleteRegKey HKLM "Software\${APPNAME}"
+	DeleteRegKey ${PRODUCT_REG_ROOT} "Software\${APPNAME}"
 	#Remove cli for the path
 	
 	${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\daisy-pipeline\cli"  
