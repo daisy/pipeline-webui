@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+export WEBUI_HOME=$(dirname "$0")
+
 if [ "`uname -s`" == "Darwin" ]
 then
     export DP2DATA="`echo ~`/Library/Application Support/DAISY Pipeline 2"
@@ -14,18 +16,18 @@ if [ ! -d "$DP2DATA/webui" ]; then
     mkdir -p "$DP2DATA/webui"
 
     echo "Copying default database..."
-    cp -r dp2webui "$DP2DATA/webui/" > /dev/null
+    cp -r "$WEBUI_HOME/dp2webui" "$DP2DATA/webui/" > /dev/null
 
     echo "Copying loading page..."
-    cp -r startui "$DP2DATA/webui/" > /dev/null
+    cp -r "$WEBUI_HOME/startui" "$DP2DATA/webui/" > /dev/null
 fi
 
 export DP2WEBUILOGFILE="$DP2DATA/webui/startui/log.txt"
-date "+%Y-%d-%m %H:%M:%S" > $DP2WEBUILOGFILE
-echo `uname -s` `uname -m` >> $DP2WEBUILOGFILE
+date "+%Y-%d-%m %H:%M:%S" > "$DP2WEBUILOGFILE"
+echo `uname -s` `uname -m` >> "$DP2WEBUILOGFILE"
 
 # add variables to the DP2 object in the startui page
-cp startui/start.html "$DP2DATA/webui/startui/"
+cp "$WEBUI_HOME/startui/start.html" "$DP2DATA/webui/startui/"
 echo "<script type=\"text/javascript\">set('DP2DATA','/');</script>" >> "$DP2DATA/webui/startui/start.html"
 echo "<script type=\"text/javascript\">set('DP2DATA','$DP2DATA');</script>" >> "$DP2DATA/webui/startui/start.html"
 if [ -f "$DP2DATA/webui/RUNNING_PID" ]; then
