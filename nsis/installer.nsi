@@ -5,7 +5,7 @@
 ;   General Defines
 ;----------------------------------------------------------
 !define APPNAME "DAISY Pipeline 2"
-!define VERSION "1.6-BETA"
+!define VERSION "${pipeline.webui.version}"
 !define COMPANYNAME "DAISY Consortium"
 !define DESCRIPTION "DAISY Pipeline 2 windows distribution"
 !define PRODUCT_WEB_SITE "http://www.daisy.org/pipeline2"
@@ -32,7 +32,7 @@ InstallDir "$PROGRAMFILES\${APPNAME}"
 ;----------------------------------------------------------
 ; Maven properties
 ;----------------------------------------------------------
-!include ../target/project.nsh
+!include ../project.nsh
 
 ;----------------------------------------------------------
 ;   Multi-User settings
