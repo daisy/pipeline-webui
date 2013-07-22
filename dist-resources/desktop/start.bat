@@ -4,7 +4,7 @@ SETLOCAL ENABLEDELAYEDEXPANSION
 title Pipeline 2 Web UI
 cd /d "%~dp0"
 
-set DP2DATA=%APPDATA%\daisy-pipeline
+set DP2DATA=%APPDATA%\DAISY Pipeline 2
 
 IF EXIST "!DP2DATA!\webui" GOTO CONFIGURATION_DONE
 

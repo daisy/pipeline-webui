@@ -2,7 +2,7 @@
 
 if [ "`uname -s`" == "Darwin" ]
 then
-    export DP2DATA="`echo ~`/Library/Application Support/daisy-pipeline"
+    export DP2DATA="`echo ~`/Library/Application Support/DAISY Pipeline 2"
 else
     export DP2DATA="`echo ~`/.daisy-pipeline"
 fi

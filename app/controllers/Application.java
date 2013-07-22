@@ -50,10 +50,10 @@ public class Application extends Controller {
 		String dp2data = System.getenv("DP2DATA");
 		if (dp2data == null || "".equals(dp2data)) {
 			if (os.startsWith("Windows")) {
-				dp2data = System.getenv("APPDATA") + SLASH + "daisy-pipeline";
+				dp2data = System.getenv("APPDATA") + SLASH + "DAISY Pipeline 2";
 				
 			} else if (os.startsWith("Mac OS X")) {
-				dp2data = home + "/Library/Application Support/daisy-pipeline";
+				dp2data = home + "/Library/Application Support/DAISY Pipeline 2";
 				
 			} else { // Linux etc.
 				dp2data = home + SLASH + ".daisy-pipeline";

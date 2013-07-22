@@ -4,7 +4,7 @@ SETLOCAL ENABLEDELAYEDEXPANSION
 title Pipeline 2 Uninstaller
 cd /d "%~dp0"
 
-set DP2DATA=%APPDATA%\daisy-pipeline
+set DP2DATA=%APPDATA%\DAISY Pipeline 2
 
 
 IF NOT EXIST "!DP2DATA!" GOTO NOT_INSTALLED
