@@ -45,7 +45,7 @@ start "" "%DP2DATA%\webui\startui\start.html"
 
 IF NOT EXIST "%DP2DATA%\webui\RUNNING_PID" (
 echo Starting Web UI...
-java  -Dderby.stream.error.file="%DP2DATA\log\webui-database.log" -Dlogger.file="%~dp0\logger.xml" -Dpidfile.path="%DP2DATA%\webui\RUNNING_PID" -Dconfig.file="%~dp0\application.conf" %* -cp "%~dp0\lib\*;" play.core.server.NettyServer . >> %DP2WEBUILOGFILE% 2>&1
+java  -Dderby.stream.error.file="%DP2DATA%\log\webui-database.log" -Dlogger.file="%~dp0\logger.xml" -Dpidfile.path="%DP2DATA%\webui\RUNNING_PID" -Dconfig.file="%~dp0\application.conf" %* -cp "%~dp0\lib\*;" play.core.server.NettyServer . >> %DP2WEBUILOGFILE% 2>&1
 ) ELSE (
 echo Web UI is already running.
 )

@@ -22,4 +22,4 @@ xcopy /E /Y dp2webui "%DP2DATA%\webui\dp2webui"
 :CONFIGURATION_DONE
 
 echo Starting Web UI...
-java -Dderby.stream.error.file="%DP2DATA\log\webui-database.log" -Dlogger.file="%~dp0\logger.xml" -Dpidfile.path="%DP2DATA%\webui\RUNNING_PID" -Dconfig.file="%~dp0\application.conf" %* -cp "%~dp0\lib\*;" play.core.server.NettyServer .
+java -Dderby.stream.error.file="%DP2DATA%\log\webui-database.log" -Dlogger.file="%~dp0\logger.xml" -Dpidfile.path="%DP2DATA%\webui\RUNNING_PID" -Dconfig.file="%~dp0\application.conf" %* -cp "%~dp0\lib\*;" play.core.server.NettyServer .
