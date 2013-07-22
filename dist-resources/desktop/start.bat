@@ -13,11 +13,11 @@ mkdir "%DP2DATA%\webui"
 
 echo Copying default database...
 mkdir "%DP2DATA%\webui\dp2webui"
-xcopy /E /Y dp2webui "%DP2DATA%\webui\dp2webui"
+xcopy /E /Y dp2webui "%DP2DATA%\webui\dp2webui" >NUL
 
 echo Copying loading page...
 mkdir "%DP2DATA%\webui\startui"
-xcopy /E /Y startui "%DP2DATA%\webui\startui"
+xcopy /E /Y startui "%DP2DATA%\webui\startui" >NUL
 
 :CONFIGURATION_DONE
 

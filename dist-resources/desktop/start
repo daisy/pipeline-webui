@@ -13,10 +13,10 @@ if [ ! -d "$DP2DATA/webui" ]; then
     mkdir -p "$DP2DATA/webui"
 
     echo "Copying default database..."
-    cp -r dp2webui "$DP2DATA/webui/"
+    cp -r dp2webui "$DP2DATA/webui/" > /dev/null
 
     echo "Copying loading page..."
-    cp -r startui "$DP2DATA/webui/"
+    cp -r startui "$DP2DATA/webui/" > /dev/null
 fi
 
 export DP2WEBUILOGFILE="$DP2DATA/webui/startui/log.txt"

@@ -214,40 +214,13 @@ public class FirstUse extends Controller {
 	}
 	
 	public static void configureDesktopDefaults() {
-		String os = System.getProperty("os.name");
-		String home = System.getProperty("user.home");
 		String slash = controllers.Application.SLASH;
-		
-		// create temporary dir for webui
-		String systemTemp = System.getProperty("java.io.tmpdir");
-		try {
-			File systemTempDir = File.createTempFile("daisy-pipeline-webui-", null);
-			if (systemTempDir.exists()) {
-				systemTempDir.delete();
-			}
-			systemTempDir.mkdirs();
-			systemTemp = systemTempDir.getCanonicalPath();
-		} catch (IOException e) {
-			Logger.error("Could not create temporary directory", e);
-		}
-		
-		// get data directory for webui
-		String dp2data = System.getenv("DP2DATA");
-		if (dp2data == null || "".equals(dp2data)) {
-			if (os.startsWith("Windows")) {
-				dp2data = System.getenv("APPDATA") + slash + "daisy-pipeline";
-				
-			} else if (os.startsWith("Mac OS X")) {
-				dp2data = home + "/Library/Application Support/daisy-pipeline";
-				
-			} else { // Linux etc.
-				dp2data = home + slash + ".daisy-pipeline";
-			}
-		}
+		String dp2temp = controllers.Application.SYSTEM_TEMP;
+		String dp2data = controllers.Application.DP2DATA;
 		
 		String resultsdir = dp2data + slash + "webui" + slash + "local.results" + slash;
-		String tempdir = systemTemp + slash + "local.temp" + slash;
-		String uploads = systemTemp + slash + "uploads" + slash;
+		String tempdir = dp2temp + slash + "local.temp" + slash;
+		String uploads = dp2temp + slash + "uploads" + slash;
 		
 		try {
 			File resultsdirFile = new File(resultsdir);
