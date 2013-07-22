@@ -41,7 +41,6 @@
   </issueManagement>
   <properties>
     <pipeline.webui.version>1.6-BETA</pipeline.webui.version>
-    <nsis.scriptfile>nsis/installer.nsi</nsis.scriptfile>
   </properties>
   <build>
     <plugins>
@@ -92,20 +91,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-	      <groupId>org.codehaus.mojo</groupId>
-	      <artifactId>nsis-maven-plugin</artifactId>
-	      <version>1.0-alpha-1</version>
-	      <executions>
-		      <execution>
-			      <phase>package</phase>
-			      <goals>
-				      <goal>generate-headerfile</goal>
-				      <goal>make</goal>
-			      </goals>
-		      </execution>
-	      </executions>
-      </plugin>
     </plugins>
   </build>
   <dependencies>
@@ -134,6 +119,37 @@
           <classifier>incl-braille</classifier>
         </dependency>
       </dependencies>
+    </profile>
+    <profile>
+      <id>installer</id>
+      <activation>
+        <property>
+          <name>withInstaller</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <properties>
+        <nsis.scriptfile>nsis/installer.nsi</nsis.scriptfile>
+        <nsis.output.file>pipeline2-webui-${pipeline.webui.version}.exe</nsis.output.file>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>nsis-maven-plugin</artifactId>
+            <version>1.0-alpha-1</version>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>generate-headerfile</goal>
+                  <goal>make</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 </project>
