@@ -64,7 +64,7 @@ public class Application extends Controller {
 			}
 		}
 		try {
-			File dp2dataDir = File.createTempFile("daisy-pipeline-webui-", null);
+			File dp2dataDir = new File(dp2data);
 			if (dp2dataDir.exists()) {
 				dp2dataDir.delete();
 			}
