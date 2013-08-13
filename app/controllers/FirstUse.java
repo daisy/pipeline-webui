@@ -29,6 +29,9 @@ public class FirstUse extends Controller {
 		User user = null;
 		
 		if (isFirstUse()) {
+			// set initial absoluteURL (will typically be "http://localhost:9000")
+			Setting.set("absoluteURL", routes.FirstUse.welcome().absoluteURL(request()).replaceFirst("^([^/]+:/+[^/]+)/.*$", "$1"));
+			
 			if (!"desktop".equals(Application.deployment()) && !"server".equals(Application.deployment())) {
 				// Application mode is not set
 				
@@ -56,6 +59,9 @@ public class FirstUse extends Controller {
 				
 				if (Setting.get("uploads") == null) {
 					User.flashBrowserId(user);
+					flash("uploads", defaultUploadsDir());
+					flash("tempdir", defaultTempDir());
+					flash("resultsdir", defaultResultsDir());
 					return ok(views.html.FirstUse.setStorageDirs.render(play.data.Form.form(Administrator.SetStorageDirsForm.class)));
 				}
 				
@@ -213,39 +219,59 @@ public class FirstUse extends Controller {
 		return User.findAll().size() == 0 || Setting.get("dp2ws.endpoint") == null || Setting.get("uploads") == null || "desktop".equals(Application.deployment()) && (Pipeline2Engine.cwd == null || !Pipeline2Engine.State.RUNNING.equals(Pipeline2Engine.getState()));
 	}
 	
-	public static void configureDesktopDefaults() {
+	public static String defaultResultsDir() {
 		String slash = controllers.Application.SLASH;
-		String dp2temp = controllers.Application.DP2TEMP;
 		String dp2data = controllers.Application.DP2DATA;
-		
 		String resultsdir = dp2data + slash + "webui" + slash + "local.results" + slash;
-		String tempdir = dp2temp + slash + "local.temp" + slash;
-		String uploads = dp2temp + slash + "uploads" + slash;
-		
 		try {
 			File resultsdirFile = new File(resultsdir);
-			File tempdirFile = new File(tempdir);
-			File uploadsFile = new File(uploads);
-			
 			resultsdirFile.mkdirs();
-			tempdirFile.mkdirs();
-			uploadsFile.mkdirs();
-			
 			resultsdir = resultsdirFile.getCanonicalPath();
-			tempdir = tempdirFile.getCanonicalPath();
-			uploads = uploadsFile.getCanonicalPath();
-			
 		} catch (IOException e) {
-			Logger.error("Was not able to create directory", e);
+			Logger.error("Was not able to create results directory", e);
 		}
-		
-		if (!tempdir.endsWith(slash)) tempdir += slash;
 		if (!resultsdir.endsWith(slash)) resultsdir += slash;
+		return resultsdir;
+	}
+	
+	public static String defaultTempDir() {
+		String slash = controllers.Application.SLASH;
+		String dp2temp = controllers.Application.DP2TEMP;
+		String tempdir = dp2temp + slash + "local.temp" + slash;
+		try {
+			File tempdirFile = new File(tempdir);
+			tempdirFile.mkdirs();
+			tempdir = tempdirFile.getCanonicalPath();
+		} catch (IOException e) {
+			Logger.error("Was not able to create results directory", e);
+		}
+		if (!tempdir.endsWith(slash)) tempdir += slash;
+		return tempdir;
+	}
+	
+	public static String defaultUploadsDir() {
+		String slash = controllers.Application.SLASH;
+		String dp2temp = controllers.Application.DP2TEMP;
+		String uploads = dp2temp + slash + "uploads" + slash;
+		try {
+			File uploadsFile = new File(uploads);
+			uploadsFile.mkdirs();
+			uploads = uploadsFile.getCanonicalPath();
+		} catch (IOException e) {
+			Logger.error("Was not able to create results directory", e);
+		}
 		if (!uploads.endsWith(slash)) uploads += slash;
+		return uploads;
+	}
+	
+	public static void configureDesktopDefaults() {
+		String uploads = defaultUploadsDir();
+		String tempdir = defaultTempDir();
+		String resultsdir = defaultResultsDir();
 		
+		Logger.info("Using as uploaded files directory: "+uploads);
 		Logger.info("Using as job result files directory: "+resultsdir);
 		Logger.info("Using as job temporary files directory: "+tempdir);
-		Logger.info("Using as uploaded files directory: "+uploads);
 		
 		Setting.set("uploads", uploads);
 		Setting.set("dp2ws.tempdir", tempdir);

@@ -1,17 +1,17 @@
 Notifications = {
-	lastWebSocketHeartbeat: new Date().getTime(),
-	lastXHRHeartbeat: new Date().getTime(),
-	WebSocket: typeof MozWebSocket !== "undefined" ? MozWebSocket : typeof WebSocket !== "undefined" ? WebSocket : null,
-	websocket: null,
-	websocketURL: "",
-	xhrURL: "",
-	handlers: {},
-	
-	init: function(websocketURL, xhrURL) {
-		Notifications.websocketURL = websocketURL;
-		Notifications.xhrURL = xhrURL;
-    	Notifications.start();
-	},
+    lastWebSocketHeartbeat: new Date().getTime(),
+    lastXHRHeartbeat: new Date().getTime(),
+    WebSocket: typeof MozWebSocket !== "undefined" ? MozWebSocket : typeof WebSocket !== "undefined" ? WebSocket : null,
+    websocket: null,
+    websocketURL: "",
+    xhrURL: "",
+    handlers: {},
+    
+    init: function(websocketURL, xhrURL) {
+        Notifications.websocketURL = websocketURL;
+        Notifications.xhrURL = xhrURL;
+        Notifications.start();
+    },
 
     start: function() {
         // Watchdog timer (switches to XHR if WebSockets are unavailable or disconnected)
@@ -52,42 +52,42 @@ Notifications = {
         if (Notifications.websocket !== null)
             Notifications.websocket.close();
     },
-	
-	handleNotifications: function(notification) {
-		if (notification.error) {
-			if (Notifications.websocket !== null) {
-            	Notifications.websocket.close();
-            	Notifications.websocket = null;
-			}
+    
+    handleNotifications: function(notification) {
+        if (notification.error) {
+            if (Notifications.websocket !== null) {
+                Notifications.websocket.close();
+                Notifications.websocket = null;
+            }
             return;
             
         } else {
-        	if (Notifications.websocket !== null) {
-        		Notifications.lastWebSocketHeartbeat = new Date().getTime();
-        	} else {
-        		Notifications.lastXHRHeartbeat = new Date().getTime();
-        	}
-        	
-        	if (Notifications.handlers[notification.kind]) {
-        		for (var i = 0; i < Notifications.handlers[notification.kind].length; i++) {
+            if (Notifications.websocket !== null) {
+                Notifications.lastWebSocketHeartbeat = new Date().getTime();
+            } else {
+                Notifications.lastXHRHeartbeat = new Date().getTime();
+            }
+            
+            if (Notifications.handlers[notification.kind]) {
+                for (var i = 0; i < Notifications.handlers[notification.kind].length; i++) {
                     var handler = Notifications.handlers[notification.kind][i];
                     handler.fn(notification.data, handler.data);
-        		}
-        	}
+                }
+            }
         }
-	},
-	
-	openWebSocket: function() {
+    },
+    
+    openWebSocket: function() {
         if (!Notifications.WebSocket) return;
         Notifications.websocket = new Notifications.WebSocket(Notifications.websocketURL);
         Notifications.websocket.onmessage = function(event) {Notifications.handleNotifications(JSON.parse(event.data));};
         Notifications.websocket.onerror = function() {}
         Notifications.websocket.onclose = function() {Notifications.websocket = null;}
-	},
-	
-	listen: function(kind, fn, data) {
+    },
+    
+    listen: function(kind, fn, data) {
         if (!$.isArray(Notifications.handlers[kind]))
             Notifications.handlers[kind] = new Array();
-		Notifications.handlers[kind].push({ fn:fn, data:data });
-	}
+        Notifications.handlers[kind].push({ fn:fn, data:data });
+    }
 };

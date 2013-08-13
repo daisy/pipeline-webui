@@ -40,7 +40,7 @@
     <url>http://code.google.com/p/daisy-pipeline/issues/list</url>
   </issueManagement>
   <properties>
-    <pipeline.webui.version>1.6-BETA</pipeline.webui.version>
+    <pipeline.webui.version>1.6.1-SNAPSHOT</pipeline.webui.version>
   </properties>
   <build>
     <plugins>

@@ -1,7 +1,6 @@
 package controllers;
 
 import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -478,7 +477,7 @@ public class Administrator extends Controller {
 							updateUser.active = false;
 							updateUser.makeNewActivationUid();
 
-							String activateUrl = routes.Account.showActivateForm(updateUser.email, updateUser.getActivationUid()).absoluteURL(request());
+							String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(updateUser.email, updateUser.getActivationUid()).absoluteURL(request()));
 							String html = views.html.Account.emailActivate.render(activateUrl).body();
 							String text = "Go to this link to activate your account: " + activateUrl;
 							if (!Account.sendEmail("Activate your account", html, text, updateUser.name, updateUser.email))
@@ -513,7 +512,7 @@ public class Administrator extends Controller {
 				if (resetUser.active) {
 					resetUser.makeNewActivationUid();
 					resetUser.save(Application.datasource);
-					String resetUrl = routes.Account.showResetPasswordForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
+					String resetUrl = Application.absoluteURL(routes.Account.showResetPasswordForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request()));
 					String html = views.html.Account.emailResetPassword.render(resetUrl).body();
 					String text = "Go to this link to change your password: " + resetUrl;
 					if (Account.sendEmail("Reset your password", html, text, resetUser.name, resetUser.email))
@@ -524,7 +523,7 @@ public class Administrator extends Controller {
 				} else {
 					resetUser.makeNewActivationUid();
 					resetUser.save(Application.datasource);
-					String activateUrl = routes.Account.showActivateForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request());
+					String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request()));
 					String html = views.html.Account.emailActivate.render(activateUrl).body();
 					String text = "Go to this link to activate your account: " + activateUrl;
 
@@ -586,7 +585,7 @@ public class Administrator extends Controller {
 					newUser.save(Application.datasource);
 
 					if ("true".equals(Setting.get("mail.enable"))) {
-						String activateUrl = routes.Account.showActivateForm(newUser.email, newUser.getActivationUid()).absoluteURL(request());
+						String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(newUser.email, newUser.getActivationUid()).absoluteURL(request()));
 						String html = views.html.Account.emailActivate.render(activateUrl).body();
 						String text = "Go to this link to activate your account: " + activateUrl;
 
@@ -656,6 +655,11 @@ public class Administrator extends Controller {
 				if (filledForm.field("enable").value() != null) {
 					Setting.set("mail.enable", filledForm.field("enable").valueOr(""));
 					flash("success", "E-mail is now "+("true".equals(filledForm.field("enable").valueOr("false"))?"enabled":"disabled")+".");
+					return redirect(routes.Administrator.getSettings());
+
+				} else if (filledForm.field("absoluteURL").value() != null) {
+					Setting.set("absoluteURL", filledForm.field("absoluteURL").valueOr(""));
+					flash("success", "Absolute URL was successfully changed to "+filledForm.field("absoluteURL").valueOr("")+".");
 					return redirect(routes.Administrator.getSettings());
 
 				} else {

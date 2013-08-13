@@ -18,9 +18,6 @@ if [ ! -d "$DP2DATA/webui" ]; then
 
     echo "Copying default database..."
     cp -r dp2webui "$DP2DATA/webui/"
-
-    echo "Copying loading page..."
-    cp -r startui "$DP2DATA/webui/"
 fi
 
 echo "Starting Web UI..."

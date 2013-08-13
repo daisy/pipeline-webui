@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import org.daisy.pipeline.client.models.Alive;
 
@@ -13,7 +14,6 @@ import models.Setting;
 import models.User;
 import play.Configuration;
 import play.Logger;
-import play.api.mvc.Call;
 import play.mvc.*;
 import utils.Pipeline2Engine;
 
@@ -166,12 +166,12 @@ public class Application extends Controller {
 	
 	public static String titleLink() {
 		String titleLink = Setting.get("appearance.titleLink");
-		if ("welcome".equals(titleLink)) titleLink = routes.FirstUse.welcome().absoluteURL(request());
-		else if ("scripts".equals(titleLink)) titleLink = routes.Jobs.newJob().absoluteURL(request());
-		else if ("jobs".equals(titleLink)) titleLink = routes.Jobs.getJobs().absoluteURL(request());
-		else if ("about".equals(titleLink)) titleLink = routes.Application.about().absoluteURL(request());
-		else if ("admin".equals(titleLink)) titleLink = routes.Administrator.getSettings().absoluteURL(request());
-		else if ("account".equals(titleLink)) titleLink = routes.Account.overview().absoluteURL(request());
+		if ("welcome".equals(titleLink)) titleLink = routes.FirstUse.welcome().toString();
+		else if ("scripts".equals(titleLink)) titleLink = routes.Jobs.newJob().toString();
+		else if ("jobs".equals(titleLink)) titleLink = routes.Jobs.getJobs().toString();
+		else if ("about".equals(titleLink)) titleLink = routes.Application.about().toString();
+		else if ("admin".equals(titleLink)) titleLink = routes.Administrator.getSettings().toString();
+		else if ("account".equals(titleLink)) titleLink = routes.Account.overview().toString();
 		return titleLink;
 	}
 	
@@ -182,6 +182,26 @@ public class Application extends Controller {
 	 */
 	public static String deployment() {
 		return deployment != null ? deployment : Setting.get("deployment");
+	}
+	
+	public static String absoluteURL(String url) {
+		String absoluteURL = Setting.get("absoluteURL"); // for instance "http://localhost:9000" (protocol+host)
+		if (absoluteURL == null) {
+			return null;
+		}
+		
+		if (url.matches("[^/]+:/.*")) {
+			// absolute
+			url = url.replaceFirst("[^/]+:/+[^/]+", absoluteURL);
+			return url;
+			
+		} else {
+			// relative
+			if (!url.startsWith("/")) {
+				absoluteURL += "/";
+			}
+			return absoluteURL+url;
+		}
 	}
 
 	public static String getPipeline2EngineState() {

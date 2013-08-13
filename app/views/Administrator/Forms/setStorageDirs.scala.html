@@ -15,7 +15,7 @@
 			<div class="dp2-form-input">
 				<div class="dp2-form-content">
 					<input @if(autofocus){autofocus="autofocus"} type="text" name="uploaddir" id="setStorageDirs-uploaddir" placeholder="URL" class="input-xlarge"
-							value="@setStorageDirsForm.field("uploaddir").valueOr(if (Setting.get("uploads") != null) Setting.get("uploads") else System.getProperty("user.dir") + System.getProperty("file.separator") + "uploads" + System.getProperty("file.separator"))"
+							value="@setStorageDirsForm.field("uploaddir").valueOr(if (Setting.get("uploads") != null) Setting.get("uploads") else flash.get("uploads"))"
 							onkeyup="if(@{models.Setting.get("uploads")==null} || this.value==='@models.Setting.get("uploads")')document.getElementById('setStorageDirs-uploaddirGroup').style.backgroundColor='#FFF';else document.getElementById('setStorageDirs-uploaddirGroup').style.backgroundColor='#DDF';"
 					/>
 					<p class="help-block">
@@ -40,7 +40,7 @@
 			<div class="dp2-form-input">
 				<div class="dp2-form-content">
 					<input type="text" autocomplete="off" name="resultdir" id="setStorageDirs-resultdir" placeholder="Temporary directory path" class="input-xlarge"
-							value="@setStorageDirsForm.field("resultdir").valueOr(if (Setting.get("dp2ws.resultdir") != null) Setting.get("dp2ws.resultdir") else System.getProperty("user.dir") + System.getProperty("file.separator") + "local.results" + System.getProperty("file.separator"))"
+							value="@setStorageDirsForm.field("resultdir").valueOr(if (Setting.get("dp2ws.resultdir") != null) Setting.get("dp2ws.resultdir") else flash.get("resultsdir"))"
 							onkeyup="if(@{models.Setting.get("dp2ws.resultdir")==null} || this.value==='@models.Setting.get("dp2ws.resultdir")')document.getElementById('setStorageDirs-resultdirGroup').style.backgroundColor='#FFF';else document.getElementById('setStorageDirs-resultdirGroup').style.backgroundColor='#DDF';"
 					/>
 					<p class="help-block">
@@ -65,7 +65,7 @@
 			<div class="dp2-form-input">
 				<div class="dp2-form-content">
 					<input type="text" autocomplete="off" name="tempdir" id="setStorageDirs-tempdir" placeholder="Temporary directory path" class="input-xlarge"
-							value="@setStorageDirsForm.field("tempdir").valueOr(if (Setting.get("dp2ws.tempdir") != null) Setting.get("dp2ws.tempdir") else System.getProperty("user.dir") + System.getProperty("file.separator") + "local.temp" + System.getProperty("file.separator"))"
+							value="@setStorageDirsForm.field("tempdir").valueOr(if (Setting.get("dp2ws.tempdir") != null) Setting.get("dp2ws.tempdir") else flash.get("tempdir"))"
 							onkeyup="if(@{models.Setting.get("dp2ws.tempdir")==null} || this.value==='@models.Setting.get("dp2ws.tempdir")')document.getElementById('setStorageDirs-tempdirGroup').style.backgroundColor='#FFF';else document.getElementById('setStorageDirs-tempdirGroup').style.backgroundColor='#DDF';"
 					/>
 					<p class="help-block">

@@ -29,6 +29,34 @@
 	
 	<br/><br/>
 	
+	@helper.form(action = route, 'id -> "configureEmail-absoluteURL-form") {
+		
+		<input type="hidden" name="formName" value="configureEmail"/>
+		
+		<fieldset>
+		    <div class="form-horizontal">
+				<div class="control-group @("error".when(configureEmailForm.error("absoluteURL") != null))" id="configureEmail-absoluteURLGroup">
+					<label class="control-label" id="configureEmail-absoluteURL-label" for="configureEmail-absoluteURL" aria-label="configureEmail-absoluteURL">Absolute URL</label>
+					<div class="controls">
+						<input type="url" name="absoluteURL" value="@Setting.get("absoluteURL")" placeholder="URL to the Web UI"
+							id="configureEmail-absoluteURL" aria-labelledby="configureEmail-absoluteURL-label"/>
+						<button type="submit" value="Save" name="submit" class="btn btn-primary">Save</button>
+						<p class="help-block">This is the protocol and host to be used in absolute URLs. If the Pipeline 2 Web UI is running behind
+						a proxy you will probably have to change this. For instance: <code id="configureEmail-absoluteURL-example">http://localhost:9000</code></p>
+						@if(configureEmailForm.field("enable").errors().size() > 0){
+							<p class="help-inline">@configureEmailForm.error("enable").message</p>
+						}
+						<script>
+							document.getElementById("configureEmail-absoluteURL-example").innerHTML = window.location.protocol+"//"+window.location.host;
+						</script>
+					</div>
+				</div>
+			</div>
+		</fieldset>
+	}
+	
+	<br/><br/>
+	
 	<ul class="nav nav-tabs">
 		<li class="@("active".when(configureEmailForm.field("emailService").valueOr(Setting.get("mail.provider")) == "smtp"))"><a href="#mailtab-smtp" data-toggle="tab"><img src="@routes.Assets.at("images/mail_icon_32.png")" alt=""/> SMTP</a></li>
 		<li class="@("active".when(configureEmailForm.field("emailService").valueOr(Setting.get("mail.provider")) == "gmail"))"><a href="#mailtab-gmail" data-toggle="tab"><img src="@routes.Assets.at("images/gmail_icon_32.png")" alt=""/> GMail</a></li>
