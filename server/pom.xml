@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.daisy</groupId>
+    <artifactId>daisy</artifactId>
+    <version>2</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>org.daisy.pipeline</groupId>
+  <artifactId>webui</artifactId>
+  <version>1.6.1-SNAPSHOT</version>
+  <!-- NOTE: remember to also update the version in project/Build.scala as well as the desktop POM -->
+  <packaging>play2</packaging>
+
+  <name>DAISY Pipeline 2 :: Web User Interface :: Server version</name>
+  <description>A web-based user interface for the DAISY Pipeline 2.</description>
+  <url>https://github.com/daisy-consortium/pipeline-webui</url>
+  <inceptionYear>2012</inceptionYear>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.nanoko.playframework</groupId>
+        <artifactId>play2-maven-plugin</artifactId>
+        <version>1.2.2</version>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <id>prepare</id>
+            <phase>package</phase>
+            <configuration>
+              <tasks>
+                <echo message="Unzipping ZIP distributable created by Play 2.0..."/>
+                <unzip src="target/webui-${project.version}.zip" dest="target/webui-unpacked"/>
+                <move file="target/webui-unpacked/daisy-pipeline-webui-${project.version}" tofile="target/daisy-pipeline-webui"/>
+                <delete file="target/webui-${project.version}.zip"/>
+                <delete file="target/webui-${project.version}.jar"/>
+                <delete file="target/webui-${project.version}.war"/>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>package</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>assembly.xml</descriptor>
+              </descriptors>
+              <appendAssemblyId>false</appendAssemblyId>
+              <finalName>webui-${project.version}</finalName>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+</project>

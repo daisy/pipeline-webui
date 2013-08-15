@@ -14,13 +14,13 @@ bin
 lib
 
 # Default directories
-/uploads
-/local.results
-/local.temp
+/server/uploads
+/server/local.results
+/server/local.temp
 
 # Derby database
-/dp2webui
-derby.log
+/server/dp2webui
+/server/derby.log
 
 # IDE and editors
 *~
