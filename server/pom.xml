@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  
+
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -21,14 +21,185 @@
   <url>https://github.com/daisy-consortium/pipeline-webui</url>
   <inceptionYear>2012</inceptionYear>
 
+  <repositories>
+    <repository>
+      <id>typesafe</id>
+      <name>Typesafe - releases</name>
+      <url>http://repo.typesafe.com/typesafe/releases/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <play2.plugin.version>1.0.0-alpha1</play2.plugin.version>
+    <play2.version>2.1.0</play2.version>
+    <play2-scala.version>2.10</play2-scala.version>
+    <scala.version>2.10.0</scala.version>
+  </properties>
+
+  <dependencies>
+    
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-compiler</artifactId>
+      <version>${scala.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>play</groupId>
+      <artifactId>play_${play2-scala.version}</artifactId>
+      <version>${play2.version}</version>
+    </dependency>
+
+    <!-- only if using Anorm -->
+    <dependency>
+      <groupId>play</groupId>
+      <artifactId>anorm_${play2-scala.version}</artifactId>
+      <version>${play2.version}</version>
+    </dependency>
+
+    <!-- only if using JDBC -->
+    <dependency>
+      <groupId>play</groupId>
+      <artifactId>play-jdbc_${play2-scala.version}</artifactId>
+      <version>${play2.version}</version>
+    </dependency>
+
+    <!-- only if using Java -->
+    <dependency>
+      <groupId>play</groupId>
+      <artifactId>play-java_${play2-scala.version}</artifactId>
+      <version>${play2.version}</version>
+    </dependency>
+
+    <!-- only if using Ebean -->
+    <dependency>
+      <groupId>play</groupId>
+      <artifactId>play-java-ebean_${play2-scala.version}</artifactId>
+      <version>${play2.version}</version>
+    </dependency>
+
+    <!-- only if using JPA -->
+    <dependency>
+      <groupId>play</groupId>
+      <artifactId>play-java-jpa_${play2-scala.version}</artifactId>
+      <version>${play2.version}</version>
+    </dependency>
+
+    <!-- only if using JPA -->
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-entitymanager</artifactId>
+      <version>3.6.9.Final</version>
+    </dependency>
+
+    <!-- only if there are tests in the project -->
+    <dependency>
+      <groupId>play</groupId>
+      <artifactId>play-test_${play2-scala.version}</artifactId>
+      <version>${play2.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+    
+    <!-- ########## NOTE: the following dependencies should be kept in sync with project/Build.scala ########## -->
+    
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <version>10.9.1.0</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>5.1.18</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.daisy.pipeline</groupId>
+      <artifactId>clientlib-java</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.4.1</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-email</artifactId>
+      <version>1.2</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.17</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>apache-log4j-extras</artifactId>
+      <version>1.1</version>
+    </dependency>
+    
+  </dependencies>
+
   <build>
+    <sourceDirectory>${basedir}/app</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>${basedir}/conf</directory>
+      </resource>
+      <resource>
+        <directory>${basedir}</directory>
+        <includes>
+          <include>public/**</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
-        <groupId>org.nanoko.playframework</groupId>
+        <groupId>com.google.code.play2-maven-plugin</groupId>
         <artifactId>play2-maven-plugin</artifactId>
-        <version>1.2.2</version>
+        <version>${play2.plugin.version}</version>
         <extensions>true</extensions>
+        <configuration>
+          <!-- only if using database evolutions -->
+          <serverJvmArgs>-DapplyEvolutions.default=true</serverJvmArgs>
+          <!--<play.distAttach>true</play.distAttach>-->
+        </configuration>
+        <executions>
+          <!-- only if there are assets in the project -->
+          <execution>
+            <id>default-play2-compile-assets</id>
+            <goals>
+              <!--<goal>closure-compile</goal> <!-\- only if precompiling js assets -\->-->
+              <!--<goal>coffee-compile</goal> <!-\- only if precompiling coffee assets -\->-->
+              <goal>less-compile</goal>
+              <goal>dist</goal>
+              <!-- only if precompiling less assets -->
+            </goals>
+          </execution>
+          <!-- only if using Ebean -->
+          <!--<execution>
+            <id>default-play2-ebean-enhance</id>
+            <goals>
+              <goal>ebean-enhance</goal>
+            </goals>
+          </execution>-->
+        </executions>
       </plugin>
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
@@ -39,12 +210,11 @@
             <phase>package</phase>
             <configuration>
               <tasks>
-                <echo message="Unzipping ZIP distributable created by Play 2.0..."/>
-                <unzip src="target/webui-${project.version}.zip" dest="target/webui-unpacked"/>
-                <move file="target/webui-unpacked/daisy-pipeline-webui-${project.version}" tofile="target/daisy-pipeline-webui"/>
-                <delete file="target/webui-${project.version}.zip"/>
+                <echo message="Unzipping ZIP distributable created by Play 2.x..."/>
+                <unzip src="target/webui-${project.version}-dist.zip" dest="target/webui-unpacked"/>
+                <move file="target/webui-unpacked/webui-${project.version}" tofile="target/daisy-pipeline-webui"/>
+                <delete file="target/webui-${project.version}-dist.zip"/>
                 <delete file="target/webui-${project.version}.jar"/>
-                <delete file="target/webui-${project.version}.war"/>
               </tasks>
             </configuration>
             <goals>
@@ -53,6 +223,7 @@
           </execution>
         </executions>
       </plugin>
+      
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
