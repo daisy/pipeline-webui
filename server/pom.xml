@@ -21,200 +21,125 @@
   <url>https://github.com/daisy-consortium/pipeline-webui</url>
   <inceptionYear>2012</inceptionYear>
 
+  <properties>
+    <play.version>2.1.0</play.version>
+  </properties>
+
   <repositories>
     <repository>
       <id>typesafe</id>
-      <name>Typesafe - releases</name>
       <url>http://repo.typesafe.com/typesafe/releases/</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
     </repository>
   </repositories>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-    <play2.plugin.version>1.0.0-alpha1</play2.plugin.version>
-    <play2.version>2.1.0</play2.version>
-    <play2-scala.version>2.10</play2-scala.version>
-    <scala.version>2.10.0</scala.version>
-  </properties>
-
   <dependencies>
-    
+
+    <!-- Play Framework Dependencies -->
     <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-compiler</artifactId>
-      <version>${scala.version}</version>
+      <groupId>play</groupId>
+      <artifactId>play_2.10</artifactId>
+      <version>${play.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>play</groupId>
+      <artifactId>play-test_2.10</artifactId>
+      <version>${play.version}</version>
       <scope>provided</scope>
     </dependency>
 
+    <!-- the Java API is in this artifact -->
     <dependency>
       <groupId>play</groupId>
-      <artifactId>play_${play2-scala.version}</artifactId>
-      <version>${play2.version}</version>
+      <artifactId>play-java_2.10</artifactId>
+      <version>${play.version}</version>
+      <scope>provided</scope>
     </dependency>
-
-    <!-- only if using Anorm -->
-    <dependency>
-      <groupId>play</groupId>
-      <artifactId>anorm_${play2-scala.version}</artifactId>
-      <version>${play2.version}</version>
-    </dependency>
-
-    <!-- only if using JDBC -->
-    <dependency>
-      <groupId>play</groupId>
-      <artifactId>play-jdbc_${play2-scala.version}</artifactId>
-      <version>${play2.version}</version>
-    </dependency>
-
-    <!-- only if using Java -->
-    <dependency>
-      <groupId>play</groupId>
-      <artifactId>play-java_${play2-scala.version}</artifactId>
-      <version>${play2.version}</version>
-    </dependency>
-
-    <!-- only if using Ebean -->
-    <dependency>
-      <groupId>play</groupId>
-      <artifactId>play-java-ebean_${play2-scala.version}</artifactId>
-      <version>${play2.version}</version>
-    </dependency>
-
-    <!-- only if using JPA -->
-    <dependency>
-      <groupId>play</groupId>
-      <artifactId>play-java-jpa_${play2-scala.version}</artifactId>
-      <version>${play2.version}</version>
-    </dependency>
-
-    <!-- only if using JPA -->
-    <dependency>
-      <groupId>org.hibernate</groupId>
-      <artifactId>hibernate-entitymanager</artifactId>
-      <version>3.6.9.Final</version>
-    </dependency>
-
-    <!-- only if there are tests in the project -->
-    <dependency>
-      <groupId>play</groupId>
-      <artifactId>play-test_${play2-scala.version}</artifactId>
-      <version>${play2.version}</version>
-      <scope>test</scope>
-    </dependency>
-    
-    
-    <!-- ########## NOTE: the following dependencies should be kept in sync with project/Build.scala ########## -->
-    
-    <dependency>
-      <groupId>org.apache.derby</groupId>
-      <artifactId>derby</artifactId>
-      <version>10.9.1.0</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
-      <version>5.1.18</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.daisy.pipeline</groupId>
-      <artifactId>clientlib-java</artifactId>
-      <version>1.0-SNAPSHOT</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-compress</artifactId>
-      <version>1.4.1</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-email</artifactId>
-      <version>1.2</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.17</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>apache-log4j-extras</artifactId>
-      <version>1.1</version>
-    </dependency>
-    
   </dependencies>
 
   <build>
-    <sourceDirectory>${basedir}/app</sourceDirectory>
-    <resources>
-      <resource>
-        <directory>${basedir}/conf</directory>
-      </resource>
-      <resource>
-        <directory>${basedir}</directory>
-        <includes>
-          <include>public/**</include>
-        </includes>
-      </resource>
-    </resources>
+    <!-- Play source directory -->
+    <sourceDirectory>app</sourceDirectory>
+    <testSourceDirectory>test</testSourceDirectory>
+
     <plugins>
+
       <plugin>
-        <groupId>com.google.code.play2-maven-plugin</groupId>
+        <groupId>org.nanoko.playframework</groupId>
         <artifactId>play2-maven-plugin</artifactId>
-        <version>${play2.plugin.version}</version>
+        <version>1.2.2</version>
         <extensions>true</extensions>
         <configuration>
-          <!-- only if using database evolutions -->
-          <serverJvmArgs>-DapplyEvolutions.default=true</serverJvmArgs>
-          <!--<play.distAttach>true</play.distAttach>-->
+          <play2Home>${play.home}</play2Home>
         </configuration>
-        <executions>
-          <!-- only if there are assets in the project -->
-          <execution>
-            <id>default-play2-compile-assets</id>
-            <goals>
-              <!--<goal>closure-compile</goal> <!-\- only if precompiling js assets -\->-->
-              <!--<goal>coffee-compile</goal> <!-\- only if precompiling coffee assets -\->-->
-              <goal>less-compile</goal>
-              <goal>dist</goal>
-              <!-- only if precompiling less assets -->
-            </goals>
-          </execution>
-          <!-- only if using Ebean -->
-          <!--<execution>
-            <id>default-play2-ebean-enhance</id>
-            <goals>
-              <goal>ebean-enhance</goal>
-            </goals>
-          </execution>-->
-        </executions>
       </plugin>
-      
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.1</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.6</version>
+        <version>1.7</version>
         <executions>
+          
+          <!-- download Play! Framework if necessary (useful for continous integration) -->
+          <execution>
+            <id>initialize</id>
+            <phase>initialize</phase>
+            <configuration>
+              <target>
+                <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+                <if>
+                  <available file="${env.PLAY2_HOME}" type="dir"/>
+                  <then>
+                    <echo>PLAY2_HOME is set, using pre-installed version from ${env.PLAY2_HOME}</echo>
+                    <property name="play.home" value="${env.PLAY2_HOME}"/>
+                  </then>
+                  <else>
+                    <if>
+                      <available file="${project.build.directory}/play-${play.version}" type="dir"/>
+                      <then>
+                        <echo>Play! Framework ${play.version} is already present in build directory</echo>
+                      </then>
+                      <else>
+                        <echo>Play! Framework ${play.version} is not installed, will download for this build...</echo>
+                        <get src="http://downloads.typesafe.com/play/${play.version}/play-${play.version}.zip" dest="${project.build.directory}/play-${play.version}.zip"/>
+                        <unzip src="${project.build.directory}/play-${play.version}.zip" dest="${project.build.directory}"/>
+                        <chmod file="${project.build.directory}/play-${play.version}/play" perm="755"/>
+                        <chmod file="${project.build.directory}/play-${play.version}/framework/*" perm="755"/>
+                      </else>
+                    </if>
+                    <property name="play.home" value="${project.build.directory}/play-${play.version}"/>
+                  </else>
+                </if>
+              </target>
+              <exportAntProperties>true</exportAntProperties>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+          
+          <!-- unzip distributable generated by Play! -->
           <execution>
             <id>prepare</id>
             <phase>package</phase>
             <configuration>
               <tasks>
-                <echo message="Unzipping ZIP distributable created by Play 2.x..."/>
-                <unzip src="target/webui-${project.version}-dist.zip" dest="target/webui-unpacked"/>
-                <move file="target/webui-unpacked/webui-${project.version}" tofile="target/daisy-pipeline-webui"/>
-                <delete file="target/webui-${project.version}-dist.zip"/>
-                <delete file="target/webui-${project.version}.jar"/>
+                <echo message="Unzipping ZIP distributable created by Play 2.0..."/>
+                <unzip src="${project.build.directory}/webui-${project.version}.zip" dest="${project.build.directory}/webui-unpacked"/>
+                <move file="${project.build.directory}/webui-unpacked/daisy-pipeline-webui-${project.version}" tofile="${project.build.directory}/daisy-pipeline-webui"/>
+                <delete file="${project.build.directory}/webui-${project.version}.zip"/>
+                <delete file="${project.build.directory}/webui-${project.version}.jar"/>
+                <delete file="${project.build.directory}/webui-${project.version}.war"/>
               </tasks>
             </configuration>
             <goals>
@@ -222,8 +147,16 @@
             </goals>
           </execution>
         </executions>
+        <dependencies>
+          <dependency>
+            <groupId>ant-contrib</groupId>
+            <artifactId>ant-contrib</artifactId>
+            <version>20020829</version>
+          </dependency>
+        </dependencies>
       </plugin>
       
+      <!-- assemble webui distributable -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
