@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/daisy-consortium/pipeline-webui.png?branch=master)](https://travis-ci.org/daisy-consortium/pipeline-webui)
+
 Pipeline 2 Web UI
 -----------------
 

@@ -1,13 +1,12 @@
 language: java
 
-# clone "travis" branch containing deployment settings
-before_install: git clone -b travis https://github.com/daisy-consortium/maven-parents.git target/travis
-
 # main task, run the verify goal
 script: mvn verify
 
 # if the build succeeds, deploy the artifact (tests are skipped)
-after_success: mvn deploy -DskipTests -Dinvoker.skip=true --settings target/travis/settings.xml
+after_success:
+  - git clone -b travis https://github.com/daisy-consortium/maven-parents.git target/travis
+  - ./target/travis/maven_deploy.sh
 
 # whitelist; only deploy master branch
 branches:
@@ -16,5 +15,13 @@ branches:
 
 env:
   global:
-    - secure: "PtxRXo1wzFd4EKBEeR+DVeCz0jrtB8zPAzr2cYoHJoa+2gZnzLi8WvhbsJiIKeMytcFt0rDDexcVwkkJl8wn+5DWndxxScdg0my/I1Eye23DwuctIhB6Z7uCvQ2En/N2vJ7yO/XduXMUX04xwgKheGTt4vntpMNdCWLC+jWbSzY="
-    - secure: "W6iuVCVmqyk6nIYBdv+dYFrhIp0jIpz9OYqi/L8MnHtsiCXqIUx6GcGNtb3Ki7HwNCUDpKzV1D5Pfo1P62lvKO93Li601e/VuYrE23tDozpYiWEdoHymeQxUBvcY/k3wDpeH4Qr1PdEJpiFhLgQwR9RjC1T6pq0YxhZfrj0kHIE="
+  - secure: ! 'RpnGDXxMS1WenuTxM3IeoB/GnJZLheVnf71I6S1Fp3genqUtTHeDw6HIOVHt
+
+      kmUfsMmY+mXy/CndRUlC+TXqYwiknxLDBkbO00kRbM/SY1dqCJulZCppnvDi
+
+      2Nc+N0FlyiAjB8afYLp36pu7Nx6HRUjK9W+l3Hqax7dcqcFoWfo='
+  - secure: ! 'UyWirx1c58WDWfsqU250Au+8n7YCqOzi6dzPNmSQSh8mT+StHVgq9Cv0SfZB
+
+      PQpYc7DyUrohx8z7UNNdA1cykThGRJVfIbcFxqq20T75nBT+7MVrlxaUnyx3
+
+      FiCHa5o6B6o8pg7jm4Xn/X27QHJAfZujx7yz0nj+NCM7tPSxmv4='
