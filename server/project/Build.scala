@@ -12,7 +12,7 @@ object ApplicationBuild extends Build {
       javaJdbc,
       javaEbean,
       
-      // project dependencies
+      // project dependencies (remember to also update pom.xml!)
       "org.apache.derby" % "derby" % "10.9.1.0",
       "mysql" % "mysql-connector-java" % "5.1.18",
       "org.daisy.pipeline" % "clientlib-java" % "1.0-SNAPSHOT",
