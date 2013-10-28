@@ -162,6 +162,17 @@
 	</div>
 </div>
 
+@if(fwkJob.results!=null){
+<style>
+ul.results-children { list-style-type: none; }
+</style>
+<h2>Results</h2>
+
+	<ul class="results-children">
+		@views.html.Jobs.jobResultItem(fwkJob.results)
+	</ul>
+}
+
 <h2>Execution Log</h2>
 
 <br/>

@@ -1,0 +1,23 @@
+@(result: org.daisy.pipeline.client.models.job.JobResult)
+
+@if(result.results.size()>0){
+	<li>
+		<a class="results-expand-collapse icon-plus" onclick="javascript:$(this).siblings().filter('ul').toggle();$(this).siblings().filter('.results-fileicon').toggleClass('icon-folder-open icon-folder-close');$(this).toggleClass('icon-plus icon-minus');return false;"></a>
+		<i class="results-fileicon icon-folder-close"></i>
+		<a class="results-filename" href="@routes.Jobs.getResult(result.relativeHref)">@if(result.name!=null&&result.name!=""){@result.name}else{@result.filename}</a>
+		<span class="results-filesize">@result.size</span>
+		<ul class="results-children" style="display:none;">
+			@for(result <- result.results){
+				@views.html.Jobs.jobResultItem(result)
+			}
+		</ul>
+	</li>
+}else{
+	<li>
+		<span class="results-expand-collapse"></span>
+		<i class="results-fileicon icon-file"></i>
+		<a class="results-filename" href="@routes.Jobs.getResult(result.relativeHref)">@if(result.name!=null&&result.name!=""){@result.name}else{@result.filename}</a>
+		<span class="results-filesize">@result.size</span>
+		<span class="results-children"></span>
+	</li>
+}
