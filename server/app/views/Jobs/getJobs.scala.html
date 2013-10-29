@@ -19,7 +19,7 @@
 		<tr id="joblist-headline">
 			<th><img src="@routes.Assets.at("images/icon-info-sign.png")" alt="Status" title="Status"/></th>
 			<th>Job</th>
-			<th>Results</th>
+			<!--<th>Results</th>-->
 			<th>Created</th>
 			@if(Controller.flash("showOwner")=="true"){
 				<th>Owner</th>
@@ -32,8 +32,10 @@
 <script type="text/javascript">
 
 addJob = function(job) {
-	var statusText = job.status.charAt(0).toUpperCase() + job.status.slice(1).toLowerCase();
-	var html = '<tr id="job-'+job.id+'" class="job">'+"\n";
+	var i, statusText, html;
+	statusText = job.status.charAt(0).toUpperCase() + job.status.slice(1).toLowerCase();
+	statusText = statusText.replace(/_/,' ');
+	html = '<tr id="job-'+job.id+'" class="job">'+"\n";
 	html += '    <td id="job-status-'+job.id+'">'+"\n";
 	html += '        <img src="@routes.Assets.at("images/")'+job.status+'.png" alt="'+statusText+'" title="'+statusText+'"/>'+"\n";
 	html += '    </td>'+"\n";
@@ -43,11 +45,15 @@ addJob = function(job) {
 	html += '            <small class="muted">'+job.id+'</small>'+"\n";
 	html += '        </a>'+"\n";
 	html += '    </td>'+"\n";
-	html += '    <td id="job-results-'+job.id+'">'+"\n";
-	if (job.status==="DONE") {
-		html += '        <span><a class="btn btn-mini btn-success" href="'+'@routes.Jobs.getResult("JOBID")'.replace('JOBID',job.id)+'"><i class="icon-download-alt icon-white"></i> Download</a></span>'+"\n";
+	/*html += '    <td id="job-results-'+job.id+'">'+"\n";
+	if (job.status==="DONE" || job.status==="VALIDATION_FAIL") {
+		if (job.results!==null) {
+			for (i = 0; i < job.results.results.length; i++) {
+				html += '        <span><a class="btn btn-mini btn-'+(job.status==="DONE"?'success':'error')+'" href="'+'@routes.Jobs.getResult("JOBID","")'.replace('JOBID',job.id)+job.results.results[i].name+'"><i class="icon-download-alt icon-white"></i> Download</a></span>'+"\n";
+			}
+		}
 	}
-	html += '    </td>'+"\n";
+	html += '    </td>'+"\n";*/
 	html += '    <td>'+"\n";
 	html += '        <span id="created-'+job.id+'-fuzzy" aria-live="timer"></span><br/>'+"\n";
 	html += '        <small id="created-'+job.id+'" class="muted">'+new Date(job.created)+'</small>'+"\n";
@@ -101,9 +107,9 @@ addJob = function(job) {
 	Notifications.listen("job-status-"+job.id, function(status, id){
 		var statusText = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 		$("#job-status-"+id).html('<img src="@routes.Assets.at("images/")'+status+'.png" alt="'+statusText+'" title="'+statusText+'"/>');
-		if (status==="DONE") {
-			$("#job-results-"+id).html(' <span><a class="btn btn-mini btn-success" href="'+'@routes.Jobs.getResult("JOBID")'.replace('JOBID',id)+'"><i class="icon-download-alt icon-white"></i> Download</a></span>');
-		}
+		/*if (status==="DONE" || status==="VALIDATION_FAIL") {
+			$("#job-results-"+id).html(' <span><a class="btn btn-mini btn-success" href="'+'@routes.Jobs.getResult("JOBID","")'.replace('JOBID',id)+'"><i class="icon-download-alt icon-white"></i> Download</a></span>');
+		}*/
 	}, job.id);
 }
 

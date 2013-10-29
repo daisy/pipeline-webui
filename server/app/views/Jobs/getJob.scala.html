@@ -1,6 +1,6 @@
 @(fwkJob: org.daisy.pipeline.client.models.Job, uiJob: models.Job)
 
-@main("View job") {
+@main("View job", "jobs", Array("createJob.js")) {
 
 @if(flash.contains("error")) {
     <div role="alert" class="alert alert-error">
@@ -108,7 +108,11 @@
 	
 	<div id="status-done" style="display:none;">
 		<h2 role="status" class="text-success">Success</h1>
-		<a class="btn btn-large btn-success" href="@routes.Jobs.getResult(fwkJob.id)"><i class="icon-download-alt icon-white"></i> Download results</a>
+		<div id="results-buttons"></div>
+	</div>
+	
+	<div id="status-validation_fail" style="display:none;">
+		<h2 role="status" class="text-error">Validation failed</h1>
 	</div>
 	
 	<div id="status-running" style="display:none;">
@@ -162,16 +166,13 @@
 	</div>
 </div>
 
-@if(fwkJob.results!=null){
-<style>
-ul.results-children { list-style-type: none; }
-</style>
-<h2>Results</h2>
-
-	<ul class="results-children">
-		@views.html.Jobs.jobResultItem(fwkJob.results)
-	</ul>
-}
+<div id="results" class="status-done">
+	<h2>Results</h2>
+	
+	<p class="results-empty" style="display:none;">No results.</p>
+	
+	<ul id="results-list" style="display:none;list-style-type:none;" class="results-children"></ul>
+</div>
 
 <h2>Execution Log</h2>
 
@@ -223,6 +224,52 @@ ul.results-children { list-style-type: none; }
 			clearInterval(updateFuzzyFinishedInterval);
 			updateFuzzy("finished-fuzzy", date);
 		});
+		var updateResultsList = function(result) {
+			var li = document.createElement("li");
+			if (result.results.length > 0) {
+				$(li).append("<a class=\"results-expand-collapse icon-plus\" onclick=\"javascript:$(this).siblings().filter('ul').toggle();$(this).siblings().filter('.results-fileicon').toggleClass('icon-folder-open icon-folder-close');$(this).toggleClass('icon-plus icon-minus');return false;\"></a>");
+				$(li).append("<i class=\"results-fileicon icon-folder-close\"></i>");
+			} else {
+				$(li).append("<span class=\"results-expand-collapse\"></span>");
+				$(li).append("<i class=\"results-fileicon icon-file\"></i>");
+			}
+			
+			var fileLink = $("<a class=\"results-filename\"></a>");
+			$(fileLink).attr("href", "@routes.Jobs.getResult(fwkJob.id,"")"+result.relativeHref.substring(7));
+			$(fileLink).html(result.name!==null&&result.name.length>0?result.name:result.filename.replace(/^idx\//,""));
+			$(li).append(fileLink);
+			$(li).append(" ");
+			
+			$(li).append($("<span class=\"results-filesize\"></span>").html(Job.prettySize(result.size)));
+			
+			var ul = $("<ul class=\"results-children\" style=\"display:none;list-style-type:none;\"></ul>");
+			for (var i = 0; i < result.results.length; i++) {
+				$(ul).append(updateResultsList(result.results[i]));
+			}
+			
+			$(li).append(ul);
+			return li; 
+		}
+		var updateResults = function(results){
+			if (results.results === null || results.results.length === 0) {
+				$("#results > p").show();
+				$("#results > ul").hide();
+			} else {
+				$("#results > p").hide();
+				
+				for (var i = 0; i < results.results.length; i++) {
+					$("#results-list").append(updateResultsList(results.results[i]));
+					$("#results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(fwkJob.id,"")"+results.results[i].name+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].name+"</a>");
+				}
+				
+				$("#results > ul").show();
+			}
+		};
+		Notifications.listen("job-results-@fwkJob.id", updateResults);
+		@if(fwkJob.results!=null){
+			var results = @Html(play.libs.Json.toJson(fwkJob.results).toString());
+			updateResults(results);
+		}
 		
 		if (Math.abs(new Date().getTime() - @(new Date().getTime())) > 1000) {
 			// You probably arrived through the back/forward buttons; reload the page contents dynamically

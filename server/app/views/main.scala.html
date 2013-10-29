@@ -70,7 +70,7 @@
 	}
 	@if(controllers.Application.debug){
 		$(function(){Notifications.debug=true;DP2Forms.debug=true;});
-		if (typeof console == "object") console.log("browser id", @flash().get("browserId"));
+		if (typeof console === "object") console.log("browser id", @flash().get("browserId"));
 	}
 	</script>
   </head>

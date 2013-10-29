@@ -178,6 +178,8 @@ public class Job extends Model implements Comparable<Job> {
 									finishedMap.put("number", webUiJob.finished.getTime()+"");
 									NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-finished-"+job.id, finishedMap));
 									
+									NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-results-"+job.id, job.results));
+									
 									// Delete temporary files when job execution has finished
 									File results = new File(Setting.get("dp2ws.tempdir")+webUiJob.localDirName);
 									if (results.exists() && results.isDirectory())

@@ -214,8 +214,8 @@ public class Jobs extends Controller {
 		JsonNode jobJson = play.libs.Json.toJson(webuiJob);
 		return ok(jobJson);
 	}
-
-	public static Result getResult(String id) {
+	
+	public static Result getResult(String id, String href) {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
 		
@@ -234,44 +234,25 @@ public class Jobs extends Controller {
 					))
 				return forbidden("You are not allowed to view this job.");
 		
-		if (Mode.LOCAL.equals(Application.getAlive().mode)) {
-			try {
-				File resultdir = new File(Setting.get("dp2ws.resultdir")+webuiJob.localDirName);
-				File tempZip;
-				tempZip = File.createTempFile("dp2result", "zip");
-				Logger.info("zipping result directory: "+resultdir.getAbsolutePath());
-				Files.zip(resultdir, tempZip);
-				
-				response().setHeader("Content-Disposition", "attachment; filename=\""+webuiJob.nicename.replaceAll("[^\\w ]","-").subSequence(0, webuiJob.nicename.length())+".zip\"");
-				response().setContentType("application/zip");
-				return ok(new FileInputStream(tempZip));
-				
-			} catch (IOException e) {
-				Logger.error("Unable to zip result directory", e);
-				return internalServerError("Unable to zip result directory");
-			}
+		try {
+			Logger.info("retrieving result from Pipeline 2 engine...");
 			
-		} else {
-			try {
-				Logger.info("retrieving result ZIP from Pipeline 2 engine...");
-				
-				Pipeline2WSResponse result = org.daisy.pipeline.client.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
-				
-				Logger.debug(result.contentType);
-				Logger.debug(result.statusDescription);
-				Logger.debug(result.statusName);
-				Logger.debug(result.status+"");
-//				Logger.debug("result size: "+result.asText().length());
-				
-				response().setHeader("Content-Disposition", "attachment; filename=\""+webuiJob.nicename.replaceAll("[^\\w ]","-").subSequence(0, webuiJob.nicename.length())+".zip\"");
-				response().setContentType(result.contentType);
-	
-				return ok(result.asStream());
-				
-			} catch (Pipeline2WSException e) {
-				Logger.error(e.getMessage(), e);
-				return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline engine", e.getMessage());
-			}
+			Pipeline2WSResponse result = org.daisy.pipeline.client.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, href);
+			
+			Logger.debug(result.contentType);
+			Logger.debug(result.statusDescription);
+			Logger.debug(result.statusName);
+			Logger.debug(result.status+"");
+//			Logger.debug("result size: "+result.asText().length());
+			
+//			response().setHeader("Content-Disposition", "attachment; filename=\""+webuiJob.nicename.replaceAll("[^\\w ]","-").subSequence(0, webuiJob.nicename.length())+".zip\"");
+			response().setContentType(result.contentType);
+			
+			return ok(result.asStream());
+			
+		} catch (Pipeline2WSException e) {
+			Logger.error(e.getMessage(), e);
+			return Application.error(500, "Sorry, something unexpected occured", "A problem occured while communicating with the Pipeline engine", e.getMessage());
 		}
 	}
 
