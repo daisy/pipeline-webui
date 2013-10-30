@@ -108,11 +108,12 @@
 	
 	<div id="status-done" style="display:none;">
 		<h2 role="status" class="text-success">Success</h1>
-		<div id="results-buttons"></div>
+		<div class="results-buttons" aria-live="polite"></div>
 	</div>
 	
 	<div id="status-validation_fail" style="display:none;">
 		<h2 role="status" class="text-error">Validation failed</h1>
+		<div class="results-buttons" aria-live="polite"></div>
 	</div>
 	
 	<div id="status-running" style="display:none;">
@@ -166,18 +167,23 @@
 	</div>
 </div>
 
-<div id="results" class="status-done">
+<div id="result-reports" aria-live="polite"></div>
+
+<div id="results" class="status-done" aria-live="polite">
 	<h2>Results</h2>
 	
-	<p class="results-empty" style="display:none;">No results.</p>
+	<p class="results-empty">No results.</p>
 	
-	<ul id="results-list" style="display:none;list-style-type:none;" class="results-children"></ul>
+	<div class="results-nonempty" style="display:none;">
+		<p id="results-download-all"></p>
+		<ul id="results-list" style="list-style-type:none;" class="results-children"></ul>
+	</div>
 </div>
 
 <h2>Execution Log</h2>
 
 <br/>
-<a class="btn btn-info" href="@routes.Jobs.getLog(fwkJob.id)" target="_blank"><i class="icon-download-alt icon-white"></i> Download Detailed Log</a>
+<a class="btn btn-info" href="@routes.Jobs.getLog(fwkJob.id)" target="_blank"><span class="icon-download-alt icon-white"></span> Download Detailed Log</a>
 <br/><br/>
 
 <ol aria-live="polite" role="log" class="messagelist" id="message-list">
@@ -236,7 +242,7 @@
 			
 			var fileLink = $("<a class=\"results-filename\"></a>");
 			$(fileLink).attr("href", "@routes.Jobs.getResult(fwkJob.id,"")"+result.relativeHref.substring(7));
-			$(fileLink).html(result.name!==null&&result.name.length>0?result.name:result.filename.replace(/^idx\//,""));
+			$(fileLink).html(result.name!==null&&result.name.length>0?result.name:decodeURIComponent(result.filename.replace(/^idx\//,"")));
 			$(li).append(fileLink);
 			$(li).append(" ");
 			
@@ -251,18 +257,40 @@
 			return li; 
 		}
 		var updateResults = function(results){
+			var i, j, href;
 			if (results.results === null || results.results.length === 0) {
-				$("#results > p").show();
-				$("#results > ul").hide();
+				$("#results .results-empty").show();
+				$("#results .results-nonempty").hide();
 			} else {
-				$("#results > p").hide();
+				$("#results .results-empty").hide();
 				
-				for (var i = 0; i < results.results.length; i++) {
+				$("#results-list").empty();
+				$("#results-download-all").empty();
+				$(".results-buttons").empty();
+				$("#result-reports").empty();
+				
+				$("#results-download-all").append($("<a class=\"btn btn-success\" href=\""+"@routes.Jobs.getResult(fwkJob.id,"")"+results.relativeHref.substring(7)+"\"><span class=\"icon-download-alt icon-white\"></span> Download all results</a>"));
+				for (i = 0; i < results.results.length; i++) {
 					$("#results-list").append(updateResultsList(results.results[i]));
-					$("#results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(fwkJob.id,"")"+results.results[i].name+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].name+"</a>");
+					$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(fwkJob.id,"")"+results.results[i].relativeHref.substring(7)+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].name+"</a> ");
+					
+					for (j = 0; j < results.results[i].results.length; j++) {
+						if (results.results[i].results[j].mimeType==="application/vnd.pipeline.report+xml") {
+							href = "@routes.Jobs.getResult(fwkJob.id,"")"+results.results[i].results[j].relativeHref.substring(7);
+							$.get(href+"?parse=report", function(data, textStatus, jqXHR){
+								var section = $("<section></section>");
+								$(section).html(data);
+								$(section).find("*[href^='file:']").replaceWith("<!-- removed filesystem link -->");
+								$(section).find("*[href]:not([href^='#'])").each(function(){
+									$(this).attr("href",href.replace(/[^/]*$/,"")+$(this).attr("href"));
+								});
+								$("#result-reports").append($(section));
+							})
+						}
+					}
 				}
 				
-				$("#results > ul").show();
+				$("#results .results-nonempty").show();
 			}
 		};
 		Notifications.listen("job-results-@fwkJob.id", updateResults);

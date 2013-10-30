@@ -1,7 +1,6 @@
 package controllers;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -11,6 +10,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.management.RuntimeErrorException;
 
@@ -239,15 +240,40 @@ public class Jobs extends Controller {
 			
 			Pipeline2WSResponse result = org.daisy.pipeline.client.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, href);
 			
+			Logger.debug(result.url);
 			Logger.debug(result.contentType);
 			Logger.debug(result.statusDescription);
 			Logger.debug(result.statusName);
 			Logger.debug(result.status+"");
 //			Logger.debug("result size: "+result.asText().length());
 			
-//			response().setHeader("Content-Disposition", "attachment; filename=\""+webuiJob.nicename.replaceAll("[^\\w ]","-").subSequence(0, webuiJob.nicename.length())+".zip\"");
-			response().setContentType(result.contentType);
+			if (result.status != 200) {
+				return badRequest();
+			}
 			
+			String filename = webuiJob.nicename.replaceAll("[^\\w \\.,]+","-").subSequence(0, webuiJob.nicename.length())+"-"+href.replaceAll("[^\\w \\.,]+", "_");
+			if ("application/zip".equals(result.contentType)) {
+				filename += ".zip";
+			}
+//			response().setHeader("Content-Disposition", "attachment; filename=\""+filename);
+			response().setHeader("Content-Disposition", "filename=\""+filename);
+			
+			String parse = request().getQueryString("parse");
+			if ("report".equals(parse)) {
+				response().setContentType("text/html");
+				String report = result.asText();
+				Pattern regex = Pattern.compile("^.*<body[^>]*>(.*)</body>.*$", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+				Matcher regexMatcher = regex.matcher(report);
+				if (regexMatcher.find()) {
+				    return ok(regexMatcher.group(1));
+				} else {
+					Logger.info("no body element found in report; returning the entire report");
+					return ok(report);
+				}
+				
+			}
+			
+			response().setContentType(result.contentType);
 			return ok(result.asStream());
 			
 		} catch (Pipeline2WSException e) {
