@@ -271,8 +271,10 @@
 				
 				$("#results-download-all").append($("<a class=\"btn btn-success\" href=\""+"@routes.Jobs.getResult(fwkJob.id,"")"+results.relativeHref.substring(7)+"\"><span class=\"icon-download-alt icon-white\"></span> Download all results</a>"));
 				for (i = 0; i < results.results.length; i++) {
-					$("#results-list").append(updateResultsList(results.results[i]));
-					$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(fwkJob.id,"")"+results.results[i].relativeHref.substring(7)+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].name+"</a> ");
+					if (results.results[i].results === null || results.results[i].results.length === 0 || results.results[i].results[0].mimeType.indexOf("application/vnd.pipeline") !== 0) {
+						$("#results-list").append(updateResultsList(results.results[i]));
+						$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(fwkJob.id,"")"+results.results[i].relativeHref.substring(7)+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].name+"</a> ");
+					}
 					
 					for (j = 0; j < results.results[i].results.length; j++) {
 						if (results.results[i].results[j].mimeType==="application/vnd.pipeline.report+xml") {
@@ -285,6 +287,7 @@
 									$(this).attr("href",href.replace(/[^/]*$/,"")+$(this).attr("href"));
 								});
 								$("#result-reports").append($(section));
+								$("#result-reports").append("<hr/>");
 							})
 						}
 					}
