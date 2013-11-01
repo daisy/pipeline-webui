@@ -2,6 +2,7 @@ package controllers;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -21,12 +22,12 @@ import models.NotificationConnection;
 import models.Setting;
 import models.Upload;
 import models.User;
+import models.UserSetting;
 
 import org.codehaus.jackson.JsonNode;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
-import org.daisy.pipeline.client.models.Alive.Mode;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.script.Argument;
 import org.w3c.dom.Node;
@@ -204,13 +205,7 @@ public class Jobs extends Controller {
 		
 		webuiJob.status = job.status.toString();
 		webuiJob.messages = job.messages;
-//		if (!Job.lastMessageSequence.containsKey(job.id) && job.messages.size() > 0) {
-			Collections.sort(job.messages);
-//			Job.lastMessageSequence.put(job.id, job.messages.get(job.messages.size()-1).sequence);
-//		}
-//		if (!Job.lastStatus.containsKey(job.id)) {
-//			Job.lastStatus.put(job.id, job.status);
-//		}
+		Collections.sort(job.messages);
 		
 		JsonNode jobJson = play.libs.Json.toJson(webuiJob);
 		return ok(jobJson);
@@ -238,9 +233,11 @@ public class Jobs extends Controller {
 		try {
 			Logger.info("retrieving result from Pipeline 2 engine...");
 			
+			Logger.debug("href: "+href);
+			
 			Pipeline2WSResponse result = org.daisy.pipeline.client.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, href);
 			
-			Logger.debug(result.url);
+			Logger.debug("URL: "+result.url);
 			Logger.debug(result.contentType);
 			Logger.debug(result.statusDescription);
 			Logger.debug(result.statusName);
@@ -338,6 +335,10 @@ public class Jobs extends Controller {
 		}
 
 		String id = params.get("id")[0];
+		
+		if ("false".equals(UserSetting.get(user.id, "scriptEnabled-"+id))) {
+			return forbidden();
+		}
 
 		// Get a description of the script from Pipeline 2 Web API
 		Pipeline2WSResponse scriptResponse;
@@ -355,18 +356,6 @@ public class Jobs extends Controller {
 		// Parse and validate the submitted form (also create any necessary output directories in case of local mode)
 		Scripts.ScriptForm scriptForm = new Scripts.ScriptForm(user.id, script, params);
 		String timeString = new Date().getTime()+"";
-		for (Argument arg : script.arguments) {
-			if ("result".equals(arg.output)) {
-				File href = new File(Setting.get("dp2ws.resultdir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
-				href.mkdirs();
-				arg.set(href.toURI().toString());
-				
-			} else if ("temp".equals(arg.output)) {
-				File href = new File(Setting.get("dp2ws.tempdir")+timeString+"/"+arg.kind+"-"+arg.name+"/");
-				href.mkdirs();
-				arg.set(href.toURI().toString());
-			}
-		}
 		scriptForm.validate();
 
 		File contextZipFile = null;
@@ -417,7 +406,7 @@ public class Jobs extends Controller {
 				}
 			}
 			
-			if (Mode.LOCAL.equals(Application.getAlive().mode)) {
+			if (Application.getAlive().localfs) {
 				Logger.debug("Running the Web UI and fwk on the same filesystem, no need to ZIP files...");
 				for (Argument arg : script.arguments) {
 					if (arg.output != null) {
@@ -442,7 +431,6 @@ public class Jobs extends Controller {
 					}
 				}
 				
-				//	if (contextZipUpload == null) {
 				if (contextDir.list().length == 0) {
 					contextZipFile = null;
 				} else {
@@ -465,10 +453,10 @@ public class Jobs extends Controller {
 		}
 		
 		Map<String,String> callbacks = new HashMap<String,String>();
-		if (play.Play.isDev()) { // TODO: only in dev for now
-			callbacks.put("messages", routes.Callbacks.postCallback("messages").absoluteURL(request()));
-			callbacks.put("status", routes.Callbacks.postCallback("status").absoluteURL(request()));
-		}
+//		if (play.Play.isDev()) { // TODO: only in dev for now
+//			callbacks.put("messages", routes.Callbacks.postCallback("messages").absoluteURL(request()));
+//			callbacks.put("status", routes.Callbacks.postCallback("status").absoluteURL(request()));
+//		}
 		
 		if (contextZipFile == null)
 			Logger.debug("No files in context, submitting job without context ZIP file");

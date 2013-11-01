@@ -1,6 +1,5 @@
 package models;
 
-import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -179,11 +178,6 @@ public class Job extends Model implements Comparable<Job> {
 									NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-finished-"+job.id, finishedMap));
 									
 									NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-results-"+job.id, job.results));
-									
-									// Delete temporary files when job execution has finished
-									File results = new File(Setting.get("dp2ws.tempdir")+webUiJob.localDirName);
-									if (results.exists() && results.isDirectory())
-										recursivelyDeleteDirectory(results);
 								}
 							}
 							
@@ -239,25 +233,6 @@ public class Job extends Model implements Comparable<Job> {
 		List<Upload> uploads = getUploads();
 		for (Upload upload : uploads)
 			upload.delete(datasource);
-		File results = new File(Setting.get("dp2ws.resultdir")+this.localDirName);
-		if (results.exists() && results.isDirectory())
-			recursivelyDeleteDirectory(results);
 		super.delete(datasource);
 	}
-	
-	private void recursivelyDeleteDirectory(File dir) {
-		for (File file : dir.listFiles()) {
-			if (file.isDirectory()) {
-				recursivelyDeleteDirectory(file);
-			} else {
-				if (!file.delete()) {
-					Logger.error("Failed to delete file: " + file);
-				}
-			}
-		}
-		if (!dir.delete()) {
-			Logger.error("Failed to delete directory: " + dir);
-		}
-	}
-
 }

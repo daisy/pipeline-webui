@@ -97,6 +97,8 @@
 					</div>
 				</div>
 				
+				<!-- TODO: configure user script permissions -->
+				
 				<div class="form-actions">
 					<button type="submit" class="btn btn-primary" id="user-@{user.id}-submit" name="submit">Save</button>
 					<button type="reset" class="btn" id="user-@{user.id}-reset" name="reset" onclick="toggleRadio('user-@{user.id}-admin', @user.admin, '@user.admin');toggleChanged('user-@{user.id}-name', '@user.name', '@user.name');toggleChanged('user-@{user.id}-email', '@user.email', '@user.email');">Clear</button>

@@ -273,22 +273,32 @@
 				for (i = 0; i < results.results.length; i++) {
 					if (results.results[i].results === null || results.results[i].results.length === 0 || results.results[i].results[0].mimeType.indexOf("application/vnd.pipeline") !== 0) {
 						$("#results-list").append(updateResultsList(results.results[i]));
-						$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(fwkJob.id,"")"+results.results[i].relativeHref.substring(7)+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].name+"</a> ");
+						if (results.results[i].results.length === 1 && results.results[i].results[0].results.length === 0) {
+							$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(fwkJob.id,"")"+results.results[i].results[0].relativeHref.substring(7)+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].name+"</a> ");
+						} else {
+							$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(fwkJob.id,"")"+results.results[i].relativeHref.substring(7)+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].name+"</a> ");
+						}
 					}
 					
 					for (j = 0; j < results.results[i].results.length; j++) {
 						if (results.results[i].results[j].mimeType==="application/vnd.pipeline.report+xml") {
 							href = "@routes.Jobs.getResult(fwkJob.id,"")"+results.results[i].results[j].relativeHref.substring(7);
-							$.get(href+"?parse=report", function(data, textStatus, jqXHR){
-								var section = $("<section></section>");
-								$(section).html(data);
-								$(section).find("*[href^='file:']").replaceWith("<!-- removed filesystem link -->");
-								$(section).find("*[href]:not([href^='#'])").each(function(){
-									$(this).attr("href",href.replace(/[^/]*$/,"")+$(this).attr("href"));
-								});
-								$("#result-reports").append($(section));
-								$("#result-reports").append("<hr/>");
-							})
+							$.ajax({
+								url: href+"?parse=report",
+								success: function(data, textStatus, jqXHR){
+									var section = $("<section class=\"result-report\" data-href=\""+this.href+"\"></section>");
+									$(section).html(data);
+									$(section).find("*[href^='file:']").replaceWith("<!-- removed filesystem link -->");
+									$(section).find("*[href]:not([href^='#'])").each(function(){
+										$(this).attr("href",href.replace(/[^/]*$/,"")+$(this).attr("href"));
+									});
+									$(".result-report[data-href='"+this.href+"'] + hr").remove();
+									$(".result-report[data-href='"+this.href+"']").remove();
+									$("#result-reports").append($(section));
+									$("#result-reports").append("<hr/>");
+								},
+								context: {href:href}
+							});
 						}
 					}
 				}

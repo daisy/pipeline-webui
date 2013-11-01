@@ -10,10 +10,10 @@
         
         <div class="form-horizontal">
         	
-        	<div class="control-group @("error".when(guestForm != null && guestForm.error("name") != null))" id="user-users.guest.nameGroup">
+        	<div class="control-group @("error".when(guestForm != null && guestForm.error("name") != null))" id="user-users-guest-nameGroup">
         		<label for="user-users.guest.name" class="control-label">Name</label>
 	            <div class="controls">
-	        		<input type="text" name="name" id="user-users.guest.name" class="input-xlarge"
+	        		<input type="text" name="name" id="user-users-guest-name" class="input-xlarge"
 	        			placeholder="&quot;@models.Setting.get("users.guest.name")&quot; is the users current name."
 	        			value="@{if (guestForm != null && guestForm.hasErrors()) guestForm.field("name").valueOr(""); else models.Setting.get("users.guest.name");}"
 	        			onkeyup="if(this.value==='@models.Setting.get("users.guest.name")')document.getElementById('user-users.guest.nameGroup').style.backgroundColor='#FFF';else document.getElementById('user-users.guest.nameGroup').style.backgroundColor='#DDF';"/>
@@ -27,9 +27,57 @@
 	            </div>
 			</div>
 			
-			<div class="form-actions">
+			<div class="control-group @("error".when(guestForm.error("scriptPermissions") != null))">
+				<h3>Script permissions:</h3>
+				<div class="controls">
+					<span id="user-users-guest-loadingScripts" class="help-block">Loading scripts...</span>
+					@if(guestForm.field("scriptPermissions").errors().size() > 0){
+						<span class="help-block">@guestForm.error("scriptPermissions").message</span>
+					}
+				</div>
+			</div>
+			<script type="text/javascript">
+				$(function(){
+					var scriptPermissions = @Html(play.libs.Json.stringify(play.libs.Json.toJson(controllers.Administrator.GuestUser.scriptPermissions())));
+					var scriptHrefBase = "@routes.Scripts.getScript("")";
+					var checkForScripts = function() {
+						$.ajax({
+							url: "@routes.Scripts.getScriptsJson()",
+							error: function(jqXHR, textStatus, errorThrown) {
+								setTimeout(checkForScripts,5000);
+							},
+							success: function(scripts, textStatus, jqXHR) {
+								var s;
+								$("#user-users-guest-loadingScripts").hide();
+								for (s = 0; s < scripts.length; s++) {
+									var div;
+									var enabled = scriptPermissions[scripts[s].id];
+									console.log(scripts[s]);
+									div = $("<div class=\"control-group\"></div>");
+									$(div).append("<label class=\"control-label\" id=\"user-users-guest-script-"+scripts[s].id+"-label\">"+scripts[s].nicename+"</label>");
+									$(div).append("<div class=\"controls\"></div>");
+									$(div).find(".controls").append("<div class=\"btn-group\" data-toggle=\"buttons-radio\" aria-role=\"radiogroup\" aria-labelledby=\"user-users-guest-script-"+scripts[s].id+"-label\" id=\"user-users-guest-script-"+scripts[s].id+"\"></div>");
+									$(div).find(".btn-group").append("<button type=\"button\" name=\"user-users-guest-script-"+scripts[s].id+"-off\" class=\"btn "+(enabled?"":"active")+"\" id=\"user-users-guest-script-"+scripts[s].id+"-disable\" aria-role=\"radio\" aria-checked=\""+(enabled?"false":"true")+"\" onclick=\"toggleRadio('user-users-guest-script-"+scripts[s].id+"', false, '"+enabled+"');\">Disable</button>");
+									$(div).find(".btn-group").append("<button type=\"button\" name=\"user-users-guest-script-"+scripts[s].id+"-on\" class=\"btn "+(enabled?"active":"")+"\" id=\"user-users-guest-script-"+scripts[s].id+"-enable\" aria-role=\"radio\" aria-checked=\""+(enabled?"true":"false")+"\" onclick=\"toggleRadio('user-users-guest-script-"+scripts[s].id+"', true, '"+enabled+"');\">Enable</button>");
+									$(div).find(".btn-group").append("<input type=\"hidden\" id=\"user-users-guest-script-"+scripts[s].id+"-value\" name=\"user-users-guest-script-"+scripts[s].id+"\" value=\""+enabled+"\"/>");
+									$("#user-users-guest-submitButtons").before(div);
+								}
+								
+							}
+						});
+					}
+					
+					if (typeof scriptPermissions === "string") {
+						$("#user-users-guest-loadingScripts").html(scriptPermissions);
+					} else {
+						checkForScripts();
+					}
+				});
+			</script>
+			
+			<div class="form-actions" id="user-users-guest-submitButtons">
 				<button type="submit" class="btn btn-primary" id="user-guest-submit" name="submit">Save</button>
-				<button type="reset" class="btn" id="user-guest-reset" name="reset" onclick="toggleChanged('user-users.guest.name', '@models.Setting.get("users.guest.name")', '@models.Setting.get("users.guest.name")');">Clear</button>
+				<!--<button type="reset" class="btn" id="user-guest-reset" name="reset" onclick="toggleChanged('user-users.guest.name', '@models.Setting.get("users.guest.name")', '@models.Setting.get("users.guest.name")');">Clear</button>-->
 			</div>
 			
 		</div>

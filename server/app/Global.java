@@ -2,7 +2,6 @@ import play.*;
 import models.*;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,8 +11,6 @@ import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.Pipeline2WSLogger;
-import org.daisy.pipeline.client.models.Alive;
-
 import controllers.Administrator;
 import controllers.FirstUse;
 
@@ -268,8 +265,7 @@ public class Global extends GlobalSettings {
 								}
 							}
 							
-							if (controllers.Application.getAlive() != null && Alive.Mode.REMOTE.equals(controllers.Application.getAlive().mode)) {
-								// only add jobs when running in remote mode because in local mode the client does not currently have access to the job results
+							if (controllers.Application.getAlive() != null) {
 								for (org.daisy.pipeline.client.models.Job fwkJob : fwkJobs) {
 									boolean exists = false;
 									for (Job webUiJob : webUiJobs) {

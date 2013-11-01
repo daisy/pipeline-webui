@@ -9,12 +9,17 @@ import java.util.concurrent.TimeUnit;
 
 import javax.persistence.Transient;
 
+import org.daisy.pipeline.client.Pipeline2WSException;
+import org.daisy.pipeline.client.Pipeline2WSResponse;
+import org.daisy.pipeline.client.models.Script;
+
 import controllers.SystemStatus.EngineAttempt;
 
 import akka.actor.Cancellable;
 
 import models.Setting;
 import models.User;
+import models.UserSetting;
 import play.Logger;
 import play.data.Form;
 import play.data.format.Formats;
@@ -317,6 +322,34 @@ public class Administrator extends Controller {
 		@Constraints.MinLength(1)
 		@Constraints.Pattern("[^{}\\[\\]();:'\"<>]+") // Avoid breaking JavaScript code in templates
 		public String name;
+		
+		public static Object scriptPermissions() {
+			Map<String,Boolean> scriptPermissions = new HashMap<String,Boolean>();
+			
+			List<Script> scripts = null;
+			try {
+				Pipeline2WSResponse response = org.daisy.pipeline.client.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
+				if (response.status != 200) {
+					return response.statusName;
+				} else {
+					scripts = Script.getScripts(response);
+				}
+			} catch (Pipeline2WSException e) {
+				Logger.error(e.getMessage(), e);
+				return "Something bad happened, try refreshing the page or ask a technician for help";
+			}
+			
+			for (Script script : scripts) {
+				String enabled = UserSetting.get(-2L, "scriptEnabled-"+script.id);
+				if ("false".equals(enabled)) {
+					scriptPermissions.put(script.id, false);
+				} else {
+					scriptPermissions.put(script.id, true);
+				}
+			}
+			
+			return scriptPermissions;
+		}
 	}
 
 	final static Form<GlobalPermissions> globalForm = play.data.Form.form(GlobalPermissions.class);
@@ -436,6 +469,17 @@ public class Administrator extends Controller {
 
 				} else {
 					Setting.set("users.guest.name", filledForm.field("name").valueOr("Guest"));
+					
+					Map<String, String[]> form = request().body().asFormUrlEncoded();
+					for (String fieldName : form.keySet()) {
+						if (fieldName.startsWith("user-users-guest-script-")) {
+							String scriptId = fieldName.substring("user-users-guest-script-".length());
+							String scriptEnabled = form.get(fieldName)[0];
+							UserSetting.set(-2L, "scriptEnabled-"+scriptId, scriptEnabled);
+							Logger.debug(scriptId+" - "+scriptEnabled);
+						}
+					}
+					
 					flash("success", "Guest was updated successfully!");
 					return redirect(routes.Administrator.getSettings());
 				}

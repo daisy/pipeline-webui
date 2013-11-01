@@ -16,6 +16,7 @@ import org.daisy.pipeline.client.models.script.Argument;
 import models.Setting;
 import models.Upload;
 import models.User;
+import models.UserSetting;
 
 import play.Logger;
 import play.mvc.*;
@@ -43,7 +44,13 @@ public class Scripts extends Controller {
 				error = response.asText();
 
 			} else {
-				scripts = Script.getScripts(response);
+				scripts = new ArrayList<Script>();
+				List<Script> allScripts = Script.getScripts(response);
+				for (Script script : allScripts) {
+					if (!"false".equals(UserSetting.get(user.id, "scriptEnabled-"+script.id))) {
+						scripts.add(script);
+					}
+				}
 			}
 		} catch (Pipeline2WSException e) {
 			Logger.error(e.getMessage(), e);
@@ -66,6 +73,10 @@ public class Scripts extends Controller {
 		User user = User.authenticate(request(), session());
 		if (user == null)
 			return redirect(routes.Login.login());
+		
+		if ("false".equals(UserSetting.get(user.id, "scriptEnabled-"+id))) {
+			return forbidden();
+		}
 		
 		Pipeline2WSResponse response;
 		Script script;
