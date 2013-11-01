@@ -142,6 +142,10 @@ public class Scripts extends Controller {
 		if (user == null)
 			return unauthorized("unauthorized");
 		
+		if ("false".equals(UserSetting.get(user.id, "scriptEnabled-"+id))) {
+			return forbidden();
+		}
+		
 		Pipeline2WSResponse response;
 		Script script = null;
 		String error = null;

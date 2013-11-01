@@ -2,6 +2,8 @@ package models;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import play.Logger;
 import play.db.ebean.*;
 
 import javax.persistence.*;
