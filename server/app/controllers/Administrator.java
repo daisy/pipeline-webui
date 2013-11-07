@@ -134,12 +134,6 @@ public class Administrator extends Controller {
 		@Required
 		public String uploaddir;
 
-		@Required
-		public String tempdir;
-
-		@Required
-		public String resultdir;
-
 		public static void validate(Form<SetStorageDirsForm> filledForm) {
 			String uploadPath = filledForm.field("uploaddir").valueOr("");
 			if (!uploadPath.endsWith(System.getProperty("file.separator")))
@@ -149,30 +143,6 @@ public class Administrator extends Controller {
 				filledForm.reject("uploaddir", "The directory does not exist.");
 			else if (!dir.isDirectory())
 				filledForm.reject("uploaddir", "The path does not point to a directory.");
-			
-			if (Application.getAlive() == null) {
-				filledForm.reject("tempdir", "Cannot determine whether or not the Pipeline 2 Engine is running in local mode.");
-				filledForm.reject("resultdir", "Cannot determine whether or not the Pipeline 2 Engine is running in local mode.");
-				
-			} else if (Application.getAlive().authentication) {
-				String tempPath = filledForm.field("tempdir").valueOr("");
-				if (!tempPath.endsWith(System.getProperty("file.separator")))
-					tempPath += System.getProperty("file.separator");
-				dir = new File(tempPath);
-				if (!dir.exists())
-					filledForm.reject("tempdir", "The directory does not exist.");
-				else if (!dir.isDirectory())
-					filledForm.reject("tempdir", "The path does not point to a directory.");
-				
-				String resultPath = filledForm.field("resultdir").valueOr("");
-				if (!resultPath.endsWith(System.getProperty("file.separator")))
-					resultPath += System.getProperty("file.separator");
-				dir = new File(resultPath);
-				if (!dir.exists())
-					filledForm.reject("resultdir", "The directory does not exist.");
-				else if (!dir.isDirectory())
-					filledForm.reject("resultdir", "The path does not point to a directory.");
-			}
 		}
 
 		public static void save(Form<SetStorageDirsForm> filledForm) {
@@ -180,16 +150,6 @@ public class Administrator extends Controller {
 			if (!uploadPath.endsWith(System.getProperty("file.separator")))
 				uploadPath += System.getProperty("file.separator");
 			Setting.set("uploads", uploadPath);
-
-			String tempdir = filledForm.field("tempdir").valueOr("");
-			if (tempdir.contains("/") && !tempdir.endsWith("/")) tempdir += "/";
-			if (tempdir.contains("\\") && !tempdir.endsWith("\\")) tempdir += "\\";
-			Setting.set("dp2ws.tempdir", tempdir);
-
-			String resultdir = filledForm.field("resultdir").valueOr("");
-			if (resultdir.contains("/") && !resultdir.endsWith("/")) resultdir += "/";
-			if (resultdir.contains("\\") && !resultdir.endsWith("\\")) resultdir += "\\";
-			Setting.set("dp2ws.resultdir", resultdir);
 		}
 	}
 
