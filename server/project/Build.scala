@@ -4,8 +4,12 @@ import play.Project._
 
 object ApplicationBuild extends Build {
 
-    val appName         = "daisy-pipeline-webui"
-    val appVersion      = "1.6.1-SNAPSHOT"
+    def fromEnv(name: String) = System.getenv(name) match {
+      case null => None
+      case value => Some(value)
+    }
+    val appName = fromEnv("project.artifactId").getOrElse("webui")
+    val appVersion = fromEnv("project.version").getOrElse("1.0-SNAPSHOT")
 
     val appDependencies = Seq(
       javaCore,

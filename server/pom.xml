@@ -12,7 +12,7 @@
 
   <groupId>org.daisy.pipeline</groupId>
   <artifactId>webui</artifactId>
-  <version>1.6.1-SNAPSHOT</version>
+  <version>1.7-SNAPSHOT</version>
   <!-- NOTE: remember to also update the version in project/Build.scala as well as the desktop POM -->
   <packaging>play2</packaging>
 
@@ -139,10 +139,11 @@
       <plugin>
         <groupId>org.nanoko.playframework</groupId>
         <artifactId>play2-maven-plugin</artifactId>
-        <version>1.2.2</version>
+        <version>1.2.3</version>
         <extensions>true</extensions>
         <configuration>
           <play2Home>${play.home}</play2Home>
+          <buildWar>false</buildWar>
         </configuration>
       </plugin>
 
@@ -208,10 +209,9 @@
               <tasks>
                 <echo message="Unzipping ZIP distributable created by Play 2.0..."/>
                 <unzip src="${project.build.directory}/webui-${project.version}.zip" dest="${project.build.directory}/webui-unpacked"/>
-                <move file="${project.build.directory}/webui-unpacked/daisy-pipeline-webui-${project.version}" tofile="${project.build.directory}/daisy-pipeline-webui"/>
+                <move file="${project.build.directory}/webui-unpacked/${project.artifactId}-${project.version}" tofile="${project.build.directory}/webui"/>
                 <delete file="${project.build.directory}/webui-${project.version}.zip"/>
                 <delete file="${project.build.directory}/webui-${project.version}.jar"/>
-                <delete file="${project.build.directory}/webui-${project.version}.war"/>
               </tasks>
             </configuration>
             <goals>
