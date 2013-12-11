@@ -13,7 +13,7 @@
 					    <div style="display:table-row;">
 					    	<div style="display:table-cell;">
 								<label for="@{arg.kind}-@{arg.name}-all" id="script-@scriptId-@{arg.kind}-@{arg.name}-all-label">Uploaded files</label>
-								<select style="width:auto;min-width:200px;" id="script-@scriptId-@{arg.kind}-@{arg.name}-all" multiple="multiple" size="10" class="all-files" aria-labelledby="@{arg.kind}-@{arg.name}-all-label @{arg.kind}-@{arg.name}-label">
+								<select style="width:100%;min-width:200px;" id="script-@scriptId-@{arg.kind}-@{arg.name}-all" multiple="multiple" size="10" class="all-files" aria-labelledby="@{arg.kind}-@{arg.name}-all-label @{arg.kind}-@{arg.name}-label">
 									<optgroup id="script-@scriptId-@{arg.kind}-@{arg.name}-suggested" label="Suggested files"></optgroup>
 									<optgroup id="script-@scriptId-@{arg.kind}-@{arg.name}-other" label="Other files"></optgroup>
 								</select>
@@ -32,7 +32,7 @@
 					    <div style="display:table-row;">
 					    	<div style="display:table-cell;">
 								<label for="@{arg.kind}-@{arg.name}-selected" id="script-@scriptId-@{arg.kind}-@{arg.name}-selected-label">Selected files</label>
-								<select style="width:auto;min-width:200px;" id="script-@scriptId-@{arg.kind}-@{arg.name}-selected" multiple="multiple" size="10" aria-labelledby="@{arg.kind}-@{arg.name}-selected-label @{arg.kind}-@{arg.name}-label">
+								<select style="width:100%;min-width:200px;" id="script-@scriptId-@{arg.kind}-@{arg.name}-selected" multiple="multiple" size="10" aria-labelledby="@{arg.kind}-@{arg.name}-selected-label @{arg.kind}-@{arg.name}-label">
 								</select>
 							</div>
 							<div style="display:table-cell;vertical-align:middle;min-width:40px;">
@@ -128,10 +128,10 @@
 							}
 							
 							if (matchingContentType) {
-								$("#script-@scriptId-@{arg.kind}-@{arg.name}-selected").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>')
+								$("#script-@scriptId-@{arg.kind}-@{arg.name}-selected").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'" title="'+file.fileName+'">'+file.fileName+'</option>')
 								);
 							} else {
-								$("#script-@scriptId-@{arg.kind}-@{arg.name}-other").append($('<option class="wrongContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>')
+								$("#script-@scriptId-@{arg.kind}-@{arg.name}-other").append($('<option class="wrongContentType" value="upload'+id+'-file'+f+'" title="'+file.fileName+'">'+file.fileName+'</option>')
 								);
 							}
 							
@@ -200,12 +200,12 @@
 							
 							if (matchingContentType) {
 								if (!selectedSomething) {
-									$("#script-@scriptId-@{arg.kind}-@{arg.name}-suggested").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'" selected="">'+file.fileName+'</option>'));
+									$("#script-@scriptId-@{arg.kind}-@{arg.name}-suggested").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'" title="'+file.fileName+'" selected="">'+file.fileName+'</option>'));
 								} else {
-									$("#script-@scriptId-@{arg.kind}-@{arg.name}-suggested").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>'));
+									$("#script-@scriptId-@{arg.kind}-@{arg.name}-suggested").append($('<option class="rightContentType" value="upload'+id+'-file'+f+'" title="'+file.fileName+'">'+file.fileName+'</option>'));
 								}
 							} else {
-								$("#script-@scriptId-@{arg.kind}-@{arg.name}-other").append($('<option class="wrongContentType" value="upload'+id+'-file'+f+'">'+file.fileName+'</option>')
+								$("#script-@scriptId-@{arg.kind}-@{arg.name}-other").append($('<option class="wrongContentType" value="upload'+id+'-file'+f+'" title="'+file.fileName+'">'+file.fileName+'</option>')
 								);
 							}
 							
