@@ -12,7 +12,7 @@
   
   <groupId>org.daisy.pipeline</groupId>
   <artifactId>webui-desktop</artifactId>
-  <version>1.6.1-SNAPSHOT</version>
+  <version>1.7-SNAPSHOT</version>
   <!-- NOTE: remember to also update the version in project/Build.scala as well as the server POM -->
   <packaging>pom</packaging>
   
@@ -42,7 +42,7 @@
                   <version>${project.version}</version>
                   <type>zip</type>
                   <overWrite>true</overWrite>
-                  <outputDirectory>target/webui</outputDirectory>
+                  <outputDirectory>target</outputDirectory>
                 </artifactItem>
               </artifactItems>
               <overWriteReleases>false</overWriteReleases>

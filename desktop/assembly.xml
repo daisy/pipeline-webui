@@ -5,12 +5,12 @@
         <format>zip</format>
         <format>dir</format>
     </formats>
-    <includeBaseDirectory>false</includeBaseDirectory>
+    <baseDirectory>daisy-pipeline-webui</baseDirectory>
     <fileSets>
         
         <!-- Copy server version of the Web UI, except for the default database and start scripts -->
         <fileSet>
-            <directory>target/webui/daisy-pipeline-webui</directory>
+            <directory>target/daisy-pipeline-webui</directory>
             <excludes>
                 <exclude>dp2webui/**</exclude>
                 <exclude>start</exclude>
