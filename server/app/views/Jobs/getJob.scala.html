@@ -269,7 +269,7 @@
 				$(".results-buttons").empty();
 				$("#result-reports").empty();
 				
-				$("#results-download-all").append($("<a class=\"btn btn-success\" href=\""+"@routes.Jobs.getResult(fwkJob.id,"")"+results.relativeHref.substring(7)+"\"><span class=\"icon-download-alt icon-white\"></span> Download all results</a>"));
+				$("#results-download-all").append($("<a class=\"btn btn-success\" href=\""+"@routes.Jobs.getAllResults(fwkJob.id)"+"\"><span class=\"icon-download-alt icon-white\"></span> Download all results</a>"));
 				for (i = 0; i < results.results.length; i++) {
 					if (results.results[i].results === null || results.results[i].results.length === 0 || results.results[i].results[0].mimeType.indexOf("application/vnd.pipeline") !== 0) {
 						$("#results-list").append(updateResultsList(results.results[i]));

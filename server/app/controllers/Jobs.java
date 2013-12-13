@@ -27,6 +27,8 @@ import models.UserSetting;
 import org.codehaus.jackson.JsonNode;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
+import org.daisy.pipeline.client.Pipeline2WSLogger;
+import org.daisy.pipeline.client.Pipeline2WSLoggerImpl;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.script.Argument;
@@ -211,6 +213,10 @@ public class Jobs extends Controller {
 		return ok(jobJson);
 	}
 	
+	public static Result getAllResults(String id) {
+		return getResult(id, null);
+	}
+	
 	public static Result getResult(String id, String href) {
 		if (FirstUse.isFirstUse())
 			return redirect(routes.FirstUse.getFirstUse());
@@ -233,7 +239,7 @@ public class Jobs extends Controller {
 		try {
 			Logger.info("retrieving result from Pipeline 2 engine...");
 			
-			Logger.debug("href: "+href);
+			Logger.debug("href: "+(href==null?"[null]":href));
 			
 			Pipeline2WSResponse result = org.daisy.pipeline.client.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, href);
 			
@@ -242,18 +248,21 @@ public class Jobs extends Controller {
 			Logger.debug(result.statusDescription);
 			Logger.debug(result.statusName);
 			Logger.debug(result.status+"");
-//			Logger.debug("result size: "+result.asText().length());
+			Logger.debug(result.size+"");
 			
 			if (result.status != 200) {
 				return badRequest();
 			}
 			
-			String filename = webuiJob.nicename.replaceAll("[^\\w \\.,]+","-").subSequence(0, webuiJob.nicename.length())+"-"+href.replaceAll("[^\\w \\.,]+", "_");
+			String filename = webuiJob.nicename.replaceAll("[^\\w \\.,]+","-").subSequence(0, webuiJob.nicename.length())+(href==null?"":"-"+href.replaceAll("[^\\w \\.,]+", "_"));
 			if ("application/zip".equals(result.contentType)) {
 				filename += ".zip";
 			}
-//			response().setHeader("Content-Disposition", "attachment; filename=\""+filename);
 			response().setHeader("Content-Disposition", "filename=\""+filename);
+			if (result.size != null)
+				response().setHeader("Content-Length", result.size.toString());
+			else
+				Logger.debug("content size unknown (result.size="+result.size+")");
 			
 			String parse = request().getQueryString("parse");
 			if ("report".equals(parse)) {
