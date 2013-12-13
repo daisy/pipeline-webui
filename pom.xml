@@ -7,12 +7,12 @@
     <groupId>org.daisy</groupId>
     <artifactId>daisy</artifactId>
     <version>2</version>
-    <relativePath/>
+    <relativePath />
   </parent>
   
   <groupId>org.daisy.pipeline</groupId>
   <artifactId>webui-aggregator</artifactId>
-  <version>1.7-SNAPSHOT</version>
+  <version>1.7</version>
 
   <!-- NOTE: the actual version is set in project/Build.scala, desktop/pom.xml and server/pom.xml -->
   <packaging>pom</packaging>
@@ -24,4 +24,8 @@
     <module>desktop</module>
   </modules>
   
+
+  <scm>
+    <tag>v1.7</tag>
+  </scm>
 </project>
