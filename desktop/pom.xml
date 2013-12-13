@@ -12,7 +12,7 @@
   
   <groupId>org.daisy.pipeline</groupId>
   <artifactId>webui-desktop</artifactId>
-  <version>1.7</version>
+  <version>1.8-SNAPSHOT</version>
   <!-- NOTE: remember to also update the version in project/Build.scala as well as the server POM -->
   <packaging>pom</packaging>
   
@@ -81,9 +81,4 @@
       <type>zip</type>
     </dependency>
   </dependencies>
-  
-
-  <scm>
-    <tag>v1.7</tag>
-  </scm>
 </project>

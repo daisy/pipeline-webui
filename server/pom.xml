@@ -12,7 +12,7 @@
 
   <groupId>org.daisy.pipeline</groupId>
   <artifactId>webui</artifactId>
-  <version>1.7</version>
+  <version>1.8-SNAPSHOT</version>
   <!-- NOTE: remember to also update the version in project/Build.scala as well as the desktop POM -->
   <packaging>play2</packaging>
 
@@ -251,8 +251,4 @@
 
     </plugins>
   </build>
-
-  <scm>
-    <tag>v1.7</tag>
-  </scm>
 </project>
