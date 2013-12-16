@@ -7,12 +7,12 @@
     <groupId>org.daisy</groupId>
     <artifactId>daisy</artifactId>
     <version>2</version>
-    <relativePath/>
+    <relativePath />
   </parent>
 
   <groupId>org.daisy.pipeline</groupId>
   <artifactId>webui</artifactId>
-  <version>1.7-SNAPSHOT</version>
+  <version>1.8-SNAPSHOT</version>
   <!-- NOTE: remember to also update the version in project/Build.scala as well as the desktop POM -->
   <packaging>play2</packaging>
 
@@ -100,7 +100,7 @@
     <dependency>
         <groupId>org.daisy.pipeline</groupId>
         <artifactId>clientlib-java</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0.0</version>
     </dependency>
     
     <dependency>
@@ -169,28 +169,28 @@
             <phase>initialize</phase>
             <configuration>
               <target>
-                <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+                <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
                 <if>
-                  <available file="${env.PLAY2_HOME}" type="dir"/>
+                  <available file="${env.PLAY2_HOME}" type="dir" />
                   <then>
                     <echo>PLAY2_HOME is set, using pre-installed version from ${env.PLAY2_HOME}</echo>
-                    <property name="play.home" value="${env.PLAY2_HOME}"/>
+                    <property name="play.home" value="${env.PLAY2_HOME}" />
                   </then>
                   <else>
                     <if>
-                      <available file="${project.build.directory}/play-${play.version}" type="dir"/>
+                      <available file="${project.build.directory}/play-${play.version}" type="dir" />
                       <then>
                         <echo>Play! Framework ${play.version} is already present in build directory</echo>
                       </then>
                       <else>
                         <echo>Play! Framework ${play.version} is not installed, will download for this build...</echo>
-                        <get src="http://downloads.typesafe.com/play/${play.version}/play-${play.version}.zip" dest="${project.build.directory}/play-${play.version}.zip"/>
-                        <unzip src="${project.build.directory}/play-${play.version}.zip" dest="${project.build.directory}"/>
-                        <chmod file="${project.build.directory}/play-${play.version}/play" perm="755"/>
-                        <chmod file="${project.build.directory}/play-${play.version}/framework/*" perm="755"/>
+                        <get src="http://downloads.typesafe.com/play/${play.version}/play-${play.version}.zip" dest="${project.build.directory}/play-${play.version}.zip" />
+                        <unzip src="${project.build.directory}/play-${play.version}.zip" dest="${project.build.directory}" />
+                        <chmod file="${project.build.directory}/play-${play.version}/play" perm="755" />
+                        <chmod file="${project.build.directory}/play-${play.version}/framework/*" perm="755" />
                       </else>
                     </if>
-                    <property name="play.home" value="${project.build.directory}/play-${play.version}"/>
+                    <property name="play.home" value="${project.build.directory}/play-${play.version}" />
                   </else>
                 </if>
               </target>
@@ -207,11 +207,11 @@
             <phase>package</phase>
             <configuration>
               <tasks>
-                <echo message="Unzipping ZIP distributable created by Play 2.0..."/>
-                <unzip src="${project.build.directory}/webui-${project.version}.zip" dest="${project.build.directory}/webui-unpacked"/>
-                <move file="${project.build.directory}/webui-unpacked/${project.artifactId}-${project.version}" tofile="${project.build.directory}/webui"/>
-                <delete file="${project.build.directory}/webui-${project.version}.zip"/>
-                <delete file="${project.build.directory}/webui-${project.version}.jar"/>
+                <echo message="Unzipping ZIP distributable created by Play 2.0..." />
+                <unzip src="${project.build.directory}/webui-${project.version}.zip" dest="${project.build.directory}/webui-unpacked" />
+                <move file="${project.build.directory}/webui-unpacked/${project.artifactId}-${project.version}" tofile="${project.build.directory}/webui" />
+                <delete file="${project.build.directory}/webui-${project.version}.zip" />
+                <delete file="${project.build.directory}/webui-${project.version}.jar" />
               </tasks>
             </configuration>
             <goals>
