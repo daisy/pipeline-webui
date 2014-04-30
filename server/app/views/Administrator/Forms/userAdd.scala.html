@@ -71,7 +71,9 @@
 			@if(Setting.get("mail.enable") == "false") {
 				<div class="form-actions">
 					<button class="btn btn-primary" id="createUser-submit" type="submit" name="submit" disabled="">Create user</button>
-					<span class="help-inline">An e-mail will be sent to the user with a link to a page where the user can set up their password.</span>
+					@if(Setting.get("mail.enable") == "true") {
+						<span class="help-inline">An e-mail will be sent to the user with a link to a page where the user can set up their password.</span>
+					}
 				</div>
 			}
 			

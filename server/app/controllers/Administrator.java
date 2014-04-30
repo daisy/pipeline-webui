@@ -358,404 +358,406 @@ public class Administrator extends Controller {
 		String formName = request().queryString().containsKey("formName") ? request().queryString().get("formName")[0] :
 			request().body().asFormUrlEncoded().containsKey("formName") ? request().body().asFormUrlEncoded().get("formName")[0] :
 				null;
-			if (formName == null) {
-				flash("error", "Form not found. Submitted information ignored :(");
-				redirect(routes.Administrator.getSettings());
-			}
-
+		if (formName == null) {
+			flash("error", "Form not found. Submitted information ignored :(");
+			redirect(routes.Administrator.getSettings());
+		}
+		
+		if (!query.containsKey("validate")) {
 			flash("settings.formName", formName);
+		}
 
-			if ("updateGlobalPermissions".equals(formName)) {
-				Form<GlobalPermissions> filledForm = globalForm.bindFromRequest();
-				//			GlobalPermissions.validate(filledForm);
+		if ("updateGlobalPermissions".equals(formName)) {
+			Form<GlobalPermissions> filledForm = globalForm.bindFromRequest();
+			//			GlobalPermissions.validate(filledForm);
 
-				flash("settings.usertab", "global");
-				
-				if (query.containsKey("validate")) {
-					User.flashBrowserId(user);
-					return ok(FormHelper.asJson(filledForm));
-				
-				} else if (filledForm.hasErrors()) {
-					forms.globalForm = filledForm;
-					List<User> users = User.find.orderBy("admin, name, email").findList();
-					User.flashBrowserId(user);
-					return badRequest(views.html.Administrator.settings.render(forms, users));
+			flash("settings.usertab", "global");
+			
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(user);
+				return ok(FormHelper.asJson(filledForm));
+			
+			} else if (filledForm.hasErrors()) {
+				forms.globalForm = filledForm;
+				List<User> users = User.find.orderBy("admin, name, email").findList();
+				User.flashBrowserId(user);
+				return badRequest(views.html.Administrator.settings.render(forms, users));
+
+			} else {
+				String login = filledForm.field("login").valueOr("deny");
+				if ("automatic".equals(login)) {
+					Setting.set("users.guest.allowGuests", "true");
+					Setting.set("users.guest.automaticLogin", "true");
+					Setting.set("users.guest.showGuestName", "false");
+					Setting.set("users.guest.shareJobs", "true");
+					Setting.set("users.guest.showEmailBox", "false");
+
+				} else if ("allow".equals(login)) {
+					Setting.set("users.guest.allowGuests", "true");
+					Setting.set("users.guest.automaticLogin", "false");
+					Setting.set("users.guest.showGuestName", "true");
+					Setting.set("users.guest.shareJobs", "false");
+					Setting.set("users.guest.showEmailBox", "true");
 
 				} else {
-					String login = filledForm.field("login").valueOr("deny");
-					if ("automatic".equals(login)) {
-						Setting.set("users.guest.allowGuests", "true");
-						Setting.set("users.guest.automaticLogin", "true");
-						Setting.set("users.guest.showGuestName", "false");
-						Setting.set("users.guest.shareJobs", "true");
-						Setting.set("users.guest.showEmailBox", "false");
+					Setting.set("users.guest.allowGuests", "false");
+					Setting.set("users.guest.automaticLogin", "false");
+					Setting.set("users.guest.showGuestName", "true");
+					Setting.set("users.guest.shareJobs", "false");
+					Setting.set("users.guest.showEmailBox", "false");
+				}
 
-					} else if ("allow".equals(login)) {
-						Setting.set("users.guest.allowGuests", "true");
-						Setting.set("users.guest.automaticLogin", "false");
-						Setting.set("users.guest.showGuestName", "true");
-						Setting.set("users.guest.shareJobs", "false");
-						Setting.set("users.guest.showEmailBox", "true");
+				Setting.set("jobs.hideAdvancedOptions", filledForm.field("hideAdvancedOptions").valueOr("false"));
+				flash("success", "Global permissions was updated successfully!");
+				return redirect(routes.Administrator.getSettings());
+			}
+		}
 
-					} else {
-						Setting.set("users.guest.allowGuests", "false");
-						Setting.set("users.guest.automaticLogin", "false");
-						Setting.set("users.guest.showGuestName", "true");
-						Setting.set("users.guest.shareJobs", "false");
-						Setting.set("users.guest.showEmailBox", "false");
+		if ("updateGuest".equals(formName)) {
+			Form<GuestUser> filledForm = guestForm.bindFromRequest();
+			//			GuestUser.validate(filledForm);
+
+			flash("settings.usertab", "guest");
+			
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(user);
+				return ok(FormHelper.asJson(filledForm));
+			
+			} else if (filledForm.hasErrors()) {
+				forms.guestForm = filledForm;
+				List<User> users = User.find.orderBy("admin, name, email").findList();
+				User.flashBrowserId(user);
+				return badRequest(views.html.Administrator.settings.render(forms, users));
+
+			} else {
+				Setting.set("users.guest.name", filledForm.field("name").valueOr("Guest"));
+				
+				Map<String, String[]> form = request().body().asFormUrlEncoded();
+				for (String fieldName : form.keySet()) {
+					if (fieldName.startsWith("user-users-guest-script-")) {
+						String scriptId = fieldName.substring("user-users-guest-script-".length());
+						String scriptEnabled = form.get(fieldName)[0];
+						UserSetting.set(-2L, "scriptEnabled-"+scriptId, scriptEnabled);
+						Logger.debug(scriptId+" - "+scriptEnabled);
+					}
+				}
+				
+				flash("success", "Guest was updated successfully!");
+				return redirect(routes.Administrator.getSettings());
+			}
+		}
+
+		if ("updateUser".equals(formName)) {
+			Form<User> filledForm = userForm.bindFromRequest();
+			Long userId = request().queryString().containsKey("userid") ? Long.parseLong(request().queryString().get("userid")[0])
+					: request().body().asFormUrlEncoded().containsKey("userid") ? Long.parseLong(request().body().asFormUrlEncoded().get("userid")[0])
+							: 0L;
+			flash("settings.usertab", ""+userId);
+
+			User updateUser = User.findById(userId);
+			if (updateUser == null) {
+				flash("success", "Hmm, that's weird; the user was not found. Nothing was changed...");
+				return redirect(routes.Administrator.getSettings());
+			}
+			
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(user);
+				return ok(FormHelper.asJson(filledForm,new String[]{"password"}));
+			
+			} else if (filledForm.hasErrors()) {
+				List<User> users = User.find.orderBy("admin, name, email").findList();
+				forms.userForm = filledForm;
+				flash("error", "Could not edit user, please review the form and make sure it is filled out properly.");
+				User.flashBrowserId(user);
+				return badRequest(views.html.Administrator.settings.render(forms, users));
+
+			} else {
+				updateUser.name = filledForm.field("name").valueOr("");
+				updateUser.admin = filledForm.field("admin").valueOr("").equals("true");
+
+				String oldEmail = updateUser.email;
+				updateUser.email = filledForm.field("email").valueOr("");
+
+				if ("true".equals(Setting.get("mail.enable"))) {
+					if (!updateUser.email.equals(oldEmail)) {
+						updateUser.active = false;
+						updateUser.makeNewActivationUid();
+
+						String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(updateUser.email, updateUser.getActivationUid()).absoluteURL(request()));
+						String html = views.html.Account.emailActivate.render(activateUrl).body();
+						String text = "Go to this link to activate your account: " + activateUrl;
+						if (!Account.sendEmail("Activate your account", html, text, updateUser.name, updateUser.email))
+							flash("error", "Was unable to send the e-mail.");
 					}
 
-					Setting.set("jobs.hideAdvancedOptions", filledForm.field("hideAdvancedOptions").valueOr("false"));
-					flash("success", "Global permissions was updated successfully!");
-					return redirect(routes.Administrator.getSettings());
+				} else {
+					String newPassword = filledForm.field("password").valueOr("");
+					if (newPassword.length() > 0)
+						updateUser.setPassword(newPassword);
 				}
+
+				updateUser.save(Application.datasource);
+				if (updateUser.id.equals(user.id)) {
+					session("name", user.name);
+					session("email", user.email);
+				}
+
+				flash("success", "Your changes were saved successfully!");
+				return redirect(routes.Administrator.getSettings());
+			}
+		}
+
+		if ("resetPassword".equals(formName)) {
+			Long userId = request().queryString().containsKey("userid") ? Long.parseLong(request().queryString().get("userid")[0])
+					: request().body().asFormUrlEncoded().containsKey("userid") ? Long.parseLong(request().body().asFormUrlEncoded().get("userid")[0])
+							: 0L;
+			flash("settings.usertab", userId + "");
+
+			User resetUser = User.findById(userId);
+
+			if (resetUser.active) {
+				resetUser.makeNewActivationUid();
+				resetUser.save(Application.datasource);
+				String resetUrl = Application.absoluteURL(routes.Account.showResetPasswordForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request()));
+				String html = views.html.Account.emailResetPassword.render(resetUrl).body();
+				String text = "Go to this link to change your password: " + resetUrl;
+				if (Account.sendEmail("Reset your password", html, text, resetUser.name, resetUser.email))
+					flash("success", "A password reset link was sent to " + resetUser.name);
+				else
+					flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
+
+			} else {
+				resetUser.makeNewActivationUid();
+				resetUser.save(Application.datasource);
+				String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request()));
+				String html = views.html.Account.emailActivate.render(activateUrl).body();
+				String text = "Go to this link to activate your account: " + activateUrl;
+
+				if (Account.sendEmail("Activate your account", html, text, resetUser.name, resetUser.email))
+					flash("success", "An account activation link was sent to " + resetUser.name);
+				else
+					flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
 			}
 
-			if ("updateGuest".equals(formName)) {
-				Form<GuestUser> filledForm = guestForm.bindFromRequest();
-				//			GuestUser.validate(filledForm);
+			return redirect(routes.Administrator.getSettings());
+		}
 
-				flash("settings.usertab", "guest");
-				
-				if (query.containsKey("validate")) {
-					User.flashBrowserId(user);
-					return ok(FormHelper.asJson(filledForm));
-				
-				} else if (filledForm.hasErrors()) {
-					forms.guestForm = filledForm;
-					List<User> users = User.find.orderBy("admin, name, email").findList();
-					User.flashBrowserId(user);
-					return badRequest(views.html.Administrator.settings.render(forms, users));
+		if ("deleteUser".equals(formName)) {
+			Long userId = request().queryString().containsKey("userid") ? Long.parseLong(request().queryString().get("userid")[0])
+					: request().body().asFormUrlEncoded().containsKey("userid") ? Long.parseLong(request().body().asFormUrlEncoded().get("userid")[0])
+							: 0L;
 
-				} else {
-					Setting.set("users.guest.name", filledForm.field("name").valueOr("Guest"));
-					
-					Map<String, String[]> form = request().body().asFormUrlEncoded();
-					for (String fieldName : form.keySet()) {
-						if (fieldName.startsWith("user-users-guest-script-")) {
-							String scriptId = fieldName.substring("user-users-guest-script-".length());
-							String scriptEnabled = form.get(fieldName)[0];
-							UserSetting.set(-2L, "scriptEnabled-"+scriptId, scriptEnabled);
-							Logger.debug(scriptId+" - "+scriptEnabled);
-						}
-					}
-					
-					flash("success", "Guest was updated successfully!");
-					return redirect(routes.Administrator.getSettings());
-				}
+			User deleteUser = User.findById(userId);
+
+			if (deleteUser == null) {
+				flash("success", "Hmm, that's weird. The user was not found; nothing was changed...");
+				return redirect(routes.Administrator.getSettings());
 			}
 
-			if ("updateUser".equals(formName)) {
-				Form<User> filledForm = userForm.bindFromRequest();
-				Long userId = request().queryString().containsKey("userid") ? Long.parseLong(request().queryString().get("userid")[0])
-						: request().body().asFormUrlEncoded().containsKey("userid") ? Long.parseLong(request().body().asFormUrlEncoded().get("userid")[0])
-								: 0L;
-				flash("settings.usertab", ""+userId);
+			flash("settings.usertab", deleteUser.id + "");
 
-				User updateUser = User.findById(userId);
-				if (updateUser == null) {
-					flash("success", "Hmm, that's weird; the user was not found. Nothing was changed...");
-					return redirect(routes.Administrator.getSettings());
-				}
-				
-				if (query.containsKey("validate")) {
-					User.flashBrowserId(user);
-					return ok(FormHelper.asJson(filledForm,new String[]{"password"}));
-				
-				} else if (filledForm.hasErrors()) {
-					List<User> users = User.find.orderBy("admin, name, email").findList();
-					forms.userForm = filledForm;
-					flash("error", "Could not edit user, please review the form and make sure it is filled out properly.");
-					User.flashBrowserId(user);
-					return badRequest(views.html.Administrator.settings.render(forms, users));
-
-				} else {
-					updateUser.name = filledForm.field("name").valueOr("");
-					updateUser.admin = filledForm.field("admin").valueOr("").equals("true");
-
-					String oldEmail = updateUser.email;
-					updateUser.email = filledForm.field("email").valueOr("");
-
-					if ("true".equals(Setting.get("mail.enable"))) {
-						if (!updateUser.email.equals(oldEmail)) {
-							updateUser.active = false;
-							updateUser.makeNewActivationUid();
-
-							String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(updateUser.email, updateUser.getActivationUid()).absoluteURL(request()));
-							String html = views.html.Account.emailActivate.render(activateUrl).body();
-							String text = "Go to this link to activate your account: " + activateUrl;
-							if (!Account.sendEmail("Activate your account", html, text, updateUser.name, updateUser.email))
-								flash("error", "Was unable to send the e-mail.");
-						}
-
-					} else {
-						String newPassword = filledForm.field("password").valueOr("");
-						if (newPassword.length() > 0)
-							updateUser.setPassword(newPassword);
-					}
-
-					updateUser.save(Application.datasource);
-					if (updateUser.id.equals(user.id)) {
-						session("name", user.name);
-						session("email", user.email);
-					}
-
-					flash("success", "Your changes were saved successfully!");
-					return redirect(routes.Administrator.getSettings());
-				}
+			if (deleteUser.id.equals(user.id)) {
+				flash("error", "Only other admins can delete you, you cannot do it yourself");
+				return redirect(routes.Administrator.getSettings());
 			}
 
-			if ("resetPassword".equals(formName)) {
-				Long userId = request().queryString().containsKey("userid") ? Long.parseLong(request().queryString().get("userid")[0])
-						: request().body().asFormUrlEncoded().containsKey("userid") ? Long.parseLong(request().body().asFormUrlEncoded().get("userid")[0])
-								: 0L;
-				flash("settings.usertab", userId + "");
+			deleteUser.delete(Application.datasource);
+			flash("settings.usertab", "global");
+			flash("success", deleteUser.name + " was deleted");
+			return redirect(routes.Administrator.getSettings());
+		}
 
-				User resetUser = User.findById(userId);
+		if ("createUser".equals(formName)) {
+			Form<User> filledForm = userForm.bindFromRequest();
+			User.validateNew(filledForm);
+			
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(user);
+				return ok(FormHelper.asJson(filledForm,new String[]{"password"}));
+			
+			} else if (filledForm.hasErrors()) {
+				flash("settings.usertab", "adduser");
+				List<User> users = User.find.orderBy("admin, name, email").findList();
+				forms.userForm = filledForm;
+				User.flashBrowserId(user);
+				return badRequest(views.html.Administrator.settings.render(forms, users));
 
-				if (resetUser.active) {
-					resetUser.makeNewActivationUid();
-					resetUser.save(Application.datasource);
-					String resetUrl = Application.absoluteURL(routes.Account.showResetPasswordForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request()));
-					String html = views.html.Account.emailResetPassword.render(resetUrl).body();
-					String text = "Go to this link to change your password: " + resetUrl;
-					if (Account.sendEmail("Reset your password", html, text, resetUser.name, resetUser.email))
-						flash("success", "A password reset link was sent to " + resetUser.name);
-					else
-						flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
+			} else {
+				User newUser = new User(filledForm.field("email").valueOr(""),
+						filledForm.field("name").valueOr(""),
+						"true".equals(Setting.get("mail.enable")) ? "" : filledForm.field("password").valueOr(""),
+								filledForm.field("admin").valueOr("").equals("true"));
+				newUser.makeNewActivationUid();
+				newUser.save(Application.datasource);
 
-				} else {
-					resetUser.makeNewActivationUid();
-					resetUser.save(Application.datasource);
-					String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request()));
+				if ("true".equals(Setting.get("mail.enable"))) {
+					String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(newUser.email, newUser.getActivationUid()).absoluteURL(request()));
 					String html = views.html.Account.emailActivate.render(activateUrl).body();
 					String text = "Go to this link to activate your account: " + activateUrl;
 
-					if (Account.sendEmail("Activate your account", html, text, resetUser.name, resetUser.email))
-						flash("success", "An account activation link was sent to " + resetUser.name);
-					else
-						flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
+					if (!Account.sendEmail("Activate your account", html, text, newUser.name, newUser.email))
+						flash("error", "Was unable to send the e-mail. :(");
+
 				}
+
+				flash("settings.usertab", newUser.id  + "");
+				flash("success", "User " + newUser.name + " created successfully!");
 
 				return redirect(routes.Administrator.getSettings());
 			}
+		}
 
-			if ("deleteUser".equals(formName)) {
-				Long userId = request().queryString().containsKey("userid") ? Long.parseLong(request().queryString().get("userid")[0])
-						: request().body().asFormUrlEncoded().containsKey("userid") ? Long.parseLong(request().body().asFormUrlEncoded().get("userid")[0])
-								: 0L;
-
-				User deleteUser = User.findById(userId);
-
-				if (deleteUser == null) {
-					flash("success", "Hmm, that's weird. The user was not found; nothing was changed...");
-					return redirect(routes.Administrator.getSettings());
+		if ("setWS".equals(formName)) {
+			Form<Administrator.SetWSForm> filledForm = setWSForm.bindFromRequest();
+			Administrator.SetWSForm.validate(filledForm);
+			
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(user);
+				try {
+					return ok(FormHelper.asJson(filledForm));
+				} catch (RuntimeException e) {
+					Logger.error("validation failed", e);
+					return internalServerError("validation failed");
 				}
+			
+			} else if (filledForm.hasErrors()) {
+				List<User> users = User.find.orderBy("admin, name, email").findList();
+				forms.setWSForm = filledForm;
+				User.flashBrowserId(user);
+				return badRequest(views.html.Administrator.settings.render(forms, users));
 
-				flash("settings.usertab", deleteUser.id + "");
-
-				if (deleteUser.id.equals(user.id)) {
-					flash("error", "Only other admins can delete you, you cannot do it yourself");
-					return redirect(routes.Administrator.getSettings());
-				}
-
-				deleteUser.delete(Application.datasource);
-				flash("settings.usertab", "global");
-				flash("success", deleteUser.name + " was deleted");
+			} else {
+				Administrator.SetWSForm.save(filledForm);
+				flash("success", "Pipeline 2 Web API endpoint changed successfully!");
 				return redirect(routes.Administrator.getSettings());
 			}
+		}
 
-			if ("createUser".equals(formName)) {
-				Form<User> filledForm = userForm.bindFromRequest();
-				User.validateNew(filledForm);
-				
-				if (query.containsKey("validate")) {
-					User.flashBrowserId(user);
-					return ok(FormHelper.asJson(filledForm,new String[]{"password"}));
-				
-				} else if (filledForm.hasErrors()) {
-					flash("settings.usertab", "adduser");
-					List<User> users = User.find.orderBy("admin, name, email").findList();
-					forms.userForm = filledForm;
-					User.flashBrowserId(user);
-					return badRequest(views.html.Administrator.settings.render(forms, users));
+		if ("setStorageDirs".equals(formName)) {
+			Form<Administrator.SetStorageDirsForm> filledForm = setStorageDirsForm.bindFromRequest();
+			Administrator.SetStorageDirsForm.validate(filledForm);
+			
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(user);
+				return ok(FormHelper.asJson(filledForm));
+			
+			} else if (filledForm.hasErrors()) {
+				List<User> users = User.find.orderBy("admin, name, email").findList();
+				forms.setStorageDirsForm = filledForm;
+				User.flashBrowserId(user);
+				return badRequest(views.html.Administrator.settings.render(forms, users));
 
-				} else {
-					User newUser = new User(filledForm.field("email").valueOr(""),
-							filledForm.field("name").valueOr(""),
-							"true".equals(Setting.get("mail.enable")) ? "" : filledForm.field("password").valueOr(""),
-									filledForm.field("admin").valueOr("").equals("true"));
-					newUser.makeNewActivationUid();
-					newUser.save(Application.datasource);
-
-					if ("true".equals(Setting.get("mail.enable"))) {
-						String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(newUser.email, newUser.getActivationUid()).absoluteURL(request()));
-						String html = views.html.Account.emailActivate.render(activateUrl).body();
-						String text = "Go to this link to activate your account: " + activateUrl;
-
-						if (!Account.sendEmail("Activate your account", html, text, newUser.name, newUser.email))
-							flash("error", "Was unable to send the e-mail. :(");
-
-					}
-
-					flash("settings.usertab", newUser.id  + "");
-					flash("success", "User " + newUser.name + " created successfully!");
-
-					return redirect(routes.Administrator.getSettings());
-				}
+			} else {
+				Administrator.SetStorageDirsForm.save(filledForm);
+				flash("success", "Uploads directory changed successfully!");
+				return redirect(routes.Administrator.getSettings());
 			}
+		}
 
-			if ("setWS".equals(formName)) {
-				Form<Administrator.SetWSForm> filledForm = setWSForm.bindFromRequest();
-				Administrator.SetWSForm.validate(filledForm);
-				
-				if (query.containsKey("validate")) {
-					User.flashBrowserId(user);
-					try {
-						return ok(FormHelper.asJson(filledForm));
-					} catch (RuntimeException e) {
-						Logger.error("validation failed", e);
-						return internalServerError("validation failed");
-					}
-				
-				} else if (filledForm.hasErrors()) {
-					List<User> users = User.find.orderBy("admin, name, email").findList();
-					forms.setWSForm = filledForm;
-					User.flashBrowserId(user);
-					return badRequest(views.html.Administrator.settings.render(forms, users));
+		if ("configureEmail".equals(formName)) {
+			Form<Administrator.ConfigureEmailForm> filledForm = configureEmailForm.bindFromRequest();
+			Administrator.ConfigureEmailForm.validate(filledForm);
+			
+			if (filledForm.field("enable").value() != null) {
+				Setting.set("mail.enable", filledForm.field("enable").valueOr(""));
+				flash("success", "E-mail is now "+("true".equals(filledForm.field("enable").valueOr("false"))?"enabled":"disabled")+".");
+				return redirect(routes.Administrator.getSettings());
 
-				} else {
-					Administrator.SetWSForm.save(filledForm);
-					flash("success", "Pipeline 2 Web API endpoint changed successfully!");
-					return redirect(routes.Administrator.getSettings());
-				}
-			}
+			} else if (filledForm.field("absoluteURL").value() != null) {
+				Setting.set("absoluteURL", filledForm.field("absoluteURL").valueOr(""));
+				flash("success", "Absolute URL was successfully changed to "+filledForm.field("absoluteURL").valueOr("")+".");
+				return redirect(routes.Administrator.getSettings());
 
-			if ("setStorageDirs".equals(formName)) {
-				Form<Administrator.SetStorageDirsForm> filledForm = setStorageDirsForm.bindFromRequest();
-				Administrator.SetStorageDirsForm.validate(filledForm);
+			} else {
 				
 				if (query.containsKey("validate")) {
 					User.flashBrowserId(user);
 					return ok(FormHelper.asJson(filledForm));
-				
-				} else if (filledForm.hasErrors()) {
-					List<User> users = User.find.orderBy("admin, name, email").findList();
-					forms.setStorageDirsForm = filledForm;
-					User.flashBrowserId(user);
-					return badRequest(views.html.Administrator.settings.render(forms, users));
-
-				} else {
-					Administrator.SetStorageDirsForm.save(filledForm);
-					flash("success", "Uploads directory changed successfully!");
-					return redirect(routes.Administrator.getSettings());
-				}
-			}
-
-			if ("configureEmail".equals(formName)) {
-				Form<Administrator.ConfigureEmailForm> filledForm = configureEmailForm.bindFromRequest();
-				Administrator.ConfigureEmailForm.validate(filledForm);
-				
-				if (filledForm.field("enable").value() != null) {
-					Setting.set("mail.enable", filledForm.field("enable").valueOr(""));
-					flash("success", "E-mail is now "+("true".equals(filledForm.field("enable").valueOr("false"))?"enabled":"disabled")+".");
-					return redirect(routes.Administrator.getSettings());
-
-				} else if (filledForm.field("absoluteURL").value() != null) {
-					Setting.set("absoluteURL", filledForm.field("absoluteURL").valueOr(""));
-					flash("success", "Absolute URL was successfully changed to "+filledForm.field("absoluteURL").valueOr("")+".");
-					return redirect(routes.Administrator.getSettings());
-
-				} else {
 					
-					if (query.containsKey("validate")) {
-						User.flashBrowserId(user);
-						return ok(FormHelper.asJson(filledForm));
-						
-					} else if (filledForm.hasErrors()) {
-						List<User> users = User.find.orderBy("admin, name, email").findList();
-						forms.configureEmailForm = filledForm;
-						User.flashBrowserId(user);
-						return badRequest(views.html.Administrator.settings.render(forms, users));
-
-					} else {
-						Administrator.ConfigureEmailForm.save(filledForm);
-						flash("success", "Successfully changed e-mail settings!");
-						return redirect(routes.Administrator.getSettings());
-					}
-				}
-			}
-
-			if ("setMaintenance".equals(formName)) {
-				Form<Administrator.SetMaintenanceForm> filledForm = setMaintenanceForm.bindFromRequest();
-				Administrator.SetMaintenanceForm.validate(filledForm);
-				
-				if (query.containsKey("validate")) {
-					User.flashBrowserId(user);
-					return ok(FormHelper.asJson(filledForm));
-				
 				} else if (filledForm.hasErrors()) {
 					List<User> users = User.find.orderBy("admin, name, email").findList();
-					forms.setMaintenanceForm  = filledForm;
+					forms.configureEmailForm = filledForm;
 					User.flashBrowserId(user);
 					return badRequest(views.html.Administrator.settings.render(forms, users));
 
 				} else {
-					Administrator.SetMaintenanceForm.save(filledForm);
-					flash("success", "Maintenance time changed successfully!");
+					Administrator.ConfigureEmailForm.save(filledForm);
+					flash("success", "Successfully changed e-mail settings!");
 					return redirect(routes.Administrator.getSettings());
 				}
 			}
+		}
 
-			if ("configureAppearance".equals(formName)) {
-				Form<Administrator.ConfigureAppearanceForm> filledForm = configureAppearanceForm.bindFromRequest();
-				Administrator.ConfigureAppearanceForm.validate(filledForm);
-				
-				if (query.containsKey("validate")) {
-					User.flashBrowserId(user);
-					return ok(FormHelper.asJson(filledForm));
-				
-				} else if (filledForm.hasErrors()) {
-					for (String key : filledForm.errors().keySet()) {
-						for (ValidationError error : filledForm.errors().get(key)) {
-							Logger.debug(key+": "+error.message());
-						}
+		if ("setMaintenance".equals(formName)) {
+			Form<Administrator.SetMaintenanceForm> filledForm = setMaintenanceForm.bindFromRequest();
+			Administrator.SetMaintenanceForm.validate(filledForm);
+			
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(user);
+				return ok(FormHelper.asJson(filledForm));
+			
+			} else if (filledForm.hasErrors()) {
+				List<User> users = User.find.orderBy("admin, name, email").findList();
+				forms.setMaintenanceForm  = filledForm;
+				User.flashBrowserId(user);
+				return badRequest(views.html.Administrator.settings.render(forms, users));
+
+			} else {
+				Administrator.SetMaintenanceForm.save(filledForm);
+				flash("success", "Maintenance time changed successfully!");
+				return redirect(routes.Administrator.getSettings());
+			}
+		}
+
+		if ("configureAppearance".equals(formName)) {
+			Form<Administrator.ConfigureAppearanceForm> filledForm = configureAppearanceForm.bindFromRequest();
+			Administrator.ConfigureAppearanceForm.validate(filledForm);
+			
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(user);
+				return ok(FormHelper.asJson(filledForm));
+			
+			} else if (filledForm.hasErrors()) {
+				for (String key : filledForm.errors().keySet()) {
+					for (ValidationError error : filledForm.errors().get(key)) {
+						Logger.debug(key+": "+error.message());
 					}
-
-					List<User> users = User.find.orderBy("admin, name, email").findList();
-					forms.configureAppearanceForm  = filledForm;
-					User.flashBrowserId(user);
-					return badRequest(views.html.Administrator.settings.render(forms, users));
-
-				} else {
-					String title = Setting.get("appearance.title")+"";
-					String titleLink = Setting.get("appearance.titleLink")+"";
-					String titleLinkNewWindow = Setting.get("appearance.titleLink.newWindow")+"";
-					String landingPage = Setting.get("appearance.landingPage")+"";
-					String theme = Application.themeName()+"";
-
-					Administrator.ConfigureAppearanceForm.save(filledForm);
-
-					String successString = "";
-					if (!title.equals(Setting.get("appearance.title")))
-						successString += " Title changed to \""+Setting.get("appearance.title")+"\" !";
-					if (!titleLink.equals(Setting.get("appearance.titleLink")))
-						successString += " Title link changed to \""+Setting.get("appearance.titleLink")+"\" !";
-					if (!titleLinkNewWindow.equals(Setting.get("appearance.titleLink.newWindow")))
-						successString += " Title link will "+ ("true".equals(titleLinkNewWindow)? "not open in a new window anymore" : "now open in a new window") +" !";
-					if (!landingPage.equals(Setting.get("appearance.landingPage")))
-						successString += " Landing page changed to \""+Setting.get("appearance.landingPage")+"\" !";
-					if (!theme.equals(Application.themeName()))
-						successString += " Theme changed to "+("".equals(Application.themeName())?"default":"\""+Application.themeName().substring(0, Application.themeName().length()-1)+"\"")+" !";
-					if ("".equals(successString))
-						successString = "Nothing changed";
-					flash("success", successString);
-					return redirect(routes.Administrator.getSettings());
 				}
-			}
 
-			flash("error", "Form not found. Submitted information ignored :(");
-			return redirect(routes.Administrator.getSettings());
+				List<User> users = User.find.orderBy("admin, name, email").findList();
+				forms.configureAppearanceForm  = filledForm;
+				User.flashBrowserId(user);
+				return badRequest(views.html.Administrator.settings.render(forms, users));
+
+			} else {
+				String title = Setting.get("appearance.title")+"";
+				String titleLink = Setting.get("appearance.titleLink")+"";
+				String titleLinkNewWindow = Setting.get("appearance.titleLink.newWindow")+"";
+				String landingPage = Setting.get("appearance.landingPage")+"";
+				String theme = Application.themeName()+"";
+
+				Administrator.ConfigureAppearanceForm.save(filledForm);
+
+				String successString = "";
+				if (!title.equals(Setting.get("appearance.title")))
+					successString += " Title changed to \""+Setting.get("appearance.title")+"\" !";
+				if (!titleLink.equals(Setting.get("appearance.titleLink")))
+					successString += " Title link changed to \""+Setting.get("appearance.titleLink")+"\" !";
+				if (!titleLinkNewWindow.equals(Setting.get("appearance.titleLink.newWindow")))
+					successString += " Title link will "+ ("true".equals(titleLinkNewWindow)? "not open in a new window anymore" : "now open in a new window") +" !";
+				if (!landingPage.equals(Setting.get("appearance.landingPage")))
+					successString += " Landing page changed to \""+Setting.get("appearance.landingPage")+"\" !";
+				if (!theme.equals(Application.themeName()))
+					successString += " Theme changed to "+("".equals(Application.themeName())?"default":"\""+Application.themeName().substring(0, Application.themeName().length()-1)+"\"")+" !";
+				if ("".equals(successString))
+					successString = "Nothing changed";
+				flash("success", successString);
+				return redirect(routes.Administrator.getSettings());
+			}
+		}
+
+		flash("error", "Form not found. Submitted information ignored :(");
+		return redirect(routes.Administrator.getSettings());
 	}
 
 	public static Cancellable shuttingDown = null;

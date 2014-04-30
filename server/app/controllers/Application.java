@@ -20,8 +20,7 @@ public class Application extends Controller {
 	
 	public static final boolean debug = "DEBUG".equals(Configuration.root().getString("logger.application"));
 	
-	public static final String DEFAULT_DP2_ENDPOINT_LOCAL = "http://localhost:8181/ws";
-	public static final String DEFAULT_DP2_ENDPOINT_REMOTE = "http://localhost:8182/ws";
+	public static final String DEFAULT_DP2_ENDPOINT = "http://localhost:8181/ws";
 	public static final String SLASH = System.getProperty("file.separator");
 	public static final String SYSTEM_TEMP;
 	public static final String DP2TEMP;

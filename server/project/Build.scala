@@ -19,7 +19,7 @@ object ApplicationBuild extends Build {
       // project dependencies (remember to also update pom.xml!)
       "org.apache.derby" % "derby" % "10.9.1.0",
       "mysql" % "mysql-connector-java" % "5.1.18",
-      "org.daisy.pipeline" % "clientlib-java" % "1.0.0",
+      "org.daisy.pipeline" % "clientlib-java" % "1.1.0-SNAPSHOT",
       "org.apache.commons" % "commons-compress" % "1.4.1",
       "org.apache.commons" % "commons-email" % "1.2",
       "log4j" % "log4j" % "1.2.17",
@@ -29,8 +29,7 @@ object ApplicationBuild extends Build {
     val main = play.Project(appName, appVersion, appDependencies).settings(
       // project settings
       ebeanEnabled := true,
-      resolvers += ("Local Maven Repository" at "file:///"+Path.userHome.absolutePath+"/.m2/repository"),
-      resolvers += ("Public online Restlet repository" at "http://maven.restlet.org")
+      resolvers += ("Local Maven Repository" at "file:///"+Path.userHome.absolutePath+"/.m2/repository")
     ).settings(
       javacOptions ++= Seq("-source", "1.6", "-target", "1.6")
     )
