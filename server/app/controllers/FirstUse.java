@@ -239,7 +239,7 @@ public class FirstUse extends Controller {
 		
 		Setting.set("uploads", uploads);
 		
-		Setting.set("dp2ws.endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT_LOCAL);
+		Setting.set("dp2ws.endpoint", controllers.Application.DEFAULT_DP2_ENDPOINT);
 		Setting.set("dp2ws.authid", "");
 		Setting.set("dp2ws.secret", "");
 	}

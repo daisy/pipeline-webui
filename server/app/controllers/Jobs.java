@@ -1,8 +1,9 @@
 package controllers;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,8 +28,6 @@ import models.UserSetting;
 import org.codehaus.jackson.JsonNode;
 import org.daisy.pipeline.client.Pipeline2WS;
 import org.daisy.pipeline.client.Pipeline2WSException;
-import org.daisy.pipeline.client.Pipeline2WSLogger;
-import org.daisy.pipeline.client.Pipeline2WSLoggerImpl;
 import org.daisy.pipeline.client.Pipeline2WSResponse;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.script.Argument;
@@ -38,6 +37,7 @@ import org.w3c.dom.NodeList;
 import play.Logger;
 import play.libs.XPath;
 import play.mvc.*;
+import utils.ContentType;
 import utils.Files;
 
 public class Jobs extends Controller {
@@ -241,33 +241,43 @@ public class Jobs extends Controller {
 			
 			Logger.debug("href: "+(href==null?"[null]":href));
 			
-			Pipeline2WSResponse result = org.daisy.pipeline.client.Jobs.getResult(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, href);
+			File result = org.daisy.pipeline.client.Jobs.getResultFromFile(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id, href);
 			
-			Logger.debug("URL: "+result.url);
-			Logger.debug(result.contentType);
-			Logger.debug(result.statusDescription);
-			Logger.debug(result.statusName);
-			Logger.debug(result.status+"");
-			Logger.debug(result.size+"");
-			
-			if (result.status != 200) {
-				return badRequest();
+			if (result == null || !result.exists()) {
+				return badRequest("Unable to retrieve file.");
 			}
 			
-			String filename = webuiJob.nicename.replaceAll("[^\\w \\.,]+","-").subSequence(0, webuiJob.nicename.length())+(href==null?"":"-"+href.replaceAll("[^\\w \\.,]+", "_"));
-			if ("application/zip".equals(result.contentType)) {
-				filename += ".zip";
+			try {
+				String contentType = ContentType.probe(result.getName(), new FileInputStream(result));
+				response().setContentType(contentType);
+				
+				Logger.debug("contentType: "+contentType);
+				
+			} catch (FileNotFoundException e) {
+				/* ignore */
 			}
-			response().setHeader("Content-Disposition", "filename=\""+filename);
-			if (result.size != null)
-				response().setHeader("Content-Length", result.size.toString());
+			
+			long size = result.length();
+			if (size > 0) {
+				response().setHeader("Content-Length", size+"");
+				Logger.debug("size: "+size);
+			} else {
+				Logger.debug("content size unknown (size="+size+")");
+			}
+			
+			String filename;
+			if (href == null)
+				filename = id+".zip";
+			else if (href.matches("^[^/]*/[^/]*/idx/.*$"))
+				filename = href.replaceFirst("^.*/([^/]*)$", "$1");
 			else
-				Logger.debug("content size unknown (result.size="+result.size+")");
+				filename = id+"-"+href.replaceFirst("^[^/]*/([^/]*)/?.*?$", "$1")+".zip";
+			response().setHeader("Content-Disposition", "filename=\""+filename);
 			
 			String parse = request().getQueryString("parse");
 			if ("report".equals(parse)) {
 				response().setContentType("text/html");
-				String report = result.asText();
+				String report = Files.read(result);
 				Pattern regex = Pattern.compile("^.*<body[^>]*>(.*)</body>.*$", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 				Matcher regexMatcher = regex.matcher(report);
 				if (regexMatcher.find()) {
@@ -279,8 +289,7 @@ public class Jobs extends Controller {
 				
 			}
 			
-			response().setContentType(result.contentType);
-			return ok(result.asStream());
+			return ok(result);
 			
 		} catch (Pipeline2WSException e) {
 			Logger.error(e.getMessage(), e);
