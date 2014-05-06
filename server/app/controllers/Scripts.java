@@ -47,7 +47,7 @@ public class Scripts extends Controller {
 				scripts = new ArrayList<Script>();
 				List<Script> allScripts = Script.getScripts(response);
 				for (Script script : allScripts) {
-					if (!"false".equals(UserSetting.get(user.id, "scriptEnabled-"+script.id))) {
+					if (!"false".equals(UserSetting.get(-2L, "scriptEnabled-"+script.id)) || user.admin && request().queryString().containsKey("showAll")) {
 						scripts.add(script);
 					}
 				}
@@ -74,7 +74,7 @@ public class Scripts extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 		
-		if ("false".equals(UserSetting.get(user.id, "scriptEnabled-"+id))) {
+		if ("false".equals(UserSetting.get(-2L, "scriptEnabled-"+id))) {
 			return forbidden();
 		}
 		
@@ -142,7 +142,7 @@ public class Scripts extends Controller {
 		if (user == null)
 			return unauthorized("unauthorized");
 		
-		if ("false".equals(UserSetting.get(user.id, "scriptEnabled-"+id))) {
+		if ("false".equals(UserSetting.get(-2L, "scriptEnabled-"+id))) {
 			return forbidden();
 		}
 		

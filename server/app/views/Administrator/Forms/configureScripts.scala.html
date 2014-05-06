@@ -1,0 +1,65 @@
+@(scriptsForm: Form[controllers.Administrator.ConfigureScripts], route: play.api.mvc.Call)
+
+@helper.form(action = route) {
+	
+	<input type="hidden" name="formName" value="configureScripts"/>
+	
+	<fieldset>
+		<legend>Scripts</legend>
+        <br/>
+        
+        <div class="form-horizontal">
+        	
+			<div class="control-group @("error".when(scriptsForm.error("scriptPermissions") != null))">
+				<div class="controls">
+					<span id="configureScripts-loadingScripts" class="help-block">Loading scripts...</span>
+					@if(scriptsForm.field("scriptPermissions").errors().size() > 0){
+						<span class="help-block">@scriptsForm.error("scriptPermissions").message</span>
+					}
+				</div>
+			</div>
+			<script type="text/javascript">
+				$(function(){
+					var scriptPermissions = @Html(play.libs.Json.stringify(play.libs.Json.toJson(controllers.Administrator.ConfigureScripts.scriptPermissions())));
+					var scriptHrefBase = "@routes.Scripts.getScript("")";
+					var checkForScripts = function() {
+						$.ajax({
+							url: "@routes.Scripts.getScriptsJson()?showAll",
+							error: function(jqXHR, textStatus, errorThrown) {
+								setTimeout(checkForScripts,5000);
+							},
+							success: function(scripts, textStatus, jqXHR) {
+								var s;
+								$("#configureScripts-loadingScripts").hide();
+								for (s = 0; s < scripts.length; s++) {
+									var div;
+									var enabled = scriptPermissions[scripts[s].id];
+									div = $("<div class=\"control-group\"></div>");
+									$(div).append("<label class=\"control-label\" id=\"configureScripts-script-"+scripts[s].id+"-label\">"+scripts[s].nicename+"</label>");
+									$(div).append("<div class=\"controls\"></div>");
+									$(div).find(".controls").append("<div class=\"btn-group\" data-toggle=\"buttons-radio\" aria-role=\"radiogroup\" aria-labelledby=\"configureScripts-script-"+scripts[s].id+"-label\" id=\"configureScripts-script-"+scripts[s].id+"\"></div>");
+									$(div).find(".btn-group").append("<button type=\"button\" name=\"configureScripts-script-"+scripts[s].id+"-off\" class=\"btn "+(enabled?"":"active")+"\" id=\"configureScripts-script-"+scripts[s].id+"-disable\" aria-role=\"radio\" aria-checked=\""+(enabled?"false":"true")+"\" onclick=\"toggleRadio('configureScripts-script-"+scripts[s].id+"', false, '"+enabled+"');\">Disable</button>");
+									$(div).find(".btn-group").append("<button type=\"button\" name=\"configureScripts-script-"+scripts[s].id+"-on\" class=\"btn "+(enabled?"active":"")+"\" id=\"configureScripts-script-"+scripts[s].id+"-enable\" aria-role=\"radio\" aria-checked=\""+(enabled?"true":"false")+"\" onclick=\"toggleRadio('configureScripts-script-"+scripts[s].id+"', true, '"+enabled+"');\">Enable</button>");
+									$(div).find(".btn-group").append("<input type=\"hidden\" id=\"configureScripts-script-"+scripts[s].id+"-value\" name=\"configureScripts-script-"+scripts[s].id+"\" value=\""+enabled+"\"/>");
+									$("#configureScripts-submitButtons").before(div);
+								}
+								
+							}
+						});
+					}
+					
+					if (typeof scriptPermissions === "string") {
+						$("#configureScripts-loadingScripts").html(scriptPermissions);
+					} else {
+						checkForScripts();
+					}
+				});
+			</script>
+			
+			<div class="form-actions" id="configureScripts-submitButtons">
+				<button type="submit" class="btn btn-primary" id="configureScripts-submit" name="submit">Save</button>
+			</div>
+			
+		</div>
+	</fieldset>
+}
