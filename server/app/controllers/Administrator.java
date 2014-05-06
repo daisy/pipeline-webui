@@ -45,6 +45,7 @@ public class Administrator extends Controller {
 		public Form<GlobalPermissions> globalForm = Administrator.globalForm;
 		public Form<SetMaintenanceForm> setMaintenanceForm = Administrator.setMaintenanceForm;
 		public Form<ConfigureAppearanceForm> configureAppearanceForm = Administrator.configureAppearanceForm;
+		public Form<ConfigureScripts> scriptsForm = Administrator.scriptsForm;
 	}
 
 	public final static Form<SetDeploymentForm> setDeploymentForm = play.data.Form.form(SetDeploymentForm.class);
@@ -282,7 +283,10 @@ public class Administrator extends Controller {
 		@Constraints.MinLength(1)
 		@Constraints.Pattern("[^{}\\[\\]();:'\"<>]+") // Avoid breaking JavaScript code in templates
 		public String name;
-		
+	}
+	
+	final static Form<ConfigureScripts> scriptsForm = play.data.Form.form(ConfigureScripts.class);
+	public static class ConfigureScripts {
 		public static Object scriptPermissions() {
 			Map<String,Boolean> scriptPermissions = new HashMap<String,Boolean>();
 			
@@ -432,17 +436,36 @@ public class Administrator extends Controller {
 			} else {
 				Setting.set("users.guest.name", filledForm.field("name").valueOr("Guest"));
 				
+				flash("success", "Guest was updated successfully!");
+				return redirect(routes.Administrator.getSettings());
+			}
+		}
+		
+		if ("configureScripts".equals(formName)) {
+			Form<ConfigureScripts> filledForm = scriptsForm.bindFromRequest();
+
+			if (query.containsKey("validate")) {
+				User.flashBrowserId(user);
+				return ok(FormHelper.asJson(filledForm));
+			
+			} else if (filledForm.hasErrors()) {
+				forms.scriptsForm = filledForm;
+				List<User> users = User.find.orderBy("admin, name, email").findList();
+				User.flashBrowserId(user);
+				return badRequest(views.html.Administrator.settings.render(forms, users));
+
+			} else {
 				Map<String, String[]> form = request().body().asFormUrlEncoded();
 				for (String fieldName : form.keySet()) {
-					if (fieldName.startsWith("user-users-guest-script-")) {
-						String scriptId = fieldName.substring("user-users-guest-script-".length());
+					if (fieldName.startsWith("configureScripts-script-")) {
+						String scriptId = fieldName.substring("configureScripts-script-".length());
 						String scriptEnabled = form.get(fieldName)[0];
 						UserSetting.set(-2L, "scriptEnabled-"+scriptId, scriptEnabled);
 						Logger.debug(scriptId+" - "+scriptEnabled);
 					}
 				}
 				
-				flash("success", "Guest was updated successfully!");
+				flash("success", "Scripts were updated successfully!");
 				return redirect(routes.Administrator.getSettings());
 			}
 		}

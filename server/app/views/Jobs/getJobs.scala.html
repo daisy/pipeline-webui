@@ -5,7 +5,22 @@
 <hgroup>
 <h1>Jobs</h1>
 @if(session.get("admin")=="true"){
-	<p>Displaying jobs for all users</p>
+	<script>
+		filterJobs = function(user) {
+		    if (user === 'all') {
+				$("#joblist tbody tr").show();
+				$("#showYourJobs").removeClass("active");
+				$("#showAllJobs").addClass("active");
+			} else {
+				$("#joblist tbody tr[data-user='"+user+"']").show();
+				$("#joblist tbody tr[data-user!='"+user+"']").hide();
+				$("#showAllJobs").removeClass("active");
+				$("#showYourJobs").addClass("active");
+			}
+		}
+	</script>
+	<a id="showYourJobs" class="btn active" onclick="filterJobs(@Controller.flash("userid"));" href="javascript:void(0)">Your jobs</a>
+	<a id="showAllJobs" class="btn" onclick="filterJobs('all');" href="javascript:void(0)">All jobs</a>
 }else{
 @if(Setting.get("users.guest.shareJobs") == "true"){
 	<p>Displaying jobs for all guests</p>
@@ -32,10 +47,12 @@
 <script type="text/javascript">
 
 addJob = function(job) {
-	var i, statusText, html;
+	var i, statusText, html, visible;
 	statusText = job.status.charAt(0).toUpperCase() + job.status.slice(1).toLowerCase();
 	statusText = statusText.replace(/_/,' ');
-	html = '<tr id="job-'+job.id+'" class="job">'+"\n";
+	visible = $("#showAllJobs").hasClass("active") || "@Controller.flash("userid")" === ""+job.user;
+	console.log(visible, $("#showAllJobs").hasClass("active"),' || ',"@Controller.flash("userid")" === ""+job.user);
+	html = '<tr id="job-'+job.id+'" class="job" data-user="'+job.user+'"'+(!visible?' style="display:none;"':'')+'>'+"\n";
 	html += '    <td id="job-status-'+job.id+'">'+"\n";
 	html += '        <img src="@routes.Assets.at("images/")'+job.status+'.png" alt="'+statusText+'" title="'+statusText+'"/>'+"\n";
 	html += '    </td>'+"\n";
