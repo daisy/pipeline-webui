@@ -66,6 +66,7 @@ public class Jobs extends Controller {
 		
 		if (user.admin)
 			flash("showOwner", "true");
+		flash("userid", user.id+"");
 		
 		User.flashBrowserId(user);
 		return ok(views.html.Jobs.getJobs.render());
