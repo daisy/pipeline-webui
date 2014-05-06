@@ -7,6 +7,7 @@ import play.db.ebean.*;
 import javax.persistence.*;
 
 import controllers.Application;
+import controllers.Administrator.CreateAdminForm;
 
 import java.util.*;
 
@@ -20,7 +21,23 @@ import play.mvc.Http.Session;
 @Entity(name="users")
 @Table(name="users")
 public class User extends Model {
+	
+	public static class UserSetPassword {
+		
+		@Constraints.Required
+		@Constraints.MinLength(6)
+		public String password;
 
+		@Constraints.Required
+		@Constraints.MinLength(6)
+		public String repeatPassword;
+
+		public static void validate(Form<CreateAdminForm> filledForm) {
+			if (!filledForm.field("password").valueOr("").equals("") && !filledForm.field("password").valueOr("").equals(filledForm.field("repeatPassword").value()))
+				filledForm.reject("repeatPassword", "Password doesn't match.");
+		}
+	}
+	
 	// ---------- Static stuff ----------
 
 	private static final long serialVersionUID = 1L;
