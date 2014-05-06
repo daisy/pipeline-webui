@@ -6,6 +6,7 @@ import org.apache.commons.mail.HtmlEmail;
 
 import models.Setting;
 import models.User;
+import models.User.UserSetPassword;
 import play.Logger;
 import play.data.Form;
 import play.mvc.*;
@@ -13,8 +14,8 @@ import play.mvc.*;
 public class Account extends Controller {
 	
 	final static Form<User> editDetailsForm = play.data.Form.form(User.class);
-	final static Form<User> resetPasswordForm = play.data.Form.form(User.class);
-	final static Form<User> activateAccountForm = play.data.Form.form(User.class);
+	final static Form<UserSetPassword> resetPasswordForm = play.data.Form.form(UserSetPassword.class);
+	final static Form<UserSetPassword> activateAccountForm = play.data.Form.form(UserSetPassword.class);
 	
 	/**
 	 * GET /account
@@ -133,7 +134,7 @@ public class Account extends Controller {
 		}
 		
 		User.flashBrowserId(user);
-		return ok(views.html.Account.resetPassword.render(play.data.Form.form(User.class), email, resetUid, user.active));
+		return ok(views.html.Account.resetPassword.render(play.data.Form.form(UserSetPassword.class), email, resetUid, user.active));
 	}
 	
 	/**
@@ -156,8 +157,8 @@ public class Account extends Controller {
 		if (resetUid == null || !resetUid.equals(user.getActivationUid()))
 			return redirect(routes.Login.login());
 		
-		Form<User> filledForm = resetPasswordForm.bindFromRequest();
-        
+		Form<UserSetPassword> filledForm = resetPasswordForm.bindFromRequest();
+		
 		// TODO: @Constraints.MinLength(6) doesn't seem to work for some reason, so checking it manually here for now
 		if (filledForm.field("password").valueOr("").length() < 6)
 			filledForm.reject("password", "The password must be at least 6 characters long.");
