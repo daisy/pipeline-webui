@@ -130,7 +130,7 @@ public class ContentType {
 		return contentType;
 	}
 	
-	private static final Pattern PI = Pattern.compile("^\\s*<\\?.*?\\?>", Pattern.MULTILINE | Pattern.DOTALL);
+	private static final Pattern PI = Pattern.compile("^[^<]*?<\\?.*?\\?>", Pattern.MULTILINE | Pattern.DOTALL);
 	private static final Pattern DOCTYPE = Pattern.compile("^\\s*<!\\w.*?>", Pattern.MULTILINE | Pattern.DOTALL);
 	private static final Pattern COMMENT = Pattern.compile("^\\s*<!--.*?-->", Pattern.MULTILINE | Pattern.DOTALL);
 	private static final Pattern WHITESPACE = Pattern.compile("^\\s+", Pattern.MULTILINE | Pattern.DOTALL);
