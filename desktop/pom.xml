@@ -18,7 +18,7 @@
   
   <name>DAISY Pipeline 2 :: Web User Interface :: Desktop version</name>
   <description>A web-based user interface for the DAISY Pipeline 2.</description>
-  <url>https://github.com/daisy-consortium/pipeline-webui</url>
+  <url>https://github.com/daisy/pipeline-webui</url>
   <inceptionYear>2012</inceptionYear>
   
   <build>
