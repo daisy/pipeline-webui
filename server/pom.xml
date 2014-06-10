@@ -3,12 +3,12 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <!--<parent>
+  <parent>
     <groupId>org.daisy</groupId>
     <artifactId>daisy</artifactId>
-    <version>2</version>
+    <version>3</version>
     <relativePath />
-  </parent>-->
+  </parent>
 
   <groupId>org.daisy.pipeline</groupId>
   <artifactId>webui</artifactId>
@@ -20,6 +20,13 @@
   <description>A web-based user interface for the DAISY Pipeline 2.</description>
   <url>https://github.com/daisy/pipeline-webui</url>
   <inceptionYear>2012</inceptionYear>
+
+  <scm>
+    <connection>scm:git:git@github.com:daisy/pipeline-webui.git</connection>
+    <url>scm:git:git@github.com:daisy/pipeline-webui.git</url>
+    <developerConnection>scm:git:git@github.com:daisy/pipeline-webui.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
 
   <properties>
     <play.version>2.1.0</play.version>
@@ -35,31 +42,6 @@
       </snapshots>
     </repository>
   </repositories>
-  <pluginRepositories>
-      <pluginRepository>
-         <id>sonatype-nexus-snapshots</id>
-         <name>oss.sonatype.org github Release Repository Snapshot Repository</name>
-         <releases>
-            <enabled>false</enabled>
-         </releases>
-         <snapshots>
-            <enabled>true</enabled>
-         </snapshots>
-         <url>http://oss.sonatype.org/content/repositories/snapshots/</url>
-      </pluginRepository>
-   </pluginRepositories>
-   <distributionManagement>
-      <repository>
-         <id>sonatype-nexus-staging</id>
-         <name>oss.sonatype.org Staging Repository</name>
-         <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-      </repository>
-      <snapshotRepository>
-         <id>sonatype-nexus-snapshots</id>
-         <name>Sonatype Nexus Snapshots</name>
-         <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-      </snapshotRepository>
-   </distributionManagement>
 
   <dependencies>
 

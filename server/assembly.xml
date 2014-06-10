@@ -28,12 +28,21 @@
         <fileSet>
             <directory>dist-resources</directory>
             <excludes>
+                <exclude>application.conf</exclude>
                 <exclude>uninstall</exclude>
                 <exclude>uninstall.bat</exclude>
                 <exclude>start</exclude>
                 <exclude>start.bat</exclude>
             </excludes>
             <outputDirectory>/</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>dist-resources</directory>
+            <includes>
+                <include>application.conf</include>
+            </includes>
+            <outputDirectory>/</outputDirectory>
+            <filtered>true</filtered>
         </fileSet>
         <fileSet>
             <directory>dist-resources</directory>
