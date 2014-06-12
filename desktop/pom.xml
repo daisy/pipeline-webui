@@ -6,13 +6,13 @@
   <parent>
     <groupId>org.daisy</groupId>
     <artifactId>daisy</artifactId>
-    <version>2</version>
+    <version>3</version>
     <relativePath />
   </parent>
   
   <groupId>org.daisy.pipeline</groupId>
   <artifactId>webui-desktop</artifactId>
-  <version>1.8-SNAPSHOT</version>
+  <version>1.8.1-SNAPSHOT</version>
   <!-- NOTE: remember to also update the version in project/Build.scala as well as the server POM -->
   <packaging>pom</packaging>
   
@@ -20,6 +20,14 @@
   <description>A web-based user interface for the DAISY Pipeline 2.</description>
   <url>https://github.com/daisy/pipeline-webui</url>
   <inceptionYear>2012</inceptionYear>
+
+  <scm>
+    <connection>scm:git:git@github.com:daisy/pipeline-webui.git</connection>
+    <url>scm:git:git@github.com:daisy/pipeline-webui.git</url>
+    <developerConnection>scm:git:git@github.com:daisy/pipeline-webui.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+
   
   <build>
     <plugins>
