@@ -12,7 +12,7 @@
   
   <groupId>org.daisy.pipeline</groupId>
   <artifactId>webui-desktop</artifactId>
-  <version>1.8</version>
+  <version>1.8.1-SNAPSHOT</version>
   <!-- NOTE: remember to also update the version in project/Build.scala as well as the server POM -->
   <packaging>pom</packaging>
   
@@ -25,7 +25,7 @@
     <connection>scm:git:git@github.com:daisy/pipeline-webui.git</connection>
     <url>scm:git:git@github.com:daisy/pipeline-webui.git</url>
     <developerConnection>scm:git:git@github.com:daisy/pipeline-webui.git</developerConnection>
-    <tag>v1.8</tag>
+    <tag>HEAD</tag>
   </scm>
 
   

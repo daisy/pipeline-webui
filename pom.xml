@@ -12,7 +12,7 @@
   
   <groupId>org.daisy.pipeline</groupId>
   <artifactId>webui-aggregator</artifactId>
-  <version>1.8</version>
+  <version>1.8.1-SNAPSHOT</version>
 
   <!-- NOTE: the actual version is set in project/Build.scala, desktop/pom.xml and server/pom.xml -->
   <packaging>pom</packaging>
@@ -23,8 +23,4 @@
     <module>server</module>
     <module>desktop</module>
   </modules>
-
-  <scm>
-    <tag>v1.8</tag>
-  </scm>
 </project>
