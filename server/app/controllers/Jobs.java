@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -281,12 +282,16 @@ public class Jobs extends Controller {
 				String report = Files.read(result);
 				Pattern regex = Pattern.compile("^.*<body[^>]*>(.*)</body>.*$", Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 				Matcher regexMatcher = regex.matcher(report);
+				String body = null;
 				if (regexMatcher.find()) {
-				    return ok(regexMatcher.group(1));
+					body = regexMatcher.group(1);
 				} else {
 					Logger.info("no body element found in report; returning the entire report");
-					return ok(report);
+					body = report;
 				}
+				final byte[] utf8Bytes = body.getBytes(StandardCharsets.UTF_8);
+				response().setHeader(CONTENT_LENGTH, ""+utf8Bytes.length);
+				return ok(body);
 				
 			}
 			
