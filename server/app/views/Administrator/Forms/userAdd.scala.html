@@ -16,7 +16,7 @@
 				<div class="controls">
 					<input type="text" name="name" id="createUser-name" placeholder="The name of the user." class="input-xlarge" value="@(if(userForm!=null)userForm.field("name").valueOr("") else "")"/>
 					<p class="help-block">
-						<img id="createUser-nameHelpLoading" src="@routes.Assets.at("images/loading-inline.gif")" alt="" style="display:none;"/>
+						<img id="createUser-nameHelpLoading" src="@routes.Assets.versioned("images/loading-inline.gif")" alt="" style="display:none;"/>
 						<span id="createUser-nameHelp"></span>
 					</p>
 				</div>
@@ -28,7 +28,7 @@
 					<input id="createUser-email" type="email" name="email" placeholder="Valid e-mail address required." class="input-xlarge"
 							value="@(if(userForm!=null)userForm.field("email").valueOr("") else "")"/>
 					<p class="help-block">
-						<img id="createUser-emailHelpLoading" src="@routes.Assets.at("images/loading-inline.gif")" alt="" style="display:none;"/>
+						<img id="createUser-emailHelpLoading" src="@routes.Assets.versioned("images/loading-inline.gif")" alt="" style="display:none;"/>
 						<span id="createUser-emailHelp"></span>
 					</p>
 				</div>
@@ -62,7 +62,7 @@
 							onclick="toggleRadio('createUser-admin', false, 'false');return false;">No</button>
 					</div>
 					<p class="help-block">
-						<img id="createUser-adminHelpLoading" src="@routes.Assets.at("images/loading-inline.gif")" alt="" style="display:none;"/>
+						<img id="createUser-adminHelpLoading" src="@routes.Assets.versioned("images/loading-inline.gif")" alt="" style="display:none;"/>
 						<span id="createUser-adminHelp"></span>
 					</p>
 				</div>

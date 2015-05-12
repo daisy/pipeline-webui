@@ -26,16 +26,11 @@ public class Login extends Controller {
      */
     public static Result login() {
     	if (FirstUse.isFirstUse()) {
-    		if ("server".equals(Application.deployment()) && User.find.where().eq("admin", true).findRowCount() > 0);
+    		if (User.find.where().eq("admin", true).findRowCount() > 0);
     			// Server mode and admin exists; require login
     		else
     			return redirect(routes.FirstUse.getFirstUse());
     	}
-    	
-    	if ("desktop".equals(Application.deployment())) {
-			User.find.where().eq("admin", true).findUnique().login(session());
-			return redirect(routes.Application.index());
-		}
     	
     	User.parseUserId(session());
     	User user = User.authenticate(request(), session());
@@ -89,7 +84,7 @@ public class Login extends Controller {
     		
     	} else {
     		user.makeNewActivationUid();
-    		user.save(Application.datasource);
+    		user.save();
 			String resetUrl = Application.absoluteURL(routes.Account.showResetPasswordForm(user.email, user.getActivationUid()).absoluteURL(request()));
 			String html = views.html.Account.emailResetPassword.render(resetUrl).body();
 			String text = "Go to this link to change your password: "+resetUrl;
@@ -106,17 +101,13 @@ public class Login extends Controller {
      * Logout and clean the session.
      */
     public static Result logout() {
-    	if ("server".equals(Application.deployment())) {
-	        session().clear();
-	        flash("success", "You've been logged out");
-	        
-	        if ("true".equals(Setting.get("users.guest.automaticLogin")))
-				User.loginAsGuest(session());
-	        
-	        return redirect(routes.Login.login());
-    	} else {
-    		return Application.error(FORBIDDEN, "You can't log out when running in desktop mode", null, null);
-    	}
+        session().clear();
+        flash("success", "You've been logged out");
+        
+        if ("true".equals(Setting.get("users.guest.automaticLogin")))
+			User.loginAsGuest(session());
+        
+        return redirect(routes.Login.login());
     }
 
 }

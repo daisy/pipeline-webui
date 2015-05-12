@@ -1,11 +1,12 @@
-@()
+@(jobId: Long)
 
 @if(Setting.get("uploads")==null){
     <div class="hero-unit" style="text-align:center">
-        <h2>We're sorry, but files cannot be uploaded until the upload directory is configured.</h2>
+        <h2>Files cannot be uploaded until the upload directory is configured.</h2>
     </div>
 }else{
-    @helper.form(action = routes.Uploads.postUpload(), 'enctype -> "multipart/form-data", 'id -> "fileupload", 'class -> "form-horizontal"){
+    @helper.form(action = routes.Jobs.upload(jobId), 'enctype -> "multipart/form-data", 'id -> "fileupload", 'class -> "form-horizontal"){
+   		<input type="hidden" id="uploads-jobId" name="jobId" value="@jobId"/>
         <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
         <div class="row">
             <div class="span6">
@@ -57,7 +58,7 @@
     $(function(){
         'use strict';
         
-        var url = '@routes.Uploads.postUpload()?browserId=@flash().get("browserId")';
+        var url = '@routes.Jobs.upload(jobId)?browserId=@flash().get("browserId")';
         url = window.location.protocol+"//"+window.location.host+url;
         
         // Initialize the jQuery File Upload widget:

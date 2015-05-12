@@ -33,11 +33,8 @@
 }
 
 <hgroup>
-  <h1>
-    @if(controllers.Application.deployment()=="desktop"){ Settings }else{ Administrator settings }
-  </h1>
+  <h1>Administrator settings</h1>
 </hgroup>
-@if(controllers.Application.deployment()=="server"){
 <ul class="nav nav-pills">
     <li class="@("active".when(Controller.flash("settings.formName")==null||Controller.flash("settings.formName")=="updateGlobalPermissions"||Controller.flash("settings.formName")=="updateGuest"||Controller.flash("settings.formName")=="updateUser"||Controller.flash("settings.formName")=="deleteUser"||Controller.flash("settings.formName")=="createUser"))"><a href="#usersAndPermissions" data-toggle="tab">Users and Permissions</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="configureScripts"))"><a href="#configureScripts" data-toggle="tab">Scripts</a></li>
@@ -47,12 +44,9 @@
     <li class="@("active".when(Controller.flash("settings.formName")=="setMaintenance"))"><a href="#maintenance" data-toggle="tab">Maintenance</a></li>
     <li class="@("active".when(Controller.flash("settings.formName")=="configureAppearance"))"><a href="#appearance" data-toggle="tab">Appearance</a></li>
 </ul>
-}
 
 <div class="tab-content">
 
-@if(controllers.Application.deployment()=="server"){
-	
 	<section id="usersAndPermissions" class="tab-pane @("active".when(Controller.flash("settings.formName")==null||Controller.flash("settings.formName")=="updateGlobalPermissions"||Controller.flash("settings.formName")=="updateGuest"||Controller.flash("settings.formName")=="updateUser"||Controller.flash("settings.formName")=="deleteUser"||Controller.flash("settings.formName")=="createUser"))">
 		<div class="tabbable tabs-left">
 			<h2>Users and permissions</h2>
@@ -62,7 +56,7 @@
 				<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "global" || play.mvc.Controller.flash("settings.usertab") == null))"><a href="#usertab-global" data-toggle="tab"><i class="icon-globe"></i> <em>General settings</em></a></li>
 				<hr/>
 				
-				<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))"><a href="#usertab-guest" data-toggle="tab"><img alt="" src="@routes.Assets.at("images/icon-public.png")" height="50%"/> @models.Setting.get("users.guest.name")</a></li>
+				<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))"><a href="#usertab-guest" data-toggle="tab"><img alt="" src="@routes.Assets.versioned("images/icon-public.png")" height="50%"/> @models.Setting.get("users.guest.name")</a></li>
 				
 				@for(user <- userList) {
 					<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.id))"><a href="#usertab-@user.id" data-toggle="tab"><i class="icon-user"></i> @user.name</a></li>
@@ -112,7 +106,7 @@
 		<h2>Storage directories</h2>
 		<br/>
 		<script type="text/javascript">
-	  		$(function(){ DP2Forms.startValidation("setStorageDirs", "@routes.Administrator.postSettings()?validate", ["uploaddir","resultdir","tempdir"]); });
+	  		$(function(){ DP2Forms.startValidation("setStorageDirs", "@routes.Administrator.postSettings()?validate", ["uploaddir","jobsdir","templatesdir"]); });
 		</script>
 		@views.html.Administrator.Forms.setStorageDirs(forms.setStorageDirsForm, routes.Administrator.postSettings(), null, Controller.flash("settings.formName")=="setStorageDirs")
 	</section>
@@ -136,9 +130,7 @@
 		@views.html.Administrator.Forms.setMaintenance(forms.setMaintenanceForm, routes.Administrator.postSettings(), null)
 	</section>
 
-}
-
-<section id="appearance" class="tab-pane @("active".when(Controller.flash("settings.formName")=="configureAppearance"||controllers.Application.deployment()=="desktop"))">
+<section id="appearance" class="tab-pane @("active".when(Controller.flash("settings.formName")=="configureAppearance"))">
 	<h2>Appearance</h2>
 	<br/>
 	<script type="text/javascript">

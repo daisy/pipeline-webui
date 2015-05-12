@@ -1,4 +1,4 @@
-@(frameworkState: String)
+@(jobId: Long)
 
 @main("Scripts", "scripts", 
 Array("jquery.ui.widget.js","jquery.iframe-transport.js","jquery.fileupload.js","jquery.fileupload-ui.js","createJob.js"),
@@ -26,7 +26,7 @@ h2 {
 		<h2>Files</h2>
 		<div id="filesInnerGroup">
 			<div id="acceptsFiles">
-    			@views.html.Scripts.Widgets.upload()
+    			@views.html.Jobs.Widgets.upload(jobId)
     		</div>
     		<div id="doesNotAcceptFiles" style="display:none;">
     			<p><span id="doesNotAcceptFilesScriptName"></span> does not require any input files.</p>
@@ -36,45 +36,24 @@ h2 {
 	<div class="span4">
 		<h2>Scripts</h2>
 		<div id="scriptsInnerGroup">
-		    <div class="INITIAL" style="text-align:center;display:none;">
-				<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/><br/>
-				<span>Loading...</span>
-			</div>
-			<div class="RUNNING" style="display:none;">
-				<ul id="scriptList" class="unstyled oneOrMoreScripts scriptlist" style="display:none;"></ul>
-				<table id="scriptTable" class="table" style="display:none;">
-					<thead>
-						<tr>
-							<th>Script</th>
-							<th>Description</th>
-						</tr>
-					</thead>
-					<tbody></tbody>
-					<!--<tfoot>
-						<tr>
-							<td colspan="2">More</td>
-						</tr>
-					</tfoot>-->
-				</table>
-				
-				<div role="alert" class="noScripts alert alert-info" style="display:none;">
-					<p>There are no scripts installed.</p>
-				</div>
-			</div>
-			<div role="alert" class="STARTING alert alert-info" style="text-align:center; display:none;">
-				<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/>
-				<p>Starting the Pipeline engine...</p>
-			</div>
-			<div class="STOPPED" style="display:none;">
-				<p style="text-align:center;">
-					<img src="@routes.Assets.at("images/loading.gif")" alt="" style="margin:10px;"/><br/>
-					<span>Attempting to connect to the framework...</span>
-				</p>
-				<br/>
-				<div role="alert" class="alert alert-warning">
-					<p>Unable to communicate with the Pipeline engine.</p>
-					<p>Please check the configuration of the Pipeline 2 engine in the administrative settings.</p>
-				</div>
+			<ul id="scriptList" class="unstyled oneOrMoreScripts scriptlist" style="display:none;"></ul>
+			<table id="scriptTable" class="table" style="display:none;">
+				<thead>
+					<tr>
+						<th>Script</th>
+						<th>Description</th>
+					</tr>
+				</thead>
+				<tbody></tbody>
+				<!--<tfoot>
+					<tr>
+						<td colspan="2">More</td>
+					</tr>
+				</tfoot>-->
+			</table>
+			
+			<div role="alert" class="noScripts alert alert-info" style="display:none;">
+				<p>There are no scripts available.</p>
 			</div>
 		</div>
 	</div>
@@ -109,24 +88,7 @@ h2 {
 		    	activeHeader: "ui-icon-circle-arrow-s"
 		    }
 	    });
-		var updateState = function (state){
-			$(".INITIAL").hide();
-			if (state === "RUNNING") {
-				$(".STOPPED").hide();
-				$(".STARTING").hide();
-				$(".RUNNING").show();
-			} else if (state === "STARTING") {
-				$(".STOPPED").hide();
-				$(".STARTING").show();
-				$(".RUNNING").hide();
-			} else if (state === "STOPPED") {
-				$(".STOPPED").show();
-				$(".STARTING").hide();
-				$(".RUNNING").hide();
-			}
-		}
-		Notifications.listen("heartbeat", updateState);
-		var scriptHrefBase = "@routes.Scripts.getScript("")";
+		var scriptHrefBase = "@routes.Jobs.getScript(jobId, "")";
 		var checkForScripts = function() {
 			$.ajax({
 				url: "@routes.Scripts.getScriptsJson()",
@@ -134,10 +96,6 @@ h2 {
 					setTimeout(checkForScripts,5000);
 				},
 				success: function(scripts, textStatus, jqXHR) {
-					$(".INITIAL").hide();
-					$(".STOPPED").hide();
-					$(".STARTING").hide();
-					$(".RUNNING").show();
 					if (scripts.length === 0) {
 						$(".oneOrMoreScripts").hide();
 						$(".noScripts").show();
@@ -148,19 +106,36 @@ h2 {
 						var table = $("#scriptTable tbody");
 						var list = $("#scriptList");
 						for (var s = 0; s < scripts.length; s++) {
-							var scriptId = scripts[s].id.replace(/:/g,'\\x3A');
+						    var a = $("<a>"+scripts[s].nicename+"</a>");
+						    var li = $("<li></li>");
+						    var td = $("<td></td>");
+						    var tr = $("<tr></tr>");
+						    var scriptId = scripts[s].id.replace(/:/g,'\\x3A');
 							var scriptIdEscaped = scripts[s].id.replace(/:/g,'\\\\x3A');
-							$(list).append("	<li><a data-description=\""+scripts[s].desc+"\" data-nicename=\""+scripts[s].nicename+"\" data-id=\""+scriptId+"\" class=\"script-button-"+scriptId+"\" href=\"javascript:void(0)\">"+scripts[s].nicename+"</a></li>\n");
-							$(table).append(
-								"	<tr>\n"+
-								"		<td><a data-description=\""+scripts[s].desc+"\" data-nicename=\""+scripts[s].nicename+"\" data-id=\""+scriptId+"\" class=\"script-button-"+scriptId+"\" href=\"javascript:void(0)\">"+scripts[s].nicename+"</a></td>\n"+
-								"		<td>"+scripts[s].desc+"</td>\n"+
-								"	</tr>\n");
+						    for (var key in scripts[s]) {
+							 	if (scripts[s].hasOwnProperty(key)) {
+							 		a.data(key, scripts[s][key]);
+							    }
+							}
+							a.data("id", scriptId);
+							a.addClass("script-button-"+scriptId);
+							a.attr("href", "javascript:void(0)");
+							
+							td.append(a.clone().data(a.data()));
+						    tr.append(td);
+						    tr.append("<td>"+scripts[s].description+"</td>");
+							$(table).append(tr);
+							
+							a.attr("title", scripts[s].description);
+						    li.append(a);
+						    li.append("<p><small class=\"muted\">"+scripts[s].description+"</small></p>");
+						    $(list).append(li);
+							
 							$(".script-button-"+scriptIdEscaped).click(function(){
 								if (firstFileOrScriptChosen !== null) firstFileOrScriptChosen();
 								if ($("#script-"+$(this).data("id")).size()===0) {
 									$.ajax({
-										url: "@routes.Scripts.getScript("")"+$(this).data("id").replace(/\\x3A/g,'%3A'),
+										url: "@routes.Jobs.getScript(jobId, "")"+$(this).data("id").replace(/\\x3A/g,'%3A'),
 										success: function(data) {
 											if ($("#script-"+$(this).data("id")).size()===0) {
 												$('#optionsGroup').append(data);
@@ -181,6 +156,11 @@ h2 {
 			});
 		}
 		checkForScripts();
+		window.setInterval(function(){
+			if ($(".noScripts").is(":visible")) {
+				checkForScripts();
+			}
+		}, 1000);
 		chooseScript = function(linkElement) {
 			$("#script-"+$(this).data("id")).show();
 			$("#scriptsDetails").html($(linkElement).data("nicename"));
@@ -203,13 +183,6 @@ h2 {
 				$("#hFiles").click();
 			}
 		}
-		setTimeout(function(){
-			// show spinning gif after one second of waiting
-			if (!$(".STOPPED, .STARTING, .RUNNING, .ERROR").is(":visible")) {
-				$(".INITIAL").show();
-			}
-		},1000);
-		updateState("@frameworkState");
 		firstFileOrScriptChosen = function() {
 			$("#scriptCreationPathGroup").hide();
 			$("#scriptList").hide();
@@ -228,16 +201,29 @@ h2 {
 			firstFileOrScriptChosen = null;
 		}
 		Job.onFilesetTypeUpdate(function(filesetTypes){
-			var types = "";
+			console.log("Job.onFilesetTypeUpdate", filesetTypes);
+			var types, typesString;
+			
+			types = [];
 			for (var id in filesetTypes) {
 				var fs = filesetTypes[id];
-				if (types.length > 0) types = types + ", ";
-				types = types + fs.name;
+				types.push(fs.name);
 			}
-			if (types.length > 0) types = "- " + types;
-			$("#filesetTypes").html(types);
+			types = $.grep(types, function(v, k){
+			    return $.inArray(v ,types) === k;
+			});
+			
+			typesString = "";
+			for (var t = 0; t < types.length; t++) {
+				typesString += types[t];
+				if (t < types.length - 1) typesString += ", ";
+			}
+			if (types.length > 0) typesString = "- " + typesString;
+			
+			$("#filesetTypes").html(typesString);
 		});
-		Job.onNewUpload(function(fileset, id){
+		Job.onNewUpload(function(fileset){
+			console.log("Job.onNewUpload", fileset);
 			if (firstFileOrScriptChosen !== null) {
 				firstFileOrScriptChosen();
 				

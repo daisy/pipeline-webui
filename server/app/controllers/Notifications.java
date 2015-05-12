@@ -3,7 +3,7 @@ package controllers;
 import models.NotificationConnection;
 import models.User;
 
-import org.codehaus.jackson.JsonNode;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import play.mvc.Controller;
 import play.mvc.Result;

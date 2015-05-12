@@ -114,7 +114,6 @@ public class ContentType {
 			// Non-XML files
 			
 			if ("html".equals(ext) || "htm".equals(ext)) {
-				// TODO: probe ".html" and ".htm" files and see if they declare the XHTML namespace, in which case we can assume that they are XHTML files as well.
 				
 				if (contentType == null)
 					contentType = "text/html";
@@ -246,94 +245,6 @@ public class ContentType {
     	nsMap.put("http://openebook.org/namespaces/oeb-package/1.0/", "application/oebps-package+xml");
     	nsMap.put("http://www.w3.org/2001/XML", "application/xml");
     	nsMap.put("http://www.w3.org/ns/xproc-step", "application/xproc+xml");
-    	
-    	// TODO: see if some of these namespaces (grep'ed from daisy-pipeline.modules) has content types
-    	//nsMap.put("http://maven.apache.org/POM/4.0.0", "");
-    	//nsMap.put("urn:oasis:names:tc:entity:xmlns:xml:catalog", "");
-    	//nsMap.put("http://xmlcalabash.com/ns/extensions", "");
-    	//nsMap.put("http://xmlcalabash.com/ns/extensions/osutils", "");
-    	//nsMap.put("http://www.daisy.org/ns/pipeline/xproc", "");
-    	//nsMap.put("http://www.daisy.org/ns/pipeline/xproc/internal", "");
-    	//nsMap.put("http://www.daisy.org/ns/pipeline/tmp", "");
-    	//nsMap.put("http://www.w3.org/1999/xhtml", "");
-    	//nsMap.put("http://www.daisy.org/ns/pipeline/data", "");
-    	//nsMap.put("http://www.w3.org/1999/X", "");
-    	//nsMap.put("http://www.daisy.org/ns/pipeline/functions", "");
-    	//nsMap.put("http://www.osgi.org/xmlns/scr/v1.1.0", "");
-    	//nsMap.put("http://www.daisy.org/ns/pipeline/doc", "");
-    	//nsMap.put("http://www.daisy.org/ns/z3998/authoring/", "");
-    	//nsMap.put("http://www.daisy.org/ns/pipeline/internal-functions", "");
-    	//nsMap.put("http://www.idpf.org/2007/ops", "");
-    	//nsMap.put("http://www.idpf.org/2007/opf", "");
-    	//nsMap.put("http://www.daisy.org/ns/z3998/authoring/", "");
-    	//nsMap.put("http://www.osgi.org/xmlns/scr/v1.1.0", "");
-    	//nsMap.put("http://www.daisy.org/z3986/2005/ncx/", "");
-    	//nsMap.put("http://www.daisy.org/ns/pipeline/tmp", "");
-    	//nsMap.put("http://purl.org/dc/elements/1.1/", "");
-    	//nsMap.put("http://www.w3.org/2001/XML", "");
-    	//nsMap.put("http://www.w3.org/1999/xhtml", "");
-    	//nsMap.put("http://www.daisy.org/ns/pipeline/converter", "");
-    	//nsMap.put("http://www.idpf.org/2007/opf", "");
-    	//nsMap.put("http://www.w3.org/ns/", "");
-    	//nsMap.put("http://www.idpf.org/2011/epub", "");
-    	//nsMap.put("http://utfx.org/test-definition", "");
-    	//nsMap.put("http://www.w3.org/2005/11/its", "");
-    	//nsMap.put("http://www.w3.org/1999/xlink", "");
-    	//nsMap.put("http://www.daisy.org/ns/functions", "");
-    	//nsMap.put("http://www.w3.org/2000/01/rdf-schema#", "");
-    	//nsMap.put("http://www.w3.org/1999/xhtml/vocab#", "");
-    	//nsMap.put("http://www.daisy.org/ns/rdf/usage/html/#", "");
-    	//nsMap.put("http://purl.org/dc/terms/", "");
-    	//nsMap.put("http://www.w3.org/2002/07/owl#", "");
-    	//nsMap.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "");
-    	//nsMap.put("http://www.daisy.org/ns/z3986/authoring/", "");
-    	//nsMap.put("http://www.daisy.org/z3986/2011/vocab/decl/#", "");
-    	//nsMap.put("http://expath.org/ns/pkg", "");
-    	//nsMap.put("http://pipeline.daisy.org/ns/pipeline/tmp", "");
-    	//nsMap.put("http://www.daisy.org/ns/z3998/authoring/features/rend/", "");
-    	//nsMap.put("http://www.daisy.org/z3998/2011/vocab/decl/#", "");
-    	//nsMap.put("http://www.daisy.org/pipeline/ns/tmp", "");
-    	//nsMap.put("http://www.oxygenxml.com/ns/doc/xsl", "");
-    	//nsMap.put("http://www.oxygenxml.com/ns/doc/xsl", "");
-    	//nsMap.put("http://www.daisy.org/ns/pipeline/internal-function", "");
-    	//nsMap.put("http://relaxng.org/ns/structure/1.0", "");
-    	//nsMap.put("http://docbook.org/ns/docbook", "");
-    	//nsMap.put("http://www.w3.org/1999/xhtml", "");
-    	//nsMap.put("http://www.daisy.org/ns/z3998/annotations/#", "");
-    	//nsMap.put("http://relaxng.org/ns/compatibility/annotations/1.0", "");
-    	//nsMap.put("http://purl.oclc.org/dsdl/schematron", "");
-    	//nsMap.put("http://docbook.org/ns/docbook", "");
-    	//nsMap.put("http://www.w3.org/2001/10/synthesis", "");
-    	//nsMap.put("http://www.daisy.org/ns/z3998/authoring/features/description/", "");
-    	//nsMap.put("http://www.w3.org/2001/XInclude", "");
-    	//nsMap.put("http://www.w3.org/1998/Math/MathML", "");
-    	//nsMap.put("http://www.daisy.org/ns/rng/annotations", "");
-    	//nsMap.put("http://www.daisy.org/ns/z3998/authoring/features/select/", "");
-    	//nsMap.put("http://www.w3.org/2002/xforms/", "");
-    	//nsMap.put("http://www.daisy.org/ns/z3998/authoring/xforms/instance/", "");
-    	//nsMap.put("http://purl.oclc.org/dsdl/schematron", "");
-    	//nsMap.put("http://www.w3.org/2001/XML", "");
-    	//nsMap.put("http://purl.oclc.org/dsdl/nvdl/ns/structure/1.0", "");
-    	//nsMap.put("http://xmlcalabash.com/ns/extensions/fileutils", "");
-    	//nsMap.put("http://www.w3.org/1999/html", "");
-    	//nsMap.put("http://example.net/ns", "");
-    	//nsMap.put("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "");
-    	//nsMap.put("http://www.w3.org/2000/10/swap/pim/contact#", "");
-    	//nsMap.put("http://www.example.com/cdr/metadata", "");
-    	//nsMap.put("http://www.daisy.org/ns/pipeline/data", "");
-    	//nsMap.put("http://example.net/non-xhtml", "");
-    	//nsMap.put("http://www.loc.gov/mods/v3", "");
-    	//nsMap.put("http://www.w3.org/ns/", "");
-    	//nsMap.put("http://www.w3.org/2001/", "");
-    	//nsMap.put("http://www.daisy.org/ns/pipeline/xproc-internal", "");
-    	//nsMap.put("urn:oasis:names:tc:opendocument:xmlns:manifest:1.0", "");
-    	//nsMap.put("urn:oasis:names:tc:opendocument:xmlns:container", "");
-    	//nsMap.put("http://purl.org/dc/terms/", "");
-    	//nsMap.put("http://expath.org/ns/pkg", "");
-    	//nsMap.put("http://www.daisy.org/ns/z3986/annotations/#", "");
-    	//nsMap.put("http://www.daisy.org/ns/z3986/authoring/features/rend/", "");
-    	//nsMap.put("http://www.daisy.org/ns/z3986/authoring/features/select/", "");
-    	//nsMap.put("http://www.daisy.org/ns/z3986/authoring/xforms/instance/", "");
     	
     	namespaces = Collections.unmodifiableMap(nsMap);
 	}

@@ -1,20 +1,20 @@
-@(script: org.daisy.pipeline.client.models.Script, scriptId: String, uploadFiles: Boolean, hasAdvancedOptions: Boolean, hideAdvancedOptions: Boolean, mediaTypeBlacklist: List[String])
+@(script: org.daisy.pipeline.client.models.Script, scriptId: String, uploadFiles: Boolean, hasAdvancedOptions: Boolean, hideAdvancedOptions: Boolean, mediaTypeBlacklist: List[String], jobId: Long)
 
 
 <div id="script-@scriptId" data-fileinput="@uploadFiles">
 <hgroup>
 <h3>
-	@script.nicename<br /> <small>@script.desc</small>
+	@script.getNicename()<br /> <small>@script.getDescription()</small>
 </h3>
-@if(script.homepage!=null && script.homepage.href!=null && script.homepage.href.length()>0){
+@if(script.getHomepage()!=null && script.getHomepage()!=null && script.getHomepage().length()>0){
 	<address class="muted">
-		<a href="@script.homepage.href" target="_blank">Online Documentation <i class="icon-share"></a></i>
+		<a href="@script.getHomepage()" target="_blank">Online Documentation <i class="icon-share"></a></i>
 	</address>
 }
 </hgroup>
 
-<form action="@routes.Jobs.postJob().unique()" method="POST" id="script-@scriptId-form" class="form-horizontal" onsubmit="DP2Forms.prepareSubmission('script-@scriptId')">
-	<input type="hidden" id="script-@scriptId-id" name="id" value="@script.id" />
+<form action="@routes.Jobs.postJob(jobId).unique()" method="POST" id="script-@scriptId-form" class="form-horizontal" onsubmit="DP2Forms.prepareSubmission('script-@scriptId')">
+	<input type="hidden" id="script-@scriptId-id" name="id" value="@script.getId()" />
 	<input type="hidden" id="script-@scriptId-uploads" name="uploads" value=""/>
 	<script type="text/javascript">
 		/* Prepare upload widget for validation and submission */
@@ -28,19 +28,17 @@
 	
 	<fieldset>
 		
-		@for(arg <- script.arguments){
-			@if(arg.required==true){
-				@if(arg.output!="result" && arg.output!="temp" && arg.kind!="output"){
-					@if(arg.kind=="parameters"){
-						@Widgets.parameters(arg, script, scriptId)
-					}else{
-						@defining(arg.xsdType){xsdType => @xsdType match{
-							case "string" => { @Widgets.string(arg, script, scriptId) }
-							case "boolean" => { @Widgets.boolean(arg, script, scriptId) }
-							case "anyFileURI" => { @Widgets.file(arg, script, scriptId, mediaTypeBlacklist) }
-							case _ => { @Widgets.string(arg, script, scriptId) }
-						}}
-					}
+		@for(arg <- script.getInputs()){
+			@if(arg.getRequired()==true){
+				@if((arg.getKind()+"")=="parameters"){
+					@Widgets.parameters(arg, script, scriptId)
+				}else{
+					@defining(arg.getType()){xsdType => @xsdType match{
+						case "string" => { @Widgets.string(arg, script, scriptId) }
+						case "boolean" => { @Widgets.boolean(arg, script, scriptId) }
+						case "anyFileURI" => { @Widgets.file(arg, script, scriptId, mediaTypeBlacklist) }
+						case _ => { @Widgets.string(arg, script, scriptId) }
+					}}
 				}
 			}
 		}
@@ -64,19 +62,17 @@
 			</legend>
 			
 			<div class="control-group @("in".when(!hideAdvancedOptions)) collapse" id="script-@scriptId-advanced-options">
-				@for(arg <- script.arguments){
-					@if(arg.required==false || arg.required == null){
-						@if(arg.output!="result" && arg.output!="temp" && arg.kind!="output"){
-							@if(arg.kind=="parameters"){
-								@Widgets.parameters(arg, script, scriptId)
-							}else{
-								@defining(arg.xsdType){xsdType => @xsdType match{
-									case "string" => { @Widgets.string(arg, script, scriptId) }
-									case "boolean" => { @Widgets.boolean(arg, script, scriptId) }
-									case "anyFileURI" => { @Widgets.file(arg, script, scriptId, mediaTypeBlacklist) }
-									case _ => { @Widgets.string(arg, script, scriptId) }
-								}}
-							}
+				@for(arg <- script.getInputs()){
+					@if(arg.getRequired()==false || arg.getRequired() == null){
+						@if((arg.getKind()+"")=="parameters"){
+							@Widgets.parameters(arg, script, scriptId)
+						}else{
+							@defining(arg.getType()){xsdType => @xsdType match{
+								case "string" => { @Widgets.string(arg, script, scriptId) }
+								case "boolean" => { @Widgets.boolean(arg, script, scriptId) }
+								case "anyFileURI" => { @Widgets.file(arg, script, scriptId, mediaTypeBlacklist) }
+								case _ => { @Widgets.string(arg, script, scriptId) }
+							}}
 						}
 					}
 					<br/>

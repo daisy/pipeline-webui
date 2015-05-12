@@ -5,16 +5,18 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import org.daisy.pipeline.client.models.Alive;
+import org.daisy.pipeline.client.http.WS;
+import org.daisy.pipeline.client.http.WSInterface;
+import org.daisy.pipeline.client.utils.Files;
 
+import controllers.Assets.Asset;
 import models.Notification;
 import models.NotificationConnection;
 import models.Setting;
 import models.User;
-import play.Configuration;
-import play.Logger;
+import play.*;
 import play.mvc.*;
-import utils.Pipeline2Engine;
+import views.html.*;
 
 public class Application extends Controller {
 	
@@ -22,8 +24,6 @@ public class Application extends Controller {
 	
 	public static final String DEFAULT_DP2_ENDPOINT = "http://localhost:8181/ws";
 	public static final String SLASH = System.getProperty("file.separator");
-	public static final String SYSTEM_TEMP;
-	public static final String DP2TEMP;
 	public static final String DP2DATA;
 	static {
 		String os = System.getProperty("os.name");
@@ -45,8 +45,6 @@ public class Application extends Controller {
 		} catch (IOException e) {
 			Logger.error("Could not get canonical path for temporary directory", e);
 		}
-		SYSTEM_TEMP = systemTemp;
-		DP2TEMP = dp2temp;
 		
 		// get data directory for webui
 		String dp2data = System.getenv("DP2DATA");
@@ -68,16 +66,26 @@ public class Application extends Controller {
 			}
 			dp2dataDir.mkdirs();
 			dp2data = dp2dataDir.getCanonicalPath();
+			
 		} catch (IOException e) {
 			Logger.error("Could not get canonical path for "+dp2data, e);
 		}
 		DP2DATA = dp2data;
 	}
 	
-	public static final String datasource = Configuration.root().getString("dp2.datasource");
-	private static Alive alive = null;
+	public static WSInterface ws = new WS();
 	
-	public static final String version = Configuration.root().getString("version");
+	private static org.daisy.pipeline.client.models.Alive alive = null;
+	
+	public static final String version;
+	static {
+		 String v = Application.class.getPackage().getImplementationVersion();
+		 if (v == null)
+			 version = "dev";
+		 else
+			 version = v;
+		 assert !(Play.isProd() && "dev".equals(version));
+	}
 	
 	public static Result index() {
 		if (FirstUse.isFirstUse())
@@ -107,7 +115,7 @@ public class Application extends Controller {
 		
 		File about = new File("about.html");
 		if (about.exists()) {
-			return ok(views.html.about.render(utils.Files.read(about)));
+			return ok(views.html.about.render(Files.read(about)));
 		} else {
 			return ok(views.html.about.render(null));
 		}
@@ -115,7 +123,7 @@ public class Application extends Controller {
 	
 	public static Result theme(String filename) {
 		if ("".equals(themeName())) {
-			return redirect(routes.Assets.at(filename));
+			return redirect(routes.Assets.versioned(new Asset(filename)));
 			
 		} else {
 			String theme = Application.themeName();
@@ -137,10 +145,10 @@ public class Application extends Controller {
 					
 				} catch (FileNotFoundException e) {
 					Logger.error("Could not open file input stream for '"+filename+"' in theme '"+theme+"'.", e);
-					return redirect(routes.Assets.at(filename));
+					return redirect(routes.Assets.versioned(new Asset(filename)));
 				}
 			} else {
-				return redirect(routes.Assets.at(filename));
+				return redirect(routes.Assets.versioned(new Asset(filename)));
 			}
 		}
 	}
@@ -156,6 +164,7 @@ public class Application extends Controller {
 	}
 	
 	public static String themeName = null;
+
 	public static String themeName() {
 		if (themeName == null)
 			themeName = Setting.get("appearance.theme");
@@ -171,15 +180,6 @@ public class Application extends Controller {
 		else if ("admin".equals(titleLink)) titleLink = routes.Administrator.getSettings().toString();
 		else if ("account".equals(titleLink)) titleLink = routes.Account.overview().toString();
 		return titleLink;
-	}
-	
-	private static String deployment = null;
-	/**
-	 * Returns a buffered value of the deployment type instead of having to check the DB each time using Setting.get("deployment").
-	 * @return
-	 */
-	public static String deployment() {
-		return deployment != null ? deployment : Setting.get("deployment");
 	}
 	
 	public static String absoluteURL(String url) {
@@ -202,21 +202,15 @@ public class Application extends Controller {
 		}
 	}
 
-	public static String getPipeline2EngineState() {
-		if (Pipeline2Engine.getState() != null)
-			return Pipeline2Engine.getState()+"";
-		
-		if (Application.alive == null || Application.alive.error)
-			return Pipeline2Engine.State.STOPPED+"";
-		
-		return Pipeline2Engine.State.RUNNING+"";
+	public static boolean pipeline2EngineAvailable() {
+		return Application.alive != null && !Application.alive.error;
 	}
 	
-	public static Alive getAlive() {
+	public static org.daisy.pipeline.client.models.Alive getAlive() {
 		return alive;
 	}
 	
-	public static void setAlive(Alive alive) {
+	public static void setAlive(org.daisy.pipeline.client.models.Alive alive) {
 		Application.alive = alive;
 		NotificationConnection.pushAll(new Notification("dp2.engine", alive));
 	}

@@ -12,6 +12,7 @@ tmp
 dist
 bin
 lib
+.sbt*
 
 # Default directories
 /server/uploads

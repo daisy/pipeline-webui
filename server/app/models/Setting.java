@@ -5,12 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import play.db.ebean.Model;
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.Model;
 
 import javax.persistence.*;
 
 import controllers.Application;
-
 import play.data.validation.*;
 import utils.ObfuscatedString;
 
@@ -28,7 +28,7 @@ public class Setting extends Model {
     
     // -- Queries
     
-    public static Model.Finder<String,Setting> find = new Model.Finder<String, Setting>(Application.datasource, String.class, Setting.class);
+    public static Model.Finder<String,Setting> find = new Model.Finder<String, Setting>(Setting.class);
     
     @Transient
     private static Map<String,String> cache = new HashMap<String,String>();
@@ -62,14 +62,14 @@ public class Setting extends Model {
     	else
     		setting.value = value;
     	if (value == null)
-    		setting.delete(Application.datasource);
+    		setting.delete();
     	else
-    		setting.save(Application.datasource);
+    		setting.save();
     	
     	// Cache settings
     	synchronized (cache) {
     		cache.put(name, value);
     	}
    }
-    
+
 }

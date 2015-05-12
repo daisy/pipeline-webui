@@ -1,0 +1,20 @@
+@(arg: org.daisy.pipeline.client.models.Argument, script: org.daisy.pipeline.client.models.Script, scriptId: String)
+
+<input type="hidden" name="@{arg.getName()}" value="true" id="script-@scriptId-@{arg.getName()}-value"/>
+
+<div class="control-group @("advanced-argument".when(!arg.getRequired()))">
+	<label class="control-label" id="script-@scriptId-@{arg.getName()}-label" for="@{arg.getName()}" aria-label="@{arg.getName()}">@arg.getNicename()</label>
+	<div class="controls">
+		<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="@{arg.getName()}-label" id="script-@scriptId-@{arg.getName()}">
+			<button type="button" name="@{arg.getName()}-on" class="btn active" id="script-@scriptId-@{arg.getName()}-on"
+				aria-role="radio" aria-checked="true"
+				onclick="toggleRadio('script-@scriptId-@{arg.getName()}', true, 'true');return false;">Yes</button>
+			<button type="button" name="@{arg.getName()}-off" class="btn" id="script-@scriptId-@{arg.getName()}-off"
+				aria-role="radio" aria-checked="false"
+				onclick="toggleRadio('script-@scriptId-@{arg.getName()}', false, 'false');return false;">No</button>
+		</div>
+		@if(arg.getDesc().length > 0){
+			<span class="help-block">@arg.getDesc()</span>
+		}
+	</div>
+</div>

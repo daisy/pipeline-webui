@@ -6,11 +6,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.daisy.pipeline.client.Pipeline2WSException;
-import org.daisy.pipeline.client.Pipeline2WSResponse;
+import org.daisy.pipeline.client.Pipeline2Exception;
+import org.daisy.pipeline.client.http.Pipeline2HttpClient;
+import org.daisy.pipeline.client.http.WSResponse;
 
 import models.User;
-
 import play.mvc.*;
 
 public class SystemStatus extends Controller {
@@ -19,12 +19,12 @@ public class SystemStatus extends Controller {
 
 	public static class EngineAttempt {
 		public Date lastAliveTime = null;
-		public Pipeline2WSResponse aliveResponse = null;
+		public WSResponse aliveResponse = null;
 		public org.daisy.pipeline.client.models.Alive alive = null;
 		public String aliveError = "The endpoint is not responding...";
 
 		public Date lastAuthTime = null;
-		public Pipeline2WSResponse authResponse = null;
+		public WSResponse authResponse = null;
 		public String authError = "The endpoint is not responding...";
 	}
 
@@ -40,17 +40,16 @@ public class SystemStatus extends Controller {
 	public static Map<String,Object> statusMap() {
 		Map<String,Object> status = new HashMap<String,Object>();
 		status.put("time", new Date());
-		status.put("deployment", Application.deployment());
-		status.put("engine.state", Application.getPipeline2EngineState());
+		status.put("engine.state", Application.pipeline2EngineAvailable());
 		status.put("engine", Application.getAlive());
 		status.put("theme", Application.themeName());
 		status.put("version", Application.version);
 
 		User user = User.authenticate(request(), session());
-		if (FirstUse.isFirstUse() || user != null && user.admin) {
-			status.put("datasource", Application.datasource);
-		}
-
+//		if (FirstUse.isFirstUse() || user != null && user.admin) {
+//			status.put("datasource", Application.datasource);
+//		}
+		
 		return status;
 	}
 
@@ -100,10 +99,11 @@ public class SystemStatus extends Controller {
 			
 			if (!urlError) {
 				try {
-					attempt.aliveResponse = org.daisy.pipeline.client.Alive.get(url);
+					attempt.aliveResponse = Pipeline2HttpClient.get(url, "", null, null, null);
+					//attempt.aliveResponse = org.daisy.pipeline.client.Alive.get(url);
 	
 					if (attempt.aliveResponse.status == 200) {
-						attempt.alive = new org.daisy.pipeline.client.models.Alive(attempt.aliveResponse);
+						attempt.alive = new org.daisy.pipeline.client.models.Alive(attempt.aliveResponse.asXml());
 						attempt.aliveError = null;
 						attempt.authError = null;
 						
@@ -111,7 +111,7 @@ public class SystemStatus extends Controller {
 						attempt.aliveError = attempt.aliveResponse.status+" - "+attempt.aliveResponse.statusName+": "+attempt.aliveResponse .statusDescription;
 					}
 	
-				} catch (Pipeline2WSException e) {
+				} catch (Pipeline2Exception e) {
 					attempt.aliveError = "Something unexpected occured while communicating with the Pipeline 2 framework";
 				}
 			}
@@ -129,7 +129,8 @@ public class SystemStatus extends Controller {
 			attempt.lastAuthTime = new Date();
 			if (attempt.alive != null && authid != null && secret != null && !attempt.alive.error && attempt.alive.authentication) {
 				try {
-					attempt.authResponse = org.daisy.pipeline.client.Scripts.get(url, authid, secret);
+					attempt.authResponse = Pipeline2HttpClient.get(url, "", authid, secret, null);
+					//attempt.authResponse = org.daisy.pipeline.client.Scripts.get(url, authid, secret);
 					if (attempt.authResponse.status == 401) {
 						attempt.authError = "Invalid authentication ID or secret text";
 
@@ -140,7 +141,7 @@ public class SystemStatus extends Controller {
 						attempt.authError = null;
 					}
 
-				} catch (Pipeline2WSException e) {
+				} catch (Pipeline2Exception e) {
 					attempt.authError = "An error occured while authenticating; could not reach the Pipeline 2 Engine.";
 				}
 			}

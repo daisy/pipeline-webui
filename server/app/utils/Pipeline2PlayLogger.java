@@ -1,7 +1,7 @@
 package utils;
 
-import org.daisy.pipeline.client.Pipeline2WSLogger;
-import org.daisy.pipeline.client.Pipeline2WSLogger.LEVEL;
+import org.daisy.pipeline.client.Pipeline2Logger;
+//import org.daisy.pipeline.client.Pipeline2WSLogger.LEVEL;
 import play.Logger;
 
 /**
@@ -9,7 +9,7 @@ import play.Logger;
  * @author jostein
  */
 @SuppressWarnings("unused")
-public class Pipeline2PlayLogger implements Pipeline2WSLogger {
+public class Pipeline2PlayLogger extends Pipeline2Logger {
 	
 	private LEVEL level = LEVEL.INFO;
 
@@ -47,5 +47,10 @@ public class Pipeline2PlayLogger implements Pipeline2WSLogger {
 	@Override
 	public void warn(String message) { Logger.warn("[WS clientlib] "+message); }
 	public void warn(String message, Exception e) { Logger.warn("[WS clientlib] "+message, e); }
+
+	@Override
+	public LEVEL getLevel() {
+		return level;
+	}
 
 }

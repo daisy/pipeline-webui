@@ -9,14 +9,14 @@ import java.util.concurrent.TimeUnit;
 
 import javax.persistence.Transient;
 
-import org.daisy.pipeline.client.Pipeline2WSException;
-import org.daisy.pipeline.client.Pipeline2WSResponse;
+import org.daisy.pipeline.client.Pipeline2Exception;
+import org.daisy.pipeline.client.http.WSResponse;
+//import org.daisy.pipeline.client.models.Script;
+
 import org.daisy.pipeline.client.models.Script;
 
 import controllers.SystemStatus.EngineAttempt;
-
 import akka.actor.Cancellable;
-
 import models.Setting;
 import models.User;
 import models.UserSetting;
@@ -31,7 +31,6 @@ import play.libs.Json;
 import play.mvc.*;
 import scala.concurrent.duration.Duration;
 import utils.FormHelper;
-import utils.Pipeline2Engine;
 
 public class Administrator extends Controller {
 
@@ -46,19 +45,6 @@ public class Administrator extends Controller {
 		public Form<SetMaintenanceForm> setMaintenanceForm = Administrator.setMaintenanceForm;
 		public Form<ConfigureAppearanceForm> configureAppearanceForm = Administrator.configureAppearanceForm;
 		public Form<ConfigureScripts> scriptsForm = Administrator.scriptsForm;
-	}
-
-	public final static Form<SetDeploymentForm> setDeploymentForm = play.data.Form.form(SetDeploymentForm.class);
-	public static class SetDeploymentForm {
-		@Constraints.Required
-		@Formats.NonEmpty
-		public String deployment;
-
-		public static void validate(Form<SetDeploymentForm> filledForm) {
-			if (!"desktop".equals(filledForm.field("deployment").value()) &&
-					!"server".equals(filledForm.field("deployment").value()))
-				filledForm.reject("deployment", "You must choose whether you're using the Web UI on your own computer or on a server.");
-		}
 	}
 
 	public final static Form<CreateAdminForm> createAdminForm = play.data.Form.form(CreateAdminForm.class);
@@ -134,23 +120,61 @@ public class Administrator extends Controller {
 	public static class SetStorageDirsForm {
 		@Required
 		public String uploaddir;
+		
+		@Required
+		public String jobsdir;
+		
+		@Required
+		public String templatesdir;
 
 		public static void validate(Form<SetStorageDirsForm> filledForm) {
 			String uploadPath = filledForm.field("uploaddir").valueOr("");
 			if (!uploadPath.endsWith(System.getProperty("file.separator")))
 				uploadPath += System.getProperty("file.separator");
-			File dir = new File(uploadPath);
-			if (!dir.exists())
+			
+			String jobsPath = filledForm.field("jobsdir").valueOr("");
+			if (!jobsPath.endsWith(System.getProperty("file.separator")))
+				jobsPath += System.getProperty("file.separator");
+			
+			String templatesPath = filledForm.field("templatesdir").valueOr("");
+			if (!templatesPath.endsWith(System.getProperty("file.separator")))
+				templatesPath += System.getProperty("file.separator");
+			
+			File uploadDir = new File(uploadPath);
+			if (!uploadDir.exists())
 				filledForm.reject("uploaddir", "The directory does not exist.");
-			else if (!dir.isDirectory())
+			else if (!uploadDir.isDirectory())
 				filledForm.reject("uploaddir", "The path does not point to a directory.");
+			
+			File jobsDir = new File(jobsPath);
+			if (!jobsDir.exists())
+				filledForm.reject("jobsdir", "The directory does not exist.");
+			else if (!jobsDir.isDirectory())
+				filledForm.reject("jobsdir", "The path does not point to a directory.");
+			
+			File templatesDir = new File(templatesPath);
+			if (!templatesDir.exists())
+				filledForm.reject("templatesdir", "The directory does not exist.");
+			else if (!templatesDir.isDirectory())
+				filledForm.reject("templatesdir", "The path does not point to a directory.");
 		}
 
 		public static void save(Form<SetStorageDirsForm> filledForm) {
 			String uploadPath = filledForm.field("uploaddir").valueOr("");
 			if (!uploadPath.endsWith(System.getProperty("file.separator")))
 				uploadPath += System.getProperty("file.separator");
+			
+			String jobsPath = filledForm.field("jobsdir").valueOr("");
+			if (!jobsPath.endsWith(System.getProperty("file.separator")))
+				jobsPath += System.getProperty("file.separator");
+			
+			String templatesPath = filledForm.field("templatesdir").valueOr("");
+			if (!templatesPath.endsWith(System.getProperty("file.separator")))
+				templatesPath += System.getProperty("file.separator");
+			
 			Setting.set("uploads", uploadPath);
+			Setting.set("jobs", uploadPath);
+			Setting.set("templates", uploadPath);
 		}
 	}
 
@@ -188,7 +212,7 @@ public class Administrator extends Controller {
 			Setting.set("mail.smtp.port", filledForm.field("port").valueOr(""));
 			Setting.set("mail.smtp.ssl", filledForm.field("ssl").valueOr(""));
 			Setting.set("mail.from.name", "Pipeline 2");
-			Setting.set("mail.from.email", session("email")); // TODO: make configurable
+			Setting.set("mail.from.email", session("email"));
 		}
 	}
 
@@ -287,33 +311,26 @@ public class Administrator extends Controller {
 	
 	final static Form<ConfigureScripts> scriptsForm = play.data.Form.form(ConfigureScripts.class);
 	public static class ConfigureScripts {
-		public static Object scriptPermissions() {
+		/*public static Object scriptPermissions() {
 			Map<String,Boolean> scriptPermissions = new HashMap<String,Boolean>();
 			
-			List<Script> scripts = null;
-			try {
-				Pipeline2WSResponse response = org.daisy.pipeline.client.Scripts.get(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
-				if (response.status != 200) {
-					return response.statusName;
-				} else {
-					scripts = Script.getScripts(response);
-				}
-			} catch (Pipeline2WSException e) {
-				Logger.error(e.getMessage(), e);
+			List<Script> scripts = Scripts.get();
+			if (scripts == null) {
+				Logger.error("Something bad happened, try refreshing the page or ask a technician for help");
 				return "Something bad happened, try refreshing the page or ask a technician for help";
 			}
 			
 			for (Script script : scripts) {
-				String enabled = UserSetting.get(-2L, "scriptEnabled-"+script.id);
+				String enabled = UserSetting.get(-2L, "scriptEnabled-"+script.getId());
 				if ("false".equals(enabled)) {
-					scriptPermissions.put(script.id, false);
+					scriptPermissions.put(script.getId(), false);
 				} else {
-					scriptPermissions.put(script.id, true);
+					scriptPermissions.put(script.getId(), true);
 				}
 			}
 			
 			return scriptPermissions;
-		}
+		}*/
 	}
 
 	final static Form<GlobalPermissions> globalForm = play.data.Form.form(GlobalPermissions.class);
@@ -519,7 +536,7 @@ public class Administrator extends Controller {
 						updateUser.setPassword(newPassword);
 				}
 
-				updateUser.save(Application.datasource);
+				updateUser.save();
 				if (updateUser.id.equals(user.id)) {
 					session("name", user.name);
 					session("email", user.email);
@@ -540,7 +557,7 @@ public class Administrator extends Controller {
 
 			if (resetUser.active) {
 				resetUser.makeNewActivationUid();
-				resetUser.save(Application.datasource);
+				resetUser.save();
 				String resetUrl = Application.absoluteURL(routes.Account.showResetPasswordForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request()));
 				String html = views.html.Account.emailResetPassword.render(resetUrl).body();
 				String text = "Go to this link to change your password: " + resetUrl;
@@ -551,7 +568,7 @@ public class Administrator extends Controller {
 
 			} else {
 				resetUser.makeNewActivationUid();
-				resetUser.save(Application.datasource);
+				resetUser.save();
 				String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request()));
 				String html = views.html.Account.emailActivate.render(activateUrl).body();
 				String text = "Go to this link to activate your account: " + activateUrl;
@@ -584,7 +601,7 @@ public class Administrator extends Controller {
 				return redirect(routes.Administrator.getSettings());
 			}
 
-			deleteUser.delete(Application.datasource);
+			deleteUser.delete();
 			flash("settings.usertab", "global");
 			flash("success", deleteUser.name + " was deleted");
 			return redirect(routes.Administrator.getSettings());
@@ -611,7 +628,7 @@ public class Administrator extends Controller {
 						"true".equals(Setting.get("mail.enable")) ? "" : filledForm.field("password").valueOr(""),
 								filledForm.field("admin").valueOr("").equals("true"));
 				newUser.makeNewActivationUid();
-				newUser.save(Application.datasource);
+				newUser.save();
 
 				if ("true".equals(Setting.get("mail.enable"))) {
 					String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(newUser.email, newUser.getActivationUid()).absoluteURL(request()));
@@ -781,50 +798,6 @@ public class Administrator extends Controller {
 
 		flash("error", "Form not found. Submitted information ignored :(");
 		return redirect(routes.Administrator.getSettings());
-	}
-
-	public static Cancellable shuttingDown = null;
-	public static Cancellable shutdownProgramatically(int delay) {
-		// TODO: If running in desktop mode; shutdown after a period of inactivity?
-
-		// Shutdown only allowed in desktop mode
-		if (!"desktop".equals(Application.deployment()))
-			return null;
-
-		if (shuttingDown != null)
-			return shuttingDown;
-
-		Logger.debug("shutting down programatically in "+delay+" seconds");
-		shuttingDown = Akka.system().scheduler().scheduleOnce(
-				Duration.create(delay, TimeUnit.SECONDS),
-				new Runnable() {
-					public void run() {
-						try {
-							// Pipeline engine
-							Logger.info("Attempting to stop the Pipeline engine...");
-							Pipeline2Engine.shutdown();
-
-							// Web UI
-							System.exit(0);
-						} catch (javax.persistence.PersistenceException e) {
-							// Ignores this exception that happens on shutdown:
-							// javax.persistence.PersistenceException: java.sql.SQLException: Attempting to obtain a connection from a pool that has already been shutdown.
-							// Should be safe to ignore I think...
-						}
-					}
-				},
-				Akka.system().dispatcher()
-				);
-		return shuttingDown;
-	}
-
-	public static Result shutdown() {
-		Cancellable cancellable = shutdownProgramatically(5);
-		if (cancellable == null)
-			Results.forbidden();
-
-		flash("shutdown","true");
-		return ok(views.html.Administrator.goodbye.render());
 	}
 
 	/**

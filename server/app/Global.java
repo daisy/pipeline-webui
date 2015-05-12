@@ -1,22 +1,40 @@
 import play.*;
 import models.*;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.NetworkInterface;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import org.daisy.pipeline.client.Pipeline2WS;
-import org.daisy.pipeline.client.Pipeline2WSException;
-import org.daisy.pipeline.client.Pipeline2WSResponse;
-import org.daisy.pipeline.client.Pipeline2WSLogger;
-import controllers.Administrator;
-import controllers.FirstUse;
 
+
+
+
+//import org.daisy.pipeline.client.Pipeline2;
+import org.daisy.pipeline.client.Pipeline2Exception;
+import org.daisy.pipeline.client.Pipeline2Logger;
+import org.daisy.pipeline.client.http.WSResponse;
+//import org.daisy.pipeline.client.Pipeline2Logger;
+
+
+
+
+
+import controllers.Administrator;
+import controllers.Application;
+import controllers.FirstUse;
 import play.libs.Akka;
 import scala.concurrent.duration.Duration;
-import utils.Pipeline2Engine;
 import utils.Pipeline2PlayLogger;
 
 public class Global extends GlobalSettings {
@@ -30,35 +48,13 @@ public class Global extends GlobalSettings {
 	public synchronized void onStart(play.Application app) {
 		// Application has started...
 		
-		final String datasource = Configuration.root().getString("dp2.datasource");
-		
-		Pipeline2WS.setLoggerImplementation(new Pipeline2PlayLogger());
+		Pipeline2Logger.setLogger(new Pipeline2PlayLogger());
 		if ("DEBUG".equals(Configuration.root().getString("logger.application"))) {
 			Logger.debug("Enabling clientlib debug mode");
-			Pipeline2WS.logger().setLevel(Pipeline2WSLogger.LEVEL.DEBUG);
+			Pipeline2Logger.logger().setLevel(Pipeline2Logger.LEVEL.DEBUG);
 		}
 		
 		NotificationConnection.notificationConnections = new ConcurrentHashMap<Long,List<NotificationConnection>>();
-		
-		Logger.debug("deployment: "+controllers.Application.deployment());
-		if ("desktop".equals(controllers.Application.deployment())) {
-			// reconfigure fwk dir each time, in case the install dir has changed
-			Pipeline2Engine.cwd = new File(Configuration.root().getString("dp2engine.dir")).getAbsoluteFile();
-			Logger.info("STARTING....");
-			Pipeline2Engine.setState(Pipeline2Engine.State.STOPPED);
-			FirstUse.configureDesktopDefaults();
-			Akka.system().scheduler().scheduleOnce(Duration.create(0, TimeUnit.SECONDS),
-			 	new Runnable() {
-					public void run() {
-						Pipeline2Engine.start();
-					}
-				},
-				Akka.system().dispatcher()
-				);
-		}
-		
-		if (User.findAll().size() > 0 && controllers.Application.deployment() == null)
-			Setting.set("deployment", "server");
 		
 		if (Setting.get("appearance.title") == null)
 			Setting.set("appearance.title", "DAISY Pipeline 2");
@@ -89,30 +85,15 @@ public class Global extends GlobalSettings {
 						try {
 							if (Setting.get("dp2ws.endpoint") == null)
 								return;
-							
-							if (Administrator.shuttingDown == null) {
-								Pipeline2WSResponse response;
-								try {
-									String endpoint = Setting.get("dp2ws.endpoint");
-									if (endpoint == null) {
-										controllers.Application.setAlive(null);
-										return;
-									}
-									
-									response = org.daisy.pipeline.client.Alive.get(endpoint);
-									if (response.status != 200) {
-										controllers.Application.setAlive(null);
-										
-									} else {
-										controllers.Application.setAlive(new org.daisy.pipeline.client.models.Alive(response));
-										if ("desktop".equals(controllers.Application.deployment()))
-											Pipeline2Engine.setState(Pipeline2Engine.State.RUNNING);
-									}
-								} catch (Pipeline2WSException e) {
-									Logger.error(e.getMessage(), e);
-									controllers.Application.setAlive(null);
-								}
+
+							String endpoint = Setting.get("dp2ws.endpoint");
+							if (endpoint == null) {
+								Application.setAlive(null);
+								return;
 							}
+
+							Application.setAlive(controllers.Application.ws.alive());
+							
 						} catch (javax.persistence.PersistenceException e) {
 							// Ignores this exception that happens on shutdown:
 							// javax.persistence.PersistenceException: java.sql.SQLException: Attempting to obtain a connection from a pool that has already been shutdown.
@@ -129,31 +110,6 @@ public class Global extends GlobalSettings {
 				Duration.create(1, TimeUnit.SECONDS),
 				new Runnable() {
 					public void run() {
-						if ("desktop".equals(controllers.Application.deployment())) {
-							if (Administrator.shuttingDown == null && (utils.Pipeline2Engine.State.ERROR+"").equals(controllers.Application.getPipeline2EngineState())) {
-								Administrator.shutdownProgramatically(30);
-							}
-							
-							// When starting the engine; check more often whether it is alive
-							if (Administrator.shuttingDown == null && Pipeline2Engine.getState() != Pipeline2Engine.State.RUNNING && Setting.get("dp2ws.endpoint") != null) {
-								Pipeline2WSResponse response;
-								try {
-									response = org.daisy.pipeline.client.Alive.get(Setting.get("dp2ws.endpoint"));
-									if (response.status != 200) {
-										controllers.Application.setAlive(null);
-
-									} else {
-										controllers.Application.setAlive(new org.daisy.pipeline.client.models.Alive(response));
-										if ("desktop".equals(controllers.Application.deployment()))
-											Pipeline2Engine.setState(Pipeline2Engine.State.RUNNING);
-									}
-								} catch (Pipeline2WSException e) {
-									Logger.error(e.getMessage(), e);
-									controllers.Application.setAlive(null);
-								}
-							}
-						}
-						
 						try {
 							synchronized (NotificationConnection.notificationConnections) {
 								for (Long userId : NotificationConnection.notificationConnections.keySet()) {
@@ -169,7 +125,7 @@ public class Global extends GlobalSettings {
 									for (NotificationConnection c : browsers) {
 										if (c.notifications.size() == 0) {
 	//										Logger.debug("*heartbeat* for user #"+userId+" and browser window #"+c.browserId);
-											c.push(new Notification("heartbeat", controllers.Application.getPipeline2EngineState()));
+											c.push(new Notification("heartbeat", controllers.Application.pipeline2EngineAvailable()));
 										}
 									}
 								}
@@ -191,30 +147,17 @@ public class Global extends GlobalSettings {
 				new Runnable() {
 					public void run() {
 						try {
-							if (Administrator.shuttingDown != null) return;
-							
-							// unused uploads are deleted after one hour
-							Date timeoutDate = new Date(new Date().getTime() - 600000L);
-							
-							List<Upload> uploads = Upload.find.all();
-							for (Upload upload : uploads) {
-								if (upload.job == null && NotificationConnection.getBrowser(upload.browserId) == null && upload.uploaded.before(timeoutDate)) {
-									Logger.info("Deleting old upload that is not open in any browser window: "+upload.id+(upload.getFile()!=null?" ("+upload.getFile().getName()+")":""));
-									upload.delete(datasource);
-								}
-							}
-							
 							// jobs are only deleted if that option is set in admin settings
 							if ("0".equals(Setting.get("jobs.deleteAfterDuration")))
 								return;
 							
-							timeoutDate = new Date(new Date().getTime() - Long.parseLong(Setting.get("jobs.deleteAfterDuration")));
+							Date timeoutDate = new Date(new Date().getTime() - Long.parseLong(Setting.get("jobs.deleteAfterDuration")));
 							
 							List<Job> jobs = Job.find.all();
 							for (Job job : jobs) {
 								if (job.finished != null && job.finished.before(timeoutDate)) {
 									Logger.info("Deleting old job: "+job.id+" ("+job.nicename+")");
-									job.delete(datasource);
+									job.delete();
 								}
 							}
 						} catch (javax.persistence.PersistenceException e) {
@@ -234,53 +177,54 @@ public class Global extends GlobalSettings {
 				new Runnable() {
 					public void run() {
 						try {
-							if (Administrator.shuttingDown != null) return;
-							
 							String endpoint = Setting.get("dp2ws.endpoint");
 							if (endpoint == null)
 								return;
 							
-							List<org.daisy.pipeline.client.models.Job> fwkJobs;
-							try {
-								fwkJobs = org.daisy.pipeline.client.models.Job.getJobs(org.daisy.pipeline.client.Jobs.get(endpoint, Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret")));
-								
-							} catch (Pipeline2WSException e) {
-								Logger.error(e.getMessage(), e);
+							List<org.daisy.pipeline.client.models.Job> engineJobs = controllers.Application.ws.getJobs();
+							if (engineJobs == null) {
 								return;
 							}
 							
 							List<Job> webUiJobs = Job.find.all();
 							
 							for (Job webUiJob : webUiJobs) {
-								boolean exists = false;
-								for (org.daisy.pipeline.client.models.Job fwkJob : fwkJobs) {
-									if (webUiJob.id.equals(fwkJob.id)) {
-										exists = true;
-										break;
-									}
-								}
-								if (!exists) {
-									Logger.info("Deleting job that no longer exists in the Pipeline engine: "+webUiJob.id+" ("+webUiJob.nicename+")");
-									webUiJob.delete(datasource);
-								}
-							}
-							
-							if (controllers.Application.getAlive() != null) {
-								for (org.daisy.pipeline.client.models.Job fwkJob : fwkJobs) {
+								if (webUiJob.engineId != null) {
 									boolean exists = false;
-									for (Job webUiJob : webUiJobs) {
-										if (fwkJob.id.equals(webUiJob.id)) {
+									for (org.daisy.pipeline.client.models.Job engineJob : engineJobs) {
+										if (webUiJob.engineId.equals(engineJob.getId())) {
 											exists = true;
 											break;
 										}
 									}
 									if (!exists) {
-										Logger.info("Adding job from the Pipeline engine that does not exist in the Web UI: "+fwkJob.id);
-										Job webUiJob = new Job(fwkJob);
-										webUiJob.save(datasource);
+										Logger.info("Deleting job that no longer exists in the Pipeline engine: "+webUiJob.id+" ("+webUiJob.engineId+" - "+webUiJob.nicename+")");
+										webUiJob.delete();
 									}
 								}
 							}
+							
+							if (controllers.Application.getAlive() != null) {
+								for (org.daisy.pipeline.client.models.Job engineJob : engineJobs) {
+									boolean exists = false;
+									for (Job webUiJob : webUiJobs) {
+										if (engineJob.getId().equals(webUiJob.engineId)) {
+											exists = true;
+											break;
+										}
+									}
+									if (!exists) {
+										Logger.info("Adding job from the Pipeline engine that does not exist in the Web UI: "+engineJob.getId());
+										User notLoggedIn = User.findById(-1L);
+										if (notLoggedIn == null) {
+											notLoggedIn = new User("not-logged-in@example.net", "Not logged in", "not logged in", false);
+										}
+										Job webUiJob = new Job(engineJob, notLoggedIn); // TODO: ensure that user with ID=-1 exists at this point
+										webUiJob.save();
+									}
+								}
+							}
+							
 						} catch (javax.persistence.PersistenceException e) {
 							// Ignores this exception that happens on shutdown:
 							// javax.persistence.PersistenceException: java.sql.SQLException: Attempting to obtain a connection from a pool that has already been shutdown.
@@ -290,15 +234,6 @@ public class Global extends GlobalSettings {
 				},
 				Akka.system().dispatcher()
 			);
-	}
-	
-	@Override
-	public void onStop(play.Application app) {
-		// Application shutdown...
-		
-		// Halt the Pipeline 2 engine if running in desktop mode
-		if ("desktop".equals(controllers.Application.deployment()))
-			Pipeline2Engine.halt();
 	}
 
 }

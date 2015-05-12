@@ -25,27 +25,25 @@ GET     /notifications/:browser/xhr         controllers.Notifications.xhr(browse
 
 # Scripts
 GET		/scripts/:id.json                   controllers.Scripts.getScriptJson(id: String)
-GET		/scripts/:id                        controllers.Scripts.getScript(id: String)
 GET     /scripts.json                       controllers.Scripts.getScriptsJson()
 
 # Jobs
 GET     /jobs/new                           controllers.Jobs.newJob()
-GET		/jobs/:id/result/*href              controllers.Jobs.getResult(id: String, href: String)
-GET		/jobs/:id/result                    controllers.Jobs.getAllResults(id: String)
-GET		/jobs/:id/log                       controllers.Jobs.getLog(id: String)
-GET		/jobs/:id/delete                    controllers.Jobs.delete(id: String)
-GET		/jobs/:id.json						controllers.Jobs.getJobJson(id: String)
-GET		/jobs/:id							controllers.Jobs.getJob(id: String)
+GET		/jobs/:id/scripts/:scriptId         controllers.Jobs.getScript(id: Long, scriptId: String)
+POST	/jobs/:id/upload                    controllers.Jobs.upload(id: Long)
+GET		/jobs/:id/result/*href              controllers.Jobs.getResult(id: Long, href: String)
+GET		/jobs/:id/result                    controllers.Jobs.getAllResults(id: Long)
+GET		/jobs/:id/log                       controllers.Jobs.getLog(id: Long)
+GET		/jobs/:id/delete                    controllers.Jobs.delete(id: Long)
+GET		/jobs/:id/restart                   controllers.Jobs.restart(id: Long)
+GET		/jobs/:id.json						controllers.Jobs.getJobJson(id: Long)
+GET		/jobs/:id							controllers.Jobs.getJob(id: Long)
 GET     /jobs.json                          controllers.Jobs.getJobsJson()
 GET     /jobs                               controllers.Jobs.getJobs()
-POST    /jobs                               controllers.Jobs.postJob()
+POST    /jobs/:id                           controllers.Jobs.postJob(id: Long)
 
 # Callbacks
 POST	/callbacks/:callbackType            controllers.Callbacks.postCallback(callbackType: String)
-
-# Uploads
-GET		/uploads/:id                        controllers.Uploads.getUpload(id: Long)
-POST    /uploads                            controllers.Uploads.postUpload()
 
 # Account
 GET		/account/resetpassword              controllers.Account.showResetPasswordForm(email, resetUid)
@@ -58,7 +56,6 @@ POST	/account                            controllers.Account.changeDetails()
 # Administrator
 GET		/admin                              controllers.Administrator.getSettings()
 POST	/admin                              controllers.Administrator.postSettings()
-GET		/admin/shutdown                     controllers.Administrator.shutdown()
 GET 	/admin/POST                         controllers.Administrator.getPostSettings()
 
 # First use
@@ -67,7 +64,7 @@ POST    /firstuse                           controllers.FirstUse.postFirstUse()
 GET		/welcome							controllers.FirstUse.welcome()
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file                       controllers.Assets.at(path="/public", file)
+GET     /assets/*file                       controllers.Assets.versioned(path="/public", file: Asset)
 
 # Application
 GET     /alive                              controllers.SystemStatus.alive()
@@ -75,5 +72,5 @@ GET     /status                             controllers.SystemStatus.status()
 GET     /status/engine                      controllers.SystemStatus.engineStatus()
 
 # Log
-GET		/log								controllers.Log.getLog(shutdown: java.lang.Integer ?= 0)
+GET		/log								controllers.Log.getLog()
 

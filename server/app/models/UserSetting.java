@@ -3,19 +3,17 @@ package models;
 import java.util.HashMap;
 import java.util.Map;
 
-import play.db.ebean.*;
+import com.avaje.ebean.*;
 
 import javax.persistence.*;
 
 import controllers.Application;
-
 import play.data.validation.*;
 
 @Entity(name="usersetting")
 @Table(name="usersetting")
 public class UserSetting extends Model {
-	private static final long serialVersionUID = 1L;
-
+	
 	@Id
 	@Constraints.Required
 	public String id;
@@ -29,7 +27,7 @@ public class UserSetting extends Model {
 	public String value;
 
 	// -- Queries
-	public static Model.Finder<String,UserSetting> find = new Model.Finder<String, UserSetting>(Application.datasource, String.class, UserSetting.class);
+	public static Model.Finder<String,UserSetting> find = new Model.Finder<String, UserSetting>(UserSetting.class);
 
 	@Transient
 	private static Map<Long,Map<String,String>> cache;
@@ -63,9 +61,9 @@ public class UserSetting extends Model {
 		}
 		setting.value = value;
 		if (value == null)
-			setting.delete(Application.datasource);
+			setting.delete();
 		else
-			setting.save(Application.datasource);
+			setting.save();
 
 		// Cache settings
 		cache(user, name, value);

@@ -2,12 +2,15 @@ package models;
 
 import play.Logger;
 import play.api.libs.Crypto;
-import play.db.ebean.*;
+
+import com.avaje.ebean.*;
+import com.avaje.ebean.Query;
+import com.avaje.ebean.util.ClassUtil;
+
+import controllers.Administrator.CreateAdminForm;
+import controllers.Application;
 
 import javax.persistence.*;
-
-import controllers.Application;
-import controllers.Administrator.CreateAdminForm;
 
 import java.util.*;
 
@@ -43,7 +46,7 @@ public class User extends Model {
 	private static final long serialVersionUID = 1L;
 
 
-	public static final Long LINK_TIMEOUT = 24*3600*1000L; // TODO: make as admin setting instead
+	public static final Long LINK_TIMEOUT = 24*3600*1000L;
 	
 	public static final Long JS_MAX_INT = +9007199254740992L;
 	public static final Long JS_MIN_INT = -9007199254740992L;
@@ -87,7 +90,7 @@ public class User extends Model {
 			this.password = "";
 			this.active = false;
 		} else {
-			this.password = Crypto.sign(password);
+			this.password = play.Play.application().injector().instanceOf(Crypto.class).sign(password);
 			this.active = true;
 		}
 		this.admin = admin;
@@ -102,7 +105,7 @@ public class User extends Model {
 	public void activate(String uid, String password) {
 		if (getActivationUid().equals(uid)) {
 			this.active = true;
-			this.password = Crypto.sign(password);
+			this.password = play.Play.application().injector().instanceOf(Crypto.class).sign(password);
 		}
 	}
 
@@ -121,7 +124,7 @@ public class User extends Model {
 		if (this.passwordLinkSent == null || new Date(new Date().getTime() - LINK_TIMEOUT).after(this.passwordLinkSent)) {
 			return null;
 		}
-		return Crypto.sign(this.email+this.passwordLinkSent.getTime()/1000);
+		return play.Play.application().injector().instanceOf(Crypto.class).sign(this.email+this.passwordLinkSent.getTime()/1000);
 	}
 
 	public String toString() {
@@ -132,7 +135,7 @@ public class User extends Model {
 	 * Encrypts and sets the password.
 	 */
 	public void setPassword(String password) {
-		this.password = Crypto.sign(password);
+		this.password = play.Play.application().injector().instanceOf(Crypto.class).sign(password);
 	}
 	
 	private static Random randomBrowserId = new Random(new Date().getTime());
@@ -146,7 +149,7 @@ public class User extends Model {
 	
 	// -- Queries
 
-	public static Model.Finder<String,User> find = new Model.Finder<String, User>(Application.datasource, String.class, User.class);
+	public static Model.Finder<String, User> find = new Model.Finder<>(User.class);
 
 	/** Retrieve all users. */
 	public static List<User> findAll() {
@@ -157,7 +160,7 @@ public class User extends Model {
 	public static User findByEmail(String email) {
 		List<User> users = find.where().eq("email", email).findList();
 		for (int u = users.size()-1; u > 0; u--)
-			users.get(u).delete(Application.datasource);
+			users.get(u).delete();
 		if (users.size() == 0)
 			return null;
 		else
@@ -168,7 +171,7 @@ public class User extends Model {
 	public static User findById(long id) {
 		List<User> users = find.where().eq("id", id).findList();
 		for (int u = users.size()-1; u > 0; u--)
-			users.get(u).delete(Application.datasource);
+			users.get(u).delete();
 		if (users.size() == 0)
 			return null;
 		else
@@ -226,17 +229,10 @@ public class User extends Model {
 		if (!"true".equals(models.Setting.get("users.guest.allowGuests")))
 			return null;
 		
-		if ("desktop".equals(models.Setting.get("deployment"))) {
-			User admin = find.where().eq("admin", true).findList().get(0);
-			admin.login(session);
-			return admin;
-			
-		} else {
-			User guest = new User("", models.Setting.get("users.guest.name"), "", false);
-			guest.id = -2-(long)randomGuestUserId.nextInt(2147483639); // <= -2: logged in guest, -1: not logged in, >= 0: logged in user
-			guest.login(session);
-			return guest;
-		}
+		User guest = new User("", models.Setting.get("users.guest.name"), "", false);
+		guest.id = -2-(long)randomGuestUserId.nextInt(2147483639); // <= -2: logged in guest, -1: not logged in, >= 0: logged in user
+		guest.login(session);
+		return guest;
 	}
 
 	public void login(Session session) {
@@ -257,7 +253,7 @@ public class User extends Model {
 		try {
 			User user = find.where()
 					.eq("email", email)
-					.eq("password", Crypto.sign(password))
+					.eq("password", play.Play.application().injector().instanceOf(Crypto.class).sign(password))
 					.findUnique();
 			user.login(session);
 			return user;
@@ -339,7 +335,7 @@ public class User extends Model {
 		if (!this.email.equals(filledForm.field("email").valueOr("")))
 			return true;
 		
-		if (filledForm.field("password").valueOr("").length() != 0 && !this.password.equals(Crypto.sign(filledForm.field("password").valueOr(""))))
+		if (filledForm.field("password").valueOr("").length() != 0 && !this.password.equals(play.Play.application().injector().instanceOf(Crypto.class).sign(filledForm.field("password").valueOr(""))))
 			return true;
 
 		if (!(this.admin + "").equals(filledForm.field("admin").valueOr("")))
@@ -353,20 +349,20 @@ public class User extends Model {
 	}
 	
 	@Override
-	public void delete(String datasource) {
+	public void delete() {
 		try {
 			List<Job> jobs = getJobs();
 			for (Job job : jobs)
-				job.delete(datasource);
-			super.delete(datasource);
+				job.delete();
+			super.delete();
 		} catch (javax.persistence.OptimisticLockException e) {
 			Logger.warn("Could not delete user "+this.id+" ("+this.name+" / "+this.email+")", e);
 		}
 	}
 	
 	@Override
-	public void save(String datasource) {
-		super.save(datasource);
+	public void save() {
+		super.save();
 		
 		// refresh id after save
 		if (this.id == null) {

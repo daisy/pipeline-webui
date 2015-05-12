@@ -20,7 +20,7 @@
 							value="@setWSForm.field("endpoint").valueOr(if (Setting.get("dp2ws.endpoint")!=null) Setting.get("dp2ws.endpoint") else "")"
 					/>
 					<p class="help-block">
-						<img id="setWS-endpointHelpLoading" src="@routes.Assets.at("images/loading-inline.gif")" alt="" style="display:none;"/>
+						<img id="setWS-endpointHelpLoading" src="@routes.Assets.versioned("images/loading-inline.gif")" alt="" style="display:none;"/>
 						<span id="setWS-endpointHelp"></span>
 					</p>
 				</div>
@@ -40,7 +40,7 @@
 							value="@setWSForm.field("authid").valueOr(models.Setting.get("dp2ws.authid"))"
 					/>
 					<p class="help-block">
-						<img id="setWS-authidHelpLoading" src="@routes.Assets.at("images/loading-inline.gif")" alt="" style="display:none;"/>
+						<img id="setWS-authidHelpLoading" src="@routes.Assets.versioned("images/loading-inline.gif")" alt="" style="display:none;"/>
 						<span id="setWS-authidHelp"></span>
 					</p>
 					<p class="help-block" style="color:black;">This Pipeline 2 Engine requires authentication. The authentication ID is not to be confused with the user accounts in the Web UI.</p>
@@ -64,7 +64,7 @@
 							placeholder="@if(models.Setting.get("dp2ws.secret")==null){Secret token}else{**********}" class="input-xlarge"
 					/>
 					<p class="help-block">
-						<img id="setWS-secretHelpLoading" src="@routes.Assets.at("images/loading-inline.gif")" alt="" style="display:none;"/>
+						<img id="setWS-secretHelpLoading" src="@routes.Assets.versioned("images/loading-inline.gif")" alt="" style="display:none;"/>
 						<span id="setWS-secretHelp"></span>
 					</p>
 					<p class="help-block" style="color:black;">The secret token corresponding to the authentication ID.</p>

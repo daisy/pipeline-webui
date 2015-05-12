@@ -15,109 +15,72 @@
 			<div class="dp2-form-input">
 				<div class="dp2-form-content">
 					<input @if(autofocus){autofocus="autofocus"} type="text" name="uploaddir" id="setStorageDirs-uploaddir" placeholder="URL" class="input-xlarge"
-							value="@setStorageDirsForm.field("uploaddir").valueOr(if (Setting.get("uploads") != null) Setting.get("uploads") else flash.get("uploads"))"
-							onkeyup="if(@{models.Setting.get("uploads")==null} || this.value==='@models.Setting.get("uploads")')document.getElementById('setStorageDirs-uploaddirGroup').style.backgroundColor='#FFF';else document.getElementById('setStorageDirs-uploaddirGroup').style.backgroundColor='#DDF';"
+							value="@setStorageDirsForm.field("uploaddir").valueOr(Setting.get("uploads"))"
+							onkeyup="if(this.value==='@models.Setting.get("uploads")')document.getElementById('setStorageDirs-uploaddirGroup').style.backgroundColor='#FFF';else document.getElementById('setStorageDirs-uploaddirGroup').style.backgroundColor='#DDF';"
 					/>
 					<p class="help-block">
-						<img id="setStorageDirs-uploaddirHelpLoading" src="@routes.Assets.at("images/loading-inline.gif")" alt="" style="display:none;"/>
+						<img id="setStorageDirs-uploaddirHelpLoading" src="@routes.Assets.versioned("images/loading-inline.gif")" alt="" style="display:none;"/>
 						<span id="setStorageDirs-uploaddirHelp"></span>
 					</p>
-					@if(models.Setting.get("uploads")==null && setStorageDirsForm.field("uploaddir").value() == null){
-						<p class="help-block" style="color:black;">The upload directory is not set, a suggestion is provided.</p>
-					}
-					<p class="help-block" style="color:black;">This is where all uploaded files will be stored. The path refers to the filesystem that the Web UI runs on.</p>
+					<p class="help-block" style="color:black;">This is where all uploaded files will be stored.</p>
 				</div>
 			</div>
 			<div class="dp2-form-br"></div>
 		</div>
 		
-		<div class="control-group dp2-form @("error".when(setStorageDirsForm.error("resultdir") != null))" id="setStorageDirs-resultdirGroup" style="display:none;">
+		<div class="control-group dp2-form @("error".when(setStorageDirsForm.error("jobsdir") != null))" id="setStorageDirs-jobsdirGroup">
      		<div class="dp2-form-label">
      			<div class="dp2-form-content">
-					<label for="tempdir" class="control-label">Result directory</label>
+					<label for="jobsdir" class="control-label">Jobs directory</label>
 				</div>
 			</div>
 			<div class="dp2-form-input">
 				<div class="dp2-form-content">
-					<input type="text" autocomplete="off" name="resultdir" id="setStorageDirs-resultdir" placeholder="Temporary directory path" class="input-xlarge"
-							value="@setStorageDirsForm.field("resultdir").valueOr(if (Setting.get("dp2ws.resultdir") != null) Setting.get("dp2ws.resultdir") else flash.get("resultsdir"))"
-							onkeyup="if(@{models.Setting.get("dp2ws.resultdir")==null} || this.value==='@models.Setting.get("dp2ws.resultdir")')document.getElementById('setStorageDirs-resultdirGroup').style.backgroundColor='#FFF';else document.getElementById('setStorageDirs-resultdirGroup').style.backgroundColor='#DDF';"
+					<input type="text" autocomplete="off" name="jobsdir" id="setStorageDirs-jobsdir" placeholder="Temporary directory path" class="input-xlarge"
+							value="@setStorageDirsForm.field("jobsdir").valueOr(Setting.get("jobs"))"
+							onkeyup="if(this.value==='@models.Setting.get("jobs")')document.getElementById('setStorageDirs-jobsdirGroup').style.backgroundColor='#FFF';else document.getElementById('setStorageDirs-jobsdirGroup').style.backgroundColor='#DDF';"
 					/>
 					<p class="help-block">
-						<img id="setStorageDirs-resultdirHelpLoading" src="@routes.Assets.at("images/loading-inline.gif")" alt="" style="display:none;"/>
-						<span id="setStorageDirs-resultdirHelp"></span>
+						<img id="setStorageDirs-jobsdirHelpLoading" src="@routes.Assets.versioned("images/loading-inline.gif")" alt="" style="display:none;"/>
+						<span id="setStorageDirs-jobsdirHelp"></span>
 					</p>
-					@if(models.Setting.get("dp2ws.resultdir")==null && setStorageDirsForm.field("resultdir").value() == null){
-						<p class="help-block" style="color:black;">The result directory is not set, a suggestion is provided.</p>
-					}
-					<p class="help-block" style="color:black;">This is where the job results will be stored. The path refers to the filesystem that the Pipeline 2 Engine runs on.</p>
+					<p class="help-block" style="color:black;">This is where the jobs input files and option values will be stored. This is stored to allow for re-running jobs.</p>
 				</div>
 			</div>
 			<div class="dp2-form-br"></div>
 		</div>
 		
-		<div class="control-group dp2-form @("error".when(setStorageDirsForm.error("tempdir") != null))" id="setStorageDirs-tempdirGroup" style="display:none;">
+		<div class="control-group dp2-form @("error".when(setStorageDirsForm.error("templatesdir") != null))" id="setStorageDirs-templatesdirGroup">
      		<div class="dp2-form-label">
      			<div class="dp2-form-content">
-					<label for="tempdir" class="control-label">Temporary directory</label>
+					<label for="templatesdir" class="control-label">Job template directory</label>
 				</div>
 			</div>
 			<div class="dp2-form-input">
 				<div class="dp2-form-content">
-					<input type="text" autocomplete="off" name="tempdir" id="setStorageDirs-tempdir" placeholder="Temporary directory path" class="input-xlarge"
-							value="@setStorageDirsForm.field("tempdir").valueOr(if (Setting.get("dp2ws.tempdir") != null) Setting.get("dp2ws.tempdir") else flash.get("tempdir"))"
-							onkeyup="if(@{models.Setting.get("dp2ws.tempdir")==null} || this.value==='@models.Setting.get("dp2ws.tempdir")')document.getElementById('setStorageDirs-tempdirGroup').style.backgroundColor='#FFF';else document.getElementById('setStorageDirs-tempdirGroup').style.backgroundColor='#DDF';"
+					<input type="text" autocomplete="off" name="templatesdir" id="setStorageDirs-templatesdir" placeholder="Temporary directory path" class="input-xlarge"
+							value="@setStorageDirsForm.field("templatesdir").valueOr(Setting.get("templates"))"
+							onkeyup="if(this.value==='@models.Setting.get("templates")')document.getElementById('setStorageDirs-templatesdirGroup').style.backgroundColor='#FFF';else document.getElementById('setStorageDirs-templatesdirGroup').style.backgroundColor='#DDF';"
 					/>
 					<p class="help-block">
-						<img id="setStorageDirs-tempdirHelpLoading" src="@routes.Assets.at("images/loading-inline.gif")" alt="" style="display:none;"/>
-						<span id="setStorageDirs-tempdirHelp"></span>
+						<img id="setStorageDirs-templatesdirHelpLoading" src="@routes.Assets.versioned("images/loading-inline.gif")" alt="" style="display:none;"/>
+						<span id="setStorageDirs-templatesdirHelp"></span>
 					</p>
-					@if(models.Setting.get("dp2ws.tempdir")==null && setStorageDirsForm.field("tempdir").value() == null){
-						<span class="help-block" style="color:black;">The result directory is not set, a suggestion is provided.</span>
-					}
-					<span class="help-block" style="color:black;">Most jobs will generate some temporary files, which will be stored in this directory. <!--The temporary files are deleted automatically when the job is finished.TODO--> The path refers to the filesystem that the Pipeline 2 Engine runs on.</span>
+					<p class="help-block" style="color:black;">This is where the job templates will be stored. Job templates are predefined sets of options and files that can be reused to create jobs more easily.</p>
 				</div>
 			</div>
 			<div class="dp2-form-br"></div>
 		</div>
 		
 		<br/>
-		@if(skipRoute != null){
-			<div class="split">
-	     		<div class="split-left">
-	     			<div class="split-content" style="text-align:right;">
-						<button class="btn btn-primary" id="setStorageDirs-submit" type="submit" name="submit">Save Settings</button>
-					</div>
-				</div>
-				<div class="split-right">
-					<div class="split-content" style="text-align:left;">
-						<button class="btn" id="setStorageDirs-skip" type="button" name="skip" onclick="window.location='@routes.Application.index()';return false;">I'll configure it later <i class="icon-hand-right"></i></button>
-					</div>
-				</div>
-				<div class="split-br"></div>
-			</div>
-		}else{
-			<button class="btn btn-primary" id="setStorageDirs-submit" type="submit" name="submit" disabled="">Save Settings</button>
-		}
+		<button class="btn btn-primary" id="setStorageDirs-submit" type="submit" name="submit" disabled="">Save Settings</button>
 		
 		<script type="text/javascript">
-			function setStorageDirsOnEngineUpdate(engine) {
-				if (typeof engine !== "object" || engine === null)
-					return;
-				if (engine.mode==="LOCAL") {
-					$("#setStorageDirs-resultdirGroup, #setStorageDirs-tempdirGroup").show(400); 
-				} else {
-					$("#setStorageDirs-resultdirGroup, #setStorageDirs-tempdirGroup").hide(400);
-				}
-			}
-			setStorageDirsOnEngineUpdate(@Html(play.libs.Json.toJson(controllers.Application.getAlive())+""));
 			$(function(){
-				DP2Forms.validateAsTextField("setStorageDirs", "uploaddir", "@setStorageDirsForm.field("uploaddir").valueOr(if (Setting.get("uploaddir")!=null) Setting.get("uploads") else "")");
-				DP2Forms.validateAsTextField("setStorageDirs", "resultdir", "@setStorageDirsForm.field("resultdir").valueOr(if (Setting.get("dp2ws.resultdir")!=null) Setting.get("dp2ws.resultdir") else "")");
-				DP2Forms.validateAsTextField("setStorageDirs", "tempdir", "@setStorageDirsForm.field("tempdir").valueOr(if (Setting.get("dp2ws.tempdir")!=null) Setting.get("dp2ws.tempdir") else "")");
+				DP2Forms.validateAsTextField("setStorageDirs", "uploaddir", "@setStorageDirsForm.field("uploaddir").valueOr(Setting.get("uploads"))");
+				DP2Forms.validateAsTextField("setStorageDirs", "jobsdir", "@setStorageDirsForm.field("jobsdir").valueOr(Setting.get("jobs"))");
+				DP2Forms.validateAsTextField("setStorageDirs", "templatesdir", "@setStorageDirsForm.field("templatesdir").valueOr(Setting.get("templates"))");
 				DP2Forms.disableButtonOnErrors("setStorageDirs", "submit");
-				
-				Notifications.listen("dp2.engine", setStorageDirsOnEngineUpdate);
 			});
 		</script>
 		

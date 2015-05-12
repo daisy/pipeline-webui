@@ -1,4 +1,4 @@
-@(id: String)
+@(id: Long)
 
 @main("Empty detailed log") {
 
@@ -8,7 +8,7 @@
 
 <ul class="pager">
   <li>
-    <a href="@routes.Jobs.getJob(id)">&larr; Back to job @id</a>
+    <a href="@routes.Jobs.getJob(id)">&larr; Back to job #@id</a>
   </li>
 </ul>
 
