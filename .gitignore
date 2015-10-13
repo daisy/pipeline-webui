@@ -13,19 +13,21 @@ dist
 bin
 lib
 .sbt*
+.cache-*
 
 # Default directories
-/server/uploads
-/server/local.results
-/server/local.temp
+/uploads
+/local.results
+/local.temp
 
 # Derby database
-/server/dp2webui
-/server/derby.log
+/dp2webui
+/derby.log
 
 # IDE and editors
 *~
 .idea
+.idea_modules
 nbproject
 eclipse
 .amateras
@@ -35,3 +37,6 @@ eclipse
 *.iml
 *.ipr
 *.iws
+
+# Play! Framework
+RUNNING_PID

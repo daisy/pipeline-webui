@@ -1,6 +1,13 @@
-name := """server"""
+organization := "org.daisy.pipeline"
+name := "webui"
+version := "2.0-SNAPSHOT"
 
-version := "1.0-SNAPSHOT"
+organizationName := "DAISY"
+organizationHomepage := Some(url("http://daisy.org"))
+homepage := Some(url("https://github.com/daisy/pipeline-webui"))
+startYear := Some(2012)
+description := "A web-based user interface for the DAISY Pipeline 2."
+licenses += "LGPLv3" -> url("https://www.gnu.org/licenses/lgpl-3.0.html")
 
 lazy val root = (project in file(".")).enablePlugins(PlayJava, PlayEbean, DebianPlugin)
 
@@ -8,7 +15,7 @@ scalaVersion := "2.11.6"
 
 maintainer in Linux := "Jostein Austvik Jacobsen <josteinaj@gmail.com>"
 packageSummary in Linux := "DAISY Pipeline 2 Web User Interface"
-packageDescription := "DAISY Pipeline 2 Web User Interface"
+packageDescription := "A web-based user interface for the DAISY Pipeline 2."
 
 resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
