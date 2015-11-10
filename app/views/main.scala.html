@@ -1,4 +1,4 @@
-@(title: String, nav: String = "", moreScripts: Array[String] = Array(), moreStyles: Array[String] = Array(), navs: Array[String] = Array("scripts", "jobs", "about", "admin", "account", "login"))(content: Html)
+@(title: String, nav: String = "", moreScripts: Array[String] = Array(), moreStyles: Array[String] = Array(), navs: Array[String] = Array("scripts", "jobs", "templates", "about", "admin", "account", "login"))(content: Html)
 
 <!DOCTYPE html>
 <html lang="en">
@@ -98,6 +98,9 @@
 			 					<li class="@("active".when(nav == "jobs"))"><a href="@routes.Jobs.getJobs()"><i class="icon-tasks icon-white"></i> Jobs</a></li>
 			 				}
 		 				}
+		 				@if(navs.contains("templates")){
+		 					<li class="@("active".when(nav == "templates"))"><a href="@routes.Templates.getTemplates()"><i class="icon-briefcase icon-white"></i> Templates</a></li>
+	  					}
 		 				@if(navs.contains("about")){
 		 					<li class="@("active".when(nav == "about"))"><a href="@routes.Application.about()"><i class="icon-info-sign icon-white"></i> About</a></li>
 	  					}

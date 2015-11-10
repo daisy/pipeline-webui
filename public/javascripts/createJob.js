@@ -9,6 +9,7 @@ var Job = {
 	uploadListeners: [],
 	validators: [],
 	filesetTypeListeners: [],
+	setFromTemplateHandlers: [],
 	
 	// private properties
 	_filesetTypeDeterminator: undefined,

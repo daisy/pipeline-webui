@@ -17,4 +17,17 @@
 			<span class="help-block">@arg.getDesc()</span>
 		}
 	</div>
+	<script type="text/javascript">
+	$(function(){
+		Job.setFromTemplateHandlers.push(function(arg, uploads) {
+			if (arg.name === "@arg.getName()") {
+				if (arg.defined && arg.asList.length > 0 && arg.asList[0] === "false") {
+					$("#script-@scriptId-@{arg.getName()}-off").click();
+				} else {
+					$("#script-@scriptId-@{arg.getName()}-on").click();
+				}
+			}
+		});
+	});
+	</script>
 </div>

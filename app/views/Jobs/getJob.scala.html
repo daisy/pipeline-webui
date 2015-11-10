@@ -17,7 +17,7 @@
 }
 
 <hgroup>
-	<h1>Job Summary<br>
+	<h1>Job Summary<br/>
 	<small id="header-nicename">&nbsp;</small></h1>
 	
 	<small>
@@ -194,8 +194,12 @@
 <ol aria-live="polite" role="log" class="messagelist" id="message-list" style="display:none;"></ol>
 
 <br/>
-<a class="btn btn-info" href="@routes.Jobs.restart(uiJob)"><span class="icon-download-alt icon-white"></span> Restart Job</a>
-<p><small>Note: this will delete the current results.</small></p>
+<div class="form-actions">
+<a class="btn btn-info" href="@routes.Jobs.restart(uiJob)"><span class="icon-refresh icon-white"></span> Restart job</a>
+<a class="btn btn-success" href="@routes.Jobs.newJobWithOldJob(uiJob)"><span class="icon-plus icon-white"></span> New job with same options</a>
+<a class="btn" href="@routes.Jobs.saveAsTemplate(uiJob)"><span class="icon-briefcase"></span> Save job as template</a>
+<p><small>Note: restarting the job will delete the current results.</small></p>
+</div>
 <br/><br/>
 
 <script type="text/javascript">
@@ -226,7 +230,6 @@
 		});
 		Notifications.listen("job-created-@uiJob", function(message){
 			var time = parseInt(message.number);
-			console.log("job-created-@uiJob", message, time);
 			if (isNaN(time)) {
 				clearFuzzyUpdates("created-fuzzy", time);
 				$("#created, #created-fuzzy").html("&nbsp;");
@@ -237,7 +240,6 @@
 		});
 		Notifications.listen("job-started-@uiJob", function(message){
 			var time = parseInt(message.number);
-			console.log("job-started-@uiJob", message, time);
 			if (isNaN(time)) {
 				clearFuzzyUpdates("started-fuzzy", time);
 				$("#started, #started-fuzzy").html("&nbsp;");
@@ -248,7 +250,6 @@
 		});
 		Notifications.listen("job-finished-@uiJob", function(message){
 			var time = parseInt(message.number);
-			console.log("job-finished-@uiJob", message, time);
 			if (isNaN(time)) {
 				clearFuzzyUpdates("finished-fuzzy", time);
 				$("#finished, #finished-fuzzy").html("&nbsp;");
@@ -259,7 +260,6 @@
 		});
 		var updateResultsList = function(result) {
 			var li = document.createElement("li");
-		    console.log("updating results list", result);
 			if (result.hasOwnProperty('results') && result.results !== null && result.results !== undefined && result.results.length > 0) {
 				$(li).append("<a class=\"results-expand-collapse icon-plus\" onclick=\"javascript:$(this).siblings().filter('ul').toggle();$(this).siblings().filter('.results-fileicon').toggleClass('icon-folder-open icon-folder-close');$(this).toggleClass('icon-plus icon-minus');return false;\"></a>");
 				$(li).append("<i class=\"results-fileicon icon-folder-close\"></i>");
@@ -288,7 +288,6 @@
 		}
 		var updateResults = function(results){
 			var i, j, href;
-			console.log("updating results", results);
 			if (results.results === null || results.results.length === 0) {
 				$("#results .results-empty").show();
 				$("#results .results-nonempty").hide();
@@ -343,11 +342,9 @@
 		$.ajax({
 			url: "@routes.Jobs.getJobJson(uiJob)?"+new Date().getTime(),
 			error: function(jqXHR, textStatus, errorThrown) {
-				console.log("could not retrieve JSON for job", textStatus, errorThrown);
 				// error; too bad :(
 			},
 			success: function(job, textStatus, jqXHR) {
-			    console.log("successfully retrieved job...", job);
 				// updating page contents dynamically...
 				updateFuzzy("created-fuzzy", job.webuiJob.created);
 				updateFuzzy("started-fuzzy", job.webuiJob.started);
@@ -356,7 +353,7 @@
 				$("#started").html(typeof job.webuiJob.started === "number" ? new Date(job.webuiJob.started)+"" : "&nbsp;");
 				$("#finished").html(typeof job.webuiJob.finished === "number" ? new Date(job.webuiJob.finished)+"" : "&nbsp;");
 				
-				$("#engine-id").html(job.engineJob.id);
+				$("#engine-id").html(job.engineJob != null && typeof job.engineJob.id === "string" ? job.engineJob.id : job.webuiJob.engineId);
 				$("#header-nicename, #nicename").html(job.webuiJob.nicename);
 				$("#scriptid").html(job.webuiJob.scriptId);
 				$("#scriptname").html(job.webuiJob.scriptName);
@@ -367,10 +364,11 @@
 				$("#status-"+job.webuiJob.status.toLowerCase()).show();
 				
 				$("#message-list li").remove();
-				console.log(job);
-				if (job.engineJob.messages instanceof Array) {
-					for (var m = 0; m < job.engineJob.messages.length; m++) {
-						addMessage(job.engineJob.messages[m]);
+				if (job.engineJob !== undefined) {
+					if (job.engineJob.messages instanceof Array) {
+						for (var m = 0; m < job.engineJob.messages.length; m++) {
+							addMessage(job.engineJob.messages[m]);
+						}
 					}
 				}
 				

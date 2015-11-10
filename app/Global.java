@@ -1,38 +1,15 @@
 import play.*;
 import models.*;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.NetworkInterface;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-
-
-
-
-//import org.daisy.pipeline.client.Pipeline2;
-import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
-import org.daisy.pipeline.client.http.WSResponse;
-//import org.daisy.pipeline.client.Pipeline2Logger;
+import org.daisy.pipeline.client.models.Job.Status;
 
-
-
-
-
-import controllers.Administrator;
 import controllers.Application;
-import controllers.FirstUse;
 import play.libs.Akka;
 import scala.concurrent.duration.Duration;
 import utils.Pipeline2PlayLogger;
@@ -155,8 +132,8 @@ public class Global extends GlobalSettings {
 							
 							List<Job> jobs = Job.find.all();
 							for (Job job : jobs) {
-								if (job.finished != null && job.finished.before(timeoutDate)) {
-									Logger.info("Deleting old job: "+job.id+" ("+job.nicename+")");
+								if (job.getFinished() != null && job.getFinished().before(timeoutDate)) {
+									Logger.info("Deleting old job: "+job.getId()+" ("+job.getNicename()+")");
 									job.delete();
 								}
 							}
@@ -173,7 +150,7 @@ public class Global extends GlobalSettings {
 		// If jobs.deleteAfterDuration is not set; clean up jobs that no longer exists in the Pipeline engine. This typically happens if the Pipeline engine is restarted.
 		Akka.system().scheduler().schedule(
 				Duration.create(1, TimeUnit.MINUTES),
-				Duration.create(1, TimeUnit.MINUTES),
+				Duration.create(10, TimeUnit.MINUTES),
 				new Runnable() {
 					public void run() {
 						try {
@@ -186,41 +163,109 @@ public class Global extends GlobalSettings {
 								return;
 							}
 							
+							Logger.info("checking for jobs in webui that is not in engine...");
 							List<Job> webUiJobs = Job.find.all();
-							
 							for (Job webUiJob : webUiJobs) {
-								if (webUiJob.engineId != null) {
+								// new jobs should be deleted after a while if they're not run
+								if ("NEW".equals(webUiJob.getStatus())) {
+									Date lastAccessed = Job.lastAccessed.get(webUiJob.getId());
+									final int deleteNewJobsAfterSeconds = 600;
+									if (lastAccessed == null || (new Date().getTime() - lastAccessed.getTime())/1000 > deleteNewJobsAfterSeconds) {
+										webUiJob.delete();
+									}
+									
+									continue;
+								}
+								
+								if (webUiJob.getEngineId() != null) {
 									boolean exists = false;
 									for (org.daisy.pipeline.client.models.Job engineJob : engineJobs) {
-										if (webUiJob.engineId.equals(engineJob.getId())) {
+										if (webUiJob.getEngineId().equals(engineJob.getId())) {
 											exists = true;
 											break;
 										}
 									}
 									if (!exists) {
-										Logger.info("Deleting job that no longer exists in the Pipeline engine: "+webUiJob.id+" ("+webUiJob.engineId+" - "+webUiJob.nicename+")");
-										webUiJob.delete();
+										/* TODO: instead of deleting them:
+										 * - keep them in the webui (job xml is stored, results are not)
+										 * - allow for re-running these jobs
+										 * - have an automatic cleanup setting in the maintenance tab of the admin settings similar to the current job persistence option
+										 */
+										//if ( should delete job ) {
+											//Logger.info("Deleting job that no longer exists in the Pipeline engine: "+webUiJob.getId()+" ("+webUiJob.getEngineId()+" - "+webUiJob.getNicename()+")");
+											//webUiJob.delete();
+										//}
 									}
 								}
 							}
 							
+//							for (Job webUiJob : webUiJobs) {
+//								if (webUiJob.getStatus() == null || "null".equals(webUiJob.getStatus())) {
+//									// fix while developing; the job status should never be null!
+//									Logger.info("job #"+webUiJob.getId()+" has status "+webUiJob.getStatus()+" "+(webUiJob.getStatus() == null ? "[null]" : "[string]")+". setting it to NEW...");
+//									webUiJob.setStatus("NEW");
+//									webUiJob.save();
+//									Logger.info("saved job #"+webUiJob.getId()+" to DB with status "+webUiJob.getStatus());
+//									webUiJob = Job.findJobById(webUiJob.getId());
+//									Logger.info("loaded job #"+webUiJob.getId()+" from DB with status "+webUiJob.getStatus());
+//									Logger.info("fixed job #"+webUiJob.getId()+". status was null, now set to "+webUiJob.getStatus());
+//								}
+//							}
+							
+							Logger.info("checking for jobs in engine that is not in webui...");
 							if (controllers.Application.getAlive() != null) {
 								for (org.daisy.pipeline.client.models.Job engineJob : engineJobs) {
+									if (engineJob.getId() == null) {
+										Logger.info("engine job is null: "+engineJob.getId()+". skipping...");
+										continue;
+									}
 									boolean exists = false;
 									for (Job webUiJob : webUiJobs) {
-										if (engineJob.getId().equals(webUiJob.engineId)) {
+										// check if status is a engine status; if not, that meanse this is not a engine job and we should skip it
+										if ("NEW".equals(webUiJob.getStatus())) { continue; }
+										try { Status.valueOf(webUiJob.getStatus()); }
+										catch (IllegalArgumentException e) { Logger.info("not a engine job: #"+webUiJob.getId()+" (status:"+webUiJob.getStatus()+")"); continue; }
+										
+										// should fix broken jobs while developing; shouldn't be needed when everything's working properly though
+//										if (webUiJob.getEngineId() == null) {
+//											Logger.info("webui engine id is null: #"+webUiJob.getId());
+//											Logger.info("setting webui job #"+webUiJob.getId()+" status to NEW");
+//											webUiJob.setStatus("NEW");
+//											webUiJob.save();
+//											continue;
+//										}
+										
+										if (engineJob.getId().equals(webUiJob.getEngineId())) {
+//											Logger.info("engine job "+engineJob.getId()+" is already in the webui as job #"+webUiJob.getId()+":");
+//											Logger.info("    "+webUiJob.getUser()+" | "+webUiJob.getStatus()+" | "+engineJob.getStatus());
+											
+											// a hack to fix broken jobs while developing; shouldn't be needed when everything's working
+//											if (!webUiJob.getStatus().equals(engineJob.getStatus()+"")) {
+//												Logger.info("setting webui job #"+webUiJob.getId()+" status to "+engineJob.getStatus());
+//												webUiJob.getStatus() = engineJob.getStatus()+"";
+//												webUiJob.save();
+//											}
+											
 											exists = true;
 											break;
 										}
 									}
 									if (!exists) {
-										Logger.info("Adding job from the Pipeline engine that does not exist in the Web UI: "+engineJob.getId());
+										Logger.info("Adding job from the Pipeline engine (with status: "+engineJob.getStatus()+") that does not exist in the Web UI: "+engineJob.getId());
+										
+										org.daisy.pipeline.client.models.Job job = controllers.Application.ws.getJob(engineJob.getId(), 0);
+										
 										User notLoggedIn = User.findById(-1L);
 										if (notLoggedIn == null) {
 											notLoggedIn = new User("not-logged-in@example.net", "Not logged in", "not logged in", false);
+											notLoggedIn.id = -1L;
 										}
-										Job webUiJob = new Job(engineJob, notLoggedIn); // TODO: ensure that user with ID=-1 exists at this point
+										Job webUiJob = new Job(notLoggedIn);
 										webUiJob.save();
+										webUiJob.setStatus(job.getStatus()+"");
+										webUiJob.setJob(job);
+										webUiJob.save();
+										Logger.info("saved job with engine id "+webUiJob.getEngineId()+" as #"+webUiJob.getId());
 									}
 								}
 							}

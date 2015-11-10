@@ -6,12 +6,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +21,7 @@ import models.Job;
 import models.Notification;
 import models.NotificationConnection;
 import models.Setting;
+import models.Template;
 import models.User;
 import models.UserSetting;
 
@@ -31,7 +30,6 @@ import org.daisy.pipeline.client.Pipeline2Logger;
 import org.daisy.pipeline.client.filestorage.JobStorage;
 import org.daisy.pipeline.client.models.Argument;
 import org.daisy.pipeline.client.models.Script;
-import org.daisy.pipeline.client.models.Job.Status;
 import org.daisy.pipeline.client.utils.Files;
 
 import play.Logger;
@@ -41,16 +39,19 @@ import play.mvc.Http.MultipartFormData;
 import play.mvc.Http.MultipartFormData.FilePart;
 import play.mvc.Result;
 import scala.concurrent.duration.Duration;
-//import scala.actors.threadpool.Arrays;
 import utils.ContentType;
-import utils.FileInfo;
 import utils.XML;
 
+import com.avaje.ebean.ExpressionList;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class Jobs extends Controller {
 
 	public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	
+	public static ExpressionList<Job> findWhere() {
+		return Job.find.where().ne("status", "TEMPLATE");
+	}
 	
 	public static Result newJob() {
 		if (FirstUse.isFirstUse())
@@ -62,9 +63,134 @@ public class Jobs extends Controller {
 		
 		Job newJob = new Job(user);
 		newJob.save();
-		Logger.debug("created new job: '"+newJob.id+"'");
+		newJob.refresh();
+		Logger.debug("created new job: '"+newJob.getId()+"'");
 		
-		return redirect(routes.Jobs.getJob(newJob.id));
+		return redirect(routes.Jobs.getJob(newJob.getId()));
+	}
+	
+	public static Result newJobWithTemplate(String ownerIdOrSharedDirName, String templateName) {
+		if (FirstUse.isFirstUse())
+			return redirect(routes.FirstUse.getFirstUse());
+
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return redirect(routes.Login.login());
+		
+		Job newJob = new Job(user);
+		newJob.save();
+		
+		Template template;
+		if (ownerIdOrSharedDirName.matches("^\\d+$")) {
+			template = Template.get(user, Long.parseLong(ownerIdOrSharedDirName), templateName);
+			if (template == null) {
+				Logger.warn("Could not find a template owned by "+Long.parseLong(ownerIdOrSharedDirName)+" and named "+templateName+" available for user "+user.id);
+			}
+			
+		} else {
+			template = Template.get(user, ownerIdOrSharedDirName, templateName);
+			if (template == null) {
+				Logger.warn("Could not find a shared template in "+ownerIdOrSharedDirName+" and named "+templateName+" available for user "+user.id);
+			}
+		}
+		
+		if (template != null) {
+			// use the contents of the template for this job
+			newJob.setJob(template.clientlibJob);
+			newJob.setNicename(newJob.getNicename()+" - "+template.name);
+			
+			// get job and job storage
+			org.daisy.pipeline.client.models.Job newClientlibJob = newJob.asJob();
+			JobStorage newJobStorage = newClientlibJob.getJobStorage();
+			
+			// copy files from template to this job
+			File templateContextDir = template.clientlibJob.getJobStorage().getContextDir();
+			Map<String, File> templateFiles = null;
+			try {
+				templateFiles = Files.listFilesRecursively(templateContextDir, false);
+				if (templateFiles.size() > 0) {
+					for (String href : templateFiles.keySet()) {
+						newJobStorage.addContextFile(templateFiles.get(href), href);
+					}
+				}
+			} catch (IOException e) {
+				Logger.error("Could not list files in template context", e);
+			}
+			
+			// create job.xml and copy context files
+			newJobStorage.save(false);
+			newJob.save();
+		}
+		Logger.debug("created new job: '"+newJob.getId()+"'");
+		
+		flash("templateJob", "true");
+		return redirect(routes.Jobs.getJob(newJob.getId()));
+	}
+	
+	public static Result newJobWithOldJob(Long jobId) {
+		if (FirstUse.isFirstUse())
+			return redirect(routes.FirstUse.getFirstUse());
+
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return redirect(routes.Login.login());
+		
+		Job webuiJob = Job.findById(jobId);
+		if (webuiJob == null) {
+			Logger.debug("Job #"+jobId+" was not found.");
+			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
+		}
+		if (!(	user.admin
+			||	webuiJob.getUser().equals(user.id)
+			||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+				)) {
+			return forbidden("You are not allowed to access this job.");
+		}
+		
+		Job newJob = new Job(user);
+		newJob.save();
+		
+		org.daisy.pipeline.client.models.Job oldClientlibJob = webuiJob.asJob();
+		
+		// use the contents of the template for this job
+		newJob.setJob(oldClientlibJob);
+		newJob.setNicename(newJob.getNicename());
+		
+		// get job and job storage
+		org.daisy.pipeline.client.models.Job newClientlibJob = newJob.asJob();
+		JobStorage newJobStorage = newClientlibJob.getJobStorage();
+		
+		// copy files from template to this job
+		File oldContextDir = oldClientlibJob.getJobStorage().getContextDir();
+		Map<String, File> oldFiles = null;
+		try {
+			oldFiles = Files.listFilesRecursively(oldContextDir, false);
+			if (oldFiles.size() > 0) {
+				for (String href : oldFiles.keySet()) {
+					newJobStorage.addContextFile(oldFiles.get(href), href);
+				}
+			}
+		} catch (IOException e) {
+			Logger.error("Could not list files in old job context", e);
+		}
+		
+		// create job.xml and copy context files
+		newClientlibJob.setStatus(null);
+		newJobStorage.save(false);
+		
+		// ensure that the web ui job is configured as a new job
+		newJob.setStatus("NEW");
+		newJob.setEngineId(null);
+		newJob.setNotifiedComplete(false);
+		newJob.setStarted(null);
+		newJob.setFinished(null);
+		newJob.save();
+		
+		Logger.debug("newClientlibJob: "+XML.toString(newClientlibJob.toXml()));
+		Logger.info("created new job: '"+newJob.getId()+"'");
+		
+		flash("forkedJob", "true");
+		return redirect(routes.Jobs.getJob(newJob.getId()));
 	}
 	
 	public static Result restart(Long jobId) {
@@ -83,27 +209,27 @@ public class Jobs extends Controller {
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
 		if (!(	user.admin
-			||	webuiJob.user.equals(user.id)
-			||	webuiJob.user < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+			||	webuiJob.getUser().equals(user.id)
+			||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 				)) {
 			return forbidden("You are not allowed to restart this job.");
 		}
 		
 		webuiJob.cancelPushNotifications();
 		
-		if (webuiJob.engineId != null) {
-			Logger.info("deleting old job: "+webuiJob.engineId);
-			Application.ws.deleteJob(webuiJob.engineId);
-			webuiJob.engineId = null;
+		if (webuiJob.getEngineId() != null) {
+			Logger.info("deleting old job: "+webuiJob.getEngineId());
+			Application.ws.deleteJob(webuiJob.getEngineId());
+			webuiJob.setEngineId(null);
 		}
 		
-		webuiJob.status = "NEW";
-		webuiJob.notifiedComplete = false;
+		webuiJob.setStatus("NEW");
+		webuiJob.setNotifiedComplete(false);
 		org.daisy.pipeline.client.models.Job clientlibJob = webuiJob.asJob();
 		clientlibJob.setStatus(org.daisy.pipeline.client.models.Job.Status.IDLE);
-		webuiJob.status = "IDLE";
-		webuiJob.started = null;
-		webuiJob.finished = null;
+		webuiJob.setStatus("IDLE");
+		webuiJob.setStarted(null);
+		webuiJob.setFinished(null);
 		webuiJob.save();
 		
 		Logger.info("------------------------------ Posting job... ------------------------------");
@@ -116,12 +242,12 @@ public class Jobs extends Controller {
 		webuiJob.setJob(clientlibJob);
 		webuiJob.save();
 		
-		NotificationConnection.pushJobNotification(webuiJob.user, new Notification("job-status-"+webuiJob.id, org.daisy.pipeline.client.models.Job.Status.IDLE));
+		NotificationConnection.pushJobNotification(webuiJob.getUser(), new Notification("job-status-"+webuiJob.getId(), org.daisy.pipeline.client.models.Job.Status.IDLE));
 		webuiJob.pushNotifications();
 		
 		User.flashBrowserId(user);
-		Logger.debug("return redirect(controllers.routes.Jobs.getJob("+webuiJob.id+"));");
-		return redirect(controllers.routes.Jobs.getJob(webuiJob.id));
+		Logger.debug("return redirect(controllers.routes.Jobs.getJob("+webuiJob.getId()+"));");
+		return redirect(controllers.routes.Jobs.getJob(webuiJob.getId()));
 	}
 	
 	public static Result getScript(Long jobId, String scriptId) {
@@ -194,13 +320,13 @@ public class Jobs extends Controller {
 		
 		List<Job> jobList;
 		if (user.admin) {
-			jobList = Job.find.all();
+			jobList = findWhere().findList();
 			
 		} else if (user.id >= 0) {
-			jobList = Job.find.where().eq("user", user.id).findList();
+			jobList = findWhere().eq("user", user.id).findList();
 			
 		} else if (user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))) {
-			jobList = Job.find.where().lt("user", 0).findList();
+			jobList = findWhere().lt("user", 0).findList();
 			
 		} else {
 			jobList = new ArrayList<Job>();
@@ -223,13 +349,13 @@ public class Jobs extends Controller {
 		
 		List<Job> jobList;
 		if (user.admin) {
-			jobList = Job.find.all();
+			jobList = findWhere().findList();
 			
 		} else if (user.id >= 0) {
-			jobList = Job.find.where().eq("user", user.id).findList();
+			jobList = findWhere().eq("user", user.id).findList();
 			
 		} else if (user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))) {
-			jobList = Job.find.where().lt("user", 0).findList();
+			jobList = findWhere().lt("user", 0).findList();
 			
 		} else {
 			jobList = new ArrayList<Job>();
@@ -258,18 +384,18 @@ public class Jobs extends Controller {
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
 		if (!(	user.admin
-			||	webuiJob.user.equals(user.id)
-			||	webuiJob.user < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+			||	webuiJob.getUser().equals(user.id)
+			||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 				)) {
 			return forbidden("You are not allowed to view this job.");
 		}
 		
 		User.flashBrowserId(user);
-		if ("NEW".equals(webuiJob.status)) {
-			return ok(views.html.Jobs.newJob.render(webuiJob.id));
+		if ("NEW".equals(webuiJob.getStatus())) {
+			return ok(views.html.Jobs.newJob.render(webuiJob.getId()));
 			
 		} else {
-			return ok(views.html.Jobs.getJob.render(webuiJob.id));
+			return ok(views.html.Jobs.getJob.render(webuiJob.getId()));
 		}
 	}
 	
@@ -288,22 +414,29 @@ public class Jobs extends Controller {
 		}
 		
 		if (!(	user.admin
-			||	webuiJob.user.equals(user.id)
-			||	webuiJob.user < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+			||	webuiJob.getUser().equals(user.id)
+			||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 			)) {
 			return forbidden("You are not allowed to view this job.");
 		}
 		
-		org.daisy.pipeline.client.models.Job engineJob = webuiJob.getJobFromEngine(0);
-		if (engineJob == null) {
-			Logger.error("An error occured while fetching the job from the engine");
-			return internalServerError("An error occured while fetching the job from the engine");
-		}
-		
 		Map<String,Object> output = new HashMap<String,Object>();
 		output.put("webuiJob", webuiJob);
-		output.put("engineJob", engineJob);
-		output.put("results", Job.jsonifiableResults(engineJob));
+		
+		org.daisy.pipeline.client.models.Job clientlibJob;
+		if (webuiJob.getEngineId() != null) {
+			clientlibJob = webuiJob.getJobFromEngine(0);
+		} else {
+			clientlibJob = webuiJob.asJob();
+		}
+		
+		if (clientlibJob == null) {
+			Logger.error("An error occured while retrieving the job");
+			
+		} else {
+			output.put("engineJob", clientlibJob);
+			output.put("results", Job.jsonifiableResults(clientlibJob));
+		}
 		
 		JsonNode jobJson = play.libs.Json.toJson(output);
 		return ok(jobJson);
@@ -327,8 +460,8 @@ public class Jobs extends Controller {
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
 		if (!(	user.admin
-				||	webuiJob.user.equals(user.id)
-				||	webuiJob.user < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+				||	webuiJob.getUser().equals(user.id)
+				||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 					))
 				return forbidden("You are not allowed to view this job.");
 		
@@ -437,12 +570,12 @@ public class Jobs extends Controller {
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
 		if (!(	user.admin
-				||	webuiJob.user.equals(user.id)
-				||	webuiJob.user < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+				||	webuiJob.getUser().equals(user.id)
+				||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 					))
 				return forbidden("You are not allowed to view this job.");
 		
-		String jobLog = Application.ws.getJobLog(webuiJob.engineId);
+		String jobLog = Application.ws.getJobLog(webuiJob.getEngineId());
 		//jobLog = org.daisy.pipeline.client.Jobs.getLog(Setting.get("dp2ws.endpoint"), Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"), id);
 		
 		if (jobLog == null) {
@@ -472,7 +605,7 @@ public class Jobs extends Controller {
 			return notFound("The job with ID='"+jobId+"' was not found.");
 		}
 		
-		if (job.user != user.id) {
+		if (job.getUser() != user.id) {
 			return forbidden("You can only run your own jobs.");
 		}
 		
@@ -481,7 +614,7 @@ public class Jobs extends Controller {
 			Logger.error("Could not read form data: "+request().body().asText());
 			return internalServerError("Could not read form data");
 		}
-
+		
 		String scriptId = params.get("id")[0];
 		if ("false".equals(UserSetting.get(user.id, "scriptEnabled-"+scriptId))) {
 			return forbidden();
@@ -525,7 +658,16 @@ public class Jobs extends Controller {
 		Scripts.ScriptForm scriptForm = new Scripts.ScriptForm(user.id, script, params);
 		scriptForm.validate();
 		
-		Logger.debug("------------------------------ Posting job... ------------------------------");
+		// If we're posting a template; delegate further processing to Templates.postTemplate
+		for (String paramName : params.keySet()) {
+			if (paramName.startsWith("submit_template")) {
+				Logger.debug("posted job is a template");
+				return Templates.postTemplate(user, job, clientlibJob);
+			}
+		}
+		Logger.debug("posted job is not a template");
+		
+		Logger.info("------------------------------ Posting job... ------------------------------");
 		Logger.debug(XML.toString(clientlibJob.toJobRequestXml(true)));
 		clientlibJob = Application.ws.postJob(clientlibJob);
 		if (clientlibJob == null) {
@@ -533,29 +675,29 @@ public class Jobs extends Controller {
 			return internalServerError("An error occured when trying to post job");
 		}
 		job.setJob(clientlibJob);
-		job.status = "IDLE";
+		job.setStatus("IDLE");
 		job.save();
 		
-		NotificationConnection.push(job.user, new Notification("job-created-"+job.id, job.created.toString()));
+		NotificationConnection.push(job.getUser(), new Notification("job-created-"+job.getId(), job.getCreated().toString()));
 		
 		JsonNode jobJson = play.libs.Json.toJson(job);
 		Notification jobNotification = new Notification("new-job", jobJson);
 		Logger.debug("pushed new-job notification with status=IDLE for job #"+jobId);
-		NotificationConnection.pushJobNotification(job.user, jobNotification);
+		NotificationConnection.pushJobNotification(job.getUser(), jobNotification);
 		job.pushNotifications();
 		
 		if (user.id < 0 && scriptForm.guestEmail != null && scriptForm.guestEmail.length() > 0) {
-			String jobUrl = Application.absoluteURL(routes.Jobs.getJob(job.id).absoluteURL(request())+"?guestid="+(models.User.parseUserId(session())!=null?-models.User.parseUserId(session()):""));
-			String html = views.html.Account.emailJobCreated.render(jobUrl, job.nicename).body();
+			String jobUrl = Application.absoluteURL(routes.Jobs.getJob(job.getId()).absoluteURL(request())+"?guestid="+(models.User.parseUserId(session())!=null?-models.User.parseUserId(session()):""));
+			String html = views.html.Account.emailJobCreated.render(jobUrl, job.getNicename()).body();
 			String text = "To view your Pipeline 2 job, go to this web address: " + jobUrl;
-			if (Account.sendEmail("Job created: "+job.nicename, html, text, scriptForm.guestEmail, scriptForm.guestEmail))
+			if (Account.sendEmail("Job created: "+job.getNicename(), html, text, scriptForm.guestEmail, scriptForm.guestEmail))
 				flash("success", "An e-mail was sent to "+scriptForm.guestEmail+" with a link to this job.");
 			else
 				flash("error", "Was unable to send an e-mail with a link to this job.");
 		}
 		
-		Logger.debug("return redirect(controllers.routes.Jobs.getJob("+job.id+"));");
-		return redirect(controllers.routes.Jobs.getJob(job.id));
+		Logger.debug("return redirect(controllers.routes.Jobs.getJob("+job.getId()+"));");
+		return redirect(controllers.routes.Jobs.getJob(job.getId()));
 	}
     
     public static Result delete(Long jobId) {
@@ -573,8 +715,8 @@ public class Jobs extends Controller {
 		}
 		
 		if (!(	user.admin
-			||	webuiJob.user.equals(user.id)
-			||	webuiJob.user < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+			||	webuiJob.getUser().equals(user.id)
+			||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 			)) {
 			return forbidden("You are not allowed to view this job.");
 		}
@@ -584,7 +726,7 @@ public class Jobs extends Controller {
 		return ok();
     }
     
-    public static Result upload(Long jobId) {
+    public static Result postUpload(Long jobId) {
 		if (FirstUse.isFirstUse())
 			return forbidden();
 		
@@ -690,6 +832,73 @@ public class Jobs extends Controller {
 		response().setContentType("text/html");
 		return ok(play.libs.Json.toJson(result));
 		
+    }
+    
+    /**
+     * Returns all the context files in the same format as is emitted when they were initially uploaded.
+     * This includes the filesize etc. and is useful for creating new jobs based on templates.
+     * 
+     * @param jobId
+     * @return context files as json
+     */
+    public static Result getUploadsJson(Long jobId) {
+    	if (FirstUse.isFirstUse())
+			return forbidden();
+		
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return forbidden();
+		
+		Job webuiJob = Job.findById(jobId);
+		if (webuiJob == null) {
+			Logger.debug("Job #"+jobId+" was not found.");
+			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
+		}
+		
+		JobStorage jobStorage = (JobStorage)webuiJob.asJob().getJobStorage();
+		Map<String, File> files = null;
+		try {
+			files = Files.listFilesRecursively(jobStorage.getContextDir(), false);
+		} catch (IOException e) {
+			Logger.error("Unable to list context files", e);
+		}
+		
+		List<Map<String,Object>> jsonFileset = new ArrayList<Map<String,Object>>();
+		if (files != null) {
+			for (String href : files.keySet()) {
+				Map<String,Object> fileResult = new HashMap<String,Object>();
+				String contentType = null;
+				try {
+					contentType = ContentType.probe(href, new FileInputStream(files.get(href)));
+				} catch (FileNotFoundException e) {
+					Logger.error("[Job "+jobId+"] Could not probe "+href+" for its content type", e);
+				}
+				fileResult.put("fileName", href);
+				fileResult.put("contentType", contentType);
+				fileResult.put("total", files.get(href).length());
+				fileResult.put("isXML", contentType != null && (contentType.equals("application/xml") || contentType.equals("text/xml") || contentType.endsWith("+xml")));
+				jsonFileset.add(fileResult);
+			}
+		}
+		
+		return ok(play.libs.Json.toJson(jsonFileset));
+    }
+    
+    public static Result saveAsTemplate(Long jobId) {
+    	if (FirstUse.isFirstUse())
+			return unauthorized("unauthorized");
+		
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return unauthorized("unauthorized");
+		
+		Job webuiJob = Job.findById(jobId);
+		if (webuiJob == null) {
+			Logger.debug("Job #"+jobId+" was not found.");
+			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
+		}
+		
+		return Templates.postTemplate(user, webuiJob, webuiJob.asJob());
     }
 	
 }

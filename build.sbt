@@ -19,7 +19,7 @@ packageDescription := "A web-based user interface for the DAISY Pipeline 2."
 
 resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 //resolvers += "Sonatype OSS Staging" at "https://oss.sonatype.org/content/repositories/staging/"
-//resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
+resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 
 libraryDependencies ++= Seq(
   javaJdbc,
@@ -29,8 +29,8 @@ libraryDependencies ++= Seq(
   "org.hibernate" % "hibernate-entitymanager" % "4.3.10.Final",
   "org.avaje.ebeanorm" % "avaje-ebeanorm-api" % "3.1.1",
   "org.apache.derby" % "derby" % "10.11.1.1",
-  "org.daisy.pipeline" % "clientlib-java" % "3.0.0",
-  "org.daisy.pipeline" % "clientlib-java-httpclient" % "1.0.0",
+  "org.daisy.pipeline" % "clientlib-java" % "3.0.1-SNAPSHOT",
+  "org.daisy.pipeline" % "clientlib-java-httpclient" % "1.0.1-SNAPSHOT",
   "org.apache.commons" % "commons-compress" % "1.9",
   "org.apache.commons" % "commons-email" % "1.4",
   "log4j" % "log4j" % "1.2.17",

@@ -5,7 +5,7 @@
         <h2>Files cannot be uploaded until the upload directory is configured.</h2>
     </div>
 }else{
-    @helper.form(action = routes.Jobs.upload(jobId), 'enctype -> "multipart/form-data", 'id -> "fileupload", 'class -> "form-horizontal"){
+    @helper.form(action = routes.Jobs.postUpload(jobId), 'enctype -> "multipart/form-data", 'id -> "fileupload", 'class -> "form-horizontal"){
    		<input type="hidden" id="uploads-jobId" name="jobId" value="@jobId"/>
         <!-- The fileupload-buttonbar contains buttons to add/delete files and start/cancel the upload -->
         <div class="row">
@@ -58,17 +58,64 @@
     $(function(){
         'use strict';
         
-        var url = '@routes.Jobs.upload(jobId)?browserId=@flash().get("browserId")';
+        var url = '@routes.Jobs.postUpload(jobId)?browserId=@flash().get("browserId")';
         url = window.location.protocol+"//"+window.location.host+url;
+        
+        // `files` example: [ { "contentType": "image/jpeg", "fileName": "valentin.jpg", "isXML": false, "total": 25740 }, {...} ]
+        Job.addFilesToUploadWidget = function(files) {
+		    if (files.length > 0) {
+			    var tbody = $("#files");
+			    for (var f = 0; f < files.length; f++) {
+			    	var file = files[f];
+				    tbody.append(
+					     '<tr class="fileRow in">'
+					    +'<td class="preview"><i class="'+mediaTypeIcon(file.contentType)+'"></i></td><td class="name">'+file.fileName+'</td>'
+					    +'<td class="size">'+Job.prettySize(file.total)+'</td>'
+					    +'<td></td>'
+					    +'<td class="cancel"></td>'
+					    +'</tr>'
+				    );
+			    }
+		    }
+        }
+        
+        // triggered when an upload is aborted
+        function abortUpload (e) {
+	        e.preventDefault();
+	        var fileRow = $(e.currentTarget).closest('.fileRow');
+	        
+	        var data = fileRow.data('data') || {};
+	        if (!data.jqXHR) {
+	            data.errorThrown = 'abort';
+	            this._trigger('fail', e, data);
+	        } else {
+	            data.jqXHR.abort();
+	        }
+	    }
+	    
+	    // used to determine the icon used next to an uploaded file
+	    function mediaTypeIcon(type) {
+	        if (typeof type !== "string") return "icon-file";
+	        if (type === "application/zip") return "icon-folder-open";
+	        if (type.indexOf("image/") == 0) return "icon-picture";
+	        if (type.indexOf("audio/") == 0) return "icon-headphones";
+	        if (type.indexOf("video/") == 0) return "icon-film";
+	        if (type === "text/html" || type === "text/plain"
+	            || type === "application/xhtml+xml"
+	            || type === "application/x-dtbook+xml"
+	            || type === "application/z3998-auth+xml") return "icon-book";
+	        return "icon-file";
+	    }
         
         // Initialize the jQuery File Upload widget:
         $('#fileupload').fileupload();
         
-        // Settings:
+        // File Upload widget settings:
         $('#fileupload').fileupload('option', {
             url: url
         });
         
+        // File Upload widget handlers
         $('#fileupload')
         .bind('fileuploadadd', function (e, data) {
             // file queued
@@ -246,29 +293,5 @@
             $("#filesProgress").html("("+progress+"%)");
         });
     });
-    function abortUpload (e) {
-        e.preventDefault();
-        var fileRow = $(e.currentTarget).closest('.fileRow');
-        
-        var data = fileRow.data('data') || {};
-        if (!data.jqXHR) {
-            data.errorThrown = 'abort';
-            this._trigger('fail', e, data);
-        } else {
-            data.jqXHR.abort();
-        }
-    }
-    function mediaTypeIcon(type) {
-        if (typeof type !== "string") return "icon-file";
-        if (type === "application/zip") return "icon-folder-open";
-        if (type.indexOf("image/") == 0) return "icon-picture";
-        if (type.indexOf("audio/") == 0) return "icon-headphones";
-        if (type.indexOf("video/") == 0) return "icon-film";
-        if (type === "text/html" || type === "text/plain"
-            || type === "application/xhtml+xml"
-            || type === "application/x-dtbook+xml"
-            || type === "application/z3998-auth+xml") return "icon-book";
-        return "icon-file";
-    }
     // ]]>
 </script>

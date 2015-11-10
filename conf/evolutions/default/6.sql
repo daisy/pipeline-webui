@@ -14,7 +14,6 @@ CREATE TABLE "JOB" (
   "GUEST_EMAIL"               VARCHAR(255),
   "NOTIFIED_CREATED"          BOOLEAN,
   "NOTIFIED_COMPLETE"         BOOLEAN,
-  "LOCAL_DIR_NAME"            VARCHAR(255),
   "SCRIPT_ID"                 VARCHAR(255),
   "SCRIPT_NAME"               VARCHAR(255),
   CONSTRAINT pk_job PRIMARY KEY ("ID"))

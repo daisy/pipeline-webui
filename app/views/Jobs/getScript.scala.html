@@ -93,7 +93,11 @@
 		}
 		
 		<div class="form-actions">
-			<button type="submit" value="Start job" data-loading-text="Starting job..." class="btn btn-large btn-primary" onclick="$(this).button('loading');">Start job</button>
+			<button type="submit" name="submit_run_@scriptId" name="submit_run" value="Start job" data-loading-text="Starting job..." class="btn btn-large btn-primary" onclick="$('#submit_template_@scriptId').attr('disabled','disabled');$(this).button('loading');">Start job</button>
+			<button type="submit" name="submit_template_@scriptId" value="Save as template" data-loading-text="Saving as template..." class="btn btn-large" onclick="$('#submit_run_@scriptId').attr('disabled','disabled');$(this).button('loading');">Save as template</button>
+			<script>
+			
+			</script>
 		</div>
 	</fieldset>
 	

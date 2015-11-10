@@ -1,0 +1,154 @@
+@()
+
+@main("Templates", "templates") {
+
+<hgroup>
+<h1>Templates</h1>
+<!-- TODO: implement shareTemplates option in admin settings -->
+@if(session.get("admin")=="true" || Setting.get("users.guest.shareTemplates")=="true"){
+	<a id="showYourTemplates" class="btn" onclick="filterTemplates(@Controller.flash("userid"));" href="javascript:void(0)">Your templates</a>
+	<a id="showAllTemplates" class="btn active" onclick="filterTemplates('all');" href="javascript:void(0)">All templates</a>
+}
+</hgroup>
+<div role="alert" class="muted" style="width:100%;text-align:center;"><p id="filter-text"></p></div>
+
+<table id="templatelist" class="table templatelist" style="display:none;">
+	<thead>
+		<tr id="templatelist-headline">
+			<th>Name</th>
+			<th>Script</th>
+			@if(Controller.flash("showOwner")=="true"){
+				<th>Owner</th>
+		    }
+		    <th>Actions</th>
+    	</tr>
+	</thead>
+	<tbody></tbody>
+</table>
+
+<script type="text/javascript">
+
+filterTemplates = function(user) {
+	if (typeof user === 'undefined') {
+		if ($("#showAllTemplates").hasClass("active")) {
+			user = 'all';
+		} else {
+			user = @Controller.flash("userid");
+		}
+	}
+    if (user === 'all') {
+		$("#templatelist tbody tr").show();
+		$("#showYourTemplates").removeClass("active");
+		$("#showAllTemplates").addClass("active");
+		if ($("#templatelist tbody tr").size() > 0) {
+			$("#filter-text").text("Displaying templates for all users.");
+			$("#templatelist-headline").show();
+		} else {
+			$("#filter-text").text("There are no templates for any users.");
+			$("#templatelist-headline").hide();
+		}
+	} else {
+		$("#templatelist tbody tr[data-owner='"+user+"']").show();
+		$("#templatelist tbody tr[data-owner!='"+user+"']").hide();
+		$("#showAllTemplates").removeClass("active");
+		$("#showYourTemplates").addClass("active");
+		if ($("#templatelist tbody tr").size() > 0) {
+			$("#filter-text").text("Displaying your templates.");
+			$("#templatelist-headline").show();
+		} else {
+			$("#filter-text").text("You have no templates.");
+			$("#templatelist-headline").hide();
+		}
+	}
+}
+
+addTemlate = function(template) {
+	var i, statusText, statusClass, html, visible, highlight;
+	if (template.status === "NEW") {
+		return;
+	}
+	visible = $("#showAllTemplates").hasClass("active") || "@Controller.flash("userid")" === ""+template.ownerId || template.ownerId === null;
+	highlight = "@Controller.flash("highlightTemplateOwner")" === ""+template.ownerId && "@Controller.flash("highlightTemplateName")" === encodeURIComponent(""+template.name);
+	html = '<tr data-name="'+encodeURIComponent(template.name)+'" class="template '+(highlight ? "info" : "")+'" data-owner="'+template.ownerId+'"'+(!visible?' style="display:none;"':'')+'>'+"\n";
+	html += '    <td>'+template.name+'</td>'+"\n";
+	html += '    <td>'+(typeof template.script === "object" ? template.script.nicename : "")+'</td>'+"\n";
+	@if(Controller.flash("showOwner")=="true"){
+		if (template.ownerId !== null) {
+			html += '    <td>'+template.ownerName+'</td>'+"\n";
+		} else {
+			html += '    <td></td>'+"\n";
+		}
+	}
+	html += '    <td>'+"\n";
+	html += '        <a href="'+"@routes.Jobs.newJobWithTemplate("x","x")".replace("x/x",(template.ownerId !== null ? template.ownerId : encodeURIComponent(template.dirname))+"/"+encodeURIComponent(template.name))+'" class="btn btn-success"><i class="icon-plus icon-white"></i> New job</a>'+"\n";
+	html += '        <a href="'+"@routes.Templates.downloadTemplate("x","x")".replace("x/x",(template.ownerId !== null ? template.ownerId : encodeURIComponent(template.dirname))+"/"+encodeURIComponent(template.name))+'" class="btn btn-info"><i class="icon-download-alt icon-white"></i> Download</a>'+"\n";
+	if (template.ownerId !== null) {
+	    html += '        <a class="btn btn-danger template-delete" href="javascript:void(0)"><i class="icon-trash icon-white"></i> Delete</a>'+"\n";
+	}
+	html += '    </td>'+"\n";
+	html += '</tr>'+"\n";
+	
+	if ($("#templatelist tbody tr[data-role='"+template.name+"']").length > 0) {
+		$("#templatelist tbody tr[data-role='"+template.name+"']").replaceWith(html);
+	}
+	else {
+		$("#templatelist tbody").prepend(html);
+	}
+	
+	if (template.ownerId !== null) {
+		$(function(){
+			$("tr[data-owner=\""+template.ownerId+"\"][data-name=\""+encodeURIComponent(template.name)+"\"] a.template-delete").click(function(){
+			    var template, templateOwner, templateName;
+			    template = $(this).closest("tr");
+			    templateOwner = $(template).data("owner");
+			    templateName = $(template).data("name");
+				$(this).closest("td").find("*").hide();
+				$.ajax({
+					url: "@routes.Templates.deleteTemplate("x", "x")".replace("x/x",templateOwner+"/"+templateName),
+					success: function(data) {
+						$(this).closest("tr").remove();
+						filterTemplates();
+					},
+					error: function() {
+						$(this).closest("td").find("*").show();
+					},
+					context: this
+				});
+			});
+		});
+	}
+	
+	$("#notemplates-all").hide();
+	$("#notemplates-user").hide();
+	$("#templatelist").show();
+}
+
+$(function(){
+	$.ajax({
+		url: "@routes.Templates.getTemplatesJson()?"+new Date().getTime(),
+		error: function(jqXHR, textStatus, errorThrown) {
+			// error; too bad :(
+		},
+		success: function(templates, textStatus, jqXHR) {
+			if (templates.length == 0) {
+				$("#templatelist").hide();
+				$("#notemplates").show();
+			} else {
+				$("#notemplates").hide();
+				$("#templatelist").show();
+			}
+			$(".template").remove();
+			$.each(templates.reverse(), function(j, template) {
+				addTemlate(template);
+			});
+			filterTemplates();
+		}
+	});
+	
+	Notifications.listen("new-template", function(template){
+		addTemlate(template);
+	});
+});
+</script>
+
+}

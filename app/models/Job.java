@@ -1,7 +1,6 @@
 package models;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -17,20 +16,14 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
-import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
 import org.daisy.pipeline.client.filestorage.JobStorage;
-import org.daisy.pipeline.client.models.Job.Priority;
 import org.daisy.pipeline.client.models.Job.Status;
-import org.daisy.pipeline.client.models.Callback;
-import org.daisy.pipeline.client.models.Message;
 import org.daisy.pipeline.client.models.Result;
-import org.daisy.pipeline.client.models.Script;
 
 import play.Logger;
 import play.libs.Akka;
 import scala.concurrent.duration.Duration;
-import utils.XML;
 import akka.actor.Cancellable;
 
 import com.avaje.ebean.Model;
@@ -42,22 +35,22 @@ public class Job extends Model implements Comparable<Job> {
 	/** Key is the job ID; value is the sequence number of the last message read from the Pipeline 2 Web API. */ 
 	public static Map<String,Integer> lastMessageSequence = Collections.synchronizedMap(new HashMap<String,Integer>());
 	public static Map<String,String> lastStatus = Collections.synchronizedMap(new HashMap<String,String>());
+	public static Map<Long,Date> lastAccessed = Collections.synchronizedMap(new HashMap<Long,Date>());
 	
 	@Id
-	public Long id;
+	private Long id;
 
 	// General information
-	public String engineId;
-	public String nicename;
-	public Date created;
-	public Date started;
-	public Date finished;
-	@Column(name="user_id") public Long user;
-	public String guestEmail; // Guest users may enter an e-mail address to receive notifications
-	public String localDirName;
-	public String scriptId;
-	public String scriptName;
-	public String status;
+	private String engineId;
+	private String nicename;
+	private Date created;
+	private Date started;
+	private Date finished;
+	@Column(name="user_id") private Long user;
+	private String guestEmail; // Guest users may enter an e-mail address to receive notifications
+	private String scriptId;
+	private String scriptName;
+	private String status;
 	
 	// Notification flags
 	public boolean notifiedCreated;
@@ -88,38 +81,34 @@ public class Job extends Model implements Comparable<Job> {
 			this.userNicename = User.findById(user.id).name;
 	}
 	
-	/** Make job from engine job */
-	public Job(org.daisy.pipeline.client.models.Job job, User user) {
-		super();
-		this.engineId = job.getId();
-		this.user = user.id;
-		this.nicename = job.getNicename();
-		this.status = job.getStatus()+"";
-		this.created = new Date();
-		this.notifiedCreated = false;
-		this.notifiedComplete = false;
-		if (user.id < 0)
-			this.userNicename = Setting.get("users.guest.name");
-		else
-			this.userNicename = User.findById(user.id).name;
-		
-		if (!org.daisy.pipeline.client.models.Job.Status.IDLE.equals(job.getStatus())) {
-			this.started = this.created;
-			if (!org.daisy.pipeline.client.models.Job.Status.RUNNING.equals(job.getStatus())) {
-				this.finished = this.started;
-			}
-		}
-		
-		this.scriptId = job.getScript().getId();
-		this.scriptName = job.getScript().getNicename();
-		
-		File jobDir = new File(new File(Setting.get("jobs")), job.getId());
-		try {
-			this.localDirName = jobDir.getCanonicalPath();
-		} catch (IOException e) {
-			this.localDirName = jobDir.getPath();
-		}
-	}
+//	/** Make job from engine job */
+//	public Job(org.daisy.pipeline.client.models.Job job, User user) {
+//		super();
+//		this.engineId = job.getId();
+//		this.user = user.id;
+//		this.nicename = job.getNicename();
+//		this.status = job.getStatus()+"";
+//		this.created = new Date();
+//		this.notifiedCreated = false;
+//		this.notifiedComplete = false;
+//		if (user.id < 0)
+//			this.userNicename = Setting.get("users.guest.name");
+//		else
+//			this.userNicename = User.findById(user.id).name;
+//		
+//		if (!org.daisy.pipeline.client.models.Job.Status.IDLE.equals(job.getStatus())) {
+//			this.started = this.created;
+//			if (!org.daisy.pipeline.client.models.Job.Status.RUNNING.equals(job.getStatus())) {
+//				this.finished = this.started;
+//			}
+//		}
+//		
+//		if (job.getScript() != null) {
+//			this.scriptId = job.getScript().getId();
+//			this.scriptName = job.getScript().getNicename();
+//		}
+//		
+//	}
 
 	public int compareTo(Job other) {
 		return created.compareTo(other.created);
@@ -129,10 +118,26 @@ public class Job extends Model implements Comparable<Job> {
 
 	public static Model.Finder<Long,Job> find = new Model.Finder<Long, Job>(Job.class);
 
+//	/** Retrieve a Job by its id. */
+//	public static Job findTemplateById(Long id) {
+//		Job job = find.where().eq("id", id).eq("status", "TEMPLATE").findUnique();
+//		if (job != null) {
+//			User user = User.findById(job.user);
+//			if (user != null)
+//				job.userNicename = user.name;
+//			else if (job.user < 0)
+//				job.userNicename = Setting.get("users.guest.name");
+//			else
+//				job.userNicename = "User";
+//		}
+//		return job;
+//	}
+	
 	/** Retrieve a Job by its id. */
 	public static Job findById(Long id) {
-		Job job = find.where().eq("id", id).findUnique();
+		Job job = find.where().eq("id", id).ne("status", "TEMPLATE").findUnique();
 		if (job != null) {
+			lastAccessed.put(id, new Date());
 			User user = User.findById(job.user);
 			if (user != null)
 				job.userNicename = user.name;
@@ -146,7 +151,7 @@ public class Job extends Model implements Comparable<Job> {
 
 	/** Retrieve a Job by its engine id. */
 	public static Job findByEngineId(String id) {
-		Job job = find.where().eq("engine_id", id).findUnique();
+		Job job = find.where().eq("engine_id", id).ne("status", "TEMPLATE").findUnique();
 		if (job != null) {
 			User user = User.findById(job.user);
 			if (user != null)
@@ -318,22 +323,30 @@ public class Job extends Model implements Comparable<Job> {
 
 	@Override
 	public void delete() {
-		Logger.debug("deleting "+this.id+" (sending DELETE request)");
-		boolean success = Application.ws.deleteJob(this.engineId);
-		if (!success) {
-			Pipeline2Logger.logger().error("An error occured when trying to delete job "+this.id+" ("+this.engineId+") from the Pipeline 2 Engine");
+		try {
+			if (Status.valueOf(status) != null) {
+				Logger.debug("deleting "+this.id+" (sending DELETE request)");
+				boolean success = Application.ws.deleteJob(this.engineId);
+				if (!success) {
+					Pipeline2Logger.logger().error("An error occured when trying to delete job "+this.id+" ("+this.engineId+") from the Pipeline 2 Engine");
+				}
+			}
+			
+		} catch (IllegalArgumentException e) {
+			/* job status does not correspond to a engine job status; probably a new job; don't send DELETE request */
 		}
 		asJob().getJobStorage().delete();
+		lastAccessed.remove(id);
 		super.delete();
 	}
 	
+	/*
+	 * NOTE: this class uses getters and setters for its fields. It seems that Ebean does not
+	 * generate these getters and setters automatically in the bytecode, probably because
+	 * `save()` has been overridden. That is the reason for the getters and setters.
+	 */
 	@Override
 	public void save() {
-		// save to job storage as well
-		org.daisy.pipeline.client.models.Job engineJob = asJob();
-		engineJob.getJobStorage().save();
-		jobUpdateHelper();
-		
 		synchronized (this) {
 			super.save();
 			
@@ -341,16 +354,15 @@ public class Job extends Model implements Comparable<Job> {
 				id = (Long) Job.find.orderBy("id desc").findIds().get(0);
 				if (nicename == null) {
 					nicename = "Job #"+id;
-					super.save();
 				}
+				super.save();
 			}
-		}
-		
-		synchronized (this) {
-			int messages;
-			messages = clientlibJob.getMessages() != null ? clientlibJob.getMessages().size() : -2;
-			Logger.debug("saved (with "+messages+" messages):");
-			Logger.debug(XML.toString(clientlibJob.toXml()));
+			
+			// save to job storage as well
+			if (asJob() != null) {
+				asJob().getJobStorage().save();
+				jobUpdateHelper();
+			}
 		}
 	}
 
@@ -366,18 +378,18 @@ public class Job extends Model implements Comparable<Job> {
 			scriptName = clientlibJob.getScript().getNicename();
 		}
 		try {
-			// if current status is one of the build-in types
-			// (i.e. not "NEW", "UNDEFINED", "TEMPLATE" or anything else used only by the Web UI)
+			// if current status is one of the engines built-in types
+			// (i.e. not "NEW", "UNDEFINED", "TEMPLATE" or anything else that might used only by the Web UI)
 			// then get the status from the engine.
-			if (Status.valueOf(status) != null) {
+			if (status == null || "null".equals(status) || Status.valueOf(status) != null) {
 				status = clientlibJob.getStatus()+"";
 			}
 		}
-		catch (IllegalArgumentException e) {}
-		catch (NullPointerException e) {}
+		catch (IllegalArgumentException e) { Logger.debug("jobUpdateHelper: IllegalArgumentException: "+status); }
+		catch (NullPointerException e) { Logger.debug("jobUpdateHelper: NullPointerException: "+status); }
 	}
 
-	public org.daisy.pipeline.client.models.Job asJob() {
+	public org.daisy.pipeline.client.models.Job asJob() { // TODO: remove messages (or at least change to debug level)
 		if (clientlibJob == null) {
 			Logger.debug("getting client job (not cached from earlier)");
 			File jobStorageDir = new File(Setting.get("jobs"));
@@ -464,7 +476,7 @@ public class Job extends Model implements Comparable<Job> {
 
 	/** Use this method to get the job from the engine to ensure that the XML in the webuis job storage is always up to date */
 	public org.daisy.pipeline.client.models.Job getJobFromEngine(int fromSequence) {
-		Logger.debug("Getting job from engine: "+engineId);
+		Logger.info("Getting job from engine: "+engineId); // TODO: change to debug
 		if (engineId == null) {
 			return null;
 		}
@@ -472,15 +484,119 @@ public class Job extends Model implements Comparable<Job> {
 		if (clientlibJob == null) {
 			return null;
 		}
-		synchronized (this) {
-			int messages;
-			messages = clientlibJob.getMessages() != null ? clientlibJob.getMessages().size() : -2;
-			Logger.debug("received (with "+messages+" messages):");
-			Logger.debug(XML.toString(clientlibJob.toXml()));
-		}
+//		synchronized (this) {
+//			int messages;
+//			messages = clientlibJob.getMessages() != null ? clientlibJob.getMessages().size() : -2;
+//			Logger.debug("received (with "+messages+" messages):");
+//			Logger.debug(XML.toString(clientlibJob.toXml()));
+//		}
 		setJob(clientlibJob);
 		save();
 		return clientlibJob;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getEngineId() {
+		return engineId;
+	}
+
+	public void setEngineId(String engineId) {
+		this.engineId = engineId;
+	}
+
+	public String getNicename() {
+		return nicename;
+	}
+
+	public void setNicename(String nicename) {
+		this.nicename = nicename;
+	}
+
+	public Date getCreated() {
+		return created;
+	}
+
+	public void setCreated(Date created) {
+		this.created = created;
+	}
+
+	public Date getStarted() {
+		return started;
+	}
+
+	public void setStarted(Date started) {
+		this.started = started;
+	}
+
+	public Date getFinished() {
+		return finished;
+	}
+
+	public void setFinished(Date finished) {
+		this.finished = finished;
+	}
+
+	public Long getUser() {
+		return user;
+	}
+
+	public void setUser(Long user) {
+		this.user = user;
+	}
+
+	public String getGuestEmail() {
+		return guestEmail;
+	}
+
+	public void setGuestEmail(String guestEmail) {
+		this.guestEmail = guestEmail;
+	}
+
+	public String getScriptId() {
+		return scriptId;
+	}
+
+	public void setScriptId(String scriptId) {
+		this.scriptId = scriptId;
+	}
+
+	public String getScriptName() {
+		return scriptName;
+	}
+
+	public void setScriptName(String scriptName) {
+		this.scriptName = scriptName;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public boolean isNotifiedCreated() {
+		return notifiedCreated;
+	}
+
+	public void setNotifiedCreated(boolean notifiedCreated) {
+		this.notifiedCreated = notifiedCreated;
+	}
+
+	public boolean isNotifiedComplete() {
+		return notifiedComplete;
+	}
+
+	public void setNotifiedComplete(boolean notifiedComplete) {
+		this.notifiedComplete = notifiedComplete;
 	}
 	
 }

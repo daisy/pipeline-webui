@@ -93,7 +93,6 @@ addJob = function(job) {
 	if (job.status === "NEW") {
 		return;
 	}
-	console.log("adding job", job);
 	statusText = jobStatusText(job.status);
 	statusClass = jobStatusClass(job.status);
 	visible = $("#showAllJobs").hasClass("active") || "@Controller.flash("userid")" === ""+job.user;

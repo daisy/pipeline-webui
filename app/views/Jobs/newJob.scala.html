@@ -17,7 +17,8 @@ h2 {
 </style>
 
 <hgroup>
-<h1>Create Job</h1>
+<h1>Create Job<br/>
+<small id="header-nicename">&nbsp;</small></h1>
 </hgroup>
 
 <!-- script creation path -->
@@ -88,7 +89,84 @@ h2 {
 		    	activeHeader: "ui-icon-circle-arrow-s"
 		    }
 	    });
-		var scriptHrefBase = "@routes.Jobs.getScript(jobId, "")";
+	    
+	    Job.onNewUpload(function(fileset){
+			if (Job.doneAddingPreviousFiles === true) {
+				if (switchToAccordionGroups !== null) {
+					switchToAccordionGroups();
+					switchToAccordionGroups = null;
+					
+					if (typeof $("#scriptsDetails").data("id") === "string" && $("#scriptsDetails").data("id") !== "") {
+						// go to options accordion group if the script is already selected
+						$("#hOptions").click();
+						
+					} else {
+						// go to scripts group because no script is selected
+						$("#hScripts").click();
+					}
+				}
+			}
+		});
+	    
+		var getTemplateContents = function() {
+			// Dynamically load any page contents (for instance if the job is based on a template, then the job will be pre-populated with arguments and context)
+			$.ajax({
+				url: "@routes.Jobs.getJobJson(jobId)?"+new Date().getTime(),
+				error: function(jqXHR, textStatus, errorThrown) {
+					// error; too bad :(
+					Job.doneAddingPreviousFiles = true;
+				},
+				success: function(job, textStatus, jqXHR) {
+				    $("#header-nicename").html(job.webuiJob.nicename);
+				    
+				    var loadPreviousUploads = function() {
+					    // Dynamically load any previous uploads (for instance if the job is based on a template, then the job will be pre-populated with context files)
+						$.ajax({
+							url: "@routes.Jobs.getUploadsJson(jobId)?"+new Date().getTime(),
+							error: function(jqXHR, textStatus, errorThrown) {
+								// error; too bad :(
+							},
+							success: function(files, textStatus, jqXHR) {
+							    Job.addFilesToUploadWidget(files);
+							    if (Notifications.handlers["uploads"]) {
+					                for (var i = 0; i < Notifications.handlers["uploads"].length; i++) {
+					                    var handler = Notifications.handlers["uploads"][i];
+					                    handler.fn({fileset: files}, handler.data);
+					                }
+					            }
+					            if (typeof job.engineJob === "object") {
+				    				for (var handler = 0; handler < Job.setFromTemplateHandlers.length; handler++) {
+				    					for (var arg = 0; arg < job.engineJob.arguments.length; arg++) {
+											Job.setFromTemplateHandlers[handler](job.engineJob.arguments[arg], files);
+										}
+									}
+								}
+					            $("#filesNicename").data("fileCount", files.length);
+					            $("#filesNicename").html(files.length === 0 ? "No files" : files.length === 1 ? "1 file" : files.length+" files");
+							},
+							complete: function() {
+								Job.doneAddingPreviousFiles = true;
+							}
+						});
+				    }
+				    
+				    if (job.webuiJob.scriptId !== null) {
+				    	switchToAccordionGroups();
+				    	var scriptLink = $("#scriptTable .script-button-"+job.webuiJob.scriptId);
+				    	if (scriptLink !== null && scriptLink.get(0) !== undefined) {
+				    		getScript(scriptLink.get(0), loadPreviousUploads);
+				    		
+				    	} else {
+				    		loadPreviousUploads();
+				    	}
+				    	
+				    } else {
+				    	loadPreviousUploads();
+				    }
+				}
+			});
+			getTemplateContents = null;
+		}
 		var checkForScripts = function() {
 			$.ajax({
 				url: "@routes.Scripts.getScriptsJson()",
@@ -132,25 +210,16 @@ h2 {
 						    $(list).append(li);
 							
 							$(".script-button-"+scriptIdEscaped).click(function(){
-								if (firstFileOrScriptChosen !== null) firstFileOrScriptChosen();
-								if ($("#script-"+$(this).data("id")).size()===0) {
-									$.ajax({
-										url: "@routes.Jobs.getScript(jobId, "")"+$(this).data("id").replace(/\\x3A/g,'%3A'),
-										success: function(data) {
-											if ($("#script-"+$(this).data("id")).size()===0) {
-												$('#optionsGroup').append(data);
-												chooseScript(this);
-											}
-										},
-										context: this
-									});
-								} else {
-									chooseScript(this);
+								if (switchToAccordionGroups !== null) {
+									switchToAccordionGroups();
+									switchToAccordionGroups = null;
 								}
-								$("#optionsGroup > *:not(#script-"+$(this).data("id")+")").hide();
-								$("#optionsGroup").show();
+								getScript(this);
 							});
 						}
+					}
+					if (typeof getTemplateContents === "function") {
+						getTemplateContents();
 					}
 				}
 			});
@@ -161,9 +230,36 @@ h2 {
 				checkForScripts();
 			}
 		}, 1000);
+		getScript = function(linkElement, afterFunction) {
+			if ($("#script-"+$(linkElement).data("id")).size()===0) {
+				$.ajax({
+					url: "@routes.Jobs.getScript(jobId, "")"+$(linkElement).data("id").replace(/\\x3A/g,'%3A'),
+					success: function(data) {
+						if ($("#script-"+$(this.linkElement).data("id")).size()===0) {
+							$('#optionsGroup').append(data);
+							chooseScript(this.linkElement);
+						}
+					},
+					complete: function() {
+						if (typeof this.afterFunction === "function") {
+							this.afterFunction();
+						}
+					},
+					context: {
+						linkElement: linkElement,
+						afterFunction: afterFunction
+					}
+				});
+			} else {
+				chooseScript(linkElement);
+				if (typeof afterFunction === "function") {
+					afterFunction();
+				}
+			}
+		}
 		chooseScript = function(linkElement) {
-			$("#script-"+$(this).data("id")).show();
 			$("#scriptsDetails").html($(linkElement).data("nicename"));
+			$("#scriptsDetails").data("id", $(linkElement).data("id"));
 			
 			if ($("#script-"+$(linkElement).data("id")).data("fileinput")===true) {
 				$("#doesNotAcceptFiles").hide();
@@ -173,17 +269,22 @@ h2 {
 				$("#doesNotAcceptFiles").show();
 			}
 			
-			if ($("#script-"+$(linkElement).data("id")).data("fileinput")===false || !$.isEmptyObject(Job.uploads)) {
-				// go to options accordion group if the script does not accept files or files have already been added
-				$("#doesNotAcceptFilesScriptName").html($(linkElement).data("nicename"));
-				$("#hOptions").click();
-				
-			} else {
-				// go to files accordion group if the script accepts input files and no files have been added
-				$("#hFiles").click();
+			if (Job.doneAddingPreviousFiles === true) {
+				if ($("#script-"+$(linkElement).data("id")).data("fileinput")===false || !$.isEmptyObject(Job.uploads)) {
+					// go to options accordion group if the script does not accept files or files have already been added
+					$("#doesNotAcceptFilesScriptName").html($(linkElement).data("nicename"));
+					$("#hOptions").click();
+					
+				} else {
+					// go to files accordion group if the script accepts input files and no files have been added
+					$("#hFiles").click();
+				}
 			}
+			$("#script-"+$(linkElement).data("id")).show();
+			$("#optionsGroup > *:not(#script-"+$(linkElement).data("id")+")").hide();
+			$("#optionsGroup").show();
 		}
-		firstFileOrScriptChosen = function() {
+		switchToAccordionGroups = function() {
 			$("#scriptCreationPathGroup").hide();
 			$("#scriptList").hide();
 			$("#scriptsInnerGroup").appendTo("#scriptsGroup");
@@ -198,10 +299,8 @@ h2 {
 			$($("#fileupload > div.row")[0]).css("margin-left","auto").css("margin-right","auto").css("width","200px");
 			$($("#fileupload > div.row")[1]).css("margin-left","auto").css("margin-right","auto").css("width","50%");
 			$($("#fileupload > div.row")[2]).css("margin-left","auto").css("margin-right","auto").css("width","61.8033989%");
-			firstFileOrScriptChosen = null;
 		}
 		Job.onFilesetTypeUpdate(function(filesetTypes){
-			console.log("Job.onFilesetTypeUpdate", filesetTypes);
 			var types, typesString;
 			
 			types = [];
@@ -221,14 +320,6 @@ h2 {
 			if (types.length > 0) typesString = "- " + typesString;
 			
 			$("#filesetTypes").html(typesString);
-		});
-		Job.onNewUpload(function(fileset){
-			console.log("Job.onNewUpload", fileset);
-			if (firstFileOrScriptChosen !== null) {
-				firstFileOrScriptChosen();
-				
-				$("#hScripts").click();
-			}
 		});
 		$('html,body').animate({scrollTop: 0},'fast');
 	});
