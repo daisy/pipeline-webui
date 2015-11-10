@@ -441,6 +441,9 @@ public class Job extends Model implements Comparable<Job> {
 		if (job.getMessages() != null) {
 		    clientlibJob.setMessages(job.getMessages());
 		}
+		if (job.getResult() != null && job.getResults() != null) {
+		    clientlibJob.setResults(job.getResult(), job.getResults());
+		}
 		
 		if (clientlibJob.getBatchId() == null && job.getBatchId() != null) {
 			clientlibJob.setBatchId(job.getBatchId());
@@ -492,7 +495,7 @@ public class Job extends Model implements Comparable<Job> {
 //		}
 		setJob(clientlibJob);
 		save();
-		return clientlibJob;
+		return this.clientlibJob;
 	}
 
 	public Long getId() {

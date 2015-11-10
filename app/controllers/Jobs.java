@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
+import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -900,5 +901,36 @@ public class Jobs extends Controller {
 		
 		return Templates.postTemplate(user, webuiJob, webuiJob.asJob());
     }
+    
+    public static Result downloadContext(Long jobId) {
+    	if (FirstUse.isFirstUse())
+			return unauthorized("unauthorized");
+		
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return unauthorized("unauthorized");
+		
+		Job webuiJob = Job.findById(jobId);
+		if (webuiJob == null) {
+			Logger.debug("Job #"+jobId+" was not found.");
+			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
+		}
+		
+		File zip = webuiJob.asJob().getJobStorage().makeContextZip();
+		
+		if (zip != null && zip.exists()) {
+			response().setHeader("Content-Disposition", "attachment; filename=\"job-"+jobId+"-files.zip\"");
+			response().setContentType("application/zip");
+			long size = zip.length();
+			if (size > 0) {
+				response().setHeader("Content-Length", size+"");
+			}
+			
+		} else {
+			return internalServerError("Was unable to create zip of job inputs.");
+		}
+		
+		return ok(zip);
+	}
 	
 }

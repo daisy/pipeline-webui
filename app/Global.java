@@ -163,7 +163,7 @@ public class Global extends GlobalSettings {
 								return;
 							}
 							
-							Logger.info("checking for jobs in webui that is not in engine...");
+							Logger.debug("checking for jobs in webui that is not in engine...");
 							List<Job> webUiJobs = Job.find.all();
 							for (Job webUiJob : webUiJobs) {
 								// new jobs should be deleted after a while if they're not run
@@ -212,7 +212,7 @@ public class Global extends GlobalSettings {
 //								}
 //							}
 							
-							Logger.info("checking for jobs in engine that is not in webui...");
+							Logger.debug("checking for jobs in engine that is not in webui...");
 							if (controllers.Application.getAlive() != null) {
 								for (org.daisy.pipeline.client.models.Job engineJob : engineJobs) {
 									if (engineJob.getId() == null) {

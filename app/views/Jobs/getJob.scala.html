@@ -194,6 +194,15 @@
 <ol aria-live="polite" role="log" class="messagelist" id="message-list" style="display:none;"></ol>
 
 <br/>
+
+<div class="">
+<h2>Input files and parameters</h2>
+<br/>
+<p><a class="btn btn-info" href="@routes.Jobs.downloadContext(uiJob)"><span class="icon-download-alt icon-white"></span> Download input files</a></p>
+<dl id="arguments"></dl>
+</div>
+
+<br/>
 <div class="form-actions">
 <a class="btn btn-info" href="@routes.Jobs.restart(uiJob)"><span class="icon-refresh icon-white"></span> Restart job</a>
 <a class="btn btn-success" href="@routes.Jobs.newJobWithOldJob(uiJob)"><span class="icon-plus icon-white"></span> New job with same options</a>
@@ -300,35 +309,39 @@
 				$("#result-reports").empty();
 				
 				$("#results-download-all").append($("<a class=\"btn btn-success\" href=\""+"@routes.Jobs.getAllResults(uiJob)"+"\"><span class=\"icon-download-alt icon-white\"></span> Download all results</a>"));
-				for (i = 0; i < results.results.length; i++) {
-					if (results.results[i].results === null || results.results[i].results.length === 0 || typeof results.results[i].results[0].mimeType !== "string" || results.results[i].results[0].mimeType.indexOf("application/vnd.pipeline") !== 0) {
-						$("#results-list").append(updateResultsList(results.results[i]));
-						if (results.results[i].results.length === 1 && results.results[i].results[0].results.length === 0) {
-							$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(uiJob,"")"+results.results[i].results[0].relativeHref+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].nicename+"</a> ");
-						} else {
-							$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(uiJob,"")"+results.results[i].relativeHref+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].nicename+"</a> ");
+				if ($.isArray(results.results)) {
+					for (i = 0; i < results.results.length; i++) {
+						if (!$.isArray(results.results[i].results) || results.results[i].results.length === 0 || typeof results.results[i].results[0].mimeType !== "string" || results.results[i].results[0].mimeType.indexOf("application/vnd.pipeline") !== 0) {
+							$("#results-list").append(updateResultsList(results.results[i]));
+							if (results.results[i].results.length === 1 && (!$.isArray(results.results[i].results[0]) || results.results[i].results[0].results.length === 0)) {
+								$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(uiJob,"")"+results.results[i].results[0].relativeHref+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].nicename+"</a> ");
+							} else {
+								$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(uiJob,"")"+results.results[i].relativeHref+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].nicename+"</a> ");
+							}
 						}
-					}
-					
-					for (j = 0; j < results.results[i].results.length; j++) {
-						if (results.results[i].results[j].mimeType==="application/vnd.pipeline.report+xml") {
-							href = "@routes.Jobs.getResult(uiJob,"")"+results.results[i].results[j].relativeHref;
-							$.ajax({
-								url: href+"?parse=report",
-								success: function(data, textStatus, jqXHR){
-									var section = $("<section class=\"result-report\" data-href=\""+this.href+"\"></section>");
-									$(section).html(data);
-									$(section).find("*[href^='file:']").replaceWith("<!-- removed filesystem link -->");
-									$(section).find("*[href]:not([href^='#'])").each(function(){
-										$(this).attr("href",href.replace(/[^/]*$/,"")+$(this).attr("href"));
+						
+						if ($.isArray(results.results[i].results)) {
+							for (j = 0; j < results.results[i].results.length; j++) {
+								if (results.results[i].results[j].mimeType==="application/vnd.pipeline.report+xml") {
+									href = "@routes.Jobs.getResult(uiJob,"")"+results.results[i].results[j].relativeHref;
+									$.ajax({
+										url: href+"?parse=report",
+										success: function(data, textStatus, jqXHR){
+											var section = $("<section class=\"result-report\" data-href=\""+this.href+"\"></section>");
+											$(section).html(data);
+											$(section).find("*[href^='file:']").replaceWith("<!-- removed filesystem link -->");
+											$(section).find("*[href]:not([href^='#'])").each(function(){
+												$(this).attr("href",href.replace(/[^/]*$/,"")+$(this).attr("href"));
+											});
+											$(".result-report[data-href='"+this.href+"'] + hr").remove();
+											$(".result-report[data-href='"+this.href+"']").remove();
+											$("#result-reports").append($(section));
+											$("#result-reports").append("<hr/>");
+										},
+										context: {href:href}
 									});
-									$(".result-report[data-href='"+this.href+"'] + hr").remove();
-									$(".result-report[data-href='"+this.href+"']").remove();
-									$("#result-reports").append($(section));
-									$("#result-reports").append("<hr/>");
-								},
-								context: {href:href}
-							});
+								}
+							}
 						}
 					}
 				}
@@ -369,6 +382,19 @@
 						for (var m = 0; m < job.engineJob.messages.length; m++) {
 							addMessage(job.engineJob.messages[m]);
 						}
+					}
+				}
+				
+				var argumentsDL = $("#arguments");
+				for (var a = 0; a < job.engineJob.arguments.length; a++) {
+					var arg = job.engineJob.arguments[a];
+					argumentsDL.append("<dt>"+arg.nicename+"</dt>");
+					if ($.isArray(arg.asList) && arg.asList.length > 0) {
+						for (var v = 0; v < arg.asList.length; v++) {
+							argumentsDL.append("<dd>"+arg.asList[v]+"</dd>");
+						}
+					} else {
+						argumentsDL.append("<dd><i>(empty)</i></dd>");
 					}
 				}
 				
