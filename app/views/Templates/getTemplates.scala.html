@@ -81,7 +81,7 @@ addTemlate = function(template) {
 	}
 	html += '    <td>'+"\n";
 	html += '        <a href="'+"@routes.Jobs.newJobWithTemplate("x","x")".replace("x/x",(template.ownerId !== null ? template.ownerId : encodeURIComponent(template.dirname))+"/"+encodeURIComponent(template.name))+'" class="btn btn-success"><i class="icon-plus icon-white"></i> New job</a>'+"\n";
-	html += '        <a href="'+"@routes.Templates.downloadTemplate("x","x")".replace("x/x",(template.ownerId !== null ? template.ownerId : encodeURIComponent(template.dirname))+"/"+encodeURIComponent(template.name))+'" class="btn btn-info"><i class="icon-download-alt icon-white"></i> Download</a>'+"\n";
+	//html += '        <a href="'+"@routes.Templates.downloadTemplate("x","x")".replace("x/x",(template.ownerId !== null ? template.ownerId : encodeURIComponent(template.dirname))+"/"+encodeURIComponent(template.name))+'" class="btn btn-info"><i class="icon-download-alt icon-white"></i> Download</a>'+"\n";
 	if (template.ownerId !== null) {
 	    html += '        <a class="btn btn-danger template-delete" href="javascript:void(0)"><i class="icon-trash icon-white"></i> Delete</a>'+"\n";
 	}
