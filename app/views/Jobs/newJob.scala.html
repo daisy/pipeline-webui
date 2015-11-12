@@ -152,7 +152,7 @@ h2 {
 				    
 				    if (job.webuiJob.scriptId !== null) {
 				    	switchToAccordionGroups();
-				    	var scriptLink = $("#scriptTable .script-button-"+job.webuiJob.scriptId);
+				    	var scriptLink = $("#scriptTable .script-button-"+job.webuiJob.scriptId.replace(/:/g,'\\\\x3A'));
 				    	if (scriptLink !== null && scriptLink.get(0) !== undefined) {
 				    		getScript(scriptLink.get(0), loadPreviousUploads);
 				    		
