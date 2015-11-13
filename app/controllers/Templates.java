@@ -3,15 +3,18 @@ package controllers;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.file.Files;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import models.Job;
 import models.Setting;
 import models.Template;
 import models.User;
+import models.UserSetting;
 import play.Logger;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -165,5 +168,44 @@ public class Templates extends Controller {
 		}
 		
 		return ok(zip);
+	}
+	
+	public static Result renameTemplate(Long ownerId, String templateName) {
+		if (FirstUse.isFirstUse())
+			return unauthorized("unauthorized");
+		
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return unauthorized("unauthorized");
+		
+		Map<String, String[]> params = request().body().asFormUrlEncoded();
+		if (params == null) {
+			Logger.error("Could not read form data: "+request().body().asText());
+			return internalServerError("Could not read form data");
+		}
+		
+		String newName = params.get("template-name")[0];
+		if (newName == null || "".equals(newName)) {
+			return badRequest("New name cannot be empty.");
+		}
+		
+		if (newName.equals(templateName)) {
+			return ok();
+			
+		}
+		
+		Template template = Template.get(user, ownerId, templateName);
+		if (template == null) {
+			User owner = User.findById(ownerId);
+			String username = owner == null ? ownerId+"" : owner.name;
+			return notFound("Template '"+templateName+"' (owned by '"+username+"') was not found.");
+		}
+		
+		String error = template.rename(newName);
+		if (error == null) {
+			return ok();
+		} else {
+			return internalServerError(error);
+		}
 	}
 }

@@ -182,28 +182,30 @@ public class Template implements Comparable<Template> {
 			}
 		}
 		
-		// determine which template directories this user has access to
-		List<Object> cacheKeys = new ArrayList<Object>();
-		if (user.admin) {
-			cacheKeys.addAll(templateCache.keySet());
-			
-		} else {
-			for (Object cacheKey : templateCache.keySet()) {
-				if (!(cacheKey instanceof Long) || (Long)cacheKey == user.id) {
-					cacheKeys.add(cacheKey);
+		List<Template> results = new ArrayList<Template>();
+		if (user != null) {
+			// determine which template directories this user has access to
+			List<Object> cacheKeys = new ArrayList<Object>();
+			if (user.admin) {
+				cacheKeys.addAll(templateCache.keySet());
+
+			} else {
+				for (Object cacheKey : templateCache.keySet()) {
+					if (!(cacheKey instanceof Long) || (Long)cacheKey == user.id) {
+						cacheKeys.add(cacheKey);
+					}
 				}
 			}
-		}
-		
-		// compile a list of all the templates in the directories that this user has access to
-		List<Template> results = new ArrayList<Template>();
-		for (Object cacheKey : cacheKeys) {
-			Map<String, Template> templates = templateCache.get(cacheKey);
-			if (templates != null) {
-				results.addAll(templates.values());
+
+			// compile a list of all the templates in the directories that this user has access to
+			for (Object cacheKey : cacheKeys) {
+				Map<String, Template> templates = templateCache.get(cacheKey);
+				if (templates != null) {
+					results.addAll(templates.values());
+				}
 			}
+			Collections.sort(results);
 		}
-		Collections.sort(results);
 		
 		return results;
 	}
@@ -292,7 +294,6 @@ public class Template implements Comparable<Template> {
 	}
 
 	public void delete() {
-		Logger.error("TODO: template was deleted at "+new Date()+", check stacktrace...", new Exception());
 		if (templateCache.containsKey(this.ownerId)) {
 			templateCache.get(this.ownerId).remove(this.name);
 		}
@@ -336,6 +337,87 @@ public class Template implements Comparable<Template> {
 				}
 			}
 		}
+	}
+	
+	public String rename(String newName) {
+		if (templateCache.containsKey(this.ownerId)) {
+			templateCache.get(this.ownerId).remove(this.name);
+		}
+		
+		if ("Shared".equals(newName)) {
+			return "\"Shared\" is a reserved name, please choose another template name.";
+		}
+		
+		File existingTemplateDir = new File(new File(new File(Setting.get("templates")), ownerTemplatesDirname), name);
+		File newTemplateDir = new File(new File(new File(Setting.get("templates")), ownerTemplatesDirname), newName);
+		Logger.info("Renaming template directory: "+newTemplateDir);
+		
+		if (newTemplateDir.exists()) {
+			return "There is already a template with that name.";
+		}
+		
+		clientlibJob.setNicename(newName);
+		clientlibJob.getJobStorage().save();
+		
+		boolean success = existingTemplateDir.renameTo(newTemplateDir);
+		if (!success) {
+			return "Could not rename template. Maybe there are some problematic characters in the template name?";
+		}
+		
+		// force refresh of templateCache from disk to ensure the cache is in sync with the filesystem
+		templateCache.get(this.ownerId).remove(this);
+		list(null, true);
+		
+		return null; // null means success
+	}
+	
+	public void setShared(boolean shared) {
+		return;
+		/*
+		if (templateCache.containsKey(this.ownerId)) {
+			templateCache.get(this.ownerId).remove(this.name);
+		}
+		
+		File userTemplateDir = new File(new File(new File(Setting.get("templates")), ownerTemplatesDirname), name);
+		
+		if (userTemplateDir.exists() && userTemplateDir.isDirectory()) {
+			Logger.error("Deleting template directory: "+userTemplateDir);
+			clientlibJob = null;
+			Map<String, File> files;
+			try {
+				files = Files.listFilesRecursively(userTemplateDir, false);
+			} catch (IOException e) {
+				Logger.error("Could not list all files in the template directory for "+userTemplateDir, e);
+				return;
+			}
+			for (String filename : files.keySet()) {
+				files.get(filename).delete();
+			}
+			boolean aDirWasDeleted = true;
+			while (aDirWasDeleted) {
+				aDirWasDeleted = false;
+				Map<String, File> dirs;
+				try {
+					dirs = Files.listFilesRecursively(userTemplateDir, true);
+				} catch (IOException e) {
+					Logger.error("Could not list all subdirectories in the template directory for "+userTemplateDir, e);
+					return;
+				}
+				
+				// attempt to avoid too many iterations of this while loop
+				ArrayList<String> sortedKeys = new ArrayList<String>(dirs.keySet());
+				Collections.sort(sortedKeys);
+				Collections.reverse(sortedKeys);
+				
+				for (String dirname : sortedKeys) {
+					File dir = dirs.get(dirname);
+					if (dir.listFiles().length == 0) {
+						aDirWasDeleted = dir.delete() || aDirWasDeleted;
+					}
+				}
+			}
+		}
+		*/
 	}
 
 	public File asZip() {

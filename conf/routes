@@ -53,6 +53,7 @@ GET     /templates.json                     controllers.Templates.getTemplatesJs
 GET     /templates/:tOwner/:tName.json      controllers.Templates.getTemplateJson(tOwner: String, tName: String)
 GET     /templates/:tOwner/:tName/delete    controllers.Templates.deleteTemplate(tOwner: String, tName: String)
 GET     /templates/:tOwner/:tName/download  controllers.Templates.downloadTemplate(tOwner: String, tName: String)
+POST    /templates/:tOwner/:tName/rename    controllers.Templates.renameTemplate(tOwner: Long, tName: String)
 
 # Callbacks
 POST    /callbacks/:callbackType            controllers.Callbacks.postCallback(callbackType: String)
