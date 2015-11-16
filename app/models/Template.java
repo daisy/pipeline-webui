@@ -31,12 +31,14 @@ public class Template implements Comparable<Template> {
 	public Long ownerId;
 	public Date lastUpdated;
 	public Job clientlibJob = null;
+	public boolean shared;
 	
 	public Map<String,Object> asJsonifyableObject(User user, boolean includeArguments) {
 		Map<String,Object> result = new HashMap<String,Object>();
 		
 		result.put("name", name);
 		result.put("ownerId", ownerId);
+		result.put("shared", shared);
 		User owner = ownerId != null ? User.findById(ownerId) : null;
 		result.put("ownerName", owner != null ? owner.name : null);
 		result.put("dirname", ownerTemplatesDirname);
@@ -85,10 +87,11 @@ public class Template implements Comparable<Template> {
 		return result;
 	}
 	
-	private Template(String name, String ownerTemplatesDirname, Long ownerId, Job clientlibJob) {
+	private Template(String name, String ownerTemplatesDirname, Long ownerId, boolean shared, Job clientlibJob) {
 		this.name = name;
 		this.ownerTemplatesDirname = ownerTemplatesDirname;
 		this.ownerId = ownerId;
+		this.shared = shared;
 		this.clientlibJob = clientlibJob;
 	}
 
@@ -121,8 +124,8 @@ public class Template implements Comparable<Template> {
 			templateOwnerId = (Long)sharedTemplatesDirnameOrTemplateOwner;
 		} else {
 			templateDirname = ""+sharedTemplatesDirnameOrTemplateOwner;
-			if (templateDirname == "") {
-				templateDirname = "shared";
+			if ("".equals(templateDirname)) {
+				templateDirname = "Shared";
 			}
 		}
 		
@@ -139,7 +142,7 @@ public class Template implements Comparable<Template> {
 			// refresh from disk if needed
 			int updateFrequency = templateOwnerId == null ? 5 : 60;
 			if (forceUpdate || template.clientlibJob == null || template.lastUpdated == null || template.lastUpdated.before(new Date(new Date().getTime() - 1000*60*updateFrequency))) {
-				File templatesDir = new File(new File(Setting.get("templates")), template.ownerTemplatesDirname);
+				File templatesDir = template.shared ? template.getOwnerSharedDir() : template.getOwnerPrivateDir();
 				template.clientlibJob = org.daisy.pipeline.client.filestorage.JobStorage.loadJob(templateName, templatesDir);
 			}
 			
@@ -175,35 +178,52 @@ public class Template implements Comparable<Template> {
 				if (!templateCache.containsKey(cacheKey)) {
 					templateCache.put(cacheKey, new HashMap<String, Template>());
 				}
-				for (File templateDir : templateUserDir.listFiles()) {
-					Job clientlibJob = org.daisy.pipeline.client.filestorage.JobStorage.loadJob(templateDir.getName(), templateUserDir);
-					templateCache.get(cacheKey).put(templateDir.getName(), new Template(templateDir.getName(), templateUserDir.getName(), ownerId, clientlibJob));
+				if ("shared".equals(templateUserDir.getName().toLowerCase())) {
+					Logger.info("statically shared dir: "+templateUserDir);
+					for (File templateDir : templateUserDir.listFiles()) {
+						Job clientlibJob = org.daisy.pipeline.client.filestorage.JobStorage.loadJob(templateDir.getName(), templateUserDir);
+						templateCache.get(cacheKey).put(templateDir.getName(), new Template(templateDir.getName(), templateUserDir.getName(), ownerId, true, clientlibJob));
+					}
+					
+				} else {
+					for (File templateDir : templateUserDir.listFiles()) {
+						if ("shared".equals(templateDir.getName().toLowerCase())) {
+							Logger.info("shared dir: "+templateDir);
+							for (File sharedTemplateDir : templateDir.listFiles()) {
+								Job clientlibJob = org.daisy.pipeline.client.filestorage.JobStorage.loadJob(sharedTemplateDir.getName(), templateDir);
+								templateCache.get(cacheKey).put(sharedTemplateDir.getName(), new Template(sharedTemplateDir.getName(), templateUserDir.getName(), ownerId, true, clientlibJob));
+							}
+							
+						} else {
+							Logger.info("not shared dir: "+templateDir);
+							Job clientlibJob = org.daisy.pipeline.client.filestorage.JobStorage.loadJob(templateDir.getName(), templateUserDir);
+							templateCache.get(cacheKey).put(templateDir.getName(), new Template(templateDir.getName(), templateUserDir.getName(), ownerId, false, clientlibJob));
+						}
+					}
 				}
 			}
 		}
 		
 		List<Template> results = new ArrayList<Template>();
 		if (user != null) {
-			// determine which template directories this user has access to
-			List<Object> cacheKeys = new ArrayList<Object>();
-			if (user.admin) {
-				cacheKeys.addAll(templateCache.keySet());
-
-			} else {
-				for (Object cacheKey : templateCache.keySet()) {
-					if (!(cacheKey instanceof Long) || (Long)cacheKey == user.id) {
-						cacheKeys.add(cacheKey);
+			// determine which templates this user has access to
+			for (Object cacheKey : templateCache.keySet()) {
+				/* if (static shared dir || private templates dir || is admin) => access to all in this collection */
+				if (!(cacheKey instanceof Long) || (Long)cacheKey == user.id || user.admin) {
+					results.addAll(templateCache.get(cacheKey).values());
+					continue;
+				}
+				
+				// access to other users shared templates
+				Map<String, Template> templates = templateCache.get(cacheKey);
+				for (String templateName : templates.keySet()) {
+					Template template = templates.get(templateName);
+					if (template.shared) {
+						results.add(template);
 					}
 				}
 			}
-
-			// compile a list of all the templates in the directories that this user has access to
-			for (Object cacheKey : cacheKeys) {
-				Map<String, Template> templates = templateCache.get(cacheKey);
-				if (templates != null) {
-					results.addAll(templates.values());
-				}
-			}
+			
 			Collections.sort(results);
 		}
 		
@@ -284,7 +304,7 @@ public class Template implements Comparable<Template> {
 			Logger.info("templateJob contextDir: "+templateJob.getJobStorage().getContextDir());
 		}
 		templateJob.getJobStorage().save();
-		Template template = new Template(templateJob.getNicename(), userTemplatesDirname, user.id, templateJob);
+		Template template = new Template(templateJob.getNicename(), userTemplatesDirname, user.id, false, templateJob);
 		Logger.info("template.ownerTemplatesDirname: "+template.ownerTemplatesDirname);
 		
 		templateCache.get(user.id).put(templateJob.getNicename(), template);
@@ -298,7 +318,7 @@ public class Template implements Comparable<Template> {
 			templateCache.get(this.ownerId).remove(this.name);
 		}
 		
-		File userTemplateDir = new File(new File(new File(Setting.get("templates")), ownerTemplatesDirname), name);
+		File userTemplateDir = getTemplateDir();
 		
 		if (userTemplateDir.exists() && userTemplateDir.isDirectory()) {
 			Logger.error("Deleting template directory: "+userTemplateDir);
@@ -348,11 +368,11 @@ public class Template implements Comparable<Template> {
 			return "\"Shared\" is a reserved name, please choose another template name.";
 		}
 		
-		File existingTemplateDir = new File(new File(new File(Setting.get("templates")), ownerTemplatesDirname), name);
-		File newTemplateDir = new File(new File(new File(Setting.get("templates")), ownerTemplatesDirname), newName);
+		File existingTemplateDir = getTemplateDir();
+		File newTemplateDir = new File(existingTemplateDir.getParentFile(), newName);
 		Logger.info("Renaming template directory: "+newTemplateDir);
 		
-		if (newTemplateDir.exists()) {
+		if (new File(getOwnerPrivateDir(), newName).exists() || new File(getOwnerSharedDir(), newName).exists()) {
 			return "There is already a template with that name.";
 		}
 		
@@ -371,53 +391,16 @@ public class Template implements Comparable<Template> {
 		return null; // null means success
 	}
 	
-	public void setShared(boolean shared) {
-		return;
-		/*
-		if (templateCache.containsKey(this.ownerId)) {
-			templateCache.get(this.ownerId).remove(this.name);
-		}
-		
-		File userTemplateDir = new File(new File(new File(Setting.get("templates")), ownerTemplatesDirname), name);
-		
-		if (userTemplateDir.exists() && userTemplateDir.isDirectory()) {
-			Logger.error("Deleting template directory: "+userTemplateDir);
-			clientlibJob = null;
-			Map<String, File> files;
-			try {
-				files = Files.listFilesRecursively(userTemplateDir, false);
-			} catch (IOException e) {
-				Logger.error("Could not list all files in the template directory for "+userTemplateDir, e);
-				return;
-			}
-			for (String filename : files.keySet()) {
-				files.get(filename).delete();
-			}
-			boolean aDirWasDeleted = true;
-			while (aDirWasDeleted) {
-				aDirWasDeleted = false;
-				Map<String, File> dirs;
-				try {
-					dirs = Files.listFilesRecursively(userTemplateDir, true);
-				} catch (IOException e) {
-					Logger.error("Could not list all subdirectories in the template directory for "+userTemplateDir, e);
-					return;
-				}
-				
-				// attempt to avoid too many iterations of this while loop
-				ArrayList<String> sortedKeys = new ArrayList<String>(dirs.keySet());
-				Collections.sort(sortedKeys);
-				Collections.reverse(sortedKeys);
-				
-				for (String dirname : sortedKeys) {
-					File dir = dirs.get(dirname);
-					if (dir.listFiles().length == 0) {
-						aDirWasDeleted = dir.delete() || aDirWasDeleted;
-					}
-				}
-			}
-		}
-		*/
+	private File getTemplateDir() {
+		return shared ? new File(getOwnerSharedDir(), name) : new File(getOwnerPrivateDir(), name);
+	}
+	
+	private File getOwnerPrivateDir() {
+		return new File(new File(Setting.get("templates")), ownerTemplatesDirname);
+	}
+	
+	private File getOwnerSharedDir() {
+		return new File(new File(new File(Setting.get("templates")), ownerTemplatesDirname), "Shared");
 	}
 
 	public File asZip() {
@@ -432,6 +415,40 @@ public class Template implements Comparable<Template> {
 			Logger.error("Unable to create zip", e);
 			return null;
 		}
+	}
+
+	public String setShared(boolean shared) {
+		if (!(shared ^ this.shared)) {
+			return null;
+		}
+		
+		if (templateCache.containsKey(this.ownerId)) {
+			templateCache.get(this.ownerId).remove(this.name);
+		}
+		
+		File existingTemplateDir = getTemplateDir();
+		File newTemplateDir;
+		if (shared) {
+			Logger.info("newTemplateDir = new File(\""+getOwnerSharedDir()+"\", \""+existingTemplateDir.getName()+"\");");
+			newTemplateDir = new File(getOwnerSharedDir(), existingTemplateDir.getName());
+			
+		} else {
+			Logger.info("newTemplateDir = new File(\""+getOwnerPrivateDir()+"\", \""+existingTemplateDir.getName()+"\");");
+			newTemplateDir = new File(getOwnerPrivateDir(), existingTemplateDir.getName());
+		}
+		Logger.info("Moving template to "+(shared ? "shared" : "private")+" directory: "+newTemplateDir);
+		
+		newTemplateDir.getParentFile().mkdirs();
+		boolean success = existingTemplateDir.renameTo(newTemplateDir);
+		if (!success) {
+			return "Could not rename template.";
+		}
+		
+		// force refresh of templateCache from disk to ensure the cache is in sync with the filesystem
+		templateCache.get(this.ownerId).remove(this);
+		list(null, true);
+		
+		return null; // null means success
 	}
 	
 }

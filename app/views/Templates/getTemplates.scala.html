@@ -4,11 +4,8 @@
 
 <hgroup>
 <h1>Templates</h1>
-<!-- TODO: implement shareTemplates option in admin settings -->
-@if(session.get("admin")=="true" || Setting.get("users.guest.shareTemplates")=="true"){
-	<a id="showYourTemplates" class="btn" onclick="filterTemplates(@Controller.flash("userid"));" href="javascript:void(0)">Your templates</a>
-	<a id="showAllTemplates" class="btn active" onclick="filterTemplates('all');" href="javascript:void(0)">All templates</a>
-}
+<a id="showYourTemplates" class="btn" onclick="filterTemplates(@Controller.flash("userid"));" href="javascript:void(0)">Your templates</a>
+<a id="showAllTemplates" class="btn active" onclick="filterTemplates('all');" href="javascript:void(0)">All templates</a>
 </hgroup>
 <div role="alert" class="muted" style="width:100%;text-align:center;"><p id="filter-text"></p></div>
 
@@ -17,9 +14,8 @@
 		<tr id="templatelist-headline">
 			<th>Name</th>
 			<th>Script</th>
-			@if(Controller.flash("showOwner")=="true"){
-				<th>Owner</th>
-		    }
+			<th>Owner</th>
+		    <th>Visibility</th>
 		    <th>Actions</th>
     	</tr>
 	</thead>
@@ -80,18 +76,21 @@ addTemlate = function(template) {
 	html += '        </form>'+"\n";
 	html += '    </td>'+"\n";
 	html += '    <td>'+(typeof template.script === "object" ? template.script.nicename : "")+'</td>'+"\n";
-	@if(Controller.flash("showOwner")=="true"){
-		if (template.ownerId !== null) {
-			html += '    <td>'+template.ownerName+'</td>'+"\n";
-		} else {
-			html += '    <td></td>'+"\n";
-		}
+	if (template.ownerId !== null) {
+		html += '    <td>'+template.ownerName+'</td>'+"\n";
+	} else {
+		html += '    <td></td>'+"\n";
 	}
+	html += '    <td><i class="icon-eye-open"></i> <span class="template-when-shared" style="'+(template.shared?'':'display:none;')+'">Shared</span><span class="template-when-private" style="'+(template.shared?'display:none;':'')+'">Private</span></td>'+"\n";
 	html += '    <td>'+"\n";
 	html += '        <a href="'+"@routes.Jobs.newJobWithTemplate("x","x")".replace("x/x",(template.ownerId !== null ? template.ownerId : encodeURIComponent(template.dirname))+"/"+encodeURIComponent(template.name))+'" class="btn btn-success"><i class="icon-plus icon-white"></i> New job</a>'+"\n";
 	//html += '        <a href="'+"@routes.Templates.downloadTemplate("x","x")".replace("x/x",(template.ownerId !== null ? template.ownerId : encodeURIComponent(template.dirname))+"/"+encodeURIComponent(template.name))+'" class="btn btn-info"><i class="icon-download-alt icon-white"></i> Download</a>'+"\n";
 	if (template.ownerId !== null && (@(session.get("admin")=="true") || template.ownerId === @Controller.flash("userid"))) {
 		html += '        <a class="btn btn-info template-rename" href="javascript:void(0)"><i class="icon-pencil icon-white"></i> Rename</a>'+"\n";
+		html += '        <a class="btn btn-info template-toggle-shared" href="javascript:void(0)">'+"\n";
+		html += '            <span class="template-when-private" '+(template.shared ? 'style="display: none;"' : '')+'><i class="icon-eye-open icon-white"></i> <span>Share with others</span></span>'+"\n";
+		html += '            <span class="template-when-shared" '+(template.shared ? '' : 'style="display: none;"')+'><i class="icon-eye-close icon-white"></i> <span>Hide from others</span></span>'+"\n";
+		html += '        </a>'+"\n";
 	    html += '        <a class="btn btn-danger template-delete" href="javascript:void(0)"><i class="icon-trash icon-white"></i> Delete</a>'+"\n";
 	}
 	html += '    </td>'+"\n";
@@ -127,6 +126,46 @@ addTemlate = function(template) {
 			
 			$("tr[data-owner=\""+template.ownerId+"\"][data-name=\""+encodeURIComponent(template.name)+"\"] a.template-rename").click(function(){
 				$(this).closest("tr").find("form.template-rename-form").toggle();
+			});
+			
+			$("tr[data-owner=\""+template.ownerId+"\"][data-name=\""+encodeURIComponent(template.name)+"\"] a.template-toggle-shared").click(function(){
+				var template, templateOwner, templateName, share;
+				
+				$(this).addClass('disabled');
+				
+			    template = $(this).closest("tr");
+			    templateOwner = $(template).attr("data-owner");
+			    templateName = $(template).attr("data-name");
+				share = $(this).find(".template-when-private").is(":visible");
+				
+				$.ajax({
+			    	method: "POST",
+					url: "@routes.Templates.setShared(-1L, "TEMPLATENAME")".replace("-1/TEMPLATENAME", templateOwner+"/"+templateName),
+					dataType: "text",
+					data: {
+						"template-shared": share
+					},
+					error: function(jqXHR, textStatus, errorThrown) {
+						// error; too bad :(
+						// TODO: possibly show a nice and friendly error message here
+					},
+					success: function(response, textStatus, jqXHR) {
+						if (this.share) {
+							$(this.link).closest("tr").find(".template-when-private").hide();
+							$(this.link).closest("tr").find(".template-when-shared").show();
+						} else {
+							$(this.link).closest("tr").find(".template-when-shared").hide();
+							$(this.link).closest("tr").find(".template-when-private").show();
+						}
+					},
+					complete: function() {
+						$(this.link).removeClass('disabled');
+					},
+					context: {
+						"link": this,
+						"share": share
+					}
+				});
 			});
 			
 			$("tr[data-owner=\""+template.ownerId+"\"][data-name=\""+encodeURIComponent(template.name)+"\"] form.template-rename-form").submit(function(){

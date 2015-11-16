@@ -37,8 +37,6 @@ public class Templates extends Controller {
 		if (user == null || (user.id < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
 			return redirect(routes.Login.login());
 		
-		if (user.admin)
-			flash("showOwner", "true");
 		flash("userid", user.id+"");
 		
 		User.flashBrowserId(user);
@@ -72,11 +70,15 @@ public class Templates extends Controller {
 		
 		Template template;
 		if (ownerIdOrSharedDirName.matches("^\\d+$")) {
-			template = Template.get(user, Long.parseLong(ownerIdOrSharedDirName), templateName);
+			template = Template.get(user, Long.parseLong(ownerIdOrSharedDirName), templateName, true);
 			
 		} else {
 			template = Template.get(user, ownerIdOrSharedDirName, templateName);
-		}		
+		}
+		
+		if (template == null) {
+			return badRequest("You ("+user.name+") do either not have access to the template \""+templateName+"\" owned by \""+ownerIdOrSharedDirName+"\", or no such template exists.");
+		}
 
 		List<Object> templateJsonFriendly = new ArrayList<Object>();
 		templateJsonFriendly.add(template.asJsonifyableObject(user, true));
@@ -202,6 +204,43 @@ public class Templates extends Controller {
 		}
 		
 		String error = template.rename(newName);
+		if (error == null) {
+			return ok();
+		} else {
+			return internalServerError(error);
+		}
+	}
+	
+	public static Result setShared(Long ownerId, String templateName) {
+		if (FirstUse.isFirstUse())
+			return unauthorized("unauthorized");
+		
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return unauthorized("unauthorized");
+		
+		Map<String, String[]> params = request().body().asFormUrlEncoded();
+		if (params == null) {
+			Logger.error("Could not read form data: "+request().body().asText());
+			return internalServerError("Could not read form data");
+		}
+		
+		Template template = Template.get(user, ownerId, templateName);
+		if (template == null) {
+			User owner = User.findById(ownerId);
+			String username = owner == null ? ownerId+"" : owner.name;
+			return notFound("Template '"+templateName+"' (owned by '"+username+"') was not found.");
+		}
+
+		String sharedString = params.get("template-shared")[0];
+		if (!"true".equals(sharedString) && !"false".equals(sharedString)) {
+			return badRequest("Template must be either shared or not shared (true/false, got '"+sharedString+"').");
+		}
+		
+		boolean shared = "true".equals(sharedString);
+		Logger.info("setting shared="+shared);
+		
+		String error = template.setShared(shared);
 		if (error == null) {
 			return ok();
 		} else {
