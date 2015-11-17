@@ -54,6 +54,13 @@ public class Global extends GlobalSettings {
 		if (Setting.get("jobs.deleteAfterDuration") == null)
 			Setting.set("jobs.deleteAfterDuration", "0");
 		
+		String userTracking = Play.application().configuration().getString("userTracking");
+		if ("true".equals(userTracking)) {
+			Setting.set("userTracking", "true");
+		} else {
+			Setting.set("userTracking", "false");
+		}
+		
 		Akka.system().scheduler().schedule(
 				Duration.create(0, TimeUnit.SECONDS),
 				Duration.create(10, TimeUnit.SECONDS),

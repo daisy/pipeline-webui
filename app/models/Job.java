@@ -479,7 +479,7 @@ public class Job extends Model implements Comparable<Job> {
 
 	/** Use this method to get the job from the engine to ensure that the XML in the webuis job storage is always up to date */
 	public org.daisy.pipeline.client.models.Job getJobFromEngine(int fromSequence) {
-		Logger.info("Getting job from engine: "+engineId); // TODO: change to debug
+		Logger.debug("Getting job from engine: "+engineId); // TODO: change to debug
 		if (engineId == null) {
 			return null;
 		}

@@ -174,5 +174,16 @@
 (function(f){window.setTimeout=f(window.setTimeout);window.setInterval=f(window.setInterval);})(function(f){return function(c,t){var a=[].slice.call(arguments,2);return f(function(){c.apply(this,a);},t);};});
 @@*/
 	</script>
+	
+	@if(models.Setting.get("userTracking")=="true"){
+	<script src="https://rawgit.com/josteinaj/interactor/master/interactor.js"></script>
+	<script>
+    var interactions = new Interactor({
+    	interactionElement : $("*"),
+    	focusElement : $("*"),
+    	mousePosition : true
+	});
+    </script>
+    }
   </body>
 </html>

@@ -88,3 +88,6 @@ GET     /status/engine                      controllers.SystemStatus.engineStatu
 # Log
 GET     /log                                controllers.Log.getLog()
 
+# Interactions (used for tracking user behaviour)
+POST    /interactions                       controllers.Interactions.interactions()
+
