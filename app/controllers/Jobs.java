@@ -121,7 +121,8 @@ public class Jobs extends Controller {
 			// create job.xml and copy context files
 			newJobStorage.save(false);
 			newJob.save();
-		}
+			
+		} else Logger.warn("Could not find template...");
 		Logger.debug("created new job: '"+newJob.getId()+"'");
 		
 		flash("templateJob", "true");

@@ -179,7 +179,6 @@ public class Template implements Comparable<Template> {
 					templateCache.put(cacheKey, new HashMap<String, Template>());
 				}
 				if ("shared".equals(templateUserDir.getName().toLowerCase())) {
-					Logger.info("statically shared dir: "+templateUserDir);
 					for (File templateDir : templateUserDir.listFiles()) {
 						Job clientlibJob = org.daisy.pipeline.client.filestorage.JobStorage.loadJob(templateDir.getName(), templateUserDir);
 						templateCache.get(cacheKey).put(templateDir.getName(), new Template(templateDir.getName(), templateUserDir.getName(), ownerId, true, clientlibJob));
@@ -188,14 +187,12 @@ public class Template implements Comparable<Template> {
 				} else {
 					for (File templateDir : templateUserDir.listFiles()) {
 						if ("shared".equals(templateDir.getName().toLowerCase())) {
-							Logger.info("shared dir: "+templateDir);
 							for (File sharedTemplateDir : templateDir.listFiles()) {
 								Job clientlibJob = org.daisy.pipeline.client.filestorage.JobStorage.loadJob(sharedTemplateDir.getName(), templateDir);
 								templateCache.get(cacheKey).put(sharedTemplateDir.getName(), new Template(sharedTemplateDir.getName(), templateUserDir.getName(), ownerId, true, clientlibJob));
 							}
 							
 						} else {
-							Logger.info("not shared dir: "+templateDir);
 							Job clientlibJob = org.daisy.pipeline.client.filestorage.JobStorage.loadJob(templateDir.getName(), templateUserDir);
 							templateCache.get(cacheKey).put(templateDir.getName(), new Template(templateDir.getName(), templateUserDir.getName(), ownerId, false, clientlibJob));
 						}
