@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
-import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -748,7 +746,11 @@ public class Jobs extends Controller {
         List<Map<String,Object>> filesResult = new ArrayList<Map<String,Object>>();
         
         for (FilePart file : files) {
-        	Logger.debug(request().method()+" | "+file.getContentType()+" | "+file.getFilename()+" | "+file.getFile().getAbsolutePath());
+        	// rename the uploaded file so that it is not automatically deleted by Play!
+        	File renamedFile = new File(file.getFile().getParentFile(), file.getFile().getName()+"_");
+        	file.getFile().renameTo(renamedFile);
+        	
+        	Logger.debug(request().method()+" | "+file.getContentType()+" | "+file.getFilename()+" | "+renamedFile.getAbsolutePath());
         	
         	Map<String,Object> fileObject = new HashMap<String,Object>();
         	fileObject.put("name", file.getFilename());
@@ -760,12 +762,12 @@ public class Jobs extends Controller {
     				new Runnable() {
     					public void run() {
 							JobStorage jobStorage = (JobStorage)webuiJob.asJob().getJobStorage();
-							File f = file.getFile();
+							File f = new File(file.getFile().getParentFile(), file.getFile().getName()+"_");
 							
 							Map<String,Object> result = new HashMap<String,Object>();
 							result.put("fileName", file.getFilename());
 							result.put("contentType", file.getContentType());
-							result.put("total", file.getFile().length());
+							result.put("total", f.length());
 							
 							if (file.getFilename().toLowerCase().endsWith(".zip")) {
 								Logger.debug("adding zip file: "+file.getFilename());
@@ -818,6 +820,7 @@ public class Jobs extends Controller {
 								
 								jobStorage.addContextFile(f, file.getFilename());
 							}
+							
 				        	jobStorage.save(true); // true = move files instead of copying
 				        	
 							NotificationConnection.push(user.id, new Notification("uploads", result));

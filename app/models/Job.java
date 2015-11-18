@@ -80,35 +80,6 @@ public class Job extends Model implements Comparable<Job> {
 		else
 			this.userNicename = User.findById(user.id).name;
 	}
-	
-//	/** Make job from engine job */
-//	public Job(org.daisy.pipeline.client.models.Job job, User user) {
-//		super();
-//		this.engineId = job.getId();
-//		this.user = user.id;
-//		this.nicename = job.getNicename();
-//		this.status = job.getStatus()+"";
-//		this.created = new Date();
-//		this.notifiedCreated = false;
-//		this.notifiedComplete = false;
-//		if (user.id < 0)
-//			this.userNicename = Setting.get("users.guest.name");
-//		else
-//			this.userNicename = User.findById(user.id).name;
-//		
-//		if (!org.daisy.pipeline.client.models.Job.Status.IDLE.equals(job.getStatus())) {
-//			this.started = this.created;
-//			if (!org.daisy.pipeline.client.models.Job.Status.RUNNING.equals(job.getStatus())) {
-//				this.finished = this.started;
-//			}
-//		}
-//		
-//		if (job.getScript() != null) {
-//			this.scriptId = job.getScript().getId();
-//			this.scriptName = job.getScript().getNicename();
-//		}
-//		
-//	}
 
 	public int compareTo(Job other) {
 		return created.compareTo(other.created);
@@ -117,21 +88,6 @@ public class Job extends Model implements Comparable<Job> {
 	// -- Queries
 
 	public static Model.Finder<Long,Job> find = new Model.Finder<Long, Job>(Job.class);
-
-//	/** Retrieve a Job by its id. */
-//	public static Job findTemplateById(Long id) {
-//		Job job = find.where().eq("id", id).eq("status", "TEMPLATE").findUnique();
-//		if (job != null) {
-//			User user = User.findById(job.user);
-//			if (user != null)
-//				job.userNicename = user.name;
-//			else if (job.user < 0)
-//				job.userNicename = Setting.get("users.guest.name");
-//			else
-//				job.userNicename = "User";
-//		}
-//		return job;
-//	}
 	
 	/** Retrieve a Job by its id. */
 	public static Job findById(Long id) {
@@ -389,9 +345,9 @@ public class Job extends Model implements Comparable<Job> {
 		catch (NullPointerException e) { Logger.debug("jobUpdateHelper: NullPointerException: "+status); }
 	}
 
-	public org.daisy.pipeline.client.models.Job asJob() { // TODO: remove messages (or at least change to debug level)
+	public org.daisy.pipeline.client.models.Job asJob() {
 		if (clientlibJob == null) {
-			Logger.debug("getting client job (not cached from earlier)");
+			Logger.debug("getting client job (not cached from earlier, instance:"+this+")");
 			File jobStorageDir = new File(Setting.get("jobs"));
 			clientlibJob = JobStorage.loadJob(""+id, jobStorageDir);
 			if (clientlibJob == null) {
@@ -487,12 +443,6 @@ public class Job extends Model implements Comparable<Job> {
 		if (clientlibJob == null) {
 			return null;
 		}
-//		synchronized (this) {
-//			int messages;
-//			messages = clientlibJob.getMessages() != null ? clientlibJob.getMessages().size() : -2;
-//			Logger.debug("received (with "+messages+" messages):");
-//			Logger.debug(XML.toString(clientlibJob.toXml()));
-//		}
 		setJob(clientlibJob);
 		save();
 		return this.clientlibJob;
