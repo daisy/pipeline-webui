@@ -83,7 +83,7 @@ addTemlate = function(template) {
 	}
 	html += '    <td><i class="icon-eye-open"></i> <span class="template-when-shared" style="'+(template.shared?'':'display:none;')+'">Shared</span><span class="template-when-private" style="'+(template.shared?'display:none;':'')+'">Private</span></td>'+"\n";
 	html += '    <td>'+"\n";
-	html += '        <a href="'+"@routes.Jobs.newJobWithTemplate("x","x")".replace("x/x",(template.ownerId !== null ? template.ownerId : encodeURIComponent(template.dirname))+"/"+encodeURIComponent(template.name))+'" class="btn btn-success"><i class="icon-plus icon-white"></i> New job</a>'+"\n";
+	html += '        <a  class="btn btn-success template-new-job" href="'+"@routes.Jobs.newJobWithTemplate("x","x")".replace("x/x",(template.ownerId !== null ? template.ownerId : encodeURIComponent(template.dirname))+"/"+encodeURIComponent(template.name))+'"><i class="icon-plus icon-white"></i> New job</a>'+"\n";
 	//html += '        <a href="'+"@routes.Templates.downloadTemplate("x","x")".replace("x/x",(template.ownerId !== null ? template.ownerId : encodeURIComponent(template.dirname))+"/"+encodeURIComponent(template.name))+'" class="btn btn-info"><i class="icon-download-alt icon-white"></i> Download</a>'+"\n";
 	if (template.ownerId !== null && (@(session.get("admin")=="true") || template.ownerId === @Controller.flash("userid"))) {
 		html += '        <a class="btn btn-info template-rename" href="javascript:void(0)"><i class="icon-pencil icon-white"></i> Rename</a>'+"\n";
@@ -195,17 +195,17 @@ addTemlate = function(template) {
 					},
 					error: function(jqXHR, textStatus, errorThrown) {
 						// error; too bad :(
-						console.log(jqXHR);
-						console.log(this);
 						$(this).find("div.control-group").addClass("error");
 						$(this).find(".help-block").text(jqXHR.responseText);
 					},
 					success: function(response, textStatus, jqXHR) {
+						var newName = $(this).find("input[name='template-name']").val();
 						$(this).hide();
 						$(this).find(".control-group").removeClass("error");
 						$(this).find(".help-block").text("");
 						$(this).closest("td").find(".template-name").text($(this).find("input[name='template-name']").val());
-						$(this).closest("tr").attr("data-name", $(this).find("input[name='template-name']").val());
+						$(this).closest("tr").attr("data-name", newName);
+						$(this).closest("tr").find("a.template-new-job").attr("href", "@routes.Jobs.newJobWithTemplate("x","x")".replace("x/x",templateOwner+"/"+encodeURIComponent(newName)));
 					},
 					context: this
 				});

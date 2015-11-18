@@ -142,8 +142,7 @@ public class Template implements Comparable<Template> {
 			// refresh from disk if needed
 			int updateFrequency = templateOwnerId == null ? 5 : 60;
 			if (forceUpdate || template.clientlibJob == null || template.lastUpdated == null || template.lastUpdated.before(new Date(new Date().getTime() - 1000*60*updateFrequency))) {
-				File templatesDir = template.shared ? template.getOwnerSharedDir() : template.getOwnerPrivateDir();
-				template.clientlibJob = org.daisy.pipeline.client.filestorage.JobStorage.loadJob(templateName, templatesDir);
+				template.clientlibJob = org.daisy.pipeline.client.filestorage.JobStorage.loadJob(templateName, template.getOwnerDir());
 			}
 			
 			// return the template
@@ -245,7 +244,6 @@ public class Template implements Comparable<Template> {
 		
 		if (userTemplatesDirname == null) {
 			File templatesDir = new File(Setting.get("templates"));
-			Logger.info("templates dir: "+templatesDir);
 			for (File templateUserDir : templatesDir.listFiles()) {
 				if (templateUserDir.getName().startsWith(user.id+"-")) {
 					userTemplatesDirname = templateUserDir.getName();
@@ -261,51 +259,37 @@ public class Template implements Comparable<Template> {
 		}
 		
 		File userTemplatesDir = new File(new File(Setting.get("templates")), userTemplatesDirname);
-		Logger.info("using as template user dir: "+userTemplatesDir);
 		if (!userTemplatesDir.exists() && !userTemplatesDir.mkdirs()) {
 			userTemplatesDir = new File(new File(Setting.get("templates")), user.id+"-user");
-			Logger.info("didn't work; using as template user dir: "+userTemplatesDir);
 			if (!userTemplatesDir.exists() & !userTemplatesDir.mkdirs()) {
-				Logger.error("Could not create templates directory: "+userTemplatesDir);
 				return null;
 			}
 		}
 		
 		Job templateJob = new Job();
-		Logger.info("clientlibJob nicename:"+clientlibJob.getNicename());
 		templateJob.setJobXml(clientlibJob.toXml());
-		Logger.info("creating template nicename based on number of templates");
 		int templateCount = 1;
 		for (Object cacheKey : templateCache.keySet()) {
 			templateCount += templateCache.get(cacheKey).size();
 		}
-		Logger.info("there are "+templateCount+" templates in total");
 		String templateNicename = "Template "+templateCount;
 		while (templateCache.get(user.id).containsKey(templateNicename)) {
-			Logger.info(templateNicename+" already exists, incrementing...");
 			templateNicename = "Template "+(++templateCount);
 		}
 		templateJob.setNicename(templateNicename);
-		Logger.info("using as template dirname (nicename): "+templateJob.getNicename());
 		new File(userTemplatesDir, templateJob.getNicename());
-		
-		Logger.info("clientlibJob contextDir: "+clientlibJob.getJobStorage().getContextDir());
 		
 		if (clientlibJob.getJobStorage() == null || !clientlibJob.getJobStorage().getContextDir().isDirectory()) {
 			new JobStorage(templateJob, userTemplatesDir, templateJob.getNicename());
-			Logger.info("templateJob contextDir: "+templateJob.getJobStorage().getContextDir());
 			
 		} else {
 			clientlibJob.getJobStorage().save();
 			new JobStorage(templateJob, userTemplatesDir, clientlibJob.getJobStorage(), templateJob.getNicename());
-			Logger.info("templateJob contextDir: "+templateJob.getJobStorage().getContextDir());
 		}
 		templateJob.getJobStorage().save();
 		Template template = new Template(templateJob.getNicename(), userTemplatesDirname, user.id, false, templateJob);
-		Logger.info("template.ownerTemplatesDirname: "+template.ownerTemplatesDirname);
 		
 		templateCache.get(user.id).put(templateJob.getNicename(), template);
-		Logger.info("templateCache.get("+user.id+").put("+templateJob.getNicename()+", "+template.ownerTemplatesDirname+")");
 		
 		return template;
 	}
@@ -389,7 +373,11 @@ public class Template implements Comparable<Template> {
 	}
 	
 	private File getTemplateDir() {
-		return shared ? new File(getOwnerSharedDir(), name) : new File(getOwnerPrivateDir(), name);
+		return new File(getOwnerDir(), name);
+	}
+	
+	private File getOwnerDir() {
+		return shared && ownerId != null ? getOwnerSharedDir() : getOwnerPrivateDir();
 	}
 	
 	private File getOwnerPrivateDir() {
@@ -415,7 +403,7 @@ public class Template implements Comparable<Template> {
 	}
 
 	public String setShared(boolean shared) {
-		if (!(shared ^ this.shared)) {
+		if (!(shared ^ this.shared) || ownerId == null) {
 			return null;
 		}
 		
@@ -426,11 +414,9 @@ public class Template implements Comparable<Template> {
 		File existingTemplateDir = getTemplateDir();
 		File newTemplateDir;
 		if (shared) {
-			Logger.info("newTemplateDir = new File(\""+getOwnerSharedDir()+"\", \""+existingTemplateDir.getName()+"\");");
 			newTemplateDir = new File(getOwnerSharedDir(), existingTemplateDir.getName());
 			
 		} else {
-			Logger.info("newTemplateDir = new File(\""+getOwnerPrivateDir()+"\", \""+existingTemplateDir.getName()+"\");");
 			newTemplateDir = new File(getOwnerPrivateDir(), existingTemplateDir.getName());
 		}
 		Logger.info("Moving template to "+(shared ? "shared" : "private")+" directory: "+newTemplateDir);

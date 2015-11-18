@@ -55,7 +55,7 @@ public class Global extends GlobalSettings {
 			Setting.set("jobs.deleteAfterDuration", "0");
 		
 		String userTracking = Play.application().configuration().getString("userTracking");
-		if ("true".equals(userTracking)) {
+		if ("true".equals(userTracking) || Play.application().isDev()) {
 			Setting.set("userTracking", "true");
 		} else {
 			Setting.set("userTracking", "false");
