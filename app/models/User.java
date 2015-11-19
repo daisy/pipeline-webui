@@ -387,4 +387,56 @@ public class User extends Model {
     	}
 	}
 
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public boolean isAdmin() {
+		return admin;
+	}
+
+	public void setAdmin(boolean admin) {
+		this.admin = admin;
+	}
+
+	public boolean isActive() {
+		return active;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+
+	public Date getPasswordLinkSent() {
+		return passwordLinkSent;
+	}
+
+	public void setPasswordLinkSent(Date passwordLinkSent) {
+		this.passwordLinkSent = passwordLinkSent;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
 }

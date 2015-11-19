@@ -52,15 +52,15 @@ public class Administrator extends Controller {
 		@Constraints.Required
 		@Formats.NonEmpty
 		@Constraints.Email
-		public String email;
+		private String email;
 
 		@Constraints.Required
 		@Constraints.MinLength(6)
-		public String password;
+		private String password;
 
 		@Constraints.Required
 		@Constraints.MinLength(6)
-		public String repeatPassword;
+		private String repeatPassword;
 
 		public static void validate(Form<CreateAdminForm> filledForm) {
 			if (User.findByEmail(filledForm.field("email").valueOr("")) != null)
@@ -69,18 +69,42 @@ public class Administrator extends Controller {
 			if (!filledForm.field("password").valueOr("").equals("") && !filledForm.field("password").valueOr("").equals(filledForm.field("repeatPassword").value()))
 				filledForm.reject("repeatPassword", "Password doesn't match.");
 		}
+
+		public String getEmail() {
+			return email;
+		}
+
+		public void setEmail(String email) {
+			this.email = email;
+		}
+
+		public String getPassword() {
+			return password;
+		}
+
+		public void setPassword(String password) {
+			this.password = password;
+		}
+
+		public String getRepeatPassword() {
+			return repeatPassword;
+		}
+
+		public void setRepeatPassword(String repeatPassword) {
+			this.repeatPassword = repeatPassword;
+		}
 	}
 
 	public final static Form<SetWSForm> setWSForm = play.data.Form.form(SetWSForm.class);
 	public static class SetWSForm {
 		@Required
-		public String endpoint;
+		private String endpoint;
 
-		public String authid;
+		private String authid;
 
-		public String secret;
+		private String secret;
 
-		public String engine; // only used in the response
+		private String engine; // only used in the response
 		
 		@Transient
 		public static Map<String,Map<String,Object>> aliveAttempts = new HashMap<String,Map<String,Object>>();
@@ -114,18 +138,50 @@ public class Administrator extends Controller {
 			if (Setting.get("dp2ws.secret") == null || !"".equals(filledForm.field("secret").value()))
 				Setting.set("dp2ws.secret", filledForm.field("secret").valueOr(""));
 		}
+
+		public String getEndpoint() {
+			return endpoint;
+		}
+
+		public void setEndpoint(String endpoint) {
+			this.endpoint = endpoint;
+		}
+
+		public String getAuthid() {
+			return authid;
+		}
+
+		public void setAuthid(String authid) {
+			this.authid = authid;
+		}
+
+		public String getSecret() {
+			return secret;
+		}
+
+		public void setSecret(String secret) {
+			this.secret = secret;
+		}
+
+		public String getEngine() {
+			return engine;
+		}
+
+		public void setEngine(String engine) {
+			this.engine = engine;
+		}
 	}
 
 	public final static Form<SetStorageDirsForm> setStorageDirsForm = play.data.Form.form(SetStorageDirsForm.class);
 	public static class SetStorageDirsForm {
 		@Required
-		public String uploaddir;
+		private String uploaddir;
 		
 		@Required
-		public String jobsdir;
+		private String jobsdir;
 		
 		@Required
-		public String templatesdir;
+		private String templatesdir;
 
 		public static void validate(Form<SetStorageDirsForm> filledForm) {
 			String uploadPath = filledForm.field("uploaddir").valueOr("");
@@ -176,20 +232,44 @@ public class Administrator extends Controller {
 			Setting.set("jobs", uploadPath);
 			Setting.set("templates", uploadPath);
 		}
+
+		public String getUploaddir() {
+			return uploaddir;
+		}
+
+		public void setUploaddir(String uploaddir) {
+			this.uploaddir = uploaddir;
+		}
+
+		public String getJobsdir() {
+			return jobsdir;
+		}
+
+		public void setJobsdir(String jobsdir) {
+			this.jobsdir = jobsdir;
+		}
+
+		public String getTemplatesdir() {
+			return templatesdir;
+		}
+
+		public void setTemplatesdir(String templatesdir) {
+			this.templatesdir = templatesdir;
+		}
 	}
 
 	public final static Form<ConfigureEmailForm> configureEmailForm = play.data.Form.form(ConfigureEmailForm.class);
 	public static class ConfigureEmailForm {
 		@Required
-		public String smtp;
+		private String smtp;
 
-		public int port;
+		private int port;
 
-		public boolean ssl;
+		private boolean ssl;
 
-		public String username;
+		private String username;
 
-		public String password;
+		private String password;
 
 		public static void validate(Form<ConfigureEmailForm> filledForm) {
 			if (filledForm.field("smtp").valueOr("").equals(""))
@@ -214,12 +294,52 @@ public class Administrator extends Controller {
 			Setting.set("mail.from.name", "Pipeline 2");
 			Setting.set("mail.from.email", session("email"));
 		}
+
+		public String getSmtp() {
+			return smtp;
+		}
+
+		public void setSmtp(String smtp) {
+			this.smtp = smtp;
+		}
+
+		public int getPort() {
+			return port;
+		}
+
+		public void setPort(int port) {
+			this.port = port;
+		}
+
+		public boolean isSsl() {
+			return ssl;
+		}
+
+		public void setSsl(boolean ssl) {
+			this.ssl = ssl;
+		}
+
+		public String getUsername() {
+			return username;
+		}
+
+		public void setUsername(String username) {
+			this.username = username;
+		}
+
+		public String getPassword() {
+			return password;
+		}
+
+		public void setPassword(String password) {
+			this.password = password;
+		}
 	}
 
 	public final static Form<SetMaintenanceForm> setMaintenanceForm = play.data.Form.form(SetMaintenanceForm.class);
 	public static class SetMaintenanceForm {
 		@Required
-		public String maintenance;
+		private String maintenance;
 
 		public static void validate(Form<SetMaintenanceForm> filledForm) {
 			String maintenanceString = filledForm.field("maintenance").valueOr("0");
@@ -237,21 +357,29 @@ public class Administrator extends Controller {
 			long maintenanceTime = Long.parseLong(filledForm.field("maintenance").valueOr("0")) * 60000L;
 			Setting.set("jobs.deleteAfterDuration", maintenanceTime+"");
 		}
+
+		public String getMaintenance() {
+			return maintenance;
+		}
+
+		public void setMaintenance(String maintenance) {
+			this.maintenance = maintenance;
+		}
 	}
 
 	public final static Form<ConfigureAppearanceForm> configureAppearanceForm = play.data.Form.form(ConfigureAppearanceForm.class);
 	public static class ConfigureAppearanceForm {
 		
 		@Formats.NonEmpty
-		public String title;
+		private String title;
 		
-		public String titleLink;
+		private String titleLink;
 		
-		public String titleLinkNewWindow;
+		private String titleLinkNewWindow;
 		
-		public String landingPage;
+		private String landingPage;
 		
-		public String theme;
+		private String theme;
 
 		public static void validate(Form<ConfigureAppearanceForm> filledForm) {
 			String title = filledForm.field("title").valueOr("");
@@ -298,6 +426,36 @@ public class Administrator extends Controller {
 			Setting.set("appearance.landingPage", filledForm.field("landingPage").valueOr(Setting.get("appearance.landingPage")));
 			Setting.set("appearance.title", filledForm.field("title").valueOr(Setting.get("appearance.title")));
 		}
+		public String getTitle() {
+			return title;
+		}
+		public void setTitle(String title) {
+			this.title = title;
+		}
+		public String getTitleLink() {
+			return titleLink;
+		}
+		public void setTitleLink(String titleLink) {
+			this.titleLink = titleLink;
+		}
+		public String getTitleLinkNewWindow() {
+			return titleLinkNewWindow;
+		}
+		public void setTitleLinkNewWindow(String titleLinkNewWindow) {
+			this.titleLinkNewWindow = titleLinkNewWindow;
+		}
+		public String getLandingPage() {
+			return landingPage;
+		}
+		public void setLandingPage(String landingPage) {
+			this.landingPage = landingPage;
+		}
+		public String getTheme() {
+			return theme;
+		}
+		public void setTheme(String theme) {
+			this.theme = theme;
+		}
 	}
 
 	final static Form<User> userForm = play.data.Form.form(User.class);
@@ -306,7 +464,15 @@ public class Administrator extends Controller {
 	public static class GuestUser {
 		@Constraints.MinLength(1)
 		@Constraints.Pattern("[^{}\\[\\]();:'\"<>]+") // Avoid breaking JavaScript code in templates
-		public String name;
+		private String name;
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 	
 	final static Form<ConfigureScripts> scriptsForm = play.data.Form.form(ConfigureScripts.class);
@@ -335,14 +501,51 @@ public class Administrator extends Controller {
 
 	final static Form<GlobalPermissions> globalForm = play.data.Form.form(GlobalPermissions.class);
 	public static class GlobalPermissions {
-		public boolean hideAdvancedOptions;
+		private boolean hideAdvancedOptions;
 
-		public boolean allowGuests;
-		public boolean automaticLogin;
+		private boolean allowGuests;
+		private boolean automaticLogin;
 
-		public boolean shareJobs;
-		public boolean showEmailBox;
-		public boolean showGuestName;
+		private boolean shareJobs;
+		private boolean showEmailBox;
+		private boolean showGuestName;
+		
+		public boolean isHideAdvancedOptions() {
+			return hideAdvancedOptions;
+		}
+		public void setHideAdvancedOptions(boolean hideAdvancedOptions) {
+			this.hideAdvancedOptions = hideAdvancedOptions;
+		}
+		public boolean isAllowGuests() {
+			return allowGuests;
+		}
+		public void setAllowGuests(boolean allowGuests) {
+			this.allowGuests = allowGuests;
+		}
+		public boolean isAutomaticLogin() {
+			return automaticLogin;
+		}
+		public void setAutomaticLogin(boolean automaticLogin) {
+			this.automaticLogin = automaticLogin;
+		}
+		public boolean isShareJobs() {
+			return shareJobs;
+		}
+		public void setShareJobs(boolean shareJobs) {
+			this.shareJobs = shareJobs;
+		}
+		public boolean isShowEmailBox() {
+			return showEmailBox;
+		}
+		public void setShowEmailBox(boolean showEmailBox) {
+			this.showEmailBox = showEmailBox;
+		}
+		public boolean isShowGuestName() {
+			return showGuestName;
+		}
+		public void setShowGuestName(boolean showGuestName) {
+			this.showGuestName = showGuestName;
+		}
 	}
 
 	public static Result getSettings() {
