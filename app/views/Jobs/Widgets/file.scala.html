@@ -47,24 +47,24 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 @if(arg.getSequence()==Boolean.TRUE){
 	
 	<div class="control-group @("advanced-argument".when(!arg.getRequired()))">
-		<label class="control-label" id="script-@scriptId-@{arg.getName()}-label">@arg.getNicename()</label>
+		<label class="control-label" id="label-@scriptId-@{arg.getName()}">@arg.getNicename()</label>
 		<!-- TODO: add drag'n'drop support for reordering items? -->
 		<div class="controls">
-			<input type="hidden" name="@{arg.getName()}" id="script-@scriptId-@{arg.getName()}" value=""/>
+			<input type="hidden" name="@{arg.getName()}" id="file-@scriptId-@{arg.getName()}" value=""/>
 			<div class="row-fluid">
 				<div class="span6">
 					<div style="display:table;">
 					    <div style="display:table-row;">
 					    	<div style="display:table-cell;">
-								<label for="@{arg.getName()}-all" id="script-@scriptId-@{arg.getName()}-all-label">Uploaded files</label>
-								<select style="width:100%;min-width:200px;" id="script-@scriptId-@{arg.getName()}-all" multiple="multiple" size="10" class="all-files" aria-labelledby="@{arg.getName()}-all-label @{arg.getName()}-label">
-									<optgroup id="script-@scriptId-@{arg.getName()}-suggested" label="Suggested files"></optgroup>
-									<optgroup id="script-@scriptId-@{arg.getName()}-other" label="Other files"></optgroup>
+								<label id="label-allfiles-@scriptId-@{arg.getName()}" for="allfiles-@scriptId-@{arg.getName()}">Uploaded files</label>
+								<select style="width:100%;min-width:200px;" id="allfiles-@scriptId-@{arg.getName()}" multiple="multiple" size="10" class="all-files" aria-labelledby="label-@scriptId-@{arg.getName()} label-allfiles-@scriptId-@{arg.getName()}">
+									<optgroup id="suggestedfile-@scriptId-@{arg.getName()}" label="Suggested files"></optgroup>
+									<optgroup id="otherfile-@scriptId-@{arg.getName()}" label="Other files"></optgroup>
 								</select>
 							</div>
 							<div style="display:table-cell;vertical-align:middle;min-width:40px;">
-								<button type="button" id="script-@scriptId-@{arg.getName()}-add" class="btn" title="Add"><img src="@routes.Assets.versioned("images/glyphicons/glyphicons_211_right_arrow.png")" alt="Add"/></button><br/>
-								<button type="button" id="script-@scriptId-@{arg.getName()}-remove" class="btn" title="Remove"><img src="@routes.Assets.versioned("images/glyphicons/glyphicons_210_left_arrow.png")" alt="Remove"/></button>
+								<button type="button" id="addfile-@scriptId-@{arg.getName()}" class="btn" title="Add"><img src="@routes.Assets.versioned("images/glyphicons/glyphicons_211_right_arrow.png")" alt="Add"/></button><br/>
+								<button type="button" id="removefile-@scriptId-@{arg.getName()}" class="btn" title="Remove"><img src="@routes.Assets.versioned("images/glyphicons/glyphicons_210_left_arrow.png")" alt="Remove"/></button>
 							</div>
 						</div>
 					</div>
@@ -75,14 +75,14 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 					<div style="display:table;">
 					    <div style="display:table-row;">
 					    	<div style="display:table-cell;">
-								<label for="@{arg.getName()}-selected" id="script-@scriptId-@{arg.getName()}-selected-label">Selected files</label>
-								<select style="width:100%;min-width:200px;" id="script-@scriptId-@{arg.getName()}-selected" multiple="multiple" size="10" aria-labelledby="@{arg.getName()}-selected-label @{arg.getName()}-label">
+								<label for="selectedfiles-@scriptId-@{arg.getName()}" id="label-selectedfiles-@scriptId-@{arg.getName()}">Selected files</label>
+								<select style="width:100%;min-width:200px;" id="selectedfiles-@scriptId-@{arg.getName()}" multiple="multiple" size="10" aria-labelledby="label-@scriptId-@{arg.getName()} label-selectedfiles-@scriptId-@{arg.getName()}">
 								</select>
 							</div>
 							<div style="display:table-cell;vertical-align:middle;min-width:40px;">
 								@if(arg.getOrdered()==Boolean.TRUE){
-									<button type="button" id="script-@scriptId-@{arg.getName()}-up" class="btn" title="Move up"><img src="@routes.Assets.versioned("images/glyphicons/glyphicons_213_up_arrow.png")" alt="Move up"/></button><br/>
-									<button type="button" id="script-@scriptId-@{arg.getName()}-down" class="btn" title="Move down"><img src="@routes.Assets.versioned("images/glyphicons/glyphicons_212_down_arrow.png")" alt="Move down"/></button>
+									<button type="button" id="moveup-@scriptId-@{arg.getName()}" class="btn" title="Move up"><img src="@routes.Assets.versioned("images/glyphicons/glyphicons_213_up_arrow.png")" alt="Move up"/></button><br/>
+									<button type="button" id="movedown-@scriptId-@{arg.getName()}" class="btn" title="Move down"><img src="@routes.Assets.versioned("images/glyphicons/glyphicons_212_down_arrow.png")" alt="Move down"/></button>
 								}
 							</div>
 						</div>
@@ -97,8 +97,8 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 				$(function(){
 					@if(arg.getOrdered()==Boolean.TRUE){
 						/* Event handler for "move up"-button. */
-						$("#script-@scriptId-@{arg.getName()}-up").click(function() {
-							var options = "#script-@scriptId-@{arg.getName()}-selected option";
+						$("#moveup-@scriptId-@{arg.getName()}").click(function() {
+							var options = "#selectedfiles-@scriptId-@{arg.getName()} option";
 							for (var i = 1; i < $(options).size(); i++) {
 								if (!$($(options)[i-1]).is(":selected") && $($(options)[i]).is(":selected")) {
 									var top = $($(options)[i-1]);
@@ -110,8 +110,8 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 						});
 						
 						/* Event handler for "move down"-button. */
-						$("#script-@scriptId-@{arg.getName()}-down").click(function() {
-							var options = "#script-@scriptId-@{arg.getName()}-selected option";
+						$("#movedown-@scriptId-@{arg.getName()}").click(function() {
+							var options = "#selectedfiles-@scriptId-@{arg.getName()} option";
 							for (var i = $(options).size()-2; i >= 0; i--) {
 								if (!$($(options)[i+1]).is(":selected") && $($(options)[i]).is(":selected")) {
 									var top = $($(options)[i]);
@@ -124,32 +124,32 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 					}
 					
 					/* Event handler for "add"-button. */
-					$("#script-@scriptId-@{arg.getName()}-add").click(function() {
-						$.each($("#script-@scriptId-@{arg.getName()}-all option:selected"), function(i,e){
+					$("#addfile-@scriptId-@{arg.getName()}").click(function() {
+						$.each($("#allfiles-@scriptId-@{arg.getName()} option:selected"), function(i,e){
 							$(e).remove();
-							$(e).appendTo($("#script-@scriptId-@{arg.getName()}-selected"));
+							$(e).appendTo($("#selectedfiles-@scriptId-@{arg.getName()}"));
 						});
 					});
 					
 					/* Event handler for "remove"-button. */
-					$("#script-@scriptId-@{arg.getName()}-remove").click(function() {
-						$.each($("#script-@scriptId-@{arg.getName()}-selected option:selected"), function(i,e){
+					$("#removefile-@scriptId-@{arg.getName()}").click(function() {
+						$.each($("#selectedfiles-@scriptId-@{arg.getName()} option:selected"), function(i,e){
 							$(e).remove();
 							if ($(e).hasClass("rightContentType"))
-								$(e).appendTo($("#script-@scriptId-@{arg.getName()}-suggested"));
+								$(e).appendTo($("#suggestedfile-@scriptId-@{arg.getName()}"));
 							else
-								$(e).appendTo($("#script-@scriptId-@{arg.getName()}-other"));
+								$(e).appendTo($("#otherfile-@scriptId-@{arg.getName()}"));
 							// TODO: instead of append; insert in sorted order according to fileName
 						});
 					});
 					
 					Job.setFromTemplateHandlers.push(function(arg, uploads) {
 						if (arg.name === "@arg.getName()") { 
-							$("#script-@scriptId-@{arg.getName()}-selected option").prop('selected', true)
-							$("#script-@scriptId-@{arg.getName()}-remove").click();
+							$("#selectedfiles-@scriptId-@{arg.getName()} option").prop('selected', true)
+							$("#removefile-@scriptId-@{arg.getName()}").click();
 							if (arg.defined && arg.asList.length > 0) {
 								for (var f = 0; f < arg.asList.length; f++) {
-									$("#script-@scriptId-@{arg.getName()}-all option[value='"+arg.name.replace(/'/g,"\\'")+"']").detach().appendTo("#script-@scriptId-@{arg.getName()}-selected");
+									$("#allfiles-@scriptId-@{arg.getName()} option[value='"+arg.name.replace(/'/g,"\\'")+"']").detach().appendTo("#selectedfiles-@scriptId-@{arg.getName()}");
 								}
 							}
 						}
@@ -161,10 +161,10 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 						for (var f = 0; f < fileset.length; f++) {
 							var file = fileset[f];
 							
-							if (Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"](file)) {
-								$("#script-@scriptId-@{arg.getName()}-selected").append($('<option class="rightContentType" value="'+file.fileName+'" title="'+file.fileName+'">'+file.fileName+'</option>'));
+							if (@{arg.getRequired()} && Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"](file)) {
+								$("#selectedfiles-@scriptId-@{arg.getName()}").append($('<option class="rightContentType" value="'+file.fileName+'" title="'+file.fileName+'">'+file.fileName+'</option>'));
 							} else {
-								$("#script-@scriptId-@{arg.getName()}-other").append($('<option class="wrongContentType" value="'+file.fileName+'" title="'+file.fileName+'">'+file.fileName+'</option>'));
+								$("#otherfile-@scriptId-@{arg.getName()}").append($('<option class="wrongContentType" value="'+file.fileName+'" title="'+file.fileName+'">'+file.fileName+'</option>'));
 							}
 							
 							// TODO: instead of append; insert in sorted order according to fileName
@@ -174,10 +174,10 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 					/* Prepare form widget for validation and submission */
 					var beforeSubmit = function(){
 						var value = [];
-						$.each($("#script-@scriptId-@{arg.getName()}-selected option"), function(i, e) {
+						$.each($("#selectedfiles-@scriptId-@{arg.getName()} option"), function(i, e) {
 							value.push($(e).attr("value"));
 						});
-						$('#script-@scriptId-@{arg.getName()}').attr("value", value.join());
+						$('#file-@scriptId-@{arg.getName()}').attr("value", value.join());
 					}
 					DP2Forms.beforeSubmit("script-@scriptId",beforeSubmit);
 				});
@@ -190,10 +190,10 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 	<div class="control-group @("advanced-argument".when(!arg.getRequired()))">
 		<label class="control-label" for="@{arg.getName()}">@arg.getNicename()</label>
 		<div class="controls">
-			<select name="@{arg.getName()}" id="script-@scriptId-@{arg.getName()}">
+			<select name="@{arg.getName()}" id="file-@scriptId-@{arg.getName()}">
 				<option value="" selected=""></option>
-				<optgroup id="script-@scriptId-@{arg.getName()}-suggested" label="Supported files"></optgroup>
-				<optgroup id="script-@scriptId-@{arg.getName()}-other" label="Other files"></optgroup>
+				<optgroup id="suggestedfile-@scriptId-@{arg.getName()}" label="Supported files"></optgroup>
+				<optgroup id="otherfile-@scriptId-@{arg.getName()}" label="Other files"></optgroup>
 			</select>
 			@if(arg.getDesc().length > 0){
 				<span class="help-block">@arg.getDesc()</span>
@@ -204,9 +204,9 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 					Job.setFromTemplateHandlers.push(function(arg, uploads) {
 						if (arg.name === "@arg.getName()") { 
 							if (arg.defined && arg.asList.length > 0) {
-								$("#script-@scriptId-@{arg.getName()} option[value='"+arg.asList[0].replace(/'/g,"\\'")+"']").prop('selected', true);
+								$("#file-@scriptId-@{arg.getName()} option[value='"+arg.asList[0].replace(/'/g,"\\'")+"']").prop('selected', true);
 							} else {
-								$("#script-@scriptId-@{arg.getName()} option[value='']").prop('selected', true)
+								$("#file-@scriptId-@{arg.getName()} option[value='']").prop('selected', true)
 							}
 						}
 					});
@@ -214,18 +214,18 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 					/* Event handler for fileset changes. */
 					Job.onNewUpload(function(fileset){
 						var contentTypes = @Html(play.libs.Json.stringify(play.libs.Json.toJson(arg.getMediaTypes())));
-						var selectedSomething = $("#script-@scriptId-@{arg.getName()} optgroup option").filter(":selected").size() > 0;
+						var selectedSomething = $("#file-@scriptId-@{arg.getName()} optgroup option").filter(":selected").size() > 0;
 						for (var f = 0; f < fileset.length; f++) {
 							var file = fileset[f];
 							
 							if (Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"](file)) {
 								if (!selectedSomething) {
-									$("#script-@scriptId-@{arg.getName()}-suggested").append($('<option class="rightContentType" value="'+file.fileName+'" title="'+file.fileName+'" selected="">'+file.fileName+'</option>'));
+									$("#suggestedfile-@scriptId-@{arg.getName()}").append($('<option class="rightContentType" value="'+file.fileName+'" title="'+file.fileName+'" selected="">'+file.fileName+'</option>'));
 								} else {
-									$("#script-@scriptId-@{arg.getName()}-suggested").append($('<option class="rightContentType" value="'+file.fileName+'" title="'+file.fileName+'">'+file.fileName+'</option>'));
+									$("#suggestedfile-@scriptId-@{arg.getName()}").append($('<option class="rightContentType" value="'+file.fileName+'" title="'+file.fileName+'">'+file.fileName+'</option>'));
 								}
 							} else {
-								$("#script-@scriptId-@{arg.getName()}-other").append($('<option class="wrongContentType" value="'+file.fileName+'" title="'+file.fileName+'">'+file.fileName+'</option>')
+								$("#otherfile-@scriptId-@{arg.getName()}").append($('<option class="wrongContentType" value="'+file.fileName+'" title="'+file.fileName+'">'+file.fileName+'</option>')
 								);
 							}
 							
@@ -235,7 +235,7 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 					
 					/* Prepare and validate widget */
 					var validator = function(){
-						//TODO: validate #script-@scriptId-@{arg.getName()}
+						//TODO: validate #file-@scriptId-@{arg.getName()}
 						
 						var result = {valid: true, messages: []};
 						

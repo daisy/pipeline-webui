@@ -30,9 +30,9 @@
 }else{
 
 	<div class="control-group @("advanced-argument".when(!arg.getRequired()))">
-		<label class="control-label" for="@{arg.getName()}">@arg.getNicename()</label>
+		<label class="control-label" for="text-@scriptId-@{arg.getName()}">@arg.getNicename()</label>
 		<div class="controls">
-			<input name="@{arg.getName()}" id="script-@scriptId-@{arg.getName()}" type="text"/>
+			<input name="@{arg.getName()}" id="text-@scriptId-@{arg.getName()}" type="text" @if(arg.getDefaultValue() != null){ value="@arg.getDefaultValue().replaceAll("\"","'")" }/>
 			@if(arg.getDesc().length > 0){
 				<span class="help-block">@arg.getDesc()</span>
 			}
@@ -44,7 +44,7 @@
 		Job.setFromTemplateHandlers.push(function(arg, uploads) {
 			if (arg.name === "@arg.getName()") {
 				if (arg.defined && arg.asList.length > 0) {
-					$("#script-@scriptId-@{arg.getName()}").val(arg.asList[0]);
+					$("#text-@scriptId-@{arg.getName()}").val(arg.asList[0]);
 				}
 			}
 		});

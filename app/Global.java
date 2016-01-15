@@ -67,9 +67,6 @@ public class Global extends GlobalSettings {
 				new Runnable() {
 					public void run() {
 						try {
-							if (Setting.get("dp2ws.endpoint") == null)
-								return;
-
 							String endpoint = Setting.get("dp2ws.endpoint");
 							if (endpoint == null) {
 								Application.setAlive(null);

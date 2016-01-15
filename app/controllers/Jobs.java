@@ -269,7 +269,7 @@ public class Jobs extends Controller {
 			return internalServerError("An error occured while trying to read the script with id '"+scriptId+"' from the engine.");
 		}
 
-		/* List of mime types that are supported by more than one file argument.
+		/* List of mime types that are supported by more than one non-optional file argument.
 		 * The Web UI cannot automatically assign files of these media types to a
 		 * file argument since there are multiple possible file arguments/widgets. */
 		List<String> mediaTypeBlacklist = new ArrayList<String>();
@@ -277,10 +277,12 @@ public class Jobs extends Controller {
 			Map<String,Integer> mediaTypeOccurences = new HashMap<String,Integer>();
 			for (Argument arg : script.getInputs()) {
 				for (String mediaType : arg.getMediaTypes()) {
-					if (mediaTypeOccurences.containsKey(mediaType)) {
-						mediaTypeOccurences.put(mediaType, mediaTypeOccurences.get(mediaType)+1);
-					} else {
-						mediaTypeOccurences.put(mediaType, 1);
+					if (arg.getRequired()) {
+						if (mediaTypeOccurences.containsKey(mediaType)) {
+							mediaTypeOccurences.put(mediaType, mediaTypeOccurences.get(mediaType)+1);
+						} else {
+							mediaTypeOccurences.put(mediaType, 1);
+						}
 					}
 				}
 			}

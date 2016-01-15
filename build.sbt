@@ -12,6 +12,7 @@ licenses += "LGPLv3" -> url("https://www.gnu.org/licenses/lgpl-3.0.html")
 lazy val root = (project in file(".")).enablePlugins(PlayJava, PlayEbean, DebianPlugin)
 
 scalaVersion := "2.11.6"
+javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 
 maintainer in Linux := "Jostein Austvik Jacobsen <josteinaj@gmail.com>"
 packageSummary in Linux := "DAISY Pipeline 2 Web User Interface"
@@ -29,7 +30,7 @@ libraryDependencies ++= Seq(
   "org.hibernate" % "hibernate-entitymanager" % "4.3.10.Final",
   "org.avaje.ebeanorm" % "avaje-ebeanorm-api" % "3.1.1",
   "org.apache.derby" % "derby" % "10.11.1.1",
-  "org.daisy.pipeline" % "clientlib-java" % "4.0.1",
+  "org.daisy.pipeline" % "clientlib-java" % "4.1.0",
   "org.daisy.pipeline" % "clientlib-java-httpclient" % "1.0.1",
   "org.apache.commons" % "commons-compress" % "1.9",
   "org.apache.commons" % "commons-email" % "1.4",
@@ -39,4 +40,11 @@ libraryDependencies ++= Seq(
 
 scalacOptions += "-deprecation"
 
-fork in run := true
+fork in run := false
+
+// Compile the project before generating Eclipse files, so that generated .scala or .class files for views and routes are present
+EclipseKeys.preTasks := Seq(compile in Compile)
+// Java project. Don't expect Scala IDE
+EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
+// Use .class files instead of generated .scala files for views and routes 
+EclipseKeys.createSrc := EclipseCreateSrc.ValueSet(EclipseCreateSrc.ManagedClasses, EclipseCreateSrc.ManagedResources)
