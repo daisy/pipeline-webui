@@ -47,7 +47,7 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 @if(arg.getSequence()==Boolean.TRUE){
 	
 	<div class="control-group @("advanced-argument".when(!arg.getRequired()))">
-		<label class="control-label" id="label-@scriptId-@{arg.getName()}">@arg.getNicename()</label>
+		<label class="control-label" id="label-@scriptId-@{arg.getName()}">@arg.getNicename().replaceAll("^.*:\\s*","")</label>
 		<!-- TODO: add drag'n'drop support for reordering items? -->
 		<div class="controls">
 			<input type="hidden" name="@{arg.getName()}" id="file-@scriptId-@{arg.getName()}" value=""/>
@@ -188,7 +188,7 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 }else{
 	
 	<div class="control-group @("advanced-argument".when(!arg.getRequired()))">
-		<label class="control-label" for="@{arg.getName()}">@arg.getNicename()</label>
+		<label class="control-label" for="@{arg.getName()}">@arg.getNicename().replaceAll("^.*:\\s*","")</label>
 		<div class="controls">
 			<select name="@{arg.getName()}" id="file-@scriptId-@{arg.getName()}">
 				<option value="" selected=""></option>

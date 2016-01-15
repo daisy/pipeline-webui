@@ -1,4 +1,4 @@
-@(script: org.daisy.pipeline.client.models.Script, scriptId: String, uploadFiles: Boolean, hasAdvancedOptions: Boolean, hideAdvancedOptions: Boolean, mediaTypeBlacklist: List[String], jobId: Long)
+@(script: org.daisy.pipeline.client.models.Script, scriptId: String, uploadFiles: Boolean, hasAdvancedOptions: Boolean, hideAdvancedOptions: Boolean, mediaTypeBlacklist: List[String], jobId: Long, groupedInputs: List[utils.Pair[String,List[org.daisy.pipeline.client.models.Argument]]])
 
 
 <div id="script-@scriptId" data-fileinput="@uploadFiles">
@@ -23,10 +23,28 @@ window.setTimeout(function(){document.getElementById('description-script-@script
 		DP2Forms.beforeSubmit("script-@scriptId",onSubmit);
 	</script>
 	
-	<fieldset>
-		
-		@for(arg <- script.getInputs()){
-			@if(arg.getRequired()==true){
+	@for((argGroup, argGroupNr) <- groupedInputs.zipWithIndex){
+		<fieldset>
+			@if(argGroup.a != ""){
+				<legend>
+					<span>@{argGroup.a}</span>
+					<small><a class="accordion-toggle @("collapsed".when(hideAdvancedOptions)) advanced-options-toggle" data-toggle="collapse" href="#script-@scriptId-widget-group-@argGroupNr" id="script-@scriptId-widget-group-@argGroupNr-toggle">
+						<style>
+							#script-@scriptId-widget-group-@argGroupNr-show { display:none; }
+							#script-@scriptId-widget-group-@argGroupNr-toggle.collapsed #script-@scriptId-widget-group-@argGroupNr-show { display:inline; }
+							#script-@scriptId-widget-group-@argGroupNr-hide { display:inline; }
+							#script-@scriptId-widget-group-@argGroupNr-toggle.collapsed #script-@scriptId-widget-group-@argGroupNr-hide { display:none; }
+						</style>
+						<span id="script-@scriptId-widget-group-@argGroupNr-show"><i class="icon-chevron-down"></i>Show</span>
+						<span id="script-@scriptId-widget-group-@argGroupNr-hide"><i class="icon-chevron-up"></i>Hide</span>
+					</a></small>
+				</legend>
+			}
+			
+			@if(argGroup.a != ""){
+				<div class="control-group @("in".when(!hideAdvancedOptions)) collapse" id="script-@scriptId-widget-group-@argGroupNr">
+			}
+			@for(arg <- argGroup.b){
 				@if((arg.getKind()+"")=="parameters"){
 					@Widgets.parameters(arg, script, scriptId)
 				}else{
@@ -38,43 +56,9 @@ window.setTimeout(function(){document.getElementById('description-script-@script
 					}}
 				}
 			}
-		}
-		
-	</fieldset>
-	
-	@if(hasAdvancedOptions){
-		<fieldset>
-			<legend>
-				<span>Optional parameters</span>
-				<small><a class="accordion-toggle @("collapsed".when(hideAdvancedOptions)) advanced-options-toggle" data-toggle="collapse" href="#script-@scriptId-advanced-options" id="script-@scriptId-advanced-options-toggle">
-					<style>
-						#script-@scriptId-advanced-options-show { display:none; }
-						#script-@scriptId-advanced-options-toggle.collapsed #script-@scriptId-advanced-options-show { display:inline; }
-						#script-@scriptId-advanced-options-hide { display:inline; }
-						#script-@scriptId-advanced-options-toggle.collapsed #script-@scriptId-advanced-options-hide { display:none; }
-					</style>
-					<span id="script-@scriptId-advanced-options-show"><i class="icon-chevron-down"></i>Show</span>
-					<span id="script-@scriptId-advanced-options-hide"><i class="icon-chevron-up"></i>Hide</span>
-				</a></small>
-			</legend>
-			
-			<div class="control-group @("in".when(!hideAdvancedOptions)) collapse" id="script-@scriptId-advanced-options">
-				@for(arg <- script.getInputs()){
-					@if(arg.getRequired()==false || arg.getRequired() == null){
-						@if((arg.getKind()+"")=="parameters"){
-							@Widgets.parameters(arg, script, scriptId)
-						}else{
-							@defining(arg.getType()){xsdType => @xsdType match{
-								case "string" => { @Widgets.string(arg, script, scriptId) }
-								case "boolean" => { @Widgets.boolean(arg, script, scriptId) }
-								case "anyFileURI" => { @Widgets.file(arg, script, scriptId, mediaTypeBlacklist) }
-								case _ => { @Widgets.string(arg, script, scriptId) }
-							}}
-						}
-					}
-					<br/>
-				}
-			</div>
+			@if(argGroup.a != ""){
+				</div>
+			}
 		</fieldset>
 	}
 	

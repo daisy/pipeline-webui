@@ -39,6 +39,7 @@ import play.mvc.Http.MultipartFormData.FilePart;
 import play.mvc.Result;
 import scala.concurrent.duration.Duration;
 import utils.ContentType;
+import utils.Pair;
 import utils.XML;
 
 import com.avaje.ebean.ExpressionList;
@@ -295,6 +296,9 @@ public class Jobs extends Controller {
 		boolean uploadFiles = false;
 		boolean hideAdvancedOptions = "true".equals(Setting.get("jobs.hideAdvancedOptions"));
 		boolean hasAdvancedOptions = false;
+		Map<String,List<Argument>> groupedInputsUnsorted = new HashMap<String,List<Argument>>();
+		List<String> groupNames = new ArrayList<String>(); // group names in order of occurence
+		List<Pair<String,List<Argument>>> groupedInputs = new ArrayList<Pair<String,List<Argument>>>();
 		for (Argument arg : script.getInputs()) {
 			if (arg.getRequired() != Boolean.TRUE) {
 				hasAdvancedOptions = true;
@@ -302,10 +306,26 @@ public class Jobs extends Controller {
 			if ("anyFileURI".equals(arg.getType()) || "anyURI".equals(arg.getType()) || "anyDirURI".equals(arg.getType())) {
 				uploadFiles = true;
 			}
+			
+			String groupName = "Optional parameters";
+			if (arg.getRequired() == Boolean.TRUE) {
+				groupName = "";
+			} else if (arg.getNicename().contains(":")) {
+				groupName = arg.getNicename().split(":")[0].replaceAll("\\s+$", "");
+			}
+			
+			if (!groupNames.contains(groupName)) {
+				groupNames.add(groupName);
+				groupedInputsUnsorted.put(groupName, new ArrayList<Argument>());
+			}
+			groupedInputsUnsorted.get(groupName).add(arg);
 		}
-
+		for (String groupName : groupNames) {
+			groupedInputs.add(new Pair<String, List<Argument>>(groupName, groupedInputsUnsorted.get(groupName)));
+		}
+		
 		User.flashBrowserId(user);
-		return ok(views.html.Jobs.getScript.render(script, script.getId().replaceAll(":", "\\x3A"), uploadFiles, hasAdvancedOptions, hideAdvancedOptions, mediaTypeBlacklist, jobId));
+		return ok(views.html.Jobs.getScript.render(script, script.getId().replaceAll(":", "\\x3A"), uploadFiles, hasAdvancedOptions, hideAdvancedOptions, mediaTypeBlacklist, jobId, groupedInputs));
 	}
 	
 	public static Result getJobs() {

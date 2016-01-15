@@ -1,7 +1,7 @@
 @(arg: org.daisy.pipeline.client.models.Argument, script: org.daisy.pipeline.client.models.Script, scriptId: String)
 
 <div class="control-group @("advanced-argument".when(!arg.getRequired()))">
-	<label class="control-label">@arg.getNicename()</label>
+	<label class="control-label">@arg.getNicename().replaceAll("^.*:\\s*","")</label>
 	<div class="controls">
 		<div class="row"></div>
 		<div class="row">
