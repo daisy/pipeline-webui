@@ -195,11 +195,12 @@
 
 <br/>
 
-<div class="">
+<div>
 <h2>Input files and parameters</h2>
 <br/>
 <p><a class="btn btn-info" href="@routes.Jobs.downloadContext(uiJob)"><span class="icon-download-alt icon-white"></span> Download input files</a></p>
-<dl id="arguments"></dl>
+<br/>
+<div id="arguments"></div>
 </div>
 
 <br/>
@@ -385,18 +386,7 @@
 					}
 				}
 				
-				var argumentsDL = $("#arguments");
-				for (var a = 0; a < job.engineJob.arguments.length; a++) {
-					var arg = job.engineJob.arguments[a];
-					argumentsDL.append("<dt>"+arg.nicename+"</dt>");
-					if ($.isArray(arg.asList) && arg.asList.length > 0) {
-						for (var v = 0; v < arg.asList.length; v++) {
-							argumentsDL.append("<dd>"+arg.asList[v]+"</dd>");
-						}
-					} else {
-						argumentsDL.append("<dd><i>(empty)</i></dd>");
-					}
-				}
+				$("#arguments").html(argumentsToHtml(job.engineJob.arguments));
 				
 				updateResults(job.results);
 			}

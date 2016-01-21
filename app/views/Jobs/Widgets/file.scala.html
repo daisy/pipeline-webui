@@ -199,7 +199,6 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 			@if(arg.getDesc().length > 0){
 				<div class="help-block" id="description-script-@scriptId-argument-@{arg.getName()}">@arg.getDesc()</div>
 				<script>window.setTimeout(function(){
-					markdown_@{arg.getName()} = document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML;
 					document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML = markdownToHtml(document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML);
 				},0);</script>
 			}

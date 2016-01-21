@@ -945,7 +945,7 @@ public class Jobs extends Controller {
 		File zip = webuiJob.asJob().getJobStorage().makeContextZip();
 		
 		if (zip != null && zip.exists()) {
-			response().setHeader("Content-Disposition", "attachment; filename=\"job-"+jobId+"-files.zip\"");
+			response().setHeader("Content-Disposition", "attachment; filename=\"Context files for job - "+jobId+".zip\"");
 			response().setContentType("application/zip");
 			long size = zip.length();
 			if (size > 0) {
@@ -953,7 +953,7 @@ public class Jobs extends Controller {
 			}
 			
 		} else {
-			return internalServerError("Was unable to create zip of job inputs.");
+			return internalServerError("Was unable to create zip of job context.");
 		}
 		
 		return ok(zip);

@@ -59,9 +59,10 @@ public class Template implements Comparable<Template> {
 		
 		if (includeArguments) {
 			// arguments
-			Map<String,Object> argsObj = new HashMap<String,Object>();
+			List<Object> argsAsListObj = new ArrayList<Object>();
 			for (Argument argument : clientlibJob.getInputs()) {
 				Map<String,Object> argObj = new HashMap<String,Object>();
+				argObj.put("name", argument.getName());
 				argObj.put("values", argument.getAsList());
 				argObj.put("defined", argument.isDefined());
 				argObj.put("desc", argument.isDefined());
@@ -73,9 +74,9 @@ public class Template implements Comparable<Template> {
 				argObj.put("required", argument.getRequired());
 				argObj.put("sequence", argument.getSequence());
 				argObj.put("type", argument.getType());
-				argsObj.put(argument.getName(), argObj);
+				argsAsListObj.add(argObj);
 			}
-			result.put("inputs", argsObj);
+			result.put("inputs", argsAsListObj);
 			
 			// context
 			File contextDir = clientlibJob.getJobStorage().getContextDir();

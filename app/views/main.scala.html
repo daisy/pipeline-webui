@@ -175,6 +175,19 @@
 (function(f){window.setTimeout=f(window.setTimeout);window.setInterval=f(window.setInterval);})(function(f){return function(c,t){var a=[].slice.call(arguments,2);return f(function(){c.apply(this,a);},t);};});
 @@*/
 	</script>
+	<script>
+		/* trying this for a while to see if it's useful */
+		(function(){
+		var updateTitle = function(){
+			var h1 = $("h1")[0];
+			if (h1) {
+				$("title").text($(h1).text());
+			}
+		};
+		updateTitle();
+		window.setTimeout(updateTitle, 10000);
+		})();
+	</script>
 	
 	@if(models.Setting.get("userTracking")=="true"){
 	<script src="https://rawgit.com/josteinaj/interactor/master/interactor.js"></script>

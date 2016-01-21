@@ -9,6 +9,11 @@
 </div>
 <div role="alert" class="muted" style="width:100%;text-align:center;"><p id="filter-text"></p></div>
 
+<style>
+#templatelist > tbody > tr > td:not(:first-child) {
+    white-space: nowrap;
+}
+</style>
 <table id="templatelist" class="table templatelist" style="display:none;">
     <thead>
         <tr id="templatelist-headline">
@@ -108,13 +113,25 @@ addTemplate = function(template) {
     html += '            </form>'+"\n";
     html += '            <br/>'+"\n";
     if (template.ownerId !== null && (@(session.get("admin")=="true") || template.ownerId === @Controller.flash("userid"))) {
-        html += '        <div class="template-description-edit">'+"\n";
-        html += '            <a class="btn template-edit" href="javascript:void(0)"><i class="icon-pencil"></i> Edit description</a>'+"\n";
-        html += '        </div>'+"\n";
+        html += '             <div class="template-description-edit">'+"\n";
+        html += '                 <a class="btn template-edit" href="javascript:void(0)"><i class="icon-pencil"></i> Edit description</a>'+"\n";
+        html += '             </div>'+"\n";
     }
+    html += '            <div>'+"\n";
+    html += '                <h2>Input files and parameters</h2>'+"\n";
+    html += '                <br/>'+"\n";
+    html += '                <p><a class="btn btn-info" href="'+"@routes.Templates.downloadContext("x","x")".replace("x/x",(template.ownerId !== null ? template.ownerId : encodeURIComponent(template.dirname))+"/"+encodeURIComponent(template.name))+'"><span class="icon-download-alt icon-white"></span> Download input files</a></p>'+"\n";
+    html += '                <br/>'+"\n";
+    html += '                <div>'+"\n";
+    
+    console.log(template.inputs);
+    html += argumentsToHtml(template.inputs);
+    
+    html += '                </div>'+"\n";
+    html += '            </div>'+"\n";
     html += '         </div>'+"\n";
     html += '    </td>'+"\n";
-    html += '    <td><p>'+(typeof template.script === "object" ? template.script.nicename : "")+'</p>'+"\n";
+    html += '    <td><span>'+(typeof template.script === "object" ? template.script.nicename : "")+'</span>'+"\n";
     //html += '        <p class="muted">'+(typeof template.script === "object" && typeof template.script.description === "string" ? template.script.description.replace(/^\s*/m,'').replace(/\n.*/g,'') : "")+'</p>'+"\n";
     html += '    </td>'+"\n";
     if (template.ownerId !== null) {

@@ -54,7 +54,7 @@ public class Templates extends Controller {
 		List<Template> templates = Template.list(user, false);
 		List<Object> templatesJsonFriendly = new ArrayList<Object>();
 		for (Template template : templates) {
-			templatesJsonFriendly.add(template.asJsonifyableObject(user, false));
+			templatesJsonFriendly.add(template.asJsonifyableObject(user, true));
 		}
 		
 		return ok(play.libs.Json.toJson(templatesJsonFriendly));
@@ -137,6 +137,39 @@ public class Templates extends Controller {
 		template.delete();
 		
 		return ok();
+	}
+	
+	public static Result downloadContext(String ownerIdOrSharedDirName, String templateName) {
+    	if (FirstUse.isFirstUse())
+			return unauthorized("unauthorized");
+		
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return unauthorized("unauthorized");
+		
+		Template template;
+		if (ownerIdOrSharedDirName.matches("^\\d+$")) {
+			template = Template.get(user, Long.parseLong(ownerIdOrSharedDirName), templateName);
+			
+		} else {
+			template = Template.get(user, ownerIdOrSharedDirName, templateName);
+		}
+		
+		File zip = template.clientlibJob.getJobStorage().makeContextZip();
+		
+		if (zip != null && zip.exists()) {
+			response().setHeader("Content-Disposition", "attachment; filename=\"Context files for template - "+templateName+".zip\"");
+			response().setContentType("application/zip");
+			long size = zip.length();
+			if (size > 0) {
+				response().setHeader("Content-Length", size+"");
+			}
+			
+		} else {
+			return internalServerError("Was unable to create zip of template context.");
+		}
+		
+		return ok(zip);
 	}
 	
 	public static Result downloadTemplate(String ownerIdOrSharedDirName, String templateName) {
