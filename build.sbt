@@ -31,7 +31,7 @@ libraryDependencies ++= Seq(
   "org.avaje.ebeanorm" % "avaje-ebeanorm-api" % "3.1.1",
   "org.apache.derby" % "derby" % "10.11.1.1",
   "org.daisy.pipeline" % "clientlib-java" % "4.2.0",
-  "org.daisy.pipeline" % "clientlib-java-httpclient" % "1.0.1",
+  "org.daisy.pipeline" % "clientlib-java-httpclient" % "1.0.2",
   "org.apache.commons" % "commons-compress" % "1.9",
   "org.apache.commons" % "commons-email" % "1.4",
   "log4j" % "log4j" % "1.2.17",
