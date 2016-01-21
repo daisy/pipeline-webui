@@ -90,7 +90,8 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 				</div>
 			</div>
 			@if(arg.getDesc().length > 0){
-				<span class="help-block">@arg.getDesc()</span>
+				<div class="help-block" id="description-script-@scriptId-argument-@{arg.getName()}">@arg.getDesc()</div>
+				<script>window.setTimeout(function(){document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML = markdownToHtml(document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML);},0);</script>
 			}
 			
 			<script type="text/javascript">
@@ -196,7 +197,11 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 				<optgroup id="otherfile-@scriptId-@{arg.getName()}" label="Other files"></optgroup>
 			</select>
 			@if(arg.getDesc().length > 0){
-				<span class="help-block">@arg.getDesc()</span>
+				<div class="help-block" id="description-script-@scriptId-argument-@{arg.getName()}">@arg.getDesc()</div>
+				<script>window.setTimeout(function(){
+					markdown_@{arg.getName()} = document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML;
+					document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML = markdownToHtml(document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML);
+				},0);</script>
 			}
 			
 			<script type="text/javascript">

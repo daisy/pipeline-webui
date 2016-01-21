@@ -33,3 +33,10 @@ function toggleChanged(idPrefix, value, defaultValue) {
 	else
 		$('#'+idPrefix+'Group').addClass("changed");
 }
+
+function markdownToHtml(text) {
+	var elem = document.createElement('textarea');
+	elem.innerHTML = text;
+	text = elem.value;
+	return marked(text);
+}

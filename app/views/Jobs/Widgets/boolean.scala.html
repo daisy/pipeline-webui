@@ -7,7 +7,8 @@
 		<input type="checkbox" name="_@{arg.getName()}" @if(arg.getDefaultValue() == "false"){ value="false" }else{ checked="" value="true" } id="checkbox-@scriptId-@{arg.getName()}" onclick="$('#value-@scriptId-@{arg.getName()}')[0].value = $(this).is(':checked') ? 'true' : 'false';"/>
 		<br/><br/>
 		@if(arg.getDesc().length > 0){
-			<span class="help-block">@arg.getDesc()</span>
+			<div class="help-block" id="description-script-@scriptId-argument-@{arg.getName()}">@arg.getDesc()</div>
+			<script>window.setTimeout(function(){document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML = markdownToHtml(document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML);},0);</script>
 		}
 	</div>
 	<script type="text/javascript">

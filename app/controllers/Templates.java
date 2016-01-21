@@ -211,6 +211,46 @@ public class Templates extends Controller {
 		}
 	}
 	
+	public static Result editTemplateDescription(Long ownerId, String templateName) {
+		if (FirstUse.isFirstUse())
+			return unauthorized("unauthorized");
+		
+		User user = User.authenticate(request(), session());
+		if (user == null)
+			return unauthorized("unauthorized");
+		
+		Map<String, String[]> params = request().body().asFormUrlEncoded();
+		if (params == null) {
+			Logger.error("Could not read form data: "+request().body().asText());
+			return internalServerError("Could not read form data");
+		}
+		
+		String newDescription = params.get("template-description")[0];
+		if (newDescription == null) {
+			newDescription = "";
+		}
+		Logger.info("newDescription: ["+newDescription+"]");
+		
+		Template template = Template.get(user, ownerId, templateName);
+		if (template == null) {
+			User owner = User.findById(ownerId);
+			String username = owner == null ? ownerId+"" : owner.name;
+			return notFound("Template '"+templateName+"' (owned by '"+username+"') was not found.");
+		}
+		Logger.info("old description: ["+template.clientlibJob.getDescription()+"]");
+		
+		if (newDescription.equals(template.clientlibJob.getDescription())) {
+			Logger.info("not setting new description, no change...");
+			return ok();
+			
+		}
+		
+		Logger.info("setting new description...");
+		template.clientlibJob.setDescription(newDescription);
+		template.clientlibJob.getJobStorage().save();
+		return ok();
+	}
+	
 	public static Result setShared(Long ownerId, String templateName) {
 		if (FirstUse.isFirstUse())
 			return unauthorized("unauthorized");

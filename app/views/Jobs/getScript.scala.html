@@ -7,8 +7,8 @@
 	<address class="muted text-center"><a href="@script.getHomepage()" target="_blank">Online Documentation <i class="icon-share"></a></i></address>
 }
 <div id="description-script-@scriptId">@script.getDescription()</div>
-<script>
-window.setTimeout(function(){document.getElementById('description-script-@scriptId').innerHTML = marked(document.getElementById('description-script-@scriptId').innerHTML);},0);</script>
+<script>window.setTimeout(function(){document.getElementById('description-script-@scriptId').innerHTML = markdownToHtml(document.getElementById('description-script-@scriptId').innerHTML);},0);</script>
+<br/>
 
 <form action="@routes.Jobs.postJob(jobId).unique()" method="POST" id="script-@scriptId-form" class="form-horizontal" onsubmit="DP2Forms.prepareSubmission('script-@scriptId')">
 	<input type="hidden" id="script-@scriptId-id" name="id" value="@script.getId()" />

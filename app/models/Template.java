@@ -37,6 +37,7 @@ public class Template implements Comparable<Template> {
 		Map<String,Object> result = new HashMap<String,Object>();
 		
 		result.put("name", name);
+		result.put("description", clientlibJob.getDescription());
 		result.put("ownerId", ownerId);
 		result.put("shared", shared);
 		User owner = ownerId != null ? User.findById(ownerId) : null;

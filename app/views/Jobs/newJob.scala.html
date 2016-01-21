@@ -188,6 +188,7 @@ h2 {
 						    var li = $("<li></li>");
 						    var td = $("<td></td>");
 						    var tr = $("<tr></tr>");
+						    var scriptShortDesc = scripts[s].description.replace(/^\s*/m,'').replace(/\n.*/g,'');
 						    var scriptId = scripts[s].id.replace(/:/g,'\\x3A');
 							var scriptIdEscaped = scripts[s].id.replace(/:/g,'\\\\x3A');
 						    for (var key in scripts[s]) {
@@ -201,12 +202,12 @@ h2 {
 							
 							td.append(a.clone().data(a.data()));
 						    tr.append(td);
-						    tr.append("<td>"+scripts[s].description+"</td>");
+						    tr.append("<td>"+scriptShortDesc+"</td>");
 							$(table).append(tr);
 							
 							a.attr("title", scripts[s].description);
 						    li.append(a);
-						    li.append("<p><small class=\"muted\">"+scripts[s].description+"</small></p>");
+						    li.append("<p><small class=\"muted\">"+scriptShortDesc+"</small></p>");
 						    $(list).append(li);
 							
 							$(".script-button-"+scriptIdEscaped).click(function(){

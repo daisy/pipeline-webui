@@ -2,13 +2,13 @@
 
 @main("Jobs", "jobs") {
 
-<hgroup>
+<div style="text-align: center; padding-bottom: 2em;">
 <h1>Jobs</h1>
 @if(session.get("admin")=="true" || Setting.get("users.guest.shareJobs")=="true"){
 	<a id="showYourJobs" class="btn active" onclick="filterJobs(@Controller.flash("userid"));" href="javascript:void(0)">Your jobs</a>
 	<a id="showAllJobs" class="btn" onclick="filterJobs('all');" href="javascript:void(0)">All jobs</a>
 }
-</hgroup>
+</div>
 <div role="alert" class="muted" style="width:100%;text-align:center;"><p id="filter-text"></p></div>
 
 <table id="joblist" class="table joblist" style="display:none;">

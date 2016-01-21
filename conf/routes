@@ -55,6 +55,7 @@ GET     /templates/:tOwner/:tName/delete    controllers.Templates.deleteTemplate
 GET     /templates/:tOwner/:tName/download  controllers.Templates.downloadTemplate(tOwner: String, tName: String)
 POST    /templates/:tOwner/:tName/rename    controllers.Templates.renameTemplate(tOwner: Long, tName: String)
 POST    /templates/:tOwner/:tName/shared    controllers.Templates.setShared(tOwner: Long, tName: String)
+POST    /templates/:tOwner/:tName/description controllers.Templates.editTemplateDescription(tOwner: Long, tName: String)
 
 # Callbacks
 POST    /callbacks/:callbackType            controllers.Callbacks.postCallback(callbackType: String)
