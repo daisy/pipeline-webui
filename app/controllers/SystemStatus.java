@@ -81,7 +81,7 @@ public class SystemStatus extends Controller {
 			attempt = new EngineAttempt();
 			engineAttempts.put(url, attempt);
 		}
-
+		
 		// Ping endpoint
 		if (attempt.lastAliveTime == null || new Date().getTime() - attempt.lastAliveTime.getTime() > 5000) {
 			attempt.lastAliveTime = new Date();
@@ -99,8 +99,7 @@ public class SystemStatus extends Controller {
 			
 			if (!urlError) {
 				try {
-					attempt.aliveResponse = Pipeline2HttpClient.get(url, "", null, null, null);
-					//attempt.aliveResponse = org.daisy.pipeline.client.Alive.get(url);
+					attempt.aliveResponse = Pipeline2HttpClient.get(url, "/alive", null, null, null);
 	
 					if (attempt.aliveResponse.status == 200) {
 						attempt.alive = new org.daisy.pipeline.client.models.Alive(attempt.aliveResponse.asXml());

@@ -9,15 +9,13 @@
         	
         	@for(script <- controllers.Scripts.get()) {
         		@defining(UserSetting.get(-2L, "scriptEnabled-"+script.getId())=="true") { enabled =>
-        			<div class="control-group">
-	        			<label class="control-label" id="xconfigureScripts-script-@script.getId()-label">@script.getNicename()</label>
-	        			<div class="controls">
-	        				<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="configureScripts-script-@script.getId()-label" id="xconfigureScripts-script-@script.getId()">
-	        					<button type="button" name="configureScripts-script-@script.getId()-off" class="btn @if(!enabled) { active }" id="xconfigureScripts-script-@script.getId()-disable" aria-role="radio" aria-checked="@(!enabled)" onclick="toggleRadio('configureScripts-script-@script.getId()', false, '@enabled');">Disable</button>
-	        					<button type="button" name="configureScripts-script-@script.getId()-on" class="btn @if(enabled) { active }" id="xconfigureScripts-script-@script.getId()-enable" aria-role="radio" aria-checked="@(enabled)" onclick="toggleRadio('configureScripts-script-@script.getId()', true, '@enabled');">Enable</button>
-	        					<input type="hidden" id="xconfigureScripts-script-@script.getId()-value" name="configureScripts-script-@script.getId()" value="@enabled">
-	        				</div>
-	        			</div>
+					<div class="control-group">
+						<label class="control-label" id="configureScripts-script-@{script.getId()}-label" for="configureScripts-script-@{script.getId()}-checkbox">@script.getNicename()</label>
+						<div class="controls">
+							<input type="hidden" name="script-@{script.getId()}" value="true" id="configureScripts-script-@{script.getId()}-value"/>
+							<input type="checkbox" @if(enabled){ checked="" } id="configureScripts-script-@{script.getId()}-checkbox" onclick="$(document.getElementById('configureScripts-script-@{script.getId()}-value'))[0].value = $(this).is(':checked') ? 'true' : 'false';"/>
+							<br/><br/>
+						</div>
 					</div>
 				}
         	}

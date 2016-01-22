@@ -3,7 +3,7 @@
 <div class="control-group @("advanced-argument".when(!arg.getRequired()))">
 	<label class="control-label" id="script-@scriptId-@{arg.getName()}-label" for="checkbox-@scriptId-@{arg.getName()}">@arg.getNicename().replaceAll("^.*:\\s*","")</label>
 	<div class="controls">
-		<input type="hidden" name="@{arg.getName()}" value="true" id="value-@scriptId-@{arg.getName()}">
+		<input type="hidden" name="@{arg.getName()}" value="true" id="value-@scriptId-@{arg.getName()}"/>
 		<input type="checkbox" name="_@{arg.getName()}" @if(arg.getDefaultValue() == "false"){ value="false" }else{ checked="" value="true" } id="checkbox-@scriptId-@{arg.getName()}" onclick="$('#value-@scriptId-@{arg.getName()}')[0].value = $(this).is(':checked') ? 'true' : 'false';"/>
 		<br/><br/>
 		@if(arg.getDesc().length > 0){

@@ -108,7 +108,7 @@
 					
 					// endpoint success message
 					if (typeof engine !== "undefined" && typeof form.errors["endpoint"] === "undefined") {
-						var text = "A Pipeline 2 Engine version "+engine.version+" is running at the given URL. It is running in "+(engine.mode==="LOCAL"?"local":"server")+" mode and "+(engine.authentication?"requires":"does not require")+" authentication.";
+						var text = "A Pipeline 2 Engine version "+engine.version+" is running at the given URL. It "+(engine.authentication?"requires":"does not require")+" authentication.";
 						$("#setWS-endpoint").data("messages",[text]);
 					}
 					

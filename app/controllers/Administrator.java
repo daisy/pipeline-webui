@@ -5,18 +5,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
 import javax.persistence.Transient;
-
-import org.daisy.pipeline.client.Pipeline2Exception;
-import org.daisy.pipeline.client.http.WSResponse;
-//import org.daisy.pipeline.client.models.Script;
 
 import org.daisy.pipeline.client.models.Script;
 
 import controllers.SystemStatus.EngineAttempt;
-import akka.actor.Cancellable;
 import models.Setting;
 import models.User;
 import models.UserSetting;
@@ -26,10 +19,8 @@ import play.data.format.Formats;
 import play.data.validation.Constraints;
 import play.data.validation.Constraints.Required;
 import play.data.validation.ValidationError;
-import play.libs.Akka;
 import play.libs.Json;
 import play.mvc.*;
-import scala.concurrent.duration.Duration;
 import utils.FormHelper;
 
 public class Administrator extends Controller {
@@ -477,7 +468,7 @@ public class Administrator extends Controller {
 	
 	final static Form<ConfigureScripts> scriptsForm = play.data.Form.form(ConfigureScripts.class);
 	public static class ConfigureScripts {
-		/*public static Object scriptPermissions() {
+		public static Object scriptPermissions() {
 			Map<String,Boolean> scriptPermissions = new HashMap<String,Boolean>();
 			
 			List<Script> scripts = Scripts.get();
@@ -496,7 +487,7 @@ public class Administrator extends Controller {
 			}
 			
 			return scriptPermissions;
-		}*/
+		}
 	}
 
 	final static Form<GlobalPermissions> globalForm = play.data.Form.form(GlobalPermissions.class);
@@ -573,7 +564,6 @@ public class Administrator extends Controller {
 			return redirect(routes.Login.login());
 		
 		Map<String, String[]> query = request().queryString();
-//		Map<String, String[]> form = request().body().asFormUrlEncoded();
 
 		ConfigureAppearanceForm.refreshList();
 
@@ -676,12 +666,13 @@ public class Administrator extends Controller {
 
 			} else {
 				Map<String, String[]> form = request().body().asFormUrlEncoded();
+				Logger.info(Json.toJson(form).toString());
 				for (String fieldName : form.keySet()) {
-					if (fieldName.startsWith("configureScripts-script-")) {
-						String scriptId = fieldName.substring("configureScripts-script-".length());
+					if (fieldName.startsWith("script-")) {
+						String scriptId = fieldName.substring("script-".length());
 						String scriptEnabled = form.get(fieldName)[0];
 						UserSetting.set(-2L, "scriptEnabled-"+scriptId, scriptEnabled);
-						Logger.debug(scriptId+" - "+scriptEnabled);
+						Logger.info(scriptId+" - "+scriptEnabled);
 					}
 				}
 				
