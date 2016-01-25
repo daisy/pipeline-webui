@@ -11,7 +11,10 @@ import java.util.regex.Pattern;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.daisy.pipeline.client.models.Argument;
+import org.daisy.pipeline.client.models.DataType;
 import org.daisy.pipeline.client.models.Script;
+import org.daisy.pipeline.client.models.datatypes.EnumType;
+import org.daisy.pipeline.client.models.datatypes.RegexType;
 
 import models.User;
 import models.UserSetting;
@@ -63,6 +66,19 @@ public class Scripts extends Controller {
 		} else {
 			return internalServerError("An error occured while trying to retrieve the script '"+id+"'.");
 		}
+	}
+	
+	public static String chooseWidget(Argument arg) {
+		if (arg.getDataType() != null) {
+			DataType dataType = Application.ws.getDataType(arg.getDataType());
+			if (dataType instanceof EnumType) {
+				return "enum";
+			}
+			if (dataType instanceof RegexType) {
+				return "regex";
+			}
+		}
+		return arg.getType();
 	}
 
 	public static class ScriptForm {

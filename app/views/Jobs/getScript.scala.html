@@ -48,7 +48,9 @@
 				@if((arg.getKind()+"")=="parameters"){
 					@Widgets.parameters(arg, script, scriptId)
 				}else{
-					@defining(arg.getType()){xsdType => @xsdType match{
+					@defining(Scripts.chooseWidget(arg)){widget => @widget match{
+						case "enum" => { @Widgets.enum(arg, script, scriptId) }
+						case "regex" => { @Widgets.string(arg, script, scriptId) }
 						case "string" => { @Widgets.string(arg, script, scriptId) }
 						case "boolean" => { @Widgets.boolean(arg, script, scriptId) }
 						case "anyFileURI" => { @Widgets.file(arg, script, scriptId, mediaTypeBlacklist) }
