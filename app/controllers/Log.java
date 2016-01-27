@@ -77,7 +77,7 @@ public class Log extends Controller {
 		// webui.log
 		{
 			List<String> webuiLog = new ArrayList<String>();
-			File webuiLogFile = new File(controllers.Application.DP2DATA+controllers.Application.SLASH+"log"+controllers.Application.SLASH+"webui.log");
+			File webuiLogFile = new File(new File(new File(controllers.Application.DP2DATA), "logs"), "webui.log");
 			try {
 				FileInputStream stream = new FileInputStream(webuiLogFile);
 				try {
@@ -104,7 +104,7 @@ public class Log extends Controller {
 		// Pipeline 2 Engine logs
 		{
 			List<String> daisyPipelineLog = new ArrayList<String>();
-			File daisyPipelineLogFile = new File(controllers.Application.DP2DATA+controllers.Application.SLASH+"log"+controllers.Application.SLASH+"daisy-pipeline.log");
+			File daisyPipelineLogFile = new File(new File(new File(controllers.Application.DP2DATA).getParentFile(), "daisy-pipeline2"), "daisy-pipeline.log");
 			try {
 				FileInputStream stream = new FileInputStream(daisyPipelineLogFile);
 				try {
@@ -130,7 +130,7 @@ public class Log extends Controller {
 		
 		{
 			List<String> derbyLog = new ArrayList<String>();
-			File derbyLogFile = new File(controllers.Application.DP2DATA+controllers.Application.SLASH+"log"+controllers.Application.SLASH+"derby.log");
+			File derbyLogFile = new File(new File(new File(controllers.Application.DP2DATA).getParentFile(), "daisy-pipeline2"), "derby.log");
 			if (derbyLogFile.exists()) {
 				try {
 					FileInputStream stream = new FileInputStream(derbyLogFile);
@@ -161,7 +161,7 @@ public class Log extends Controller {
 		
 		// if Web UI is using Derby, get derby log file
 		{
-			File derbyLogFile = new File(controllers.Application.DP2DATA+controllers.Application.SLASH+"log"+controllers.Application.SLASH+"webui-database.log");
+			File derbyLogFile = new File(new File(new File(controllers.Application.DP2DATA), "logs"), "derby.log");
 			if (derbyLogFile.exists()) {
 				List<String> derbyLog = new ArrayList<String>();
 				try {

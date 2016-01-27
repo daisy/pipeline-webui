@@ -768,6 +768,7 @@ public class Jobs extends Controller {
         List<Map<String,Object>> filesResult = new ArrayList<Map<String,Object>>();
         
         for (FilePart file : files) {
+        	Logger.info("uploaded file: "+file.getFile());
         	// rename the uploaded file so that it is not automatically deleted by Play!
         	File renamedFile = new File(file.getFile().getParentFile(), file.getFile().getName()+"_");
         	file.getFile().renameTo(renamedFile);

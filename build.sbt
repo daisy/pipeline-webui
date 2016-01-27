@@ -1,3 +1,6 @@
+import com.typesafe.sbt.packager.archetypes.ServerLoader.{SystemV, Upstart}
+import com.typesafe.sbt.packager.linux.LinuxSymlink
+
 organization := "org.daisy.pipeline"
 name := "webui"
 version := "2.0-SNAPSHOT"
@@ -14,9 +17,26 @@ lazy val root = (project in file(".")).enablePlugins(PlayJava, PlayEbean, Debian
 scalaVersion := "2.11.6"
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 
+// For packaging on Linux
 maintainer in Linux := "Jostein Austvik Jacobsen <josteinaj@gmail.com>"
+packageName in Linux := "daisy-pipeline2-webui"
+name in Linux := (packageName in Linux).value
 packageSummary in Linux := "DAISY Pipeline 2 Web User Interface"
 packageDescription := "A web-based user interface for the DAISY Pipeline 2."
+daemonUser in Linux := "pipeline2-webui"
+daemonGroup in Linux := (daemonUser in Linux).value
+executableScriptName := "pipeline2-webui"
+debianPackageDependencies in Debian += "java8-runtime"
+debianPackageRecommends in Debian += "daisy-pipeline2"
+serverLoading in Debian := SystemV
+linuxPackageMappings += packageTemplateMapping(s"/usr/lib/"+(packageName in Linux).value)() withUser((daemonUser in Linux).value) withGroup((daemonGroup in Linux).value)
+linuxPackageMappings += packageTemplateMapping(s"/var/run/"+(packageName in Linux).value)() withUser((daemonUser in Linux).value) withGroup((daemonGroup in Linux).value)
+linuxPackageSymlinks += LinuxSymlink("/usr/share/"+(packageName in Linux).value+"/data", "/usr/lib/"+(packageName in Linux).value)
+linuxPackageSymlinks += LinuxSymlink("/usr/lib/"+(packageName in Linux).value+"/logs", "/var/log/"+(packageName in Linux).value)
+bashScriptExtraDefines += "export DP2DATA=\"$(realpath \"${app_home}/../data\")\" # storage for db, jobs, templates, uploads, etc."
+bashScriptExtraDefines += "[[ ! -d \"$DP2DATA/db\" ]] && cp -r \"${app_home}/../db-empty\" \"$DP2DATA/db\" # create db if needed"
+bashScriptExtraDefines += "addJava \"-Dpidfile.path=/var/run/"+(packageName in Linux).value+"/play.pid\""
+bashScriptExtraDefines += "addJava \"-Ddb.default.url=jdbc:derby:$DP2DATA/db;create=true\""
 
 resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 //resolvers += "Sonatype OSS Staging" at "https://oss.sonatype.org/content/repositories/staging/"

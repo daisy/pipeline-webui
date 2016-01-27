@@ -5,12 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.avaje.ebean.Ebean;
 import com.avaje.ebean.Model;
 
 import javax.persistence.*;
 
-import controllers.Application;
 import play.data.validation.*;
 import utils.ObfuscatedString;
 

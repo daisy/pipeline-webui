@@ -166,6 +166,9 @@ public class Scripts extends Controller {
 		if (forceUpdate || scriptList == null || scriptList.isEmpty() || scriptListCacheLastUpdate.before(new Date(new Date().getTime() - 1000*60*5))) {
 			// no scripts in cache or cache more than 5 minutes old
 			scriptList = Application.ws.getScripts();
+			if (scriptList == null) {
+				scriptList = new ArrayList<Script>();
+			}
 			scriptListCacheLastUpdate = new Date();
 		}
 		return scriptList;

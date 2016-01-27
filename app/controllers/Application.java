@@ -16,56 +16,37 @@ import models.Setting;
 import models.User;
 import play.*;
 import play.mvc.*;
-import views.html.*;
 
 public class Application extends Controller {
 	
 	public static final boolean debug = "DEBUG".equals(Configuration.root().getString("logger.application"));
 	
 	public static final String DEFAULT_DP2_ENDPOINT = "http://localhost:8181/ws";
-	public static final String SLASH = System.getProperty("file.separator");
 	public static final String DP2DATA;
 	static {
 		String os = System.getProperty("os.name");
 		String home = System.getProperty("user.home");
 		
-		// create temporary dir for webui
-		String systemTemp = System.getProperty("java.io.tmpdir");
-		String dp2temp = systemTemp;
-		try {
-			File systemTempDir = new File(systemTemp);
-			systemTemp = systemTempDir.getCanonicalPath();
-			
-			File dp2tempDir = File.createTempFile("daisy-pipeline-webui-", null);
-			if (dp2tempDir.exists()) {
-				dp2tempDir.delete();
-			}
-			dp2tempDir.mkdirs();
-			dp2temp = dp2tempDir.getCanonicalPath();
-		} catch (IOException e) {
-			Logger.error("Could not get canonical path for temporary directory", e);
-		}
-		
 		// get data directory for webui
 		String dp2data = System.getenv("DP2DATA");
-		if (dp2data == null || "".equals(dp2data)) {
-			if (os.startsWith("Windows")) {
-				dp2data = System.getenv("APPDATA") + SLASH + "DAISY Pipeline 2";
-				
-			} else if (os.startsWith("Mac OS X")) {
-				dp2data = home + "/Library/Application Support/DAISY Pipeline 2";
-				
-			} else { // Linux etc.
-				dp2data = home + SLASH + ".daisy-pipeline";
-			}
-		}
 		try {
-			File dp2dataDir = new File(dp2data);
-			if (dp2dataDir.exists()) {
-				dp2dataDir.delete();
+			if (dp2data == null || "".equals(dp2data)) {
+				File dp2dataDir = null;
+				if (os.startsWith("Windows")) {
+					dp2dataDir = new File(new File(new File(System.getenv("APPDATA")), "DAISY Pipeline 2"), "webui");
+					
+				} else if (os.startsWith("Mac OS X")) {
+					dp2dataDir = new File(home + "/Library/Application Support/DAISY Pipeline 2/webui");
+					
+				} else { // Linux etc.
+					dp2dataDir = new File(home + "/.daisy-pipeline/webui");
+				}
+				if (dp2dataDir.exists()) {
+					dp2dataDir.delete();
+				}
+				dp2dataDir.mkdirs();
+				dp2data = dp2dataDir.getCanonicalPath();
 			}
-			dp2dataDir.mkdirs();
-			dp2data = dp2dataDir.getCanonicalPath();
 			
 		} catch (IOException e) {
 			Logger.error("Could not get canonical path for "+dp2data, e);
@@ -113,7 +94,7 @@ public class Application extends Controller {
 		User user = User.authenticate(request(), session());
 		User.flashBrowserId(user);
 		
-		File about = new File("about.html");
+		File about = new File(new File(DP2DATA, "conf"), "about.html");
 		if (about.exists()) {
 			return ok(views.html.about.render(Files.read(about)));
 		} else {

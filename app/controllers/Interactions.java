@@ -27,7 +27,7 @@ public class Interactions extends Controller {
 		    session("uuid", uuid);
 		}
 		
-		File logFile = new File(new File(new File(new File(controllers.Application.DP2DATA), "log"), "interactions"), uuid);
+		File logFile = new File(new File(new File(new File(controllers.Application.DP2DATA), "logs"), "interactions"), uuid);
 		logFile.getParentFile().mkdirs();
 		
 		String interactions = request().body().asJson()+"\n";

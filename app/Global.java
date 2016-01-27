@@ -203,19 +203,6 @@ public class Global extends GlobalSettings {
 								}
 							}
 							
-//							for (Job webUiJob : webUiJobs) {
-//								if (webUiJob.getStatus() == null || "null".equals(webUiJob.getStatus())) {
-//									// fix while developing; the job status should never be null!
-//									Logger.info("job #"+webUiJob.getId()+" has status "+webUiJob.getStatus()+" "+(webUiJob.getStatus() == null ? "[null]" : "[string]")+". setting it to NEW...");
-//									webUiJob.setStatus("NEW");
-//									webUiJob.save();
-//									Logger.info("saved job #"+webUiJob.getId()+" to DB with status "+webUiJob.getStatus());
-//									webUiJob = Job.findJobById(webUiJob.getId());
-//									Logger.info("loaded job #"+webUiJob.getId()+" from DB with status "+webUiJob.getStatus());
-//									Logger.info("fixed job #"+webUiJob.getId()+". status was null, now set to "+webUiJob.getStatus());
-//								}
-//							}
-							
 							Logger.debug("checking for jobs in engine that is not in webui...");
 							if (controllers.Application.getAlive() != null) {
 								for (org.daisy.pipeline.client.models.Job engineJob : engineJobs) {
@@ -230,26 +217,7 @@ public class Global extends GlobalSettings {
 										try { Status.valueOf(webUiJob.getStatus()); }
 										catch (IllegalArgumentException e) { Logger.info("not a engine job: #"+webUiJob.getId()+" (status:"+webUiJob.getStatus()+")"); continue; }
 										
-										// should fix broken jobs while developing; shouldn't be needed when everything's working properly though
-//										if (webUiJob.getEngineId() == null) {
-//											Logger.info("webui engine id is null: #"+webUiJob.getId());
-//											Logger.info("setting webui job #"+webUiJob.getId()+" status to NEW");
-//											webUiJob.setStatus("NEW");
-//											webUiJob.save();
-//											continue;
-//										}
-										
 										if (engineJob.getId().equals(webUiJob.getEngineId())) {
-//											Logger.info("engine job "+engineJob.getId()+" is already in the webui as job #"+webUiJob.getId()+":");
-//											Logger.info("    "+webUiJob.getUser()+" | "+webUiJob.getStatus()+" | "+engineJob.getStatus());
-											
-											// a hack to fix broken jobs while developing; shouldn't be needed when everything's working
-//											if (!webUiJob.getStatus().equals(engineJob.getStatus()+"")) {
-//												Logger.info("setting webui job #"+webUiJob.getId()+" status to "+engineJob.getStatus());
-//												webUiJob.getStatus() = engineJob.getStatus()+"";
-//												webUiJob.save();
-//											}
-											
 											exists = true;
 											break;
 										}

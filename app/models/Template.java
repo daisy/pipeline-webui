@@ -9,16 +9,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import org.daisy.pipeline.client.filestorage.JobStorage;
 import org.daisy.pipeline.client.models.Argument;
 import org.daisy.pipeline.client.models.Job;
-import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.utils.Files;
 
 import play.Logger;
-import scala.reflect.internal.Trees.This;
 
 /**
  * This class is not strictly a "model". Instead, it provides static methods for accessing the templates,

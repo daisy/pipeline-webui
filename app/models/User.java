@@ -4,12 +4,7 @@ import play.Logger;
 import play.api.libs.Crypto;
 
 import com.avaje.ebean.*;
-import com.avaje.ebean.Query;
-import com.avaje.ebean.util.ClassUtil;
-
 import controllers.Administrator.CreateAdminForm;
-import controllers.Application;
-
 import javax.persistence.*;
 
 import java.util.*;

@@ -9,7 +9,6 @@ target
 .target
 tmp
 .history
-dist
 bin
 lib
 .sbt*

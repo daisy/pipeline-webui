@@ -7,7 +7,6 @@ import com.avaje.ebean.*;
 
 import javax.persistence.*;
 
-import controllers.Application;
 import play.data.validation.*;
 
 @Entity(name="usersetting")

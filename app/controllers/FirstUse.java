@@ -109,46 +109,35 @@ public class FirstUse extends Controller {
 			}
 			
 			// Set default storage directories 
-			String slash = controllers.Application.SLASH;
-			String dp2data = controllers.Application.DP2DATA;
-			String uploads = dp2data + slash + "webui" + slash + "uploads" + slash;
-			String jobStorage = dp2data + slash + "webui" + slash + "jobs" + slash;
-			String templateStorage = dp2data + slash + "webui" + slash + "templates" + slash;
+			File uploads = new File(new File(controllers.Application.DP2DATA), "uploads");
+			File jobStorage = new File(new File(controllers.Application.DP2DATA), "jobs");
+			File templateStorage = new File(new File(controllers.Application.DP2DATA), "templates");
 			
 			if (Setting.get("uploads") == null) {
-				File uploadsFile = new File(uploads);
-				uploadsFile.mkdirs();
+				uploads.mkdirs();
 				try {
-					uploads = uploadsFile.getCanonicalPath();
-					
-				} catch (IOException e) { /* ignore */ }
-				
-				Setting.set("uploads", uploads);
-				
+					Setting.set("uploads", uploads.getCanonicalPath());
+				} catch (IOException e) {
+					Setting.set("uploads", uploads.getAbsolutePath());
+				}
 			}
-			
+
 			if (Setting.get("jobs") == null) {
-				File jobStorageFile = new File(jobStorage);
-				jobStorageFile.mkdirs();
+				jobStorage.mkdirs();
 				try {
-					jobStorage = jobStorageFile.getCanonicalPath();
-					
-				} catch (IOException e) { /* ignore */ }
-				
-				Setting.set("jobs", jobStorage);
-				
+					Setting.set("jobs", jobStorage.getCanonicalPath());
+				} catch (IOException e) {
+					Setting.set("jobs", jobStorage.getAbsolutePath());
+				}
 			}
-			
+
 			if (Setting.get("templates") == null) {
-				File templateStorageFile = new File(templateStorage);
-				templateStorageFile.mkdirs();
+				templateStorage.mkdirs();
 				try {
-					templateStorage = templateStorageFile.getCanonicalPath();
-					
-				} catch (IOException e) { /* ignore */ }
-				
-				Setting.set("templates", templateStorage);
-				
+					Setting.set("templates", templateStorage.getCanonicalPath());
+				} catch (IOException e) {
+					Setting.set("templates", templateStorage.getAbsolutePath());
+				}
 			}
 			
 			// set default WS endpoint
