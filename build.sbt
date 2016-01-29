@@ -3,7 +3,8 @@ import com.typesafe.sbt.packager.linux.LinuxSymlink
 
 organization := "org.daisy.pipeline"
 name := "webui"
-version := "2.0.0-SNAPSHOT"
+versionWithGit
+git.useGitDescribe := true
 
 organizationName := "DAISY"
 organizationHomepage := Some(url("http://daisy.org"))
@@ -41,6 +42,7 @@ bashScriptExtraDefines += "[[ ! -d \"$DP2DATA/db\" ]] && cp -r \"${app_home}/../
 bashScriptExtraDefines += "addJava \"-Dpidfile.path=/var/run/"+(packageName in Linux).value+"/play.pid\""
 bashScriptExtraDefines += "addJava \"-Ddb.default.url=jdbc:derby:$DP2DATA/db;create=true\""
 com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Debian, packageBin in Debian, "deb")
+com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Universal, packageBin in Universal, "zip")
 
 resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 //resolvers += "Sonatype OSS Staging" at "https://oss.sonatype.org/content/repositories/staging/"
@@ -54,7 +56,38 @@ publishTo := {
   else
     Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
-logLevel in publish := Level.Debug
+
+publishMavenStyle := true
+pomPostProcess := {
+    import xml.transform._
+    new RuleTransformer(new RewriteRule{
+        override def transform(node:xml.Node) = {
+            if (node.label == "packaging")
+              <packaging>pom</packaging>
+            else
+              node
+        }
+    })
+}
+pomExtra := (
+  <scm>
+    <url>https://github.com/daisy/pipeline-webui</url>
+    <connection>scm:git:git://github.com/daisy/pipeline-webui.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>josteinaj</id>
+      <name>Jostein Austvik Jacobsen</name>
+      <email>josteinaj@gmail.com</email>
+      <organization>Norwegian Library of Talking Books and Braille</organization>
+      <organizationUrl>http://www.nlb.no/</organizationUrl>
+      <roles>
+        <role>Developer</role>
+      </roles>
+      <timezone>UTC+01:00</timezone>
+    </developer>
+  </developers>
+)
 
 libraryDependencies ++= Seq(
   javaJdbc,

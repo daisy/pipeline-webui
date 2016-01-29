@@ -23,3 +23,5 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-play-ebean" % "1.0.0")
 // Eclipse
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0")
 
+// Use git tags to version this project
+addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.8.5")

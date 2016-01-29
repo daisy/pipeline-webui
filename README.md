@@ -1,11 +1,9 @@
-[![Build Status](https://travis-ci.org/daisy/pipeline-webui.png?branch=master)](https://travis-ci.org/daisy/pipeline-webui)
+<!-- [![Build Status](https://travis-ci.org/daisy/pipeline-webui.png?branch=master)](https://travis-ci.org/daisy/pipeline-webui) -->
 
-Pipeline 2 Web UI
------------------
+# Pipeline 2 Web UI
 
-This project provides a Web User Interface for the DAISY Pipeline2, developed with the Play! framework.
+This project provides a Web User Interface for the DAISY Pipeline 2, developed with the Play! framework.
 
-See also:
+## Releasing the Web UI
 
- - the [Web UI requirements](https://code.google.com/p/daisy-pipeline/wiki/WebUIFunctionalRequirements)
- - the [Web UI development wiki page](https://code.google.com/p/daisy-pipeline/wiki/WebUIDev)
+**TODO**
