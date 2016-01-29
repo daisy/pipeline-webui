@@ -1,0 +1,397 @@
+@(uiJob: Long)
+
+@main("View job", "jobs", Array("createJob.js")) {
+
+@if(flash.contains("error")) {
+    <div role="alert" class="alert alert-error">
+    	<a class="close" data-dismiss="alert">&times;</a>
+        @flash.get("error")
+    </div>
+}
+
+@if(flash.contains("success")) {
+    <div role="alert" class="alert alert-success">
+    	<a class="close" data-dismiss="alert">&times;</a>
+        @flash.get("success")
+    </div>
+}
+
+<hgroup>
+	<h1>Job Summary<br/>
+	<small id="header-nicename">&nbsp;</small></h1>
+	
+	<small>
+		<a id="job-details-show" href="#" onclick="$(this).hide();$('#job-details-hide').show();$('.detailed-info').show();return false;"><i class="icon-chevron-down"></i>Show details</a>
+		<a id="job-details-hide" href="#" onclick="$(this).hide();$('#job-details-show').show();$('.detailed-info').hide();return false;" style="display:none;'"><i class="icon-chevron-up"></i>Hide details</a>
+	</small>
+
+</hgroup>
+
+<div class="row" id="job-details">
+	<div class="offset4 span4">
+	<style>
+		.detailed-info { display: none; }
+		#job-details table td { text-align: right; }
+	</style>
+	<table class="table table-hover table-condensed">
+		<tbody>
+            <tr>
+                <th>Script:</th>
+                <td>
+                    <span id="scriptname">&nbsp;</span>
+                    <span class="detailed-info">
+                    	<br/><small id="scriptid" class="muted">&nbsp;</small>
+                   	</span>
+                </td>
+            </tr>
+            <tr>
+                <th>Created:</th>
+                <td>
+                    <span id="created-fuzzy" aria-live="timer">&nbsp;</span>
+                    <span class="detailed-info">
+                    	<br/><small id="created" class="muted">&nbsp;</small>
+                   	</span>
+                </td>
+            </tr>
+            <tr>
+                <th>Started:</th>
+                <td>
+                    <span id="started-fuzzy" aria-live="timer">&nbsp;</span>
+                    <span class="detailed-info">
+                    	<br/><small id="started" class="muted">&nbsp;</small>
+                   	</span>
+                </td>
+            </tr>
+            <tr>
+                <th>Finished:</th>
+                <td>
+                    <span id="finished-fuzzy" aria-live="timer">&nbsp;</span>
+                    <span class="detailed-info">
+                    	<br/><small id="finished" class="muted">&nbsp;</small>
+                   	</span>
+                </td>
+            </tr>
+            <tr class="detailed-info">
+                <th>Engine ID:</th>
+                <td>
+                    <span id="engine-id">&nbsp;</span>
+                </td>
+            </tr>
+            <tr class="detailed-info">
+                <th>User:</th>
+                <td>
+                    <span id="username">&nbsp;</span>
+                    <span>
+                    	<br/><small id="userid" class="muted">&nbsp;</small>
+                   	</span>
+                </td>
+            </tr>
+		</tbody>
+	</table>
+	</div>
+	<br/>
+</div>
+
+<div class="row">
+	<div class="hero-unit" style="text-align:center">
+	
+	<div id="status-done" class="statusbox" style="display:none;">
+		<h2 role="status" class="text-success">Success</h1>
+		<div class="results-buttons" aria-live="polite"></div>
+	</div>
+	
+	<div id="status-validation_fail" class="statusbox" style="display:none;">
+		<h2 role="status" class="text-error">Validation failed</h1>
+		<div class="results-buttons" aria-live="polite"></div>
+	</div>
+	
+	<div id="status-running" class="statusbox" style="display:none;">
+		<h2 role="status" class="text-info">
+			Running
+			<span aria-live="none">
+				<span id="runningDot1"                       >&nbsp;.&nbsp; &nbsp; &nbsp;</span>
+				<span id="runningDot2" style="display: none;">&nbsp;.&nbsp;.&nbsp; &nbsp;</span>
+				<span id="runningDot3" style="display: none;">&nbsp;.&nbsp;.&nbsp;.&nbsp;</span>
+				<script type="text/javascript">
+					window.setInterval(function(){
+						if ($("#runningDot1").is(":visible")) {
+							$("#runningDot1").hide();
+							$("#runningDot2").show();
+							
+						} else if ($("#runningDot2").is(":visible")) {
+							$("#runningDot2").hide();
+							$("#runningDot3").show();
+							
+						} else {
+							$("#runningDot3").hide();
+							$("#runningDot1").show();
+						}
+					},1000);
+				</script>
+			</span>
+		</h2>
+		<br/>
+		<ul style="list-style-type:none;text-align:left;padding-top:20px;"><li id="message-latest">
+		    <pre>&nbsp;</pre>
+	    </li></ul>
+	</div>
+	
+	<div id="status-idle" class="statusbox" style="display:none;">
+		<h2 role="status" class="text-muted">Queued</h2>
+	</div>
+	
+	<div id="status-error" class="statusbox" style="display:none;">
+		<h2 role="status" class="text-error">Failed</h2>
+		<p>See the execution log for details.</p>
+	</div>
+	
+	</div>
+</div>
+
+<div id="result-reports" aria-live="polite"></div>
+
+<div id="results" class="status-done" aria-live="polite">
+	<h2>Results</h2>
+	
+	<p class="results-empty">No results.</p>
+	
+	<div class="results-nonempty" style="display:none;">
+		<p id="results-download-all"></p>
+		<ul id="results-list" style="list-style-type:none;" class="results-children"></ul>
+	</div>
+</div>
+
+
+<h2>Execution Log</h2>
+
+<br/>
+<a class="btn btn-info" href="@routes.Jobs.getLog(uiJob)" target="_blank"><span class="icon-download-alt icon-white"></span> Download Detailed Log</a>
+<br/><br/>
+
+<p id="message-list-loading"><em>
+	<span aria-live="none">
+		<span id="runningDotLog1"                       >&nbsp;.&nbsp; &nbsp; &nbsp;</span>
+		<span id="runningDotLog2" style="display: none;">&nbsp;.&nbsp;.&nbsp; &nbsp;</span>
+		<span id="runningDotLog3" style="display: none;">&nbsp;.&nbsp;.&nbsp;.&nbsp;</span>
+	</span>
+	<script type="text/javascript">
+		window.setInterval(function(){
+			if ($("#runningDotLog1").is(":visible")) {
+				$("#runningDotLog1").hide();
+				$("#runningDotLog2").show();
+				
+			} else if ($("#runningDotLog2").is(":visible")) {
+				$("#runningDotLog2").hide();
+				$("#runningDotLog3").show();
+				
+			} else {
+				$("#runningDotLog3").hide();
+				$("#runningDotLog1").show();
+			}
+		},1000);
+	</script>
+</em></p>
+<ol aria-live="polite" role="log" class="messagelist" id="message-list" style="display:none;"></ol>
+
+<br/>
+
+<div>
+<h2>Input files and parameters</h2>
+<br/>
+<p><a class="btn btn-info" href="@routes.Jobs.downloadContext(uiJob)"><span class="icon-download-alt icon-white"></span> Download input files</a></p>
+<br/>
+<div id="arguments"></div>
+</div>
+
+<br/>
+<div class="form-actions">
+<a class="btn btn-info" href="@routes.Jobs.restart(uiJob)"><span class="icon-refresh icon-white"></span> Restart job</a>
+<a class="btn btn-success" href="@routes.Jobs.newJobWithOldJob(uiJob)"><span class="icon-plus icon-white"></span> New job with same options</a>
+<a class="btn" href="@routes.Jobs.saveAsTemplate(uiJob)"><span class="icon-briefcase"></span> Save job as template</a>
+<p><small>Note: restarting the job will delete the current results.</small></p>
+</div>
+<br/><br/>
+
+<script type="text/javascript">
+	$(function(){
+		var addMessage = function(message) {
+			var li = '<li id="m'+message.sequence+'" value="'+message.sequence+'" class="'+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><span class="message">'+message.level+' -- '+message.text+'</span></li>';
+			if ($("#m"+message.sequence).size() > 0) {
+				$("#m"+message.sequence).replaceWith(li);
+			}
+			else if (message.sequence < $("#message-list li").last().attr("value")) {
+				$("#message-list li")
+					.filter(function(i){ return $(this).attr("value") < message.sequence; })
+					.last()
+					.after(li);
+			}
+			else {
+				$("#message-list").append(li);
+				$("#message-latest").html("<pre>"+message.text+"</pre>");
+			}
+			$("#message-list").show();
+			$("#message-list-loading").hide();
+		};
+		
+		Notifications.listen("job-message-@uiJob", addMessage);
+		Notifications.listen("job-status-@uiJob", function(status){
+			$(".statusbox").hide();
+			$("#status-"+status.toLowerCase()).show();
+		});
+		Notifications.listen("job-created-@uiJob", function(message){
+			var time = parseInt(message.number);
+			if (isNaN(time)) {
+				clearFuzzyUpdates("created-fuzzy", time);
+				$("#created, #created-fuzzy").html("&nbsp;");
+			} else {
+				updateFuzzy("created-fuzzy", time);
+				$("#created").html(new Date(time)+"");
+			}
+		});
+		Notifications.listen("job-started-@uiJob", function(message){
+			var time = parseInt(message.number);
+			if (isNaN(time)) {
+				clearFuzzyUpdates("started-fuzzy", time);
+				$("#started, #started-fuzzy").html("&nbsp;");
+			} else {
+				updateFuzzy("started-fuzzy", time);
+				$("#started").html(new Date(time)+"");
+			}
+		});
+		Notifications.listen("job-finished-@uiJob", function(message){
+			var time = parseInt(message.number);
+			if (isNaN(time)) {
+				clearFuzzyUpdates("finished-fuzzy", time);
+				$("#finished, #finished-fuzzy").html("&nbsp;");
+			} else {
+				updateFuzzy("finished-fuzzy", time);
+				$("#finished").html(new Date(time)+"");
+			}
+		});
+		var updateResultsList = function(result) {
+			var li = document.createElement("li");
+			if (result.hasOwnProperty('results') && result.results !== null && result.results !== undefined && result.results.length > 0) {
+				$(li).append("<a class=\"results-expand-collapse icon-plus\" onclick=\"javascript:$(this).siblings().filter('ul').toggle();$(this).siblings().filter('.results-fileicon').toggleClass('icon-folder-open icon-folder-close');$(this).toggleClass('icon-plus icon-minus');return false;\"></a>");
+				$(li).append("<i class=\"results-fileicon icon-folder-close\"></i>");
+			} else {
+				$(li).append("<span class=\"results-expand-collapse\"></span>");
+				$(li).append("<i class=\"results-fileicon icon-file\"></i>");
+			}
+			
+			var fileLink = $("<a class=\"results-filename\"></a>");
+			$(fileLink).attr("href", "@routes.Jobs.getResult(uiJob,"")"+result.relativeHref);
+			$(fileLink).html(result.nicename!==null&&result.nicename.length>0?result.nicename:result.name!==null&&result.name.length>0?result.name:decodeURIComponent(result.filename.replace(/^idx\//,"")));
+			$(li).append(fileLink);
+			$(li).append(" ");
+			
+			$(li).append($("<span class=\"results-filesize\"></span>").html(Job.prettySize(result.size)));
+			
+			if (result.hasOwnProperty('results') && result.results !== null && result.results !== undefined) {
+				var ul = $("<ul class=\"results-children\" style=\"display:none;list-style-type:none;\"></ul>");
+				for (var i = 0; i < result.results.length; i++) {
+					$(ul).append(updateResultsList(result.results[i]));
+				}
+				$(li).append(ul);
+			}
+			
+			return li; 
+		}
+		var updateResults = function(results){
+			var i, j, href;
+			if (results.results === null || results.results.length === 0) {
+				$("#results .results-empty").show();
+				$("#results .results-nonempty").hide();
+			} else {
+				$("#results .results-empty").hide();
+				
+				$("#results-list").empty();
+				$("#results-download-all").empty();
+				$(".results-buttons").empty();
+				$("#result-reports").empty();
+				
+				$("#results-download-all").append($("<a class=\"btn btn-success\" href=\""+"@routes.Jobs.getAllResults(uiJob)"+"\"><span class=\"icon-download-alt icon-white\"></span> Download all results</a>"));
+				if ($.isArray(results.results)) {
+					for (i = 0; i < results.results.length; i++) {
+						if (!$.isArray(results.results[i].results) || results.results[i].results.length === 0 || typeof results.results[i].results[0].mimeType !== "string" || results.results[i].results[0].mimeType.indexOf("application/vnd.pipeline") !== 0) {
+							$("#results-list").append(updateResultsList(results.results[i]));
+							if (results.results[i].results.length === 1 && (!$.isArray(results.results[i].results[0]) || results.results[i].results[0].results.length === 0)) {
+								$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(uiJob,"")"+results.results[i].results[0].relativeHref+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].nicename+"</a> ");
+							} else {
+								$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(uiJob,"")"+results.results[i].relativeHref+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].nicename+"</a> ");
+							}
+						}
+						
+						if ($.isArray(results.results[i].results)) {
+							for (j = 0; j < results.results[i].results.length; j++) {
+								if (results.results[i].results[j].mimeType==="application/vnd.pipeline.report+xml") {
+									href = "@routes.Jobs.getResult(uiJob,"")"+results.results[i].results[j].relativeHref;
+									$.ajax({
+										url: href+"?parse=report",
+										success: function(data, textStatus, jqXHR){
+											var section = $("<section class=\"result-report\" data-href=\""+this.href+"\"></section>");
+											$(section).html(data);
+											$(section).find("*[href^='file:']").replaceWith("<!-- removed filesystem link -->");
+											$(section).find("*[href]:not([href^='#'])").each(function(){
+												$(this).attr("href",href.replace(/[^/]*$/,"")+$(this).attr("href"));
+											});
+											$(".result-report[data-href='"+this.href+"'] + hr").remove();
+											$(".result-report[data-href='"+this.href+"']").remove();
+											$("#result-reports").append($(section));
+											$("#result-reports").append("<hr/>");
+										},
+										context: {href:href}
+									});
+								}
+							}
+						}
+					}
+				}
+				
+				$("#results .results-nonempty").show();
+			}
+		};
+		Notifications.listen("job-results-@uiJob", updateResults);
+		
+		// Dynamically load page contents
+		$.ajax({
+			url: "@routes.Jobs.getJobJson(uiJob)?"+new Date().getTime(),
+			error: function(jqXHR, textStatus, errorThrown) {
+				// error; too bad :(
+			},
+			success: function(job, textStatus, jqXHR) {
+				// updating page contents dynamically...
+				updateFuzzy("created-fuzzy", job.webuiJob.created);
+				updateFuzzy("started-fuzzy", job.webuiJob.started);
+				updateFuzzy("finished-fuzzy", job.webuiJob.finished);
+				$("#created").html(typeof job.webuiJob.created === "number" ? new Date(job.webuiJob.created)+"" : "&nbsp;");
+				$("#started").html(typeof job.webuiJob.started === "number" ? new Date(job.webuiJob.started)+"" : "&nbsp;");
+				$("#finished").html(typeof job.webuiJob.finished === "number" ? new Date(job.webuiJob.finished)+"" : "&nbsp;");
+				
+				$("#engine-id").html(job.engineJob != null && typeof job.engineJob.id === "string" ? job.engineJob.id : job.webuiJob.engineId);
+				$("#header-nicename, #nicename").html(job.webuiJob.nicename);
+				$("#scriptid").html(job.webuiJob.scriptId);
+				$("#scriptname").html(job.webuiJob.scriptName);
+				$("#username").html(job.webuiJob.userNicename);
+				$("#userid").html(job.webuiJob.user < 0 ? job.webuiJob.user : "&nbsp;");
+				
+				$(".statusbox").hide();
+				$("#status-"+job.webuiJob.status.toLowerCase()).show();
+				
+				$("#message-list li").remove();
+				if (job.engineJob !== undefined) {
+					if (job.engineJob.messages instanceof Array) {
+						for (var m = 0; m < job.engineJob.messages.length; m++) {
+							addMessage(job.engineJob.messages[m]);
+						}
+					}
+				}
+				
+				$("#arguments").html(argumentsToHtml(job.engineJob.arguments));
+				
+				updateResults(job.results);
+			}
+		});
+	});
+</script>
+
+}
