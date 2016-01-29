@@ -3,24 +3,27 @@ import com.typesafe.sbt.packager.linux.LinuxSymlink
 
 organization := "org.daisy.pipeline"
 name := "webui"
-version := "2.0-SNAPSHOT"
+version := "2.0.0-SNAPSHOT"
 
 organizationName := "DAISY"
 organizationHomepage := Some(url("http://daisy.org"))
 homepage := Some(url("https://github.com/daisy/pipeline-webui"))
 startYear := Some(2012)
 description := "A web-based user interface for the DAISY Pipeline 2."
+maintainer := "Jostein Austvik Jacobsen <josteinaj@gmail.com>"
 licenses += "LGPLv3" -> url("https://www.gnu.org/licenses/lgpl-3.0.html")
 
-lazy val root = (project in file(".")).enablePlugins(PlayJava, PlayEbean, DebianPlugin)
+lazy val root = (project in file(".")).enablePlugins(PlayJava, PlayEbean, DebianPlugin, UniversalDeployPlugin, DebianDeployPlugin)
 
 scalaVersion := "2.11.6"
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 
+// disable using the Scala version in output paths and artifacts
+crossPaths := false
+
 // For packaging on Linux
-maintainer in Linux := "Jostein Austvik Jacobsen <josteinaj@gmail.com>"
 packageName in Linux := "daisy-pipeline2-webui"
-name in Linux := (packageName in Linux).value
+//name in Debian := (packageName in Linux).value
 packageSummary in Linux := "DAISY Pipeline 2 Web User Interface"
 packageDescription := "A web-based user interface for the DAISY Pipeline 2."
 daemonUser in Linux := "pipeline2-webui"
@@ -37,10 +40,21 @@ bashScriptExtraDefines += "export DP2DATA=\"$(realpath \"${app_home}/../data\")\
 bashScriptExtraDefines += "[[ ! -d \"$DP2DATA/db\" ]] && cp -r \"${app_home}/../db-empty\" \"$DP2DATA/db\" # create db if needed"
 bashScriptExtraDefines += "addJava \"-Dpidfile.path=/var/run/"+(packageName in Linux).value+"/play.pid\""
 bashScriptExtraDefines += "addJava \"-Ddb.default.url=jdbc:derby:$DP2DATA/db;create=true\""
+com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Debian, packageBin in Debian, "deb")
 
 resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 //resolvers += "Sonatype OSS Staging" at "https://oss.sonatype.org/content/repositories/staging/"
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
+
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (version.value.trim.endsWith("SNAPSHOT"))
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+}
+logLevel in publish := Level.Debug
 
 libraryDependencies ++= Seq(
   javaJdbc,
