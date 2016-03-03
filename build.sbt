@@ -47,7 +47,7 @@ com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Universal, packa
 resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 //resolvers += "Sonatype OSS Staging" at "https://oss.sonatype.org/content/repositories/staging/"
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-resolvers += "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
+resolvers += "Local Maven Repository" at Path.userHome.asFile.toURI.toURL+".m2/repository/"
 
 publishTo := {
   val nexus = "https://oss.sonatype.org/"

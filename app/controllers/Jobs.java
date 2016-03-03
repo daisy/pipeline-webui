@@ -824,7 +824,7 @@ public class Jobs extends Controller {
 								}
 								
 							} else {
-								Logger.debug("adding zip file: "+f.getName());
+								Logger.debug("adding normal file: "+f.getName());
 								
 								List<Map<String,Object>> jsonFileset = new ArrayList<Map<String,Object>>();
 								Map<String,Object> fileResult = new HashMap<String,Object>();
