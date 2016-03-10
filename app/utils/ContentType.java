@@ -1119,6 +1119,7 @@ public class ContentType {
     	extMap.put("ics", "text/calendar");
     	extMap.put("ifb", "text/calendar");
     	extMap.put("css", "text/css");
+        extMap.put("scss", "text/scss");
     	extMap.put("csv", "text/csv");
     	extMap.put("html", "text/html");
     	extMap.put("htm", "text/html");
