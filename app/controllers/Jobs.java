@@ -518,7 +518,7 @@ public class Jobs extends Controller {
 					filename = id+"";
 				}
 			}
-			response().setHeader("Content-Disposition", "attachment; filename=\""+filename+"\"");
+			response().setHeader("Content-Disposition", "inline; filename=\""+filename+"\"");
 			
 			File resultFile = result.asFile();
 			if (resultFile == null || !resultFile.exists()) {
