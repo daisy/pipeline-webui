@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystemException;
+import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -758,7 +760,19 @@ public class Jobs extends Controller {
         	Logger.info("uploaded file: "+file.getFile());
         	// rename the uploaded file so that it is not automatically deleted by Play!
         	File renamedFile = new File(file.getFile().getParentFile(), file.getFile().getName()+"_");
-        	file.getFile().renameTo(renamedFile);
+        	try {
+				java.nio.file.Files.move(file.getFile().toPath(), renamedFile.toPath());
+				
+			} catch (IOException e) {
+				Logger.error("Could not rename uploaded file. Might be a problem with permissions. Trying copying instead...", e);
+				try {
+					Files.copy(file.getFile(), renamedFile);
+					
+				} catch (IOException ex) {
+					Logger.error("Could not copy uploaded file.", ex);
+					return internalServerError("Could not rename or make a copy of uploaded file.");
+				}
+			}
         	
         	Logger.debug(request().method()+" | "+file.getContentType()+" | "+file.getFilename()+" | "+renamedFile.getAbsolutePath());
         	
