@@ -219,7 +219,7 @@ public class Jobs extends Controller {
 		webuiJob.cancelPushNotifications();
 		
 		if (webuiJob.getEngineId() != null) {
-			Logger.info("deleting old job: "+webuiJob.getEngineId());
+			Logger.debug("Deleting old job before restarting job: "+webuiJob.getEngineId());
 			org.daisy.pipeline.client.models.Job engineJob = Application.ws.getJob(webuiJob.getEngineId(), 0);
 			if (engineJob != null) {
 				boolean deleted = Application.ws.deleteJob(webuiJob.getEngineId());
@@ -232,16 +232,10 @@ public class Jobs extends Controller {
 			webuiJob.setEngineId(null);
 		}
 		
-		webuiJob.setStatus("NEW");
-		webuiJob.setNotifiedComplete(false);
-		org.daisy.pipeline.client.models.Job clientlibJob = webuiJob.asJob();
-		clientlibJob.setStatus(org.daisy.pipeline.client.models.Job.Status.IDLE);
-		webuiJob.setStatus("IDLE");
-		webuiJob.setStarted(null);
-		webuiJob.setFinished(null);
-		webuiJob.save();
+		webuiJob.reset();
 		
 		Logger.debug("------------------------------ Posting job... ------------------------------");
+		org.daisy.pipeline.client.models.Job clientlibJob = webuiJob.asJob();
 		Logger.debug(XML.toString(clientlibJob.toJobRequestXml(true)));
 		clientlibJob = Application.ws.postJob(clientlibJob);
 		if (clientlibJob == null) {

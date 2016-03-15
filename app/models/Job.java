@@ -16,6 +16,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
+import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
 import org.daisy.pipeline.client.filestorage.JobStorage;
 import org.daisy.pipeline.client.models.Job.Status;
@@ -203,6 +204,7 @@ public class Job extends Model implements Comparable<Job> {
 								}
 								
 								Logger.debug("    saving");
+								webUiJob.setJob(job);
 								webUiJob.save();
 							}
 							
@@ -324,6 +326,7 @@ public class Job extends Model implements Comparable<Job> {
 			
 			// save to job storage as well
 			if (asJob() != null) {
+				Logger.debug("save to job storage");
 				asJob().getJobStorage().save();
 				jobUpdateHelper();
 			}
@@ -443,7 +446,7 @@ public class Job extends Model implements Comparable<Job> {
 
 	/** Use this method to get the job from the engine to ensure that the XML in the webuis job storage is always up to date */
 	public org.daisy.pipeline.client.models.Job getJobFromEngine(int fromSequence) {
-		Logger.debug("Getting job from engine: "+engineId); // TODO: change to debug
+		Logger.debug("Getting job from engine: "+engineId);
 		if (engineId == null) {
 			return null;
 		}
@@ -558,6 +561,26 @@ public class Job extends Model implements Comparable<Job> {
 
 	public void setNotifiedComplete(boolean notifiedComplete) {
 		this.notifiedComplete = notifiedComplete;
+	}
+
+	public void reset() {
+		setStatus("NEW");
+		setNotifiedComplete(false);
+		asJob();
+		clientlibJob.setStatus(org.daisy.pipeline.client.models.Job.Status.IDLE);
+		clientlibJob.setMessages(null);
+		clientlibJob.setResults(null, null);
+		JobStorage jobStorage = clientlibJob.getJobStorage();
+		try {
+			clientlibJob = new org.daisy.pipeline.client.models.Job(clientlibJob.toXml());
+		} catch (Pipeline2Exception e) {
+			Logger.error("An error occured when trying to reset the job", e);
+		}
+		clientlibJob.setJobStorage(jobStorage);
+		setStatus("IDLE");
+		setStarted(null);
+		setFinished(null);
+		save();
 	}
 	
 }
