@@ -11,8 +11,8 @@
 <br/>
 
 <form action="@routes.Jobs.postJob(jobId).unique()" method="POST" id="script-@scriptId-form" class="form-horizontal" onsubmit="DP2Forms.prepareSubmission('script-@scriptId')">
-	<input type="hidden" id="script-@scriptId-id" name="id" value="@script.getId()" />
-	<input type="hidden" id="script-@scriptId-uploads" name="uploads" value=""/>
+	<input type="hidden" id="script-@scriptId-id" name="_id" value="@script.getId()" />
+	<input type="hidden" id="script-@scriptId-uploads" name="_uploads" value=""/>
 	<script type="text/javascript">
 		/* Prepare upload widget for validation and submission */
 		var onSubmit = function() {
@@ -69,15 +69,15 @@
 			<div class="control-group">
 				<label class="control-label" for="guest-email">Your e-mail</label>
 				<div class="controls">
-					<input name="guest-email" id="@scriptId-guest-email" type="email"/>
+					<input name="_guest-email" id="@scriptId-guest-email" type="email"/>
 					<span class="help-block">Enter your e-mail address if you wish to receive a link to the job.</span>
 				</div>
 			</div>
 		}
 		
 		<div class="form-actions">
-			<button type="submit" name="submit_run_@scriptId" name="submit_run" value="Start job" data-loading-text="Starting job..." class="btn btn-large btn-primary" onclick="$('#submit_template_@scriptId').attr('disabled','disabled');$(this).button('loading');">Start job</button>
-			<button type="submit" name="submit_template_@scriptId" value="Save as template" data-loading-text="Saving as template..." class="btn btn-large" onclick="$('#submit_run_@scriptId').attr('disabled','disabled');$(this).button('loading');">Save as template</button>
+			<button type="submit" id="submit_run_@scriptId" name="_submit_run" value="Start job" data-loading-text="Starting job..." class="btn btn-large btn-primary" onclick="$('#submit_template_@scriptId').attr('disabled','disabled');$(this).button('loading');">Start job</button>
+			<button type="submit" id="submit_template_@scriptId" name="_submit_template" value="Save as template" data-loading-text="Saving as template..." class="btn btn-large" onclick="$('#submit_run_@scriptId').attr('disabled','disabled');$(this).button('loading');">Save as template</button>
 			<script>
 			
 			</script>

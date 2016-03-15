@@ -233,7 +233,7 @@ public class Jobs extends Controller {
 		webuiJob.setFinished(null);
 		webuiJob.save();
 		
-		Logger.info("------------------------------ Posting job... ------------------------------");
+		Logger.debug("------------------------------ Posting job... ------------------------------");
 		Logger.debug(XML.toString(clientlibJob.toJobRequestXml(true)));
 		clientlibJob = Application.ws.postJob(clientlibJob);
 		if (clientlibJob == null) {
@@ -637,7 +637,7 @@ public class Jobs extends Controller {
 			return internalServerError("Could not read form data");
 		}
 		
-		String scriptId = params.get("id")[0];
+		String scriptId = params.get("_id")[0];
 		if ("false".equals(UserSetting.get(user.id, "scriptEnabled-"+scriptId))) {
 			return forbidden();
 		}
@@ -657,35 +657,15 @@ public class Jobs extends Controller {
 		
 		org.daisy.pipeline.client.models.Job clientlibJob = job.asJob();
 		clientlibJob.setScript(script);
-		
-		for (String paramName : params.keySet()) {
-			String[] values = params.get(paramName);
-			Argument arg = script.getArgument(paramName);
-			if (arg != null) {
-				arg.clear();
-				if (values.length == 1 && "".equals(values[0])) {
-					// don't add value; treat empty strings as unset values
-				} else {
-					for (String value : values) {
-						arg.add(value);
-					}
-				}
-			} else {
-				Logger.warn(paramName+" is not a valid argument for the script "+script.getNicename());
-			}
-		}
 
-		// Parse and validate the submitted form (also create any necessary output directories in case of local mode)
-		// TODO: see if clientlib can be used for validation instead
+		// Parse the submitted form
 		Scripts.ScriptForm scriptForm = new Scripts.ScriptForm(user.id, script, params);
 		scriptForm.validate();
 		
 		// If we're posting a template; delegate further processing to Templates.postTemplate
-		for (String paramName : params.keySet()) {
-			if (paramName.startsWith("submit_template")) {
-				Logger.debug("posted job is a template");
-				return Templates.postTemplate(user, job, clientlibJob);
-			}
+		if (params.containsKey("_submit_template")) {
+			Logger.debug("posted job is a template");
+			return Templates.postTemplate(user, job, clientlibJob);
 		}
 		Logger.debug("posted job is not a template");
 		
