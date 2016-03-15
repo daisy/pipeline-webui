@@ -138,7 +138,7 @@ public class Global extends GlobalSettings {
 							for (Job job : jobs) {
 								if (job.getFinished() != null && job.getFinished().before(timeoutDate)) {
 									Logger.info("Deleting old job: "+job.getId()+" ("+job.getNicename()+")");
-									job.delete();
+									job.deleteFromEngineAndWebUi();
 								}
 							}
 						} catch (javax.persistence.PersistenceException e) {
@@ -175,7 +175,7 @@ public class Global extends GlobalSettings {
 									Date lastAccessed = Job.lastAccessed.get(webUiJob.getId());
 									final int deleteNewJobsAfterSeconds = 600;
 									if (lastAccessed == null || (new Date().getTime() - lastAccessed.getTime())/1000 > deleteNewJobsAfterSeconds) {
-										webUiJob.delete();
+										webUiJob.deleteFromEngineAndWebUi();
 									}
 									
 									continue;
@@ -197,7 +197,7 @@ public class Global extends GlobalSettings {
 										 */
 										//if ( should delete job ) {
 											//Logger.info("Deleting job that no longer exists in the Pipeline engine: "+webUiJob.getId()+" ("+webUiJob.getEngineId()+" - "+webUiJob.getNicename()+")");
-											//webUiJob.delete();
+											//webUiJob.deleteFromEngineAndWebUi();
 										//}
 									}
 								}

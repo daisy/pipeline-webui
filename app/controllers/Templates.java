@@ -90,7 +90,7 @@ public class Templates extends Controller {
 		Template template = Template.create(clientlibJob, user);
 		
 		if ("NEW".equals(job.getStatus())) {
-			job.delete();
+			job.deleteFromEngineAndWebUi();
 		}
 		
 		String highlightTemplateName = template.name == null ? "" : ""+template.name;

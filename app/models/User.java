@@ -348,7 +348,7 @@ public class User extends Model {
 		try {
 			List<Job> jobs = getJobs();
 			for (Job job : jobs)
-				job.delete();
+				job.deleteFromEngineAndWebUi();
 			super.delete();
 		} catch (javax.persistence.OptimisticLockException e) {
 			Logger.warn("Could not delete user "+this.id+" ("+this.name+" / "+this.email+")", e);

@@ -220,7 +220,15 @@ public class Jobs extends Controller {
 		
 		if (webuiJob.getEngineId() != null) {
 			Logger.info("deleting old job: "+webuiJob.getEngineId());
-			Application.ws.deleteJob(webuiJob.getEngineId());
+			org.daisy.pipeline.client.models.Job engineJob = Application.ws.getJob(webuiJob.getEngineId(), 0);
+			if (engineJob != null) {
+				boolean deleted = Application.ws.deleteJob(webuiJob.getEngineId());
+				if (!deleted) {
+					Logger.info("unable to delete old job: "+webuiJob.getEngineId());
+					flash("error", "An error occured while trying to delete the previous job. Please try creating a new job instead.");
+					return redirect(routes.Jobs.getJob(jobId));
+				}
+			}
 			webuiJob.setEngineId(null);
 		}
 		
@@ -724,8 +732,13 @@ public class Jobs extends Controller {
 		}
     	
     	Logger.debug("deleting "+jobId);
-		webuiJob.delete();
-		return ok();
+		boolean deletedSuccessfully = webuiJob.deleteFromEngineAndWebUi();
+		if (deletedSuccessfully) {
+			return ok();
+		} else {
+			flash("error", "An error occured while trying to delete the job. Please try creating a new job instead.");
+			return internalServerError();
+		}
     }
     
     public static Result postUpload(Long jobId) {

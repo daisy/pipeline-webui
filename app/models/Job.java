@@ -29,6 +29,7 @@ import akka.actor.Cancellable;
 import com.avaje.ebean.Model;
 
 import controllers.Application;
+import controllers.routes;
 
 @Entity
 public class Job extends Model implements Comparable<Job> {
@@ -277,14 +278,15 @@ public class Job extends Model implements Comparable<Job> {
 		return jsonResults;
 	}
 
-	@Override
-	public void delete() {
+	/** Same as `delete` but with boolean return value. Returns false if unable to delete the job in the engine. */
+	public boolean deleteFromEngineAndWebUi() {
 		try {
-			if (Status.valueOf(status) != null) {
+			if (Status.valueOf(status) != null && Application.ws.getJob(this.engineId, 0) != null) {
 				Logger.debug("deleting "+this.id+" (sending DELETE request)");
 				boolean success = Application.ws.deleteJob(this.engineId);
 				if (!success) {
 					Pipeline2Logger.logger().error("An error occured when trying to delete job "+this.id+" ("+this.engineId+") from the Pipeline 2 Engine");
+					return false; // don't delete Web UI job when an error occured attempting to delete the engine job
 				}
 			}
 			
@@ -294,6 +296,12 @@ public class Job extends Model implements Comparable<Job> {
 		asJob().getJobStorage().delete();
 		lastAccessed.remove(id);
 		super.delete();
+		return true;
+	}
+	
+	@Override
+	public void delete() {
+		deleteFromEngineAndWebUi();
 	}
 	
 	/*
