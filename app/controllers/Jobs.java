@@ -448,13 +448,16 @@ public class Jobs extends Controller {
 		
 		Map<String,Object> output = new HashMap<String,Object>();
 		output.put("webuiJob", webuiJob);
-		
-		org.daisy.pipeline.client.models.Job clientlibJob;
+		org.daisy.pipeline.client.models.Job clientlibJob = null;
+		boolean jobAvailableInEngine = false;
 		if (webuiJob.getEngineId() != null) {
 			clientlibJob = webuiJob.getJobFromEngine(0);
-		} else {
+			jobAvailableInEngine = clientlibJob != null;
+		}
+		if (clientlibJob == null) {
 			clientlibJob = webuiJob.asJob();
 		}
+		output.put("jobAvailableInEngine", jobAvailableInEngine);
 		
 		if (clientlibJob == null) {
 			Logger.error("An error occured while retrieving the job");

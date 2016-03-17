@@ -164,9 +164,11 @@
 
 <h2>Execution Log</h2>
 
+<div id="detailed-log">
 <br/>
 <a class="btn btn-info" href="@routes.Jobs.getLog(uiJob)" target="_blank"><span class="icon-download-alt icon-white"></span> Download Detailed Log</a>
 <br/><br/>
+</div>
 
 <p id="message-list-loading"><em>
 	<span aria-live="none">
@@ -367,7 +369,7 @@
 				$("#started").html(typeof job.webuiJob.started === "number" ? new Date(job.webuiJob.started)+"" : "&nbsp;");
 				$("#finished").html(typeof job.webuiJob.finished === "number" ? new Date(job.webuiJob.finished)+"" : "&nbsp;");
 				
-				$("#engine-id").html(job.engineJob != null && typeof job.engineJob.id === "string" ? job.engineJob.id : job.webuiJob.engineId);
+				$("#engine-id").html(job.webuiJob.engineId);
 				$("#header-nicename, #nicename").html(job.webuiJob.nicename);
 				$("#scriptid").html(job.webuiJob.scriptId);
 				$("#scriptname").html(job.webuiJob.scriptName);
@@ -378,17 +380,23 @@
 				$("#status-"+job.webuiJob.status.toLowerCase()).show();
 				
 				$("#message-list li").remove();
-				if (job.engineJob !== undefined) {
-					if (job.engineJob.messages instanceof Array) {
-						for (var m = 0; m < job.engineJob.messages.length; m++) {
-							addMessage(job.engineJob.messages[m]);
-						}
+				if (job.engineJob.messages instanceof Array) {
+					for (var m = 0; m < job.engineJob.messages.length; m++) {
+						addMessage(job.engineJob.messages[m]);
 					}
 				}
 				
 				$("#arguments").html(argumentsToHtml(job.engineJob.arguments));
 				
-				updateResults(job.results);
+				if (job.jobAvailableInEngine) {
+					$("#engine-id").html(job.engineJob.id);
+					updateResults(job.results);
+					
+				} else {
+					$("#results").hide();
+					$("#detailed-log").hide();
+					$(".container:has(h1)").prepend("<div class=\"alert alert-danger\">Result files are not available. Please restart the job.</div>");
+				}
 			}
 		});
 	});
