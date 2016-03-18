@@ -100,6 +100,10 @@ public class Scripts extends Controller {
 				
 				argument.clear();
 				for (String value : params.get(param)) {
+					String type = argument.getType();
+					if ("".equals(value) && ("anyDirURI".equals(type) || "anyFileURI".equals(type) || "anyURI".equals(type))) {
+						continue;
+					}
 					argument.add(value);
 				}
 			}
