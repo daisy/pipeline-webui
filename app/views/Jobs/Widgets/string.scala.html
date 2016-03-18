@@ -7,10 +7,11 @@
 	<div class="control-group @("advanced-argument".when(!arg.getRequired()))">
 		<label class="control-label" for="text-@scriptId-@{arg.getName()}">@arg.getNicename().replaceAll("^.*:\\s*","")</label>
 		<div class="controls">
-			<input name="@{arg.getName()}" id="text-@scriptId-@{arg.getName()}" type="text" @if(arg.getDefaultValue() != null){ value="@arg.getDefaultValue().replaceAll("\"","'")" }/>
-				<!--@@if(Scripts.chooseWidget(arg)="regex"){
-					pattern="@@{Application.ws.getDataType(arg.getDataType()).asInstanceOf[org.daisy.pipeline.client.models.datatypes.RegexType].regex}"
-				}-->
+			<input name="@{arg.getName()}" id="text-@scriptId-@{arg.getName()}" type="text" @if(arg.getDefaultValue() != null){ value="@arg.getDefaultValue().replaceAll("\"","'")" }
+				@if(Scripts.chooseWidget(arg)=="regex"){
+					pattern="@{Application.ws.getDataType(arg.getDataType()).asInstanceOf[org.daisy.pipeline.client.models.datatypes.RegexType].regex}"
+				}
+			/>
 			@Helpers.ArgumentDescription(arg, scriptId)
 		</div>
 	</div>
