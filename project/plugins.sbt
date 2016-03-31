@@ -30,4 +30,4 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.8.5")
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.1.0-RC2")
 
 // Use this in order to enable overriding of the default linux package installation in the RPM project
-addSbtPlugin("com.eed3si9n.sbt" % "sbt-assembly" % "0.10.2")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.10.2")
