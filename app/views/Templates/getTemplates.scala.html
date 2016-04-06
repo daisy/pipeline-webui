@@ -2,6 +2,13 @@
 
 @main("Templates", "templates") {
 
+@if(Controller.flash("highlightNewTemplate")){
+	<div role="alert" class="alert alert-success" style="text-align:center;"><p>
+		Created the template:
+		<script>document.write(decodeURIComponent("@Controller.flash("highlightTemplateName")"));</script>.
+	</p></div>
+}
+
 <div style="text-align: center; padding-bottom: 2em;">
 <h1>Templates</h1>
 <a id="showYourTemplates" class="btn" onclick="filterTemplates(@Controller.flash("userid"));" href="javascript:void(0)">Your templates</a>
@@ -124,7 +131,6 @@ addTemplate = function(template) {
     html += '                <br/>'+"\n";
     html += '                <div>'+"\n";
     
-    console.log(template.inputs);
     html += argumentsToHtml(template.inputs);
     
     html += '                </div>'+"\n";

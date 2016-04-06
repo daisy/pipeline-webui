@@ -89,10 +89,7 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 					</div>
 				</div>
 			</div>
-			@if(arg.getDesc().length > 0){
-				<div class="help-block" id="description-script-@scriptId-argument-@{arg.getName()}">@arg.getDesc()</div>
-				<script>window.setTimeout(function(){document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML = markdownToHtml(document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML);},0);</script>
-			}
+			@Helpers.ArgumentDescription(arg, scriptId)
 			
 			<script type="text/javascript">
 				$(function(){
@@ -196,12 +193,7 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 				<optgroup id="suggestedfile-@scriptId-@{arg.getName()}" label="Supported files"></optgroup>
 				<optgroup id="otherfile-@scriptId-@{arg.getName()}" label="Other files"></optgroup>
 			</select>
-			@if(arg.getDesc().length > 0){
-				<div class="help-block" id="description-script-@scriptId-argument-@{arg.getName()}">@arg.getDesc()</div>
-				<script>window.setTimeout(function(){
-					document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML = markdownToHtml(document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML);
-				},0);</script>
-			}
+			@Helpers.ArgumentDescription(arg, scriptId)
 			
 			<script type="text/javascript">
 				$(function(){

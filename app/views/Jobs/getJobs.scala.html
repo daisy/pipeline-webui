@@ -150,6 +150,7 @@ addJob = function(job) {
 				},
 				error: function() {
 					$("#job-delete-"+jobId).show();
+					// TODO: show alert somehow about the failed job deletion?
 				},
 				context: this
 			});

@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystemException;
+import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -219,21 +221,23 @@ public class Jobs extends Controller {
 		webuiJob.cancelPushNotifications();
 		
 		if (webuiJob.getEngineId() != null) {
-			Logger.info("deleting old job: "+webuiJob.getEngineId());
-			Application.ws.deleteJob(webuiJob.getEngineId());
+			Logger.debug("Deleting old job before restarting job: "+webuiJob.getEngineId());
+			org.daisy.pipeline.client.models.Job engineJob = Application.ws.getJob(webuiJob.getEngineId(), 0);
+			if (engineJob != null) {
+				boolean deleted = Application.ws.deleteJob(webuiJob.getEngineId());
+				if (!deleted) {
+					Logger.info("unable to delete old job: "+webuiJob.getEngineId());
+					flash("error", "An error occured while trying to delete the previous job. Please try creating a new job instead.");
+					return redirect(routes.Jobs.getJob(jobId));
+				}
+			}
 			webuiJob.setEngineId(null);
 		}
 		
-		webuiJob.setStatus("NEW");
-		webuiJob.setNotifiedComplete(false);
-		org.daisy.pipeline.client.models.Job clientlibJob = webuiJob.asJob();
-		clientlibJob.setStatus(org.daisy.pipeline.client.models.Job.Status.IDLE);
-		webuiJob.setStatus("IDLE");
-		webuiJob.setStarted(null);
-		webuiJob.setFinished(null);
-		webuiJob.save();
+		webuiJob.reset();
 		
-		Logger.info("------------------------------ Posting job... ------------------------------");
+		Logger.debug("------------------------------ Posting job... ------------------------------");
+		org.daisy.pipeline.client.models.Job clientlibJob = webuiJob.asJob();
 		Logger.debug(XML.toString(clientlibJob.toJobRequestXml(true)));
 		clientlibJob = Application.ws.postJob(clientlibJob);
 		if (clientlibJob == null) {
@@ -444,13 +448,16 @@ public class Jobs extends Controller {
 		
 		Map<String,Object> output = new HashMap<String,Object>();
 		output.put("webuiJob", webuiJob);
-		
-		org.daisy.pipeline.client.models.Job clientlibJob;
+		org.daisy.pipeline.client.models.Job clientlibJob = null;
+		boolean jobAvailableInEngine = false;
 		if (webuiJob.getEngineId() != null) {
 			clientlibJob = webuiJob.getJobFromEngine(0);
-		} else {
+			jobAvailableInEngine = clientlibJob != null;
+		}
+		if (clientlibJob == null) {
 			clientlibJob = webuiJob.asJob();
 		}
+		output.put("jobAvailableInEngine", jobAvailableInEngine);
 		
 		if (clientlibJob == null) {
 			Logger.error("An error occured while retrieving the job");
@@ -518,7 +525,7 @@ public class Jobs extends Controller {
 					filename = id+"";
 				}
 			}
-			response().setHeader("Content-Disposition", "attachment; filename=\""+filename+"\"");
+			response().setHeader("Content-Disposition", "inline; filename=\""+filename+"\"");
 			
 			File resultFile = result.asFile();
 			if (resultFile == null || !resultFile.exists()) {
@@ -637,7 +644,7 @@ public class Jobs extends Controller {
 			return internalServerError("Could not read form data");
 		}
 		
-		String scriptId = params.get("id")[0];
+		String scriptId = params.get("_id")[0];
 		if ("false".equals(UserSetting.get(user.id, "scriptEnabled-"+scriptId))) {
 			return forbidden();
 		}
@@ -657,35 +664,15 @@ public class Jobs extends Controller {
 		
 		org.daisy.pipeline.client.models.Job clientlibJob = job.asJob();
 		clientlibJob.setScript(script);
-		
-		for (String paramName : params.keySet()) {
-			String[] values = params.get(paramName);
-			Argument arg = script.getArgument(paramName);
-			if (arg != null) {
-				arg.clear();
-				if (values.length == 1 && "".equals(values[0])) {
-					// don't add value; treat empty strings as unset values
-				} else {
-					for (String value : values) {
-						arg.add(value);
-					}
-				}
-			} else {
-				Logger.warn(paramName+" is not a valid argument for the script "+script.getNicename());
-			}
-		}
 
-		// Parse and validate the submitted form (also create any necessary output directories in case of local mode)
-		// TODO: see if clientlib can be used for validation instead
+		// Parse the submitted form
 		Scripts.ScriptForm scriptForm = new Scripts.ScriptForm(user.id, script, params);
 		scriptForm.validate();
 		
 		// If we're posting a template; delegate further processing to Templates.postTemplate
-		for (String paramName : params.keySet()) {
-			if (paramName.startsWith("submit_template")) {
-				Logger.debug("posted job is a template");
-				return Templates.postTemplate(user, job, clientlibJob);
-			}
+		if (params.containsKey("_submit_template")) {
+			Logger.debug("posted job is a template");
+			return Templates.postTemplate(user, job, clientlibJob);
 		}
 		Logger.debug("posted job is not a template");
 		
@@ -744,8 +731,13 @@ public class Jobs extends Controller {
 		}
     	
     	Logger.debug("deleting "+jobId);
-		webuiJob.delete();
-		return ok();
+		boolean deletedSuccessfully = webuiJob.deleteFromEngineAndWebUi();
+		if (deletedSuccessfully) {
+			return ok();
+		} else {
+			flash("error", "An error occured while trying to delete the job. Please try creating a new job instead.");
+			return internalServerError();
+		}
     }
     
     public static Result postUpload(Long jobId) {
@@ -771,7 +763,19 @@ public class Jobs extends Controller {
         	Logger.info("uploaded file: "+file.getFile());
         	// rename the uploaded file so that it is not automatically deleted by Play!
         	File renamedFile = new File(file.getFile().getParentFile(), file.getFile().getName()+"_");
-        	file.getFile().renameTo(renamedFile);
+        	try {
+				java.nio.file.Files.move(file.getFile().toPath(), renamedFile.toPath());
+				
+			} catch (IOException e) {
+				Logger.error("Could not rename uploaded file. Might be a problem with permissions. Trying copying instead...", e);
+				try {
+					Files.copy(file.getFile(), renamedFile);
+					
+				} catch (IOException ex) {
+					Logger.error("Could not copy uploaded file.", ex);
+					return internalServerError("Could not rename or make a copy of uploaded file.");
+				}
+			}
         	
         	Logger.debug(request().method()+" | "+file.getContentType()+" | "+file.getFilename()+" | "+renamedFile.getAbsolutePath());
         	

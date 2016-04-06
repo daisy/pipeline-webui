@@ -3,13 +3,10 @@
 <div class="control-group @("advanced-argument".when(!arg.getRequired()))">
 	<label class="control-label" id="script-@scriptId-@{arg.getName()}-label" for="checkbox-@scriptId-@{arg.getName()}">@arg.getNicename().replaceAll("^.*:\\s*","")</label>
 	<div class="controls">
-		<input type="hidden" name="@{arg.getName()}" value="true" id="value-@scriptId-@{arg.getName()}"/>
+		<input type="hidden" name="@{arg.getName()}" @if(arg.getDefaultValue() == "false"){ value="false" }else{ value="true" } id="value-@scriptId-@{arg.getName()}"/>
 		<input type="checkbox" name="_@{arg.getName()}" @if(arg.getDefaultValue() == "false"){ value="false" }else{ checked="" value="true" } id="checkbox-@scriptId-@{arg.getName()}" onclick="$('#value-@scriptId-@{arg.getName()}')[0].value = $(this).is(':checked') ? 'true' : 'false';"/>
 		<br/><br/>
-		@if(arg.getDesc().length > 0){
-			<div class="help-block" id="description-script-@scriptId-argument-@{arg.getName()}">@arg.getDesc()</div>
-			<script>window.setTimeout(function(){document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML = markdownToHtml(document.getElementById('description-script-@scriptId-argument-@{arg.getName()}').innerHTML);},0);</script>
-		}
+		@Helpers.ArgumentDescription(arg, scriptId)
 	</div>
 	<script type="text/javascript">
 	$(function(){

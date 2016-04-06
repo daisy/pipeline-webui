@@ -9,8 +9,16 @@
    		
    		<div class="form-horizontal">
 			
+			<div class="control-group" id="setMaintenance-downloadLogGroup">
+				<label class="control-label" id="setMaintenance-downloadLog-label">System log</label>
+				<div class="controls" aria-labelledby="setMaintenance-downloadLog-label">
+					<a href="@routes.Log.getLog()" class="btn">Download log</a>
+				</div>
+			</div>
+			
 			<div class="control-group @("error".when(setMaintenanceForm.error("maintenance") != null))" id="setMaintenance-maintenanceGroup">
 				<label class="control-label" id="setMaintenance-maintenance-label">Job persistence</label>
+				
 				<div class="controls" aria-role="radiogroup" aria-labelledby="setMaintenance-maintenance-label">
 					<label class="radio">
 						<input type="radio" name="delete" id="setMaintenance-delete-false" value="false">

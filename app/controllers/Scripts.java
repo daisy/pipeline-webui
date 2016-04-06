@@ -83,51 +83,43 @@ public class Scripts extends Controller {
 
 	public static class ScriptForm {
 
-		//public Script script;
 		public Map<String,List<String>> errors;
 
 		public String guestEmail;
 
-		//                                                          kind    position  part      name
-		private static final Pattern PARAM_NAME = Pattern.compile("^([A-Za-z]+)(\\d*)([A-Za-z]*?)-(.*)$");
-
 		public ScriptForm(Long userId, Script script, Map<String, String[]> params) {
-			//this.script = script;
 
 			// Parse all arguments
 			for (String param : params.keySet()) {
-				Matcher matcher = PARAM_NAME.matcher(param);
-				if (!matcher.find()) {
-					Logger.debug("Unable to parse argument parameter: "+param);
-				} else {
-					String kind = matcher.group(1);
-					String name = matcher.group(4);
-					Logger.debug("script form: "+kind+": "+name);
-
-					Argument argument = script.getArgument(name);
-					if (argument == null) {
-						Logger.debug("'"+name+"' is not an argument for the script '"+script.getId()+"'; ignoring it");
+				if (param == null || param.startsWith("_")) continue; // skip arguments starting with an underscore
+				Argument argument = script.getArgument(param);
+				if (argument == null) {
+					Logger.debug("'"+param+"' is not an argument for the script '"+script.getId()+"'; ignoring it");
+					continue;
+				}
+				
+				argument.clear();
+				for (String value : params.get(param)) {
+					String type = argument.getType();
+					if ("".equals(value) && ("anyDirURI".equals(type) || "anyFileURI".equals(type) || "anyURI".equals(type))) {
 						continue;
 					}
-
-					for (int i = 0; i < params.get(param).length; i++) {
-						argument.add(params.get(param)[i]);
-					}
+					argument.add(value);
 				}
 			}
 
-			if (userId < 0 && params.containsKey("guest-email"))
-				this.guestEmail = params.get("guest-email")[0];
+			if (userId < 0 && params.containsKey("_guest-email"))
+				this.guestEmail = params.get("_guest-email")[0];
 
 			this.errors = new HashMap<String, List<String>>();
 		}
 
 		public void validate() {
 			if (guestEmail != null && !"".equals(guestEmail) && !guestEmail.matches("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}$")) {
-				addError("guest-email", "Please enter a valid e-mail address.");
+				addError("_guest-email", "Please enter a valid e-mail address.");
 			}
 
-			// TODO: validate arguments
+			// TODO: validate arguments (consider implementing validation in pipeline-clientlib-java)
 		}
 
 		public boolean hasErrors() {

@@ -220,8 +220,8 @@ public class Administrator extends Controller {
 				templatesPath += System.getProperty("file.separator");
 			
 			Setting.set("uploads", uploadPath);
-			Setting.set("jobs", uploadPath);
-			Setting.set("templates", uploadPath);
+			Setting.set("jobs", jobsPath);
+			Setting.set("templates", templatesPath);
 		}
 
 		public String getUploaddir() {

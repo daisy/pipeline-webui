@@ -105,6 +105,10 @@ public class Log extends Controller {
 		{
 			List<String> daisyPipelineLog = new ArrayList<String>();
 			File daisyPipelineLogFile = new File(new File(new File(controllers.Application.DP2DATA).getParentFile(), "daisy-pipeline2"), "daisy-pipeline.log");
+			if (!daisyPipelineLogFile.exists()) {
+				// try alternative location
+				daisyPipelineLogFile = new File("/var/log/daisy-pipeline2/daisy-pipeline.log");
+			}
 			try {
 				FileInputStream stream = new FileInputStream(daisyPipelineLogFile);
 				try {
@@ -131,6 +135,10 @@ public class Log extends Controller {
 		{
 			List<String> derbyLog = new ArrayList<String>();
 			File derbyLogFile = new File(new File(new File(controllers.Application.DP2DATA).getParentFile(), "daisy-pipeline2"), "derby.log");
+			if (!derbyLogFile.exists()) {
+				// try alternative location
+				derbyLogFile = new File("/var/log/daisy-pipeline2/derby.log");
+			}
 			if (derbyLogFile.exists()) {
 				try {
 					FileInputStream stream = new FileInputStream(derbyLogFile);
@@ -152,7 +160,6 @@ public class Log extends Controller {
 				}
 			} else {
 				derbyLog.add("There is no Derby log file at: "+derbyLogFile.getAbsolutePath());
-				derbyLog.add("This probably means that you use a MySQL database instead.");
 			}
 			Map<String,List<String>> log = new HashMap<String,List<String>>();
 			log.put("Pipeline 2 Engine - derby.log", derbyLog);

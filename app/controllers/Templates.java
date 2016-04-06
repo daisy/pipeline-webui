@@ -90,7 +90,7 @@ public class Templates extends Controller {
 		Template template = Template.create(clientlibJob, user);
 		
 		if ("NEW".equals(job.getStatus())) {
-			job.delete();
+			job.deleteFromEngineAndWebUi();
 		}
 		
 		String highlightTemplateName = template.name == null ? "" : ""+template.name;
@@ -110,6 +110,7 @@ public class Templates extends Controller {
 		Logger.debug("return redirect(controllers.routes.Templates.getTemplates());");
 		Logger.debug("highlightTemplate:"+template.name);
 		Logger.debug("highlightTemplateOwner:"+template.ownerId);
+		flash("highlightNewTemplate", "true");
 		flash("highlightTemplateName", highlightTemplateName);
 		flash("highlightTemplateOwner", ""+highlightTemplateOwner);
 		return redirect(controllers.routes.Templates.getTemplates());

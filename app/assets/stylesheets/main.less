@@ -389,3 +389,24 @@ body { font-size: 62.5%; font-family:Arial, Helvetica, sans-serif }
 .control-group .help-block.no-validation-color, .control-group .help-inline.no-validation-color {
 	color: #595959;
 }
+
+/* #### enum datatype ####*/
+
+dl.enum-terms dt em {
+	display: none;
+}
+
+dl.enum-terms dt.enum-term-selected em {
+	display: inline;
+}
+
+dl.enum-terms dt.enum-term-selected {
+	font-size: 120%;
+}
+
+/* #### highlight inputs with errors #### */
+
+input:invalid {
+	border-color: #b94a48;
+	color: #b94a48;
+}
