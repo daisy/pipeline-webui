@@ -59,9 +59,9 @@ resolvers += "Local Maven Repository" at Path.userHome.asFile.toURI.toURL+".m2/r
 // For packaging on Linux (CentOS/Redhat "RPM" flavor)
 // Informational, dependency, meta, scriptlet, systemV start and script settings
 packageName in Rpm := "pipeline2-webui"
-version in Rpm := "1.8.1"
-rpmRelease := Option(sys.props("rpm.buildNumber")) getOrElse "1"
-daemonUser in Linux := "tpbadmin"
+version in Rpm := version.value.replaceAll("-.*","")
+rpmRelease := (version.value+"-1-").replaceAll("^.*?-(\\d+)-.*$","$1")
+daemonUser in Linux := "pipeline2-webui"
 daemonGroup in Linux := (daemonUser in Linux).value
 packageArchitecture in Rpm := "noarch"
 packageSummary in Rpm := "DAISY Pipeline 2 Web User Interface."
