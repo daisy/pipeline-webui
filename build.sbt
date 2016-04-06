@@ -32,19 +32,21 @@ packageName in Linux := "daisy-pipeline2-webui"
 //name in Debian := (packageName in Linux).value
 packageSummary in Linux := "DAISY Pipeline 2 Web User Interface"
 packageDescription := "A web-based user interface for the DAISY Pipeline 2."
-daemonUser in Linux := "pipeline2-webui"
+daemonUser in Linux := "pipeline2"
 daemonGroup in Linux := (daemonUser in Linux).value
 executableScriptName := "pipeline2-webui"
 debianPackageDependencies in Debian += "java8-runtime"
 debianPackageRecommends in Debian += "daisy-pipeline2"
 serverLoading in Debian := SystemV
-linuxPackageMappings += packageTemplateMapping(s"/usr/lib/"+(packageName in Linux).value)() withUser((daemonUser in Linux).value) withGroup((daemonGroup in Linux).value)
-linuxPackageMappings += packageTemplateMapping(s"/var/run/"+(packageName in Linux).value)() withUser((daemonUser in Linux).value) withGroup((daemonGroup in Linux).value)
-linuxPackageSymlinks += LinuxSymlink("/usr/share/"+(packageName in Linux).value+"/data", "/usr/lib/"+(packageName in Linux).value)
-linuxPackageSymlinks += LinuxSymlink("/usr/lib/"+(packageName in Linux).value+"/logs", "/var/log/"+(packageName in Linux).value)
+defaultLinuxInstallLocation := "/opt"
+linuxPackageMappings += packageTemplateMapping(s"/var/opt/"+(packageName in Linux).value)() withUser((daemonUser in Linux).value) withGroup((daemonGroup in Linux).value)
+linuxPackageMappings += packageTemplateMapping(s"/var/log/"+(packageName in Linux).value)() withUser((daemonUser in Linux).value) withGroup((daemonGroup in Linux).value)
+linuxPackageMappings += packageTemplateMapping(s"/run/"+(packageName in Linux).value)() withUser((daemonUser in Linux).value) withGroup((daemonGroup in Linux).value)
+linuxPackageSymlinks += LinuxSymlink("/opt/"+(packageName in Linux).value+"/data", "/var/opt/"+(packageName in Linux).value)
+linuxPackageSymlinks += LinuxSymlink("/opt/"+(packageName in Linux).value+"/logs", "/var/log/"+(packageName in Linux).value)
 bashScriptExtraDefines += "export DP2DATA=\"$(realpath \"${app_home}/../data\")\" # storage for db, jobs, templates, uploads, etc."
 bashScriptExtraDefines += "[[ ! -d \"$DP2DATA/db\" ]] && cp -r \"${app_home}/../db-empty\" \"$DP2DATA/db\" # create db if needed"
-bashScriptExtraDefines += "addJava \"-Dpidfile.path=/var/run/"+(packageName in Linux).value+"/play.pid\""
+bashScriptExtraDefines += "addJava \"-Dpidfile.path=/run/"+(packageName in Linux).value+"/play.pid\""
 bashScriptExtraDefines += "addJava \"-Ddb.default.url=jdbc:derby:$DP2DATA/db;create=true\""
 com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Debian, packageBin in Debian, "deb")
 com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Universal, packageBin in Universal, "zip")
@@ -81,11 +83,11 @@ maintainerScripts in Rpm := Map(
   Posttrans -> Seq("""echo "posttrans""""),
   Preun -> Seq("""rm -rf /opt/daisy-pipeline2-webui"""),
   Postun -> Seq("""echo "post-uninstall"""")
-)
+  )
 rpmBrpJavaRepackJars := false
 bashScriptExtraDefines += "export DP2DATA=\"$(realpath \"${app_home}/../data\")\" # storage for db, jobs, templates, uploads, etc."
 bashScriptExtraDefines += "[[ ! -d \"$DP2DATA/db\" ]] && cp -r \"${app_home}/../db-empty\" \"$DP2DATA/db\" # create db if needed"
-bashScriptExtraDefines += "addJava \"-Dpidfile.path=/var/run/"+(packageName in Rpm).value+"/play.pid\""
+bashScriptExtraDefines += "addJava \"-Dpidfile.path=/run/"+(packageName in Rpm).value+"/play.pid\""
 //bashScriptExtraDefines += "addJava \"-Ddb.default.url=jdbc:derby:$DP2DATA/dp2webui;create=true\""
 com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Rpm, packageBin in Rpm, "rpm")
 com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Universal, packageBin in Universal, "zip")
