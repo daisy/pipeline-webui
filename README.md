@@ -6,6 +6,8 @@ This project provides a Web User Interface for the DAISY Pipeline 2, developed w
 
 ## Publishing builds
 
+*NOTE*: To build RPM packages in Ubuntu, you first need to install the `rpm` package using `sudo apt-get install rpm`.
+
 ### 1. Prepare the release
 
 The Web UI is versioned based on git tags. If you're on the `v2.0.0` tag,

@@ -44,7 +44,7 @@ linuxPackageSymlinks += LinuxSymlink("/opt/"+(packageName in Linux).value+"/logs
 bashScriptExtraDefines += "export DP2DATA=\"$(realpath \"${app_home}/../data\")\" # storage for db, jobs, templates, uploads, etc."
 bashScriptExtraDefines += "[[ ! -d \"$DP2DATA/db\" ]] && cp -r \"${app_home}/../db-empty\" \"$DP2DATA/db\" # create db if needed"
 bashScriptExtraDefines += "addJava \"-Dpidfile.path=/run/"+(packageName in Linux).value+"/play.pid\""
-bashScriptExtraDefines in Debian += "addJava \"-Ddb.default.url=jdbc:derby:$DP2DATA/db;create=true\""
+bashScriptExtraDefines += "addJava \"-Ddb.default.url=jdbc:derby:$DP2DATA/db;create=true\""
 
 // Documentation for Debian packaging with sbt-native-packager available at:
 // <http://www.scala-sbt.org/sbt-native-packager/formats/debian.html>
