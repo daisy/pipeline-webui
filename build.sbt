@@ -8,7 +8,7 @@ name := "webui"
 versionWithGit
 git.useGitDescribe := true
 
-organizationName := "DAISY"
+organizationName := "The DAISY Consortium"
 organizationHomepage := Some(url("http://daisy.org"))
 homepage := Some(url("https://github.com/daisy/pipeline-webui"))
 startYear := Some(2012)
@@ -24,37 +24,35 @@ javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 // disable using the Scala version in output paths and artifacts
 crossPaths := false
 
-// Documentation for Debian packaging with sbt-native-packager available at:
-// <http://www.scala-sbt.org/sbt-native-packager/formats/debian.html>
-// For packaging on Linux (Debian flavor)
-// Informational, dependency, meta, scriptlet, systemV start and script settings
+// Documentation for Linux packaging with sbt-native-packager available at:
+// <http://www.scala-sbt.org/sbt-native-packager/formats/linux.html>
+// These settings are common for both Debian and RPM packages.
 packageName in Linux := "daisy-pipeline2-webui"
-//name in Debian := (packageName in Linux).value
 packageSummary in Linux := "DAISY Pipeline 2 Web User Interface"
 packageDescription := "A web-based user interface for the DAISY Pipeline 2."
 daemonUser in Linux := "pipeline2"
 daemonGroup in Linux := (daemonUser in Linux).value
 executableScriptName := "pipeline2-webui"
-debianPackageDependencies in Debian += "java8-runtime"
-debianPackageRecommends in Debian += "daisy-pipeline2"
-serverLoading in Debian := SystemV
 defaultLinuxInstallLocation := "/opt"
+
 linuxPackageMappings += packageTemplateMapping(s"/var/opt/"+(packageName in Linux).value)() withUser((daemonUser in Linux).value) withGroup((daemonGroup in Linux).value)
 linuxPackageMappings += packageTemplateMapping(s"/var/log/"+(packageName in Linux).value)() withUser((daemonUser in Linux).value) withGroup((daemonGroup in Linux).value)
 linuxPackageMappings += packageTemplateMapping(s"/run/"+(packageName in Linux).value)() withUser((daemonUser in Linux).value) withGroup((daemonGroup in Linux).value)
 linuxPackageSymlinks += LinuxSymlink("/opt/"+(packageName in Linux).value+"/data", "/var/opt/"+(packageName in Linux).value)
 linuxPackageSymlinks += LinuxSymlink("/opt/"+(packageName in Linux).value+"/logs", "/var/log/"+(packageName in Linux).value)
+
 bashScriptExtraDefines += "export DP2DATA=\"$(realpath \"${app_home}/../data\")\" # storage for db, jobs, templates, uploads, etc."
 bashScriptExtraDefines += "[[ ! -d \"$DP2DATA/db\" ]] && cp -r \"${app_home}/../db-empty\" \"$DP2DATA/db\" # create db if needed"
 bashScriptExtraDefines += "addJava \"-Dpidfile.path=/run/"+(packageName in Linux).value+"/play.pid\""
-bashScriptExtraDefines += "addJava \"-Ddb.default.url=jdbc:derby:$DP2DATA/db;create=true\""
-com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Debian, packageBin in Debian, "deb")
-com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Universal, packageBin in Universal, "zip")
-resolvers += Resolver.url("Typesafe Ivy releases", url("https://repo.typesafe.com/typesafe/ivy-releases"))(Resolver.ivyStylePatterns)
-resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases/"
-//resolvers += "Sonatype OSS Staging" at "https://oss.sonatype.org/content/repositories/staging/"
-resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-resolvers += "Local Maven Repository" at Path.userHome.asFile.toURI.toURL+".m2/repository/"
+bashScriptExtraDefines in Debian += "addJava \"-Ddb.default.url=jdbc:derby:$DP2DATA/db;create=true\""
+
+// Documentation for Debian packaging with sbt-native-packager available at:
+// <http://www.scala-sbt.org/sbt-native-packager/formats/debian.html>
+// For packaging on Linux (Debian flavor)
+// Informational, dependency, meta, scriptlet, systemV start and script settings
+debianPackageDependencies in Debian += "java8-runtime"
+debianPackageRecommends in Debian += "daisy-pipeline2"
+serverLoading in Debian := SystemV
 
 // Documentation for RPM packaging with sbt-native-packager available at:
 // <http://www.scala-sbt.org/sbt-native-packager/formats/rpm.html>
@@ -63,18 +61,13 @@ resolvers += "Local Maven Repository" at Path.userHome.asFile.toURI.toURL+".m2/r
 packageName in Rpm := "pipeline2-webui"
 version in Rpm := version.value.replaceAll("-.*","")
 rpmRelease := (version.value+"-1-").replaceAll("^.*?-(\\d+)-.*$","$1")
-daemonUser in Linux := "pipeline2-webui"
-daemonGroup in Linux := (daemonUser in Linux).value
 packageArchitecture in Rpm := "noarch"
-packageSummary in Rpm := "DAISY Pipeline 2 Web User Interface."
-packageDescription in Rpm := "A web-based user interface for the DAISY Pipeline 2."
-rpmVendor := "The DAISY Consortium"
+rpmVendor := organizationName.value
 rpmUrl := Option("https://github.com/daisy/pipeline-webui")
 rpmLicense := Option("LGPLv3")
-executableScriptName := "pipeline2-webui"
 rpmAutoreq += "java8-runtime"
 rpmAutoreq += "pipeline2"
-serverLoading in Linux := Upstart 
+serverLoading in Rpm := Upstart 
 maintainerScripts in Rpm := Map(
   Pre -> Seq("""echo "pre-install""""),
   Post -> Seq("""rm -rf /opt/daisy-pipeline2-webui/webui/dp2webui && cp -rf /opt/daisy-pipeline2-webui/webui/db-empty /opt/daisy-pipeline2-webui/webui/dp2webui && rm -rf /opt/daisy-pipeline2-webui/webui/db-empty && service daisy-pipeline2-webui start"""),
@@ -85,12 +78,12 @@ maintainerScripts in Rpm := Map(
   Postun -> Seq("""echo "post-uninstall"""")
   )
 rpmBrpJavaRepackJars := false
-bashScriptExtraDefines += "export DP2DATA=\"$(realpath \"${app_home}/../data\")\" # storage for db, jobs, templates, uploads, etc."
-bashScriptExtraDefines += "[[ ! -d \"$DP2DATA/db\" ]] && cp -r \"${app_home}/../db-empty\" \"$DP2DATA/db\" # create db if needed"
-bashScriptExtraDefines += "addJava \"-Dpidfile.path=/run/"+(packageName in Rpm).value+"/play.pid\""
-//bashScriptExtraDefines += "addJava \"-Ddb.default.url=jdbc:derby:$DP2DATA/dp2webui;create=true\""
+
+com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Debian, packageBin in Debian, "deb")
 com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Rpm, packageBin in Rpm, "rpm")
 com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Universal, packageBin in Universal, "zip")
+
+// Repositories for maven artifacts
 resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 //resolvers += "Sonatype OSS Staging" at "https://oss.sonatype.org/content/repositories/staging/"
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
