@@ -5,15 +5,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.daisy.pipeline.client.models.Argument;
 import org.daisy.pipeline.client.models.DataType;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.datatypes.EnumType;
+import org.daisy.pipeline.client.models.datatypes.EnumType.Value;
 import org.daisy.pipeline.client.models.datatypes.RegexType;
 
 import models.User;
@@ -79,6 +77,23 @@ public class Scripts extends Controller {
 			}
 		}
 		return arg.getType();
+	}
+	
+	public static JsonNode getDataTypeJson(Argument argument) {
+		Logger.info("getDataTypeJson("+argument.getName()+")");
+		List<Map<String,String>> values = new ArrayList<Map<String,String>>();
+		Logger.info("Getting datatype: "+argument.getDataType());
+		EnumType enumType = (org.daisy.pipeline.client.models.datatypes.EnumType)(Application.ws.getDataType(argument.getDataType()));
+		if (enumType != null) {
+			for (Value enumValue : enumType.values) {
+				Map<String,String> value = new HashMap<String,String>();
+				value.put("name", enumValue.name);
+				value.put("nicename", enumValue.getNicename());
+				value.put("description", (String)enumValue.getDescription()); // cast to string because getDescription wrongly declares Object as return type
+			}
+		}
+		JsonNode json = play.libs.Json.toJson(values);
+		return json;
 	}
 
 	public static class ScriptForm {

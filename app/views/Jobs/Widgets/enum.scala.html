@@ -17,7 +17,7 @@
 	
 	<script type="text/javascript">
 	$(function(){
-		var values = @Html(play.libs.Json.stringify(play.libs.Json.toJson(Application.ws.getDataType(arg.getDataType()).asInstanceOf[org.daisy.pipeline.client.models.datatypes.EnumType].values)));
+		var values = @Html(play.libs.Json.stringify(controllers.Scripts.getDataTypeJson(arg)));
 		var dl_items = [];
 		for (var v = 0; v < values.length; v++) {
 			var option = $("<option id=\"enumvalue-"+v+"-@scriptId-@{arg.getName()}\"></option>");
