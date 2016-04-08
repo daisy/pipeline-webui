@@ -150,18 +150,6 @@
 
 <div id="result-reports" aria-live="polite"></div>
 
-<div id="results" class="status-done" aria-live="polite">
-	<h2>Results</h2>
-	
-	<p class="results-empty">No results.</p>
-	
-	<div class="results-nonempty" style="display:none;">
-		<p id="results-download-all"></p>
-		<ul id="results-list" style="list-style-type:none;" class="results-children"></ul>
-	</div>
-</div>
-
-
 <h2>Execution Log</h2>
 
 <div id="detailed-log">
@@ -270,56 +258,33 @@
 				$("#finished").html(new Date(time)+"");
 			}
 		});
-		var updateResultsList = function(result) {
-			var li = document.createElement("li");
-			if (result.hasOwnProperty('results') && result.results !== null && result.results !== undefined && result.results.length > 0) {
-				$(li).append("<a class=\"results-expand-collapse icon-plus\" onclick=\"javascript:$(this).siblings().filter('ul').toggle();$(this).siblings().filter('.results-fileicon').toggleClass('icon-folder-open icon-folder-close');$(this).toggleClass('icon-plus icon-minus');return false;\"></a>");
-				$(li).append("<i class=\"results-fileicon icon-folder-close\"></i>");
-			} else {
-				$(li).append("<span class=\"results-expand-collapse\"></span>");
-				$(li).append("<i class=\"results-fileicon icon-file\"></i>");
-			}
-			
-			var fileLink = $("<a class=\"results-filename\"></a>");
-			$(fileLink).attr("href", "@routes.Jobs.getResult(uiJob,"")"+result.relativeHref);
-			$(fileLink).html(result.nicename!==null&&result.nicename.length>0?result.nicename:result.name!==null&&result.name.length>0?result.name:decodeURIComponent(result.filename.replace(/^idx\//,"")));
-			$(li).append(fileLink);
-			$(li).append(" ");
-			
-			$(li).append($("<span class=\"results-filesize\"></span>").html(Job.prettySize(result.size)));
-			
-			if (result.hasOwnProperty('results') && result.results !== null && result.results !== undefined) {
-				var ul = $("<ul class=\"results-children\" style=\"display:none;list-style-type:none;\"></ul>");
-				for (var i = 0; i < result.results.length; i++) {
-					$(ul).append(updateResultsList(result.results[i]));
-				}
-				$(li).append(ul);
-			}
-			
-			return li; 
-		}
 		var updateResults = function(results){
 			var i, j, href;
-			if (results.results === null || results.results.length === 0) {
-				$("#results .results-empty").show();
-				$("#results .results-nonempty").hide();
-			} else {
-				$("#results .results-empty").hide();
-				
-				$("#results-list").empty();
-				$("#results-download-all").empty();
-				$(".results-buttons").empty();
+			if (results.results !== null && results.results.length > 0) {
+				$(".results-buttons").html("<p></p>");
 				$("#result-reports").empty();
 				
-				$("#results-download-all").append($("<a class=\"btn btn-success\" href=\""+"@routes.Jobs.getAllResults(uiJob)"+"\"><span class=\"icon-download-alt icon-white\"></span> Download all results</a>"));
 				if ($.isArray(results.results)) {
 					for (i = 0; i < results.results.length; i++) {
 						if (!$.isArray(results.results[i].results) || results.results[i].results.length === 0 || typeof results.results[i].results[0].mimeType !== "string" || results.results[i].results[0].mimeType.indexOf("application/vnd.pipeline") !== 0) {
-							$("#results-list").append(updateResultsList(results.results[i]));
 							if (results.results[i].results.length === 1 && (!$.isArray(results.results[i].results[0]) || results.results[i].results[0].results.length === 0)) {
-								$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(uiJob,"")"+results.results[i].results[0].relativeHref+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].nicename+"</a> ");
+								$(".results-buttons > p").append("<a class=\"btn btn-large btn-success\" target=\"_blank\" href=\"@routes.Jobs.getResult(uiJob,"")"+results.results[i].results[0].relativeHref+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].nicename+"</a> ");
 							} else {
-								$(".results-buttons").append("<a class=\"btn btn-large btn-success\" href=\"@routes.Jobs.getResult(uiJob,"")"+results.results[i].relativeHref+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].nicename+"</a> ");
+								var htmlResult = null;
+								for (var j = 0; j < results.results[i].results.length; j++) {
+									if (results.results[i].results[j].filename.match(/index\.x?html?$/i)) {
+										htmlResult = results.results[i].results[j];
+										break;
+									}
+									if (htmlResult === null && results.results[i].results[j].filename.match(/.*\.x?html?$/i)) {
+										htmlResult = results.results[i].results[j];
+									}
+								}
+								if (htmlResult === null) {
+									$(".results-buttons > p").append("<a class=\"btn btn-large btn-success\" target=\"_blank\" href=\"@routes.Jobs.getResult(uiJob,"")"+results.results[i].relativeHref+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].nicename+"</a> ");
+								} else {
+									$(".results-buttons > p").append("<a class=\"btn btn-large btn-success\" target=\"_blank\" href=\"@routes.Jobs.getResult(uiJob,"")"+htmlResult.relativeHref+"\"><span class=\"icon-download-alt icon-white\"></span> "+results.results[i].nicename+"</a> ");
+								}
 							}
 						}
 						
@@ -348,8 +313,7 @@
 						}
 					}
 				}
-				
-				$("#results .results-nonempty").show();
+				$(".results-buttons").append($("<p><a class=\"btn\" target=\"_blank\" href=\""+"@routes.Jobs.getAllResults(uiJob)"+"\"><span class=\"icon-download-alt\"></span> Download all results</a></p>"));
 			}
 		};
 		Notifications.listen("job-results-@uiJob", updateResults);
@@ -393,7 +357,6 @@
 					updateResults(job.results);
 					
 				} else {
-					$("#results").hide();
 					$("#detailed-log").hide();
 					$(".container:has(h1)").prepend("<div class=\"alert alert-danger\">Result files are not available. Please restart the job.</div>");
 				}
