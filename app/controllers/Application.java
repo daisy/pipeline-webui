@@ -91,9 +91,6 @@ public class Application extends Controller {
 		if (FirstUse.isFirstUse())
     		return redirect(routes.FirstUse.getFirstUse());
 		
-		User user = User.authenticate(request(), session());
-		User.flashBrowserId(user);
-		
 		File about = new File(new File(DP2DATA, "conf"), "about.html");
 		if (about.exists()) {
 			return ok(views.html.about.render(Files.read(about)));
@@ -135,8 +132,6 @@ public class Application extends Controller {
 	}
 	
 	public static Result error(int status, String name, String description, String message) {
-		User user = User.authenticate(request(), session());
-		User.flashBrowserId(user);
 		return status(status, views.html.error.render(status, name, description, message));
 	}
 	

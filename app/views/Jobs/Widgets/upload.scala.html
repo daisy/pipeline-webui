@@ -58,7 +58,7 @@
     $(function(){
         'use strict';
         
-        var url = '@routes.Jobs.postUpload(jobId)?browserId=@flash().get("browserId")';
+        var url = '@routes.Jobs.postUpload(jobId)';
         url = window.location.protocol+"//"+window.location.host+url;
         
         // `files` example: [ { "contentType": "image/jpeg", "fileName": "valentin.jpg", "isXML": false, "total": 25740 }, {...} ]

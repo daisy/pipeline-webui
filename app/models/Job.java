@@ -30,7 +30,6 @@ import akka.actor.Cancellable;
 import com.avaje.ebean.Model;
 
 import controllers.Application;
-import controllers.routes;
 
 @Entity
 public class Job extends Model implements Comparable<Job> {

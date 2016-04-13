@@ -248,7 +248,6 @@ public class Jobs extends Controller {
 		NotificationConnection.pushJobNotification(webuiJob.getUser(), new Notification("job-status-"+webuiJob.getId(), org.daisy.pipeline.client.models.Job.Status.IDLE));
 		webuiJob.pushNotifications();
 		
-		User.flashBrowserId(user);
 		Logger.debug("return redirect(controllers.routes.Jobs.getJob("+webuiJob.getId()+"));");
 		return redirect(controllers.routes.Jobs.getJob(webuiJob.getId()));
 	}
@@ -326,7 +325,6 @@ public class Jobs extends Controller {
 			groupedInputs.add(new Pair<String, List<Argument>>(groupName, groupedInputsUnsorted.get(groupName)));
 		}
 		
-		User.flashBrowserId(user);
 		return ok(views.html.Jobs.getScript.render(script, script.getId().replaceAll(":", "\\x3A"), uploadFiles, hasAdvancedOptions, hideAdvancedOptions, mediaTypeBlacklist, jobId, groupedInputs));
 	}
 	
@@ -359,7 +357,6 @@ public class Jobs extends Controller {
 		Collections.sort(jobList);
 		Collections.reverse(jobList);
 		
-		User.flashBrowserId(user);
 		return ok(views.html.Jobs.getJobs.render());
 	}
 	
@@ -414,7 +411,6 @@ public class Jobs extends Controller {
 			return forbidden("You are not allowed to view this job.");
 		}
 		
-		User.flashBrowserId(user);
 		if ("NEW".equals(webuiJob.getStatus())) {
 			return ok(views.html.Jobs.newJob.render(webuiJob.getId()));
 			
@@ -683,6 +679,8 @@ public class Jobs extends Controller {
 		}
 		job.setJob(clientlibJob);
 		job.setStatus("IDLE");
+		job.setStarted(null);
+		job.setFinished(null);
 		job.save();
 		
 		NotificationConnection.push(job.getUser(), new Notification("job-created-"+job.getId(), job.getCreated().toString()));
@@ -842,6 +840,7 @@ public class Jobs extends Controller {
 								fileResult.put("isXML", contentType != null && (contentType.equals("application/xml") || contentType.equals("text/xml") || contentType.endsWith("+xml")));
 								jsonFileset.add(fileResult);
 								result.put("fileset", jsonFileset);
+								result.put("jobId", jobId);
 								
 								jobStorage.addContextFile(f, file.getFilename());
 							}

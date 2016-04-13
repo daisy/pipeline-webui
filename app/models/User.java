@@ -12,7 +12,6 @@ import java.util.*;
 import play.data.Form;
 import play.data.format.*;
 import play.data.validation.*;
-import play.mvc.Controller;
 import play.mvc.Http.Request;
 import play.mvc.Http.Session;
 
@@ -37,9 +36,6 @@ public class User extends Model {
 	}
 	
 	// ---------- Static stuff ----------
-
-	private static final long serialVersionUID = 1L;
-
 
 	public static final Long LINK_TIMEOUT = 24*3600*1000L;
 	
@@ -134,11 +130,10 @@ public class User extends Model {
 	}
 	
 	private static Random randomBrowserId = new Random(new Date().getTime());
-	public static Long flashBrowserId(User user) {
+	public static Long getBrowserId(User user) {
 		Long userId = user == null ? null : user.id;
 		Long browserId = JS_MIN_INT + (long)(randomBrowserId.nextDouble() * ((JS_MAX_INT - JS_MIN_INT) + 1)); // Random integer in range [JS_MIN_INT,JS_MAX_INT] 
 		NotificationConnection.createBrowserIfAbsent(userId, browserId);
-		Controller.flash("browserId",""+browserId);
 		return browserId;
 	}
 	

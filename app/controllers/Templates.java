@@ -37,7 +37,6 @@ public class Templates extends Controller {
 		
 		flash("userid", user.id+"");
 		
-		User.flashBrowserId(user);
 		return ok(views.html.Templates.getTemplates.render());
 	}
 	

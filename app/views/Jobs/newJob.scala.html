@@ -90,6 +90,7 @@ h2 {
 		    }
 	    });
 	    
+	    Job.jobId = @jobId;
 	    Job.onNewUpload(function(fileset){
 			if (Job.doneAddingPreviousFiles === true) {
 				if (switchToAccordionGroups !== null) {
