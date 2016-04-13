@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URL;
+import java.util.Properties;
 
 import org.daisy.pipeline.client.http.WS;
 import org.daisy.pipeline.client.http.WSInterface;
@@ -60,12 +62,29 @@ public class Application extends Controller {
 	
 	public static final String version;
 	static {
-		 String v = Application.class.getPackage().getImplementationVersion();
-		 if (v == null)
-			 version = "dev";
-		 else
-			 version = v;
-		 assert !(Play.isProd() && "dev".equals(version));
+		URL versionFileURL = Play.application().classloader().getResource("version.properties");
+		if (versionFileURL == null) {
+			version = "dev";
+		} else {
+			File versionFile = new File(versionFileURL.getPath());
+			if (versionFile.isFile()) {
+				Properties versionProperties = new Properties();
+				try {
+					versionProperties.load(new FileInputStream(versionFile));
+				} catch (IOException e) {
+					Logger.error("Unable to read version.properties", e);
+				}
+				String v = versionProperties.getProperty("version");
+				if (v == null) {
+					version = "dev";
+				} else {
+					version = v;
+				}
+
+			} else {
+				version = "dev";
+			}
+		}
 	}
 	
 	public static Result index() {

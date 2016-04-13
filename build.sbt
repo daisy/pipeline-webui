@@ -24,6 +24,15 @@ javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 // disable using the Scala version in output paths and artifacts
 crossPaths := false
 
+// store application name and version in a file
+resourceGenerators in Compile <+= Def.task {
+    val file = (resourceManaged in Compile).value / "conf" / "version.properties"
+    val contents = "name=%s\nversion=%s".format(name.value,version.value)
+    IO.write(file, contents)
+    Seq(file)
+}
+mappings in Universal += file((resourceManaged in Compile).value + "/conf/version.properties") -> "conf/version.properties"
+
 // Documentation for Linux packaging with sbt-native-packager available at:
 // <http://www.scala-sbt.org/sbt-native-packager/formats/linux.html>
 // These settings are common for both Debian and RPM packages.
