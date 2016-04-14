@@ -155,8 +155,8 @@ public class Scripts extends Controller {
 	public static Script get(String scriptId) { return get(false, scriptId); }
 	public static Script get(boolean forceUpdate, String scriptId) {
 		Pair<Script, Date> scriptAndDate = scriptCache.get(scriptId);
-		if (forceUpdate || scriptAndDate == null || scriptAndDate.b.before(new Date(new Date().getTime() - 1000*60*5))) {
-			// not in cache or cache more than 5 minutes old
+		if (forceUpdate || scriptAndDate == null || scriptAndDate.b.before(new Date(new Date().getTime() - 1000*60))) {
+			// not in cache or cache more than 1 minute old
 			Script script = Application.ws.getScript(scriptId);
 			if (script == null) {
 				scriptCache.remove(script);
@@ -171,8 +171,8 @@ public class Scripts extends Controller {
 	}
 	public static List<Script> get() { return get(false); }
 	public static List<Script> get(boolean forceUpdate) {
-		if (forceUpdate || scriptList == null || scriptList.isEmpty() || scriptListCacheLastUpdate.before(new Date(new Date().getTime() - 1000*60*5))) {
-			// no scripts in cache or cache more than 5 minutes old
+		if (forceUpdate || scriptList == null || scriptList.isEmpty() || scriptListCacheLastUpdate.before(new Date(new Date().getTime() - 1000*60))) {
+			// no scripts in cache or cache more than 1 minute old
 			scriptList = Application.ws.getScripts();
 			if (scriptList == null) {
 				scriptList = new ArrayList<Script>();
