@@ -9,6 +9,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,7 @@ public class Jobs extends Controller {
 		
 		Job newJob = new Job(user);
 		newJob.save();
+		newJob.refresh();
 		
 		Template template;
 		if (ownerIdOrSharedDirName.matches("^\\d+$")) {
@@ -183,6 +185,7 @@ public class Jobs extends Controller {
 		newJob.setStatus("NEW");
 		newJob.setEngineId(null);
 		newJob.setNotifiedComplete(false);
+		newJob.setCreated(new Date());
 		newJob.setStarted(null);
 		newJob.setFinished(null);
 		newJob.save();
@@ -441,6 +444,7 @@ public class Jobs extends Controller {
 		}
 		
 		Map<String,Object> output = new HashMap<String,Object>();
+		System.out.println(play.libs.Json.toJson(webuiJob));
 		output.put("webuiJob", webuiJob);
 		org.daisy.pipeline.client.models.Job clientlibJob = null;
 		boolean jobAvailableInEngine = false;
@@ -450,6 +454,12 @@ public class Jobs extends Controller {
 		}
 		if (clientlibJob == null) {
 			clientlibJob = webuiJob.asJob();
+		}
+		if (!jobAvailableInEngine && ("RUNNING".equals(webuiJob.getStatus()) || "IDLE".equals(webuiJob.getStatus()))) {
+			// When jobs are not available in the engine; don't leave them in a running or queued state.
+			webuiJob.setStatus("UNAVAILABLE");
+			webuiJob.save();
+			
 		}
 		output.put("jobAvailableInEngine", jobAvailableInEngine);
 		

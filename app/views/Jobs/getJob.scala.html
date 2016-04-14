@@ -145,11 +145,16 @@
 		<p>See the execution log for details.</p>
 	</div>
 	
+	<div id="status-unavailable" class="statusbox" style="display:none;">
+		<h2 role="status" class="text-info">Job results are unavailable, please restart the job.</h2>
+	</div>
+	
 	</div>
 </div>
 
 <div id="result-reports" aria-live="polite"></div>
 
+<div id="execution-log">
 <h2>Execution Log</h2>
 
 <div id="detailed-log">
@@ -184,6 +189,7 @@
 <ol aria-live="polite" role="log" class="messagelist" id="message-list" style="display:none;"></ol>
 
 <br/>
+</div>
 
 <div>
 <h2>Input files and parameters</h2>
@@ -357,8 +363,7 @@
 					updateResults(job.results);
 					
 				} else {
-					$("#detailed-log").hide();
-					$(".container:has(h1)").prepend("<div class=\"alert alert-danger\">Result files are not available. Please restart the job.</div>");
+					$("#execution-log").hide();
 				}
 			}
 		});
