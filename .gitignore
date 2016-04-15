@@ -9,7 +9,7 @@ target
 .target
 tmp
 .history
-bin
+/bin
 lib
 .sbt*
 .cache-*

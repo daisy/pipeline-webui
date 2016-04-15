@@ -82,3 +82,8 @@ credentials += Credentials("Sonatype Nexus Repository Manager",
 ### 3. Prepare for the next development iteration
 
 Merge with the `master` branch if necessary.
+
+## Windows
+
+TODO: integrate with the rest of readme
+- install http://wixtoolset.org/
