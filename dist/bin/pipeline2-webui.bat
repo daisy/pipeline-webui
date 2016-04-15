@@ -75,7 +75,7 @@ ver >> %DP2WEBUILOGFILE%
 echo %processor_architecture% >> %DP2WEBUILOGFILE%
 
 if not exist "%DP2DATA%\RUNNING_PID" (
-  echo Starting Web UI...
+  echo Starting Web UI on http://localhost:9000/ ...
   "%_JAVACMD%" -Ddb.default.url="jdbc:derby:%DP2DATA%\dp2webui" -Dderby.stream.error.file="%DP2DATA%\webui-database.log" -Dlogger.file="%WEBUI_HOME%\conf\logger.xml" -Dpidfile.path="%DP2DATA%\RUNNING_PID" -Dconfig.file="%WEBUI_HOME%\conf\application.conf" %* -cp "%WEBUI_HOME%\lib\*;" play.core.server.ProdServerStart >> %DP2WEBUILOGFILE% 2>&1
   del "%DP2DATA%\RUNNING_PID"
 ) else (
