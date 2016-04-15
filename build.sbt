@@ -1,5 +1,6 @@
 import com.typesafe.sbt.packager.archetypes.ServerLoader.{SystemV, Upstart}
 import com.typesafe.sbt.packager.linux.LinuxSymlink
+import com.typesafe.sbt.packager.windows.WixHelper
 
 organization := "org.daisy.pipeline"
 name := "webui"
@@ -14,7 +15,7 @@ description := "A web-based user interface for the DAISY Pipeline 2."
 maintainer := "Jostein Austvik Jacobsen <josteinaj@gmail.com>"
 licenses += "LGPLv3" -> url("https://www.gnu.org/licenses/lgpl-3.0.html")
 
-lazy val root = (project in file(".")).enablePlugins(PlayJava, PlayEbean, DebianPlugin, UniversalDeployPlugin, DebianDeployPlugin)
+lazy val root = (project in file(".")).enablePlugins(PlayJava, PlayEbean, DebianPlugin, UniversalDeployPlugin, DebianDeployPlugin, WindowsPlugin)
 
 scalaVersion := "2.11.6"
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
@@ -22,11 +23,12 @@ javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 // disable using the Scala version in output paths and artifacts
 crossPaths := false
 
+// For packaging
+packageSummary := "DAISY Pipeline 2 Web User Interface"
+packageDescription := "A web-based user interface for the DAISY Pipeline 2."
+
 // For packaging on Linux
 packageName in Linux := "daisy-pipeline2-webui"
-//name in Debian := (packageName in Linux).value
-packageSummary in Linux := "DAISY Pipeline 2 Web User Interface"
-packageDescription := "A web-based user interface for the DAISY Pipeline 2."
 daemonUser in Linux := "pipeline2-webui"
 daemonGroup in Linux := (daemonUser in Linux).value
 executableScriptName := "pipeline2-webui"
@@ -43,6 +45,26 @@ bashScriptExtraDefines += "addJava \"-Dpidfile.path=/var/run/"+(packageName in L
 bashScriptExtraDefines += "addJava \"-Ddb.default.url=jdbc:derby:$DP2DATA/db;create=true\""
 com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Debian, packageBin in Debian, "deb")
 com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Universal, packageBin in Universal, "zip")
+
+// For packaging on Windows
+name in Windows := "DAISY Pipeline 2 Web UI"
+wixProductId := ""+java.util.UUID.nameUUIDFromBytes(("pipeline2-webui-"+version.value.split("\\.")(0)).getBytes())
+wixProductUpgradeId := ""+java.util.UUID.nameUUIDFromBytes(("pipeline2-webui-"+version.value).getBytes())
+version in Windows := (version.value.replaceAll("-",".").replaceAll("\\.\\d*[^\\d\\.].*","")+".0.0.0.0").replaceAll("^(\\d+\\.\\d+\\.\\d+\\.\\d+)\\..*$","$1")
+mappings in Windows := (mappings in Windows).value.filter(_._2 != "bin/pipeline2-webui.bat").filter(_._2 != "bin/pipeline2-webui") // remove auto-generated scripts
+wixConfig := {
+  import xml.transform._
+  object rule extends RewriteRule{
+      override def transform(node:xml.Node) = {
+          if (node.label == "Shortcut" && node.attribute("Name").getOrElse("").toString() != "application_conf")
+            Nil // application.conf is the only public config file (and without this there's an issue with duplicate ids in the wix file)
+          else
+            node
+      }
+  }
+  object ruleTransformer extends RuleTransformer(rule)
+  ruleTransformer(wixConfig.value)
+}
 
 resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 //resolvers += "Sonatype OSS Staging" at "https://oss.sonatype.org/content/repositories/staging/"
