@@ -21,7 +21,9 @@ there are no changes in your project directory (staged or unstaged).
 
 ### 2. Perform the release
 
-If you want to publish a snapshot version, simply run:
+#### Snapshot version
+
+If you just want to publish a snapshot version of a debian package, simply run:
 
 ```
 ./activator clean universal:publish debian:publish
@@ -29,19 +31,35 @@ If you want to publish a snapshot version, simply run:
 
 That will upload snapshot versions to sonatype.
 
+#### Release version
+
 If you want to publish a release version, you need to sign the files.
 The following are instructions on how to do this manually.
 
 <small>(We could possibly find out how to configure sbt so that it
 automatically signs the files for us, but for now this is fine.)</small>
 
-First we need to build and sign the files:
+To build the Windows MSI installer, you need to have [WiX Toolset](http://wixtoolset.org/)
+installed, and run the following command from Windows:
 
-```bash
-./activator clean universal:packageBin debian:debianSign
-gpg -ab target/universal/*.zip
-gpg -ab target/*.deb
+```
+.\activator clean windows:packageBin
+```
+
+If you do this on a separate computer / OS; copy the resulting MSI-file
+from `target\windows` back to the `target` folder (i.e. in Linux) with
+the rest of the packaged files before continuing. Make sure you're on the
+same git commit *and tag* in both git folders.
+
+To build the DEB and RPM packages, and then sign everything (including the
+MSI assuming it's default location of `target/windows`) run the following:
+
+```
+./activator clean debian:debianSign rpm:packageBin
 gpg -ab target/*.pom
+gpg -ab target/*.deb
+gpg -ab target/rpm/RPMS/noarch/*.rpm
+gpg -ab target/windows/*.msi
 ```
 
 Then:
@@ -54,8 +72,10 @@ Then:
   - Upload the `target/*.pom.asc` file, then click "Add Artifact"
   - Upload the `target/*.deb` file, then click "Add Artifact"
   - Upload the `target/*.deb.asc` file, then click "Add Artifact"
-  - Upload the `target/universal/*.zip` file, then click "Add Artifact"
-  - Upload the `target/universal/*.zip.asc` file, then click "Add Artifact"
+  - Upload the `target/rpm/RPMS/noarch/*.rpm` file, then click "Add Artifact"
+  - Upload the `target/rpm/RPMS/noarch/*.rpm.asc` file, then click "Add Artifact"
+  - Upload the `target/windows/*.msi` file, then click "Add Artifact"
+  - Upload the `target/windows/*.msi.asc` file, then click "Add Artifact"
 - In the "Description" field, enter "A web-based user interface for the DAISY Pipeline 2."
 - Click "Upload Artifact(s)"
 - Click "Staging Repositories"
@@ -82,8 +102,3 @@ credentials += Credentials("Sonatype Nexus Repository Manager",
 ### 3. Prepare for the next development iteration
 
 Merge with the `master` branch if necessary.
-
-## Windows
-
-TODO: integrate with the rest of readme
-- install http://wixtoolset.org/
