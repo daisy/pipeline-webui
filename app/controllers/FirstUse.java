@@ -147,7 +147,6 @@ public class FirstUse extends Controller {
 			
 			// if no admin user; display "create admin" form
 			if (User.find.where().eq("admin", true).findRowCount() == 0) {
-				User.flashBrowserId(user);
 				return ok(views.html.FirstUse.createAdmin.render(play.data.Form.form(Administrator.CreateAdminForm.class)));
 			}
 			
@@ -169,7 +168,6 @@ public class FirstUse extends Controller {
 		if (user == null)
 			return redirect(routes.Login.login());
 
-		User.flashBrowserId(user);
 		return ok(views.html.FirstUse.welcome.render());
 	}
 	
@@ -187,11 +185,9 @@ public class FirstUse extends Controller {
 			Administrator.CreateAdminForm.validate(filledForm);
 			
 			if (query.containsKey("validate")) {
-				User.flashBrowserId(null);
 				return ok(FormHelper.asJson(filledForm,new String[]{"password","repeatPassword"}));
 			
 			} else if (filledForm.hasErrors()) {
-				User.flashBrowserId(null);
 				return badRequest(views.html.FirstUse.createAdmin.render(filledForm));
 			
 			} else {

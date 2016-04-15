@@ -5,15 +5,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.daisy.pipeline.client.models.Argument;
 import org.daisy.pipeline.client.models.DataType;
 import org.daisy.pipeline.client.models.Script;
 import org.daisy.pipeline.client.models.datatypes.EnumType;
+import org.daisy.pipeline.client.models.datatypes.EnumType.Value;
 import org.daisy.pipeline.client.models.datatypes.RegexType;
 
 import models.User;
@@ -80,6 +78,24 @@ public class Scripts extends Controller {
 		}
 		return arg.getType();
 	}
+	
+	public static JsonNode getDataTypeJson(Argument argument) {
+		Logger.debug("getDataTypeJson("+argument.getName()+")");
+		List<Map<String,String>> values = new ArrayList<Map<String,String>>();
+		Logger.debug("Getting datatype: "+argument.getDataType());
+		EnumType enumType = (org.daisy.pipeline.client.models.datatypes.EnumType)(Application.ws.getDataType(argument.getDataType()));
+		if (enumType != null) {
+			for (Value enumValue : enumType.values) {
+				Map<String,String> value = new HashMap<String,String>();
+				value.put("name", enumValue.name);
+				value.put("nicename", enumValue.getNicename());
+				value.put("description", (String)enumValue.getDescription()); // cast to string because getDescription wrongly declares Object as return type
+				values.add(value);
+			}
+		}
+		JsonNode json = play.libs.Json.toJson(values);
+		return json;
+	}
 
 	public static class ScriptForm {
 
@@ -139,8 +155,8 @@ public class Scripts extends Controller {
 	public static Script get(String scriptId) { return get(false, scriptId); }
 	public static Script get(boolean forceUpdate, String scriptId) {
 		Pair<Script, Date> scriptAndDate = scriptCache.get(scriptId);
-		if (forceUpdate || scriptAndDate == null || scriptAndDate.b.before(new Date(new Date().getTime() - 1000*60*5))) {
-			// not in cache or cache more than 5 minutes old
+		if (forceUpdate || scriptAndDate == null || scriptAndDate.b.before(new Date(new Date().getTime() - 1000*60))) {
+			// not in cache or cache more than 1 minute old
 			Script script = Application.ws.getScript(scriptId);
 			if (script == null) {
 				scriptCache.remove(script);
@@ -155,8 +171,8 @@ public class Scripts extends Controller {
 	}
 	public static List<Script> get() { return get(false); }
 	public static List<Script> get(boolean forceUpdate) {
-		if (forceUpdate || scriptList == null || scriptList.isEmpty() || scriptListCacheLastUpdate.before(new Date(new Date().getTime() - 1000*60*5))) {
-			// no scripts in cache or cache more than 5 minutes old
+		if (forceUpdate || scriptList == null || scriptList.isEmpty() || scriptListCacheLastUpdate.before(new Date(new Date().getTime() - 1000*60))) {
+			// no scripts in cache or cache more than 1 minute old
 			scriptList = Application.ws.getScripts();
 			if (scriptList == null) {
 				scriptList = new ArrayList<Script>();

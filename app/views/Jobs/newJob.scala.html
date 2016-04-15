@@ -90,6 +90,7 @@ h2 {
 		    }
 	    });
 	    
+	    Job.jobId = @jobId;
 	    Job.onNewUpload(function(fileset){
 			if (Job.doneAddingPreviousFiles === true) {
 				if (switchToAccordionGroups !== null) {
@@ -171,7 +172,7 @@ h2 {
 			$.ajax({
 				url: "@routes.Scripts.getScriptsJson()",
 				error: function(jqXHR, textStatus, errorThrown) {
-					setTimeout(checkForScripts,5000);
+					setTimeout(checkForScripts,1000);
 				},
 				success: function(scripts, textStatus, jqXHR) {
 					if (scripts.length === 0) {

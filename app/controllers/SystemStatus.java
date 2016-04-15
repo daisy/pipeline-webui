@@ -10,7 +10,6 @@ import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.http.Pipeline2HttpClient;
 import org.daisy.pipeline.client.http.WSResponse;
 
-import models.User;
 import play.mvc.*;
 
 public class SystemStatus extends Controller {
@@ -44,12 +43,6 @@ public class SystemStatus extends Controller {
 		status.put("engine", Application.getAlive());
 		status.put("theme", Application.themeName());
 		status.put("version", Application.version);
-
-		User user = User.authenticate(request(), session());
-//		if (FirstUse.isFirstUse() || user != null && user.admin) {
-//			status.put("datasource", Application.datasource);
-//		}
-		
 		return status;
 	}
 

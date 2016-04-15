@@ -4,6 +4,7 @@ var Job = {
 	uploads: [],
 	filesetTypes: [],
 	filesetTypeDescriptions: {},
+    jobId: null,
 
 	// listeners
 	uploadListeners: [],
@@ -115,6 +116,9 @@ var Job = {
 
 /* Update the Job object when push notifications of type "uploads" arrive */
 Notifications.listen("uploads", function(notification) {
+    if (notification.jobId !== Job.jobId) {
+        return;
+    }
 	Job.uploads.push(notification);
 	for (var u = 0; u < Job.uploadListeners.length; u++) {
 		Job.uploadListeners[u](notification.fileset);

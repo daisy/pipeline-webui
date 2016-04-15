@@ -30,7 +30,6 @@ import akka.actor.Cancellable;
 import com.avaje.ebean.Model;
 
 import controllers.Application;
-import controllers.routes;
 
 @Entity
 public class Job extends Model implements Comparable<Job> {
@@ -84,7 +83,11 @@ public class Job extends Model implements Comparable<Job> {
 	}
 
 	public int compareTo(Job other) {
-		return created.compareTo(other.created);
+		if (this.started != null) {
+			return this.started.compareTo(other.getStarted() == null ? other.getCreated() : other.getStarted());
+		} else {
+			return this.created.compareTo(other.getStarted() == null ? other.getCreated() : other.getStarted());
+		}
 	}
 
 	// -- Queries
@@ -96,7 +99,7 @@ public class Job extends Model implements Comparable<Job> {
 		Job job = find.where().eq("id", id).ne("status", "TEMPLATE").findUnique();
 		if (job != null) {
 			lastAccessed.put(id, new Date());
-			User user = User.findById(job.user);
+			User user = User.findById(job.getUser());
 			if (user != null)
 				job.userNicename = user.name;
 			else if (job.user < 0)
@@ -111,7 +114,7 @@ public class Job extends Model implements Comparable<Job> {
 	public static Job findByEngineId(String id) {
 		Job job = find.where().eq("engine_id", id).ne("status", "TEMPLATE").findUnique();
 		if (job != null) {
-			User user = User.findById(job.user);
+			User user = User.findById(job.getUser());
 			if (user != null)
 				job.userNicename = user.name;
 			else if (job.user < 0)
@@ -152,6 +155,7 @@ public class Job extends Model implements Comparable<Job> {
 				Duration.create(500, TimeUnit.MILLISECONDS),
 				new Runnable() {
 					public void run() {
+						refresh();
 						try {
 							int fromSequence = Job.lastMessageSequence.containsKey(id) ? Job.lastMessageSequence.get(id) : 0;
 //							Logger.debug("checking job #"+id+" for updates from message #"+fromSequence);
@@ -173,14 +177,14 @@ public class Job extends Model implements Comparable<Job> {
 							
 							if (job.getStatus() != Status.RUNNING && job.getStatus() != Status.IDLE) {
 								pushNotifier.cancel();
-								if (webUiJob.finished == null) {
+								if (webUiJob.getFinished() == null) {
 									// pushNotifier tends to fire multiple times after canceling it, so this if{} is just to fire the "finished" event exactly once
-									webUiJob.finished = new Date();
+									webUiJob.setFinished(new Date());
 									Map<String,String> finishedMap = new HashMap<String,String>();
-									finishedMap.put("text", webUiJob.finished.toString());
-									finishedMap.put("number", webUiJob.finished.getTime()+"");
-									NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-finished-"+webUiJob.id, finishedMap));
-									NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-results-"+webUiJob.id, jsonifiableResults(job)));
+									finishedMap.put("text", webUiJob.getFinished().toString());
+									finishedMap.put("number", webUiJob.getFinished().getTime()+"");
+									NotificationConnection.pushJobNotification(webUiJob.getUser(), new Notification("job-finished-"+webUiJob.getId(), finishedMap));
+									NotificationConnection.pushJobNotification(webUiJob.getUser(), new Notification("job-results-"+webUiJob.getId(), jsonifiableResults(job)));
 								}
 							}
 							
@@ -188,19 +192,19 @@ public class Job extends Model implements Comparable<Job> {
 								Logger.debug("    status has changed to "+job.getStatus());
 								lastStatus.put(job.getId(), job.getStatus().toString());
 								Logger.debug("    notifying job-status-"+webUiJob.id);
-								NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-status-"+webUiJob.id, job.getStatus()));
+								NotificationConnection.pushJobNotification(webUiJob.getUser(), new Notification("job-status-"+webUiJob.id, job.getStatus()));
 								
-								webUiJob.status = job.getStatus().toString();
+								webUiJob.setStatus(job.getStatus().toString());
 								
 								if (job.getStatus() == Status.RUNNING) {
 									// job status changed from IDLE to RUNNING
 									Logger.debug("    job status changed from IDLE to RUNNING");
-									webUiJob.started = new Date();
+									webUiJob.setStarted(new Date());
 									Map<String,String> startedMap = new HashMap<String,String>();
-									startedMap.put("text", webUiJob.started.toString());
-									startedMap.put("number", webUiJob.started.getTime()+"");
+									startedMap.put("text", webUiJob.getStarted().toString());
+									startedMap.put("number", webUiJob.getStarted().getTime()+"");
 									Logger.debug("    notifying job-started-"+webUiJob.id);
-									NotificationConnection.pushJobNotification(webUiJob.user, new Notification("job-started-"+webUiJob.id, startedMap));
+									NotificationConnection.pushJobNotification(webUiJob.getUser(), new Notification("job-started-"+webUiJob.id, startedMap));
 								}
 								
 								Logger.debug("    saving");
@@ -212,7 +216,7 @@ public class Job extends Model implements Comparable<Job> {
 							if (messages != null) {
 								for (org.daisy.pipeline.client.models.Message message : messages) {
 									Notification notification = new Notification("job-message-"+webUiJob.id, message);
-									NotificationConnection.pushJobNotification(webUiJob.user, notification);
+									NotificationConnection.pushJobNotification(webUiJob.getUser(), notification);
 								}
 								
 								if (messages.size() > 0) {
@@ -323,6 +327,7 @@ public class Job extends Model implements Comparable<Job> {
 				}
 				super.save();
 			}
+			refresh();
 			
 			// save to job storage as well
 			if (asJob() != null) {
@@ -346,7 +351,7 @@ public class Job extends Model implements Comparable<Job> {
 		}
 		try {
 			// if current status is one of the engines built-in types
-			// (i.e. not "NEW", "UNDEFINED", "TEMPLATE" or anything else that might used only by the Web UI)
+			// (i.e. not "NEW", "UNAVAILABLE", "TEMPLATE" or anything else that might used only by the Web UI)
 			// then get the status from the engine.
 			if (status == null || "null".equals(status) || Status.valueOf(status) != null) {
 				status = clientlibJob.getStatus()+"";

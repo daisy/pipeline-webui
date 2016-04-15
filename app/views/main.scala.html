@@ -58,16 +58,28 @@
 	}
 	
 	<script type="text/javascript">
-	@if(flash()!=null && flash().containsKey("browserId")){
-		$(function(){
-			var ws = "@{routes.Notifications.websocket(Long.parseLong(flash().get("browserId"))).webSocketURL(request)}";
-			var http = "@{routes.Notifications.xhr(Long.parseLong(flash().get("browserId")))}";
+	$(function(){
+		var useBrowserId = function(browserId) {
+			var ws = "@{routes.Notifications.websocket(-1L).webSocketURL(request)}".replace("-1",browserId);
+			var http = "@{routes.Notifications.xhr(-1L)}".replace("-1",browserId);
 			ws = ws.replace(/[^/]+:\/\/[^/]+/,"");
 			ws = "ws://"+window.location.host+ws;
 			http = window.location.protocol+"//"+window.location.host+http;
 			Notifications.init(ws, http);
-		});
-	}
+		}
+		var initBrowser = function() {
+			$.ajax({
+				url: "@routes.Notifications.getBrowserId()?"+new Date().getTime(),
+				error: function(jqXHR, textStatus, errorThrown) {
+					window.setTimeout(initBrowser, 1000);
+				},
+				success: function(browserId, textStatus, jqXHR) {
+					useBrowserId(browserId.value);
+				}
+			});
+		}
+		initBrowser();
+	});
 	@if(controllers.Application.debug){
 		$(function(){Notifications.debug=true;DP2Forms.debug=true;});
 		if (typeof console === "object") console.log("browser id", @flash().get("browserId"));
@@ -176,7 +188,7 @@
 @@*/
 	</script>
 	<script>
-		/* trying this for a while to see if it's useful */
+		/* set window title to the same as the first h1 */
 		(function(){
 		var updateTitle = function(){
 			var h1 = $("h1")[0];
@@ -190,14 +202,14 @@
 	</script>
 	
 	@if(models.Setting.get("userTracking")=="true"){
-	<script src="https://rawgit.com/josteinaj/interactor/master/interactor.js"></script>
+	<!--<script src="https://rawgit.com/josteinaj/interactor/master/interactor.js"></script>
 	<script>
     var interactions = new Interactor({
     	interactionElement : "*",
     	focusElement : "*",
     	mousePosition : true
 	});
-    </script>
+    </script>-->
     }
   </body>
 </html>

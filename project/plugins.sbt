@@ -20,8 +20,17 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-mocha" % "1.1.0")
 // Play enhancer, regardless of whether the line above is commented out or not.
 addSbtPlugin("com.typesafe.sbt" % "sbt-play-ebean" % "1.0.0")
 
+// Use a newer version of sbt-native-packger
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.0.6")
+
 // Eclipse
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0")
 
 // Use git tags to version this project
 addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "0.8.5")
+
+// Use this in order to enable sbt-native-packager in the project
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.1.0-RC2")
+
+// Use this in order to enable overriding of the default linux package installation in the RPM project
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.10.2")

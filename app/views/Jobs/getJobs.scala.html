@@ -18,7 +18,7 @@
 			<th>Script</th>
 			<th>Job</th>
 			<!--<th>Results</th>-->
-			<th>Created</th>
+			<th>Started</th>
 			@if(Controller.flash("showOwner")=="true"){
 				<th>Owner</th>
 		    }
@@ -89,17 +89,36 @@ jobStatusClass = function(string) {
 }
 
 addJob = function(job) {
-	var i, statusText, statusClass, html, visible;
+	var i, statusText, statusClass, sortableStatus, html, visible;
 	if (job.status === "NEW") {
 		return;
 	}
 	statusText = jobStatusText(job.status);
 	statusClass = jobStatusClass(job.status);
+	sortableStatus = job.status.toLowerCase();
+	switch (sortableStatus) {
+		case "idle":
+			sortableStatus = "1";
+			break;
+		case "running":
+			sortableStatus = "2";
+			break;
+		case "done":
+			sortableStatus = "3";
+			break;
+		case "error":
+			sortableStatus = "4";
+			break;
+		case "validation_fail":
+			sortableStatus = "5";
+			break;
+	}
 	visible = $("#showAllJobs").hasClass("active") || "@Controller.flash("userid")" === ""+job.user;
+	
 	html = '<tr id="job-'+job.id+'" class="job '+statusClass+'" data-user="'+job.user+'"'+(!visible?' style="display:none;"':'')+'>'+"\n";
-	html += '    <td id="job-status-'+job.id+'">'+statusText+'</td>'+"\n";
-	html += '    <td>'+(typeof job.scriptName === "string" ? job.scriptName : "Unknown")+'</td>'+"\n";
-	html += '    <td>'+"\n";
+	html += '    <td id="job-status-'+job.id+'" data-sortvalue="'+sortableStatus+'">'+statusText+'</td>'+"\n";
+	html += '    <td id="job-script-'+job.id+'" data-sortvalue="'+job.scriptName.replace(/[^a-zA-Z0-9 _-]/g,"").toLowerCase()+'">'+(typeof job.scriptName === "string" ? job.scriptName : "Unknown")+'</td>'+"\n";
+	html += '    <td id="job-name-'+job.id+'" data-sortvalue="'+job.nicename.replace(/[^a-zA-Z0-9 _-]/g,"").toLowerCase()+'">'+"\n";
 	html += '        <a href="@routes.Jobs.getJobs()/'+job.id+'">'+job.nicename+'<br/>'+"\n";
 	html += '            <small class="muted">'+job.id+'</small>'+"\n";
 	html += '        </a>'+"\n";
@@ -114,19 +133,19 @@ addJob = function(job) {
 		//}
 	}
 	html += '    </td>'+"\n";*/
-	html += '    <td>'+"\n";
-	html += '        <span id="created-'+job.id+'-fuzzy" aria-live="timer"></span><br/>'+"\n";
-	html += '        <small id="created-'+job.id+'" class="muted">'+new Date(job.created)+'</small>'+"\n";
+	html += '    <td id="job-started-'+job.id+'" data-sortvalue="'+(job.started === null ? job.created : job.started)+'">'+"\n";
+	html += '        <span id="started-'+job.id+'-fuzzy" aria-live="timer">'+(job.started === null ? 'Not yet' : '')+'</span><br/>'+"\n";
+	html += '        <small id="started-'+job.id+'" class="muted">'+(job.started === null ? '' : new Date(job.started))+'</small>'+"\n";
 	html += '    </td>'+"\n";
 	@if(Controller.flash("showOwner")=="true"){
-		html += '    <td>'+"\n";
-		html += '        '+job.userNicename+'<br/>'+"\n";
+		html += '    <td data-sortvalue="'+job.userNicename.replace(/[^a-zA-Z0-9 _-]/g,"").toLowerCase()+'">'+"\n";
+		html += '        '+job.userNicename.replace(/[^a-zA-Z0-9 _-]/g,"")+'<br/>'+"\n";
 		if (job.user < 0) {
 			html += '        <small class="muted">#'+(-job.user)+'</small>'+"\n";
 		}
 		html += '    </td>'+"\n";
 	}
-	html += '    <td>'+"\n";
+	html += '    <td id="job-actions-'+job.id+'">'+"\n";
 	html += '        <span><a id="job-delete-'+job.id+'" class="btn btn-mini" data-jobid="'+job.id+'" href=\"javascript:void(0)\"><i class="icon-trash"></i> Delete</a></span>'+"\n";
 	html += '    </td>'+"\n";
 	html += '</tr>'+"\n";
@@ -161,7 +180,21 @@ addJob = function(job) {
 	$("#nojobs-user").hide();
 	$("#joblist").show();
 	
-	updateFuzzy("created-"+job.id+"-fuzzy",new Date( job.created === null ? 999999999999999 : job.created ));
+	if (job.started !== null) {
+		updateFuzzy("started-"+job.id+"-fuzzy",new Date(job.started));
+	}
+	
+	Notifications.listen("job-started-"+job.id, function(message, id){
+		$("#job-started-"+job.id).attr("data-sortvalue", message.number);
+		var time = parseInt(message.number);
+        if (isNaN(time)) {
+                clearFuzzyUpdates("started-"+job.id+"-fuzzy", time);
+                $("#started-"+job.id+"-fuzzy, #started-"+job.id).html("");
+        } else {
+                updateFuzzy("started-"+job.id+"-fuzzy", time);
+                $("#started-"+job.id+"").html(new Date(time)+"");
+        }
+	}, job.id);
 	
 	Notifications.listen("job-status-"+job.id, function(status, id){
 		var statusText = jobStatusText(status);

@@ -22,6 +22,7 @@ GET     /logout                             controllers.Login.logout()
 # Notifications
 GET     /notifications/:browser/websocket   controllers.Notifications.websocket(browser: Long)
 GET     /notifications/:browser/xhr         controllers.Notifications.xhr(browser: Long)
+GET     /notifications/new                  controllers.Notifications.getBrowserId()
 
 # Scripts
 GET     /scripts/:id.json                   controllers.Scripts.getScriptJson(id: String)

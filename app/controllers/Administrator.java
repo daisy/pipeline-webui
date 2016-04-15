@@ -551,7 +551,6 @@ public class Administrator extends Controller {
 		AdminForms forms = new AdminForms();
 		ConfigureAppearanceForm.refreshList();
 		
-		User.flashBrowserId(user);
 		return ok(views.html.Administrator.settings.render(forms, users));
 	}
 
@@ -588,13 +587,11 @@ public class Administrator extends Controller {
 			flash("settings.usertab", "global");
 			
 			if (query.containsKey("validate")) {
-				User.flashBrowserId(user);
 				return ok(FormHelper.asJson(filledForm));
 			
 			} else if (filledForm.hasErrors()) {
 				forms.globalForm = filledForm;
 				List<User> users = User.find.orderBy("admin, name, email").findList();
-				User.flashBrowserId(user);
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 
 			} else {
@@ -634,13 +631,11 @@ public class Administrator extends Controller {
 			flash("settings.usertab", "guest");
 			
 			if (query.containsKey("validate")) {
-				User.flashBrowserId(user);
 				return ok(FormHelper.asJson(filledForm));
 			
 			} else if (filledForm.hasErrors()) {
 				forms.guestForm = filledForm;
 				List<User> users = User.find.orderBy("admin, name, email").findList();
-				User.flashBrowserId(user);
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 
 			} else {
@@ -655,13 +650,11 @@ public class Administrator extends Controller {
 			Form<ConfigureScripts> filledForm = scriptsForm.bindFromRequest();
 
 			if (query.containsKey("validate")) {
-				User.flashBrowserId(user);
 				return ok(FormHelper.asJson(filledForm));
 			
 			} else if (filledForm.hasErrors()) {
 				forms.scriptsForm = filledForm;
 				List<User> users = User.find.orderBy("admin, name, email").findList();
-				User.flashBrowserId(user);
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 
 			} else {
@@ -695,14 +688,12 @@ public class Administrator extends Controller {
 			}
 			
 			if (query.containsKey("validate")) {
-				User.flashBrowserId(user);
 				return ok(FormHelper.asJson(filledForm,new String[]{"password"}));
 			
 			} else if (filledForm.hasErrors()) {
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.userForm = filledForm;
 				flash("error", "Could not edit user, please review the form and make sure it is filled out properly.");
-				User.flashBrowserId(user);
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 
 			} else {
@@ -806,14 +797,12 @@ public class Administrator extends Controller {
 			User.validateNew(filledForm);
 			
 			if (query.containsKey("validate")) {
-				User.flashBrowserId(user);
 				return ok(FormHelper.asJson(filledForm,new String[]{"password"}));
 			
 			} else if (filledForm.hasErrors()) {
 				flash("settings.usertab", "adduser");
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.userForm = filledForm;
-				User.flashBrowserId(user);
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 
 			} else {
@@ -846,7 +835,6 @@ public class Administrator extends Controller {
 			Administrator.SetWSForm.validate(filledForm);
 			
 			if (query.containsKey("validate")) {
-				User.flashBrowserId(user);
 				try {
 					return ok(FormHelper.asJson(filledForm));
 				} catch (RuntimeException e) {
@@ -857,7 +845,6 @@ public class Administrator extends Controller {
 			} else if (filledForm.hasErrors()) {
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.setWSForm = filledForm;
-				User.flashBrowserId(user);
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 
 			} else {
@@ -872,13 +859,11 @@ public class Administrator extends Controller {
 			Administrator.SetStorageDirsForm.validate(filledForm);
 			
 			if (query.containsKey("validate")) {
-				User.flashBrowserId(user);
 				return ok(FormHelper.asJson(filledForm));
 			
 			} else if (filledForm.hasErrors()) {
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.setStorageDirsForm = filledForm;
-				User.flashBrowserId(user);
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 
 			} else {
@@ -905,13 +890,11 @@ public class Administrator extends Controller {
 			} else {
 				
 				if (query.containsKey("validate")) {
-					User.flashBrowserId(user);
 					return ok(FormHelper.asJson(filledForm));
 					
 				} else if (filledForm.hasErrors()) {
 					List<User> users = User.find.orderBy("admin, name, email").findList();
 					forms.configureEmailForm = filledForm;
-					User.flashBrowserId(user);
 					return badRequest(views.html.Administrator.settings.render(forms, users));
 
 				} else {
@@ -927,13 +910,11 @@ public class Administrator extends Controller {
 			Administrator.SetMaintenanceForm.validate(filledForm);
 			
 			if (query.containsKey("validate")) {
-				User.flashBrowserId(user);
 				return ok(FormHelper.asJson(filledForm));
 			
 			} else if (filledForm.hasErrors()) {
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.setMaintenanceForm  = filledForm;
-				User.flashBrowserId(user);
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 
 			} else {
@@ -948,7 +929,6 @@ public class Administrator extends Controller {
 			Administrator.ConfigureAppearanceForm.validate(filledForm);
 			
 			if (query.containsKey("validate")) {
-				User.flashBrowserId(user);
 				return ok(FormHelper.asJson(filledForm));
 			
 			} else if (filledForm.hasErrors()) {
@@ -960,7 +940,6 @@ public class Administrator extends Controller {
 
 				List<User> users = User.find.orderBy("admin, name, email").findList();
 				forms.configureAppearanceForm  = filledForm;
-				User.flashBrowserId(user);
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 
 			} else {

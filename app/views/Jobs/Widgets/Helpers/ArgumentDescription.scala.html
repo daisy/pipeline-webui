@@ -1,6 +1,6 @@
 @(arg: org.daisy.pipeline.client.models.Argument, scriptId: String)
 
-<div class="help-block" id="shortdescription-script-@scriptId-argument-@{arg.getName()}">@{arg.getDesc().replaceAll("\n.*$","")}</div>
+<div class="help-block" id="shortdescription-script-@scriptId-argument-@{arg.getName()}">@{arg.getDesc().replaceAll("(?s)\n.*$","")}</div>
 <script>window.setTimeout(function(){document.getElementById('shortdescription-script-@scriptId-argument-@{arg.getName()}').innerHTML = markdownToHtml(document.getElementById('shortdescription-script-@scriptId-argument-@{arg.getName()}').innerHTML);},0);</script>
 <p><a data-toggle="collapse" href="#description-script-@scriptId-argument-@{arg.getName()}" id="description-script-@scriptId-argument-@{arg.getName()}-toggle" class="collapsed">
     <style>

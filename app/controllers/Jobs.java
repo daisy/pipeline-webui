@@ -5,12 +5,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystemException;
-import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +80,7 @@ public class Jobs extends Controller {
 		
 		Job newJob = new Job(user);
 		newJob.save();
+		newJob.refresh();
 		
 		Template template;
 		if (ownerIdOrSharedDirName.matches("^\\d+$")) {
@@ -185,6 +185,7 @@ public class Jobs extends Controller {
 		newJob.setStatus("NEW");
 		newJob.setEngineId(null);
 		newJob.setNotifiedComplete(false);
+		newJob.setCreated(new Date());
 		newJob.setStarted(null);
 		newJob.setFinished(null);
 		newJob.save();
@@ -250,7 +251,6 @@ public class Jobs extends Controller {
 		NotificationConnection.pushJobNotification(webuiJob.getUser(), new Notification("job-status-"+webuiJob.getId(), org.daisy.pipeline.client.models.Job.Status.IDLE));
 		webuiJob.pushNotifications();
 		
-		User.flashBrowserId(user);
 		Logger.debug("return redirect(controllers.routes.Jobs.getJob("+webuiJob.getId()+"));");
 		return redirect(controllers.routes.Jobs.getJob(webuiJob.getId()));
 	}
@@ -328,7 +328,6 @@ public class Jobs extends Controller {
 			groupedInputs.add(new Pair<String, List<Argument>>(groupName, groupedInputsUnsorted.get(groupName)));
 		}
 		
-		User.flashBrowserId(user);
 		return ok(views.html.Jobs.getScript.render(script, script.getId().replaceAll(":", "\\x3A"), uploadFiles, hasAdvancedOptions, hideAdvancedOptions, mediaTypeBlacklist, jobId, groupedInputs));
 	}
 	
@@ -361,7 +360,6 @@ public class Jobs extends Controller {
 		Collections.sort(jobList);
 		Collections.reverse(jobList);
 		
-		User.flashBrowserId(user);
 		return ok(views.html.Jobs.getJobs.render());
 	}
 	
@@ -416,7 +414,6 @@ public class Jobs extends Controller {
 			return forbidden("You are not allowed to view this job.");
 		}
 		
-		User.flashBrowserId(user);
 		if ("NEW".equals(webuiJob.getStatus())) {
 			return ok(views.html.Jobs.newJob.render(webuiJob.getId()));
 			
@@ -447,6 +444,7 @@ public class Jobs extends Controller {
 		}
 		
 		Map<String,Object> output = new HashMap<String,Object>();
+		System.out.println(play.libs.Json.toJson(webuiJob));
 		output.put("webuiJob", webuiJob);
 		org.daisy.pipeline.client.models.Job clientlibJob = null;
 		boolean jobAvailableInEngine = false;
@@ -456,6 +454,12 @@ public class Jobs extends Controller {
 		}
 		if (clientlibJob == null) {
 			clientlibJob = webuiJob.asJob();
+		}
+		if (!jobAvailableInEngine && ("RUNNING".equals(webuiJob.getStatus()) || "IDLE".equals(webuiJob.getStatus()))) {
+			// When jobs are not available in the engine; don't leave them in a running or queued state.
+			webuiJob.setStatus("UNAVAILABLE");
+			webuiJob.save();
+			
 		}
 		output.put("jobAvailableInEngine", jobAvailableInEngine);
 		
@@ -685,6 +689,8 @@ public class Jobs extends Controller {
 		}
 		job.setJob(clientlibJob);
 		job.setStatus("IDLE");
+		job.setStarted(null);
+		job.setFinished(null);
 		job.save();
 		
 		NotificationConnection.push(job.getUser(), new Notification("job-created-"+job.getId(), job.getCreated().toString()));
@@ -844,6 +850,7 @@ public class Jobs extends Controller {
 								fileResult.put("isXML", contentType != null && (contentType.equals("application/xml") || contentType.equals("text/xml") || contentType.endsWith("+xml")));
 								jsonFileset.add(fileResult);
 								result.put("fileset", jsonFileset);
+								result.put("jobId", jobId);
 								
 								jobStorage.addContextFile(f, file.getFilename());
 							}

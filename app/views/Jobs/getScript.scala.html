@@ -75,13 +75,24 @@
 			</div>
 		}
 		
-		<div class="form-actions">
-			<button type="submit" id="submit_run_@scriptId" name="_submit_run" value="Start job" data-loading-text="Starting job..." class="btn btn-large btn-primary" onclick="$('#submit_template_@scriptId').attr('disabled','disabled');$(this).button('loading');">Start job</button>
-			<button type="submit" id="submit_template_@scriptId" name="_submit_template" value="Save as template" data-loading-text="Saving as template..." class="btn btn-large" onclick="$('#submit_run_@scriptId').attr('disabled','disabled');$(this).button('loading');">Save as template</button>
-			<script>
-			
-			</script>
+		<div class="form-actions" id="submit_buttons_@scriptId">
+			<button type="submit" id="submit_run_@scriptId" name="_submit_run" value="Start job" data-loading-text="Starting job..." class="btn btn-large btn-primary">Start job</button>
+			<button type="submit" id="submit_template_@scriptId" name="_submit_template" value="Save as template" data-loading-text="Saving as template..." class="btn btn-large">Save as template</button>
 		</div>
+		<script>
+			$("submit_buttons_@scriptId button").on("click", function() {
+				var valid = true;
+				$("#script-@scriptId-form input").each(function(i, e) {
+					valid = e.checkValidity();
+					return valid;
+				});
+				if (valid) {
+					$('#submit_buttons_@scriptId button').attr('disabled','disabled');
+					$(this).button('loading');
+				}
+				return valid;
+			});
+		</script>
 	</fieldset>
 	
 </form>
