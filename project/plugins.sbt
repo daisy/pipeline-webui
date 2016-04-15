@@ -20,6 +20,9 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-mocha" % "1.1.0")
 // Play enhancer, regardless of whether the line above is commented out or not.
 addSbtPlugin("com.typesafe.sbt" % "sbt-play-ebean" % "1.0.0")
 
+// Use a newer version of sbt-native-packger
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.0.6")
+
 // Eclipse
 addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0")
 

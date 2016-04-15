@@ -97,6 +97,7 @@ com.typesafe.sbt.packager.SettingsHelper.makeDeploymentSettings(Universal, packa
 
 // For packaging on Windows
 name in Windows := "DAISY Pipeline 2 Web UI"
+wixProductLicense := Some(file("License.rtf"))
 wixProductId := ""+java.util.UUID.nameUUIDFromBytes(("pipeline2-webui-"+version.value.split("\\.")(0)).getBytes())
 wixProductUpgradeId := ""+java.util.UUID.nameUUIDFromBytes(("pipeline2-webui-"+version.value).getBytes())
 version in Windows := (version.value.replaceAll("-",".").replaceAll("\\.\\d*[^\\d\\.].*","")+".0.0.0.0").replaceAll("^(\\d+\\.\\d+\\.\\d+\\.\\d+)\\..*$","$1")
@@ -105,10 +106,27 @@ wixConfig := {
   import xml.transform._
   object rule extends RewriteRule{
       override def transform(node:xml.Node) = {
-          if (node.label == "Shortcut" && node.attribute("Name").getOrElse("").toString() != "application_conf")
-            Nil // application.conf is the only public config file (and without this there's an issue with duplicate ids in the wix file)
-          else
-            node
+          node match {
+              case element : xml.Elem => {
+                  if (element.label == "Shortcut") {
+                      if (element.attribute("Name").getOrElse("").toString() == "application_conf") {
+                          // create start menu entry to start the Web UI
+                          element % xml.Attribute(None, "Name", xml.Text("DAISY Pipeline 2 Web UI"), xml.Null) % xml.Attribute(None, "Description", xml.Text("Run the DAISY Pipeline 2 Web User Interface"), xml.Null) % xml.Attribute(None, "Target", xml.Text("[INSTALLDIR]\\bin\\pipeline2-webui.bat"), xml.Null)
+                      } else {
+                          Nil // application.conf is the only config file that resembles a "public" config file, so let's only keep the shortcut to that one
+                      }
+                  }
+                  else if (element.label == "Feature" && element.attribute("Title").getOrElse("").toString() == "webui") {
+                    element % xml.Attribute(None, "Title", xml.Text("Web UI"), xml.Null) // rename main feature to something a bit more human readable
+                  }
+                  else {
+                    element
+                  }
+              }
+              case default => {
+                node
+              }
+          }
       }
   }
   object ruleTransformer extends RuleTransformer(rule)
