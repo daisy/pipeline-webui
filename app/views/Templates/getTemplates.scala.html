@@ -45,10 +45,10 @@ filterTemplates = function(user) {
         }
     }
     if (user === 'all') {
-        $("#templatelist tbody tr").show();
+        $("#templatelist > tbody > tr").show();
         $("#showYourTemplates").removeClass("active");
         $("#showAllTemplates").addClass("active");
-        if ($("#templatelist tbody tr").size() > 0) {
+        if ($("#templatelist > tbody > tr").size() > 0) {
             $("#filter-text").text("Displaying templates for all users.");
             $("#templatelist-headline").show();
         } else {
@@ -56,11 +56,11 @@ filterTemplates = function(user) {
             $("#templatelist-headline").hide();
         }
     } else {
-        $("#templatelist tbody tr[data-owner='"+user+"']").show();
-        $("#templatelist tbody tr[data-owner!='"+user+"']").hide();
+        $("#templatelist > tbody > tr[data-owner='"+user+"']").show();
+        $("#templatelist > tbody > tr[data-owner!='"+user+"']").hide();
         $("#showAllTemplates").removeClass("active");
         $("#showYourTemplates").addClass("active");
-        if ($("#templatelist tbody tr").size() > 0) {
+        if ($("#templatelist > tbody > tr").size() > 0) {
             $("#filter-text").text("Displaying your templates.");
             $("#templatelist-headline").show();
         } else {
