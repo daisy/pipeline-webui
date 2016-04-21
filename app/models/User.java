@@ -46,30 +46,30 @@ public class User extends Model {
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE)
-	public Long id; // <= -2: logged in as guest, -1: not logged in, >= 0: logged in as user
+	private Long id; // <= -2: logged in as guest, -1: not logged in, >= 0: logged in as user
 
 	@Constraints.Required
 	@Formats.NonEmpty
 	@Constraints.Email
-	public String email;
+	private String email;
 	
 	@Constraints.Required
 	@Constraints.MinLength(1)
 	@Constraints.Pattern("[^{}\\[\\]();:'\"<>]+") // Avoid breaking JavaScript code in templates
-	public String name;
+	private String name;
 
 	@Constraints.Required
 	@Constraints.MinLength(6)
-	public String password;
+	private String password;
 
 	@Constraints.Required
-	public boolean admin;
+	private boolean admin;
 
 	@Constraints.Required
-	public boolean active; // Account is deactivated until the user sets a password
+	private boolean active; // Account is deactivated until the user sets a password
 
 	// Crypto.sign(email+passwordLinkSent.getTime()) = uid sent in link
-	public Date passwordLinkSent; // Time that the password link was sent
+	private Date passwordLinkSent; // Time that the password link was sent
 
 	/**
 	 * Constructor

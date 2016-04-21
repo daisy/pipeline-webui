@@ -544,7 +544,7 @@ public class Administrator extends Controller {
 			return redirect(routes.FirstUse.getFirstUse());
 
 		User user = User.authenticate(request(), session());
-		if (user == null || !user.admin)
+		if (user == null || !user.isAdmin())
 			return redirect(routes.Login.login());
 
 		List<User> users = User.find.orderBy("admin, name, email").findList();
@@ -559,7 +559,7 @@ public class Administrator extends Controller {
 			return redirect(routes.FirstUse.getFirstUse());
 
 		User user = User.authenticate(request(), session());
-		if (user == null || !user.admin)
+		if (user == null || !user.isAdmin())
 			return redirect(routes.Login.login());
 		
 		Map<String, String[]> query = request().queryString();
@@ -697,21 +697,21 @@ public class Administrator extends Controller {
 				return badRequest(views.html.Administrator.settings.render(forms, users));
 
 			} else {
-				updateUser.name = filledForm.field("name").valueOr("");
-				updateUser.admin = filledForm.field("admin").valueOr("").equals("true");
+				updateUser.setName(filledForm.field("name").valueOr(""));
+				updateUser.setAdmin(filledForm.field("admin").valueOr("").equals("true"));
 
-				String oldEmail = updateUser.email;
-				updateUser.email = filledForm.field("email").valueOr("");
+				String oldEmail = updateUser.getEmail();
+				updateUser.setEmail(filledForm.field("email").valueOr(""));
 
 				if ("true".equals(Setting.get("mail.enable"))) {
-					if (!updateUser.email.equals(oldEmail)) {
-						updateUser.active = false;
+					if (!updateUser.getEmail().equals(oldEmail)) {
+						updateUser.setActive(false);
 						updateUser.makeNewActivationUid();
 
-						String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(updateUser.email, updateUser.getActivationUid()).absoluteURL(request()));
+						String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(updateUser.getEmail(), updateUser.getActivationUid()).absoluteURL(request()));
 						String html = views.html.Account.emailActivate.render(activateUrl).body();
 						String text = "Go to this link to activate your account: " + activateUrl;
-						if (!Account.sendEmail("Activate your account", html, text, updateUser.name, updateUser.email))
+						if (!Account.sendEmail("Activate your account", html, text, updateUser.getName(), updateUser.getEmail()))
 							flash("error", "Was unable to send the e-mail.");
 					}
 
@@ -722,9 +722,9 @@ public class Administrator extends Controller {
 				}
 
 				updateUser.save();
-				if (updateUser.id.equals(user.id)) {
-					session("name", user.name);
-					session("email", user.email);
+				if (updateUser.getId().equals(user.getId())) {
+					session("name", user.getName());
+					session("email", user.getEmail());
 				}
 
 				flash("success", "Your changes were saved successfully!");
@@ -740,26 +740,26 @@ public class Administrator extends Controller {
 
 			User resetUser = User.findById(userId);
 
-			if (resetUser.active) {
+			if (resetUser.isActive()) {
 				resetUser.makeNewActivationUid();
 				resetUser.save();
-				String resetUrl = Application.absoluteURL(routes.Account.showResetPasswordForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request()));
+				String resetUrl = Application.absoluteURL(routes.Account.showResetPasswordForm(resetUser.getEmail(), resetUser.getActivationUid()).absoluteURL(request()));
 				String html = views.html.Account.emailResetPassword.render(resetUrl).body();
 				String text = "Go to this link to change your password: " + resetUrl;
-				if (Account.sendEmail("Reset your password", html, text, resetUser.name, resetUser.email))
-					flash("success", "A password reset link was sent to " + resetUser.name);
+				if (Account.sendEmail("Reset your password", html, text, resetUser.getName(), resetUser.getEmail()))
+					flash("success", "A password reset link was sent to " + resetUser.getName());
 				else
 					flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
 
 			} else {
 				resetUser.makeNewActivationUid();
 				resetUser.save();
-				String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(resetUser.email, resetUser.getActivationUid()).absoluteURL(request()));
+				String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(resetUser.getEmail(), resetUser.getActivationUid()).absoluteURL(request()));
 				String html = views.html.Account.emailActivate.render(activateUrl).body();
 				String text = "Go to this link to activate your account: " + activateUrl;
 
-				if (Account.sendEmail("Activate your account", html, text, resetUser.name, resetUser.email))
-					flash("success", "An account activation link was sent to " + resetUser.name);
+				if (Account.sendEmail("Activate your account", html, text, resetUser.getName(), resetUser.getEmail()))
+					flash("success", "An account activation link was sent to " + resetUser.getName());
 				else
 					flash("error", "Was unable to send the e-mail. Please notify the owners of this website so they can fix their e-mail settings.");
 			}
@@ -779,16 +779,16 @@ public class Administrator extends Controller {
 				return redirect(routes.Administrator.getSettings());
 			}
 
-			flash("settings.usertab", deleteUser.id + "");
+			flash("settings.usertab", deleteUser.getId() + "");
 
-			if (deleteUser.id.equals(user.id)) {
+			if (deleteUser.getId().equals(user.getId())) {
 				flash("error", "Only other admins can delete you, you cannot do it yourself");
 				return redirect(routes.Administrator.getSettings());
 			}
 
 			deleteUser.delete();
 			flash("settings.usertab", "global");
-			flash("success", deleteUser.name + " was deleted");
+			flash("success", deleteUser.getName() + " was deleted");
 			return redirect(routes.Administrator.getSettings());
 		}
 
@@ -814,17 +814,17 @@ public class Administrator extends Controller {
 				newUser.save();
 
 				if ("true".equals(Setting.get("mail.enable"))) {
-					String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(newUser.email, newUser.getActivationUid()).absoluteURL(request()));
+					String activateUrl = Application.absoluteURL(routes.Account.showActivateForm(newUser.getEmail(), newUser.getActivationUid()).absoluteURL(request()));
 					String html = views.html.Account.emailActivate.render(activateUrl).body();
 					String text = "Go to this link to activate your account: " + activateUrl;
 
-					if (!Account.sendEmail("Activate your account", html, text, newUser.name, newUser.email))
+					if (!Account.sendEmail("Activate your account", html, text, newUser.getName(), newUser.getEmail()))
 						flash("error", "Was unable to send the e-mail. :(");
 
 				}
 
-				flash("settings.usertab", newUser.id  + "");
-				flash("success", "User " + newUser.name + " created successfully!");
+				flash("settings.usertab", newUser.getId()  + "");
+				flash("success", "User " + newUser.getName() + " created successfully!");
 
 				return redirect(routes.Administrator.getSettings());
 			}

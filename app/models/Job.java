@@ -71,15 +71,15 @@ public class Job extends Model implements Comparable<Job> {
 	/** Make job belonging to user */
 	public Job(User user) {
 		super();
-		this.user = user.id;
+		this.user = user.getId();
 		this.status = "NEW";
 		this.created = new Date();
 		this.notifiedCreated = false;
 		this.notifiedComplete = false;
-		if (user.id < 0)
+		if (user.getId() < 0)
 			this.userNicename = Setting.get("users.guest.name");
 		else
-			this.userNicename = User.findById(user.id).name;
+			this.userNicename = User.findById(user.getId()).getName();
 	}
 
 	public int compareTo(Job other) {
@@ -101,7 +101,7 @@ public class Job extends Model implements Comparable<Job> {
 			lastAccessed.put(id, new Date());
 			User user = User.findById(job.getUser());
 			if (user != null)
-				job.userNicename = user.name;
+				job.userNicename = user.getName();
 			else if (job.user < 0)
 				job.userNicename = Setting.get("users.guest.name");
 			else
@@ -116,7 +116,7 @@ public class Job extends Model implements Comparable<Job> {
 		if (job != null) {
 			User user = User.findById(job.getUser());
 			if (user != null)
-				job.userNicename = user.name;
+				job.userNicename = user.getName();
 			else if (job.user < 0)
 				job.userNicename = Setting.get("users.guest.name");
 			else
@@ -131,7 +131,7 @@ public class Job extends Model implements Comparable<Job> {
 			if (user == null || user < 0)
 				userNicename = Setting.get("users.guest.name");
 			else
-				userNicename = User.findById(user).name;
+				userNicename = User.findById(user).getName();
 		}
 		return userNicename;
 	}

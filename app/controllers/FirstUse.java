@@ -153,7 +153,7 @@ public class FirstUse extends Controller {
 		}
 		
 		user = User.authenticate(request(), session());
-		if (user == null || !user.admin) {
+		if (user == null || !user.isAdmin()) {
 			return redirect(routes.Login.login());
 		}
 
@@ -209,7 +209,7 @@ public class FirstUse extends Controller {
 		}
 		
 		User user = User.authenticate(request(), session());
-		if (user == null || !user.admin) {
+		if (user == null || !user.isAdmin()) {
 			return redirect(routes.Login.login());
 		}
 		

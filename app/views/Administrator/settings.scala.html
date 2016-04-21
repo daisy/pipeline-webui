@@ -59,7 +59,7 @@
 				<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "guest"))"><a href="#usertab-guest" data-toggle="tab"><img alt="" src="@routes.Assets.versioned("images/icon-public.png")" height="50%"/> @models.Setting.get("users.guest.name")</a></li>
 				
 				@for(user <- userList) {
-					<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.id))"><a href="#usertab-@user.id" data-toggle="tab"><i class="icon-user"></i> @user.name</a></li>
+					<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.getId()))"><a href="#usertab-@user.getId()" data-toggle="tab"><i class="icon-user"></i> @user.getName()</a></li>
 				}
 				
 				<li class="@("active".when(play.mvc.Controller.flash("settings.usertab") == "adduser"))"><a href="#usertab-adduser" data-toggle="tab"><i class="icon-plus"></i> <em>Add user</em></a></li>
@@ -75,7 +75,7 @@
 				</div>
 				
 				@for(user <- userList) {
-					<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.id))" id="usertab-@user.id">
+					<div class="tab-pane @("active".when(play.mvc.Controller.flash("settings.usertab") == ""+user.getId()))" id="usertab-@user.getId()">
 						@Forms.user(forms.userForm, user, routes.Administrator.postSettings(), routes.Administrator.getPostSettings())
 					</div>
 				}

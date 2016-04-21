@@ -17,11 +17,11 @@ import play.mvc.WebSocket;
  * @author jostein
  */
 public class NotificationConnection {
-	public List<Notification> notifications;
-	public Date lastRead;
-	public WebSocket.Out<JsonNode> websocket;
-	public Long userId;
-	public Long browserId;
+	private List<Notification> notifications;
+	private Date lastRead;
+	private WebSocket.Out<JsonNode> websocket;
+	private Long userId;
+	private Long browserId;
 	
 	/**
 	 * Creates a notification connection for a given browser belonging to a specific user.
@@ -29,7 +29,7 @@ public class NotificationConnection {
 	 * @param browserId
 	 */
 	public NotificationConnection(Long userId, Long browserId) {
-		notifications = new ArrayList<Notification>();
+		setNotifications(new ArrayList<Notification>());
 		lastRead = new Date();
 		this.userId = userId;
 		this.browserId = browserId;
@@ -40,7 +40,7 @@ public class NotificationConnection {
 	 * @param notification
 	 */
 	public void push(Notification notification) {
-		notifications.add(notification);
+		getNotifications().add(notification);
 //		Logger.debug("added notification to user #"+userId+" + browser #"+browserId+". New size: "+notifications.size()+". Notification: "+notification);
 		flushWebSocket();
 	}
@@ -50,12 +50,12 @@ public class NotificationConnection {
 	 */
 	public void flushWebSocket() {
 		if (websocket != null) {
-			for (Notification n : notifications) {
+			for (Notification n : getNotifications()) {
 				JsonNode jsonNotification = n.toJson();
 //				Logger.debug("Writing to WebSocket (user:"+userId+",browser:"+browserId+"): "+jsonNotification+". New size: "+notifications.size());
 				websocket.write(jsonNotification);
 			}
-			notifications.clear();
+			getNotifications().clear();
 			lastRead = new Date();
 		}
 	}
@@ -68,10 +68,10 @@ public class NotificationConnection {
 	 */
 	public JsonNode pullJson() {
 		List<JsonNode> result = new ArrayList<JsonNode>();
-		for (Notification n : notifications)
+		for (Notification n : getNotifications())
 			result.add(n.toJson());
 		JsonNode resultJson = play.libs.Json.toJson(result);
-		notifications.clear();
+		getNotifications().clear();
 		lastRead = new Date();
 //		Logger.debug("Pulling with XHR (user:"+userId+",browser:"+browserId+"): "+resultJson);
 		return resultJson;
@@ -107,7 +107,7 @@ public class NotificationConnection {
 		synchronized (notificationConnections) {
 			for (Long userId : notificationConnections.keySet()) {
 				User user = userId == null ? null : User.findById(userId);
-				if (user != null && user.admin)
+				if (user != null && user.isAdmin())
 					for (NotificationConnection connection : notificationConnections.get(userId))
 						connection.push(notification);
 			}
@@ -282,6 +282,14 @@ public class NotificationConnection {
 			}
 		}
 		return null;
+	}
+
+	public List<Notification> getNotifications() {
+		return notifications;
+	}
+
+	public void setNotifications(List<Notification> notifications) {
+		this.notifications = notifications;
 	}
 	
 }

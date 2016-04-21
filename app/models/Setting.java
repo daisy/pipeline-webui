@@ -17,15 +17,15 @@ public class Setting extends Model {
 
 	@Id
     @Constraints.Required
-    public String name;
+    private String name;
     
-    public String value;
+	private String value;
     
-    public static final List<String> obfuscatedSettings = Arrays.asList("dp2ws.secret", "mail.password");
+	private static final List<String> obfuscatedSettings = Arrays.asList("dp2ws.secret", "mail.password");
     
     // -- Queries
     
-    public static Model.Finder<String,Setting> find = new Model.Finder<String, Setting>(Setting.class);
+	public static Model.Finder<String,Setting> find = new Model.Finder<String, Setting>(Setting.class);
     
     @Transient
     private static Map<String,String> cache = new HashMap<String,String>();
@@ -40,9 +40,9 @@ public class Setting extends Model {
     	Setting setting = find.where().eq("name", name).findUnique();
     	if (setting == null)
     		return null;
-    	if (obfuscatedSettings.contains(name))
-    		return ObfuscatedString.unobfuscate(setting.value);
-    	return setting.value;
+    	if (getObfuscatedsettings().contains(name))
+    		return ObfuscatedString.unobfuscate(setting.getValue());
+    	return setting.getValue();
     }
     
     /** Set the value of a setting. If value is null, the setting is deleted. */
@@ -52,12 +52,12 @@ public class Setting extends Model {
     		if (value == null)
     			return;
     		setting = new Setting();
-    		setting.name = name;
+    		setting.setName(name);
     	}
-    	if (obfuscatedSettings.contains(name))
-    		setting.value = ObfuscatedString.obfuscate(value);
+    	if (getObfuscatedsettings().contains(name))
+    		setting.setValue(ObfuscatedString.obfuscate(value));
     	else
-    		setting.value = value;
+    		setting.setValue(value);
     	if (value == null)
     		setting.delete();
     	else
@@ -68,5 +68,25 @@ public class Setting extends Model {
     		cache.put(name, value);
     	}
    }
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+
+	public static List<String> getObfuscatedsettings() {
+		return obfuscatedSettings;
+	}
 
 }
