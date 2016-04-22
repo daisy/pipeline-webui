@@ -214,20 +214,55 @@
 <script type="text/javascript">
 	$(function(){
 		var addMessage = function(message) {
-			var li = '<li id="m'+message.sequence+'" value="'+message.sequence+'" class="'+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><span class="message">'+message.level+' -- '+message.text+'</span></li>';
 			if ($("#m"+message.sequence).size() > 0) {
 				$("#m"+message.sequence).replaceWith(li);
+				
+			} else {
+				var li = '<li id="m'+message.sequence+'" value="'+message.sequence+'" class="'+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><span class="message">'+message.level+' -- '+message.text+'</span></li>';
+				
+				if (message.level==="INFO" || $("#message-list > li").size() === 0) {
+					// top-level message
+					
+					if (message.sequence < $("#message-list > li").last().attr("value")) {
+						$("#message-list > li")
+							.filter(function(i){ return $(this).attr("value") < message.sequence; })
+							.last()
+							.after(li);
+					}
+					else {
+						$("#message-list").append(li);
+						$("#message-latest").html("<pre>"+message.text+"</pre>");
+					}
+					
+				} else {
+					// message nested under first preceding top-level message
+					
+					var firstPreceding;
+					if (message.sequence < $("#message-list > li").last().attr("value")) {
+						firstPreceding = $("#message-list > li")
+							.filter(function(i){ return $(this).attr("value") < message.sequence; })
+							.last();
+					}
+					else {
+						firstPreceding = $("#message-list > li").last();
+					}
+					
+					if ($(firstPreceding).find("ol").size() === 0) {
+						$(firstPreceding).append('<ol aria-live="polite" role="log" class="messagelist"></ol>');
+					}
+					
+					if (message.sequence < $(firstPreceding).find("ol > li").last().attr("value")) {
+						$(firstPreceding).find("ol > li")
+							.filter(function(i){ return $(this).attr("value") < message.sequence; })
+							.last()
+							.after(li);
+					}
+					else {
+						$(firstPreceding).find("ol").append(li);
+					}
+				}
 			}
-			else if (message.sequence < $("#message-list li").last().attr("value")) {
-				$("#message-list li")
-					.filter(function(i){ return $(this).attr("value") < message.sequence; })
-					.last()
-					.after(li);
-			}
-			else {
-				$("#message-list").append(li);
-				$("#message-latest").html("<pre>"+message.text+"</pre>");
-			}
+			
 			$("#message-list").show();
 			$("#message-list-loading").hide();
 		};
@@ -360,7 +395,7 @@
 				$(".statusbox").hide();
 				$("#status-"+job.webuiJob.status.toLowerCase()).show();
 				
-				$("#message-list li").remove();
+				$("#message-list > li").remove();
 				if (job.engineJob.messages instanceof Array) {
 					for (var m = 0; m < job.engineJob.messages.length; m++) {
 						addMessage(job.engineJob.messages[m]);
