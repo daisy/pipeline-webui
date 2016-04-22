@@ -32,10 +32,10 @@ public class Templates extends Controller {
 			return redirect(routes.FirstUse.getFirstUse());
 		
 		User user = User.authenticate(request(), session());
-		if (user == null || (user.id < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
+		if (user == null || (user.getId() < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
 			return redirect(routes.Login.login());
 		
-		flash("userid", user.id+"");
+		flash("userid", user.getId()+"");
 		
 		return ok(views.html.Templates.getTemplates.render());
 	}
@@ -45,7 +45,7 @@ public class Templates extends Controller {
 			return unauthorized("unauthorized");
 		
 		User user = User.authenticate(request(), session());
-		if (user == null || (user.id < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
+		if (user == null || (user.getId() < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
 			return unauthorized("unauthorized");
 		
 		List<Template> templates = Template.list(user, false);
@@ -74,7 +74,7 @@ public class Templates extends Controller {
 		}
 		
 		if (template == null) {
-			return badRequest("You ("+user.name+") do either not have access to the template \""+templateName+"\" owned by \""+ownerIdOrSharedDirName+"\", or no such template exists.");
+			return badRequest("You ("+user.getName()+") do either not have access to the template \""+templateName+"\" owned by \""+ownerIdOrSharedDirName+"\", or no such template exists.");
 		}
 
 		List<Object> templateJsonFriendly = new ArrayList<Object>();
@@ -230,7 +230,7 @@ public class Templates extends Controller {
 		Template template = Template.get(user, ownerId, templateName);
 		if (template == null) {
 			User owner = User.findById(ownerId);
-			String username = owner == null ? ownerId+"" : owner.name;
+			String username = owner == null ? ownerId+"" : owner.getName();
 			return notFound("Template '"+templateName+"' (owned by '"+username+"') was not found.");
 		}
 		
@@ -265,7 +265,7 @@ public class Templates extends Controller {
 		Template template = Template.get(user, ownerId, templateName);
 		if (template == null) {
 			User owner = User.findById(ownerId);
-			String username = owner == null ? ownerId+"" : owner.name;
+			String username = owner == null ? ownerId+"" : owner.getName();
 			return notFound("Template '"+templateName+"' (owned by '"+username+"') was not found.");
 		}
 		Logger.info("old description: ["+template.clientlibJob.getDescription()+"]");
@@ -299,7 +299,7 @@ public class Templates extends Controller {
 		Template template = Template.get(user, ownerId, templateName);
 		if (template == null) {
 			User owner = User.findById(ownerId);
-			String username = owner == null ? ownerId+"" : owner.name;
+			String username = owner == null ? ownerId+"" : owner.getName();
 			return notFound("Template '"+templateName+"' (owned by '"+username+"') was not found.");
 		}
 

@@ -86,13 +86,13 @@ public class Jobs extends Controller {
 		if (ownerIdOrSharedDirName.matches("^\\d+$")) {
 			template = Template.get(user, Long.parseLong(ownerIdOrSharedDirName), templateName);
 			if (template == null) {
-				Logger.warn("Could not find a template owned by "+Long.parseLong(ownerIdOrSharedDirName)+" and named "+templateName+" available for user "+user.id);
+				Logger.warn("Could not find a template owned by "+Long.parseLong(ownerIdOrSharedDirName)+" and named "+templateName+" available for user "+user.getId());
 			}
 			
 		} else {
 			template = Template.get(user, ownerIdOrSharedDirName, templateName);
 			if (template == null) {
-				Logger.warn("Could not find a shared template in "+ownerIdOrSharedDirName+" and named "+templateName+" available for user "+user.id);
+				Logger.warn("Could not find a shared template in "+ownerIdOrSharedDirName+" and named "+templateName+" available for user "+user.getId());
 			}
 		}
 		
@@ -143,9 +143,9 @@ public class Jobs extends Controller {
 			Logger.debug("Job #"+jobId+" was not found.");
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
-		if (!(	user.admin
-			||	webuiJob.getUser().equals(user.id)
-			||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+		if (!(	user.isAdmin()
+			||	webuiJob.getUser().equals(user.getId())
+			||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 				)) {
 			return forbidden("You are not allowed to access this job.");
 		}
@@ -212,9 +212,9 @@ public class Jobs extends Controller {
 			Logger.debug("Job #"+jobId+" was not found.");
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
-		if (!(	user.admin
-			||	webuiJob.getUser().equals(user.id)
-			||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+		if (!(	user.isAdmin()
+			||	webuiJob.getUser().equals(user.getId())
+			||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 				)) {
 			return forbidden("You are not allowed to restart this job.");
 		}
@@ -336,21 +336,21 @@ public class Jobs extends Controller {
 			return redirect(routes.FirstUse.getFirstUse());
 		
 		User user = User.authenticate(request(), session());
-		if (user == null || (user.id < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
+		if (user == null || (user.getId() < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
 			return redirect(routes.Login.login());
 		
-		if (user.admin)
+		if (user.isAdmin())
 			flash("showOwner", "true");
-		flash("userid", user.id+"");
+		flash("userid", user.getId()+"");
 		
 		List<Job> jobList;
-		if (user.admin) {
+		if (user.isAdmin()) {
 			jobList = findWhere().findList();
 			
-		} else if (user.id >= 0) {
-			jobList = findWhere().eq("user", user.id).findList();
+		} else if (user.getId() >= 0) {
+			jobList = findWhere().eq("user", user.getId()).findList();
 			
-		} else if (user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))) {
+		} else if (user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))) {
 			jobList = findWhere().lt("user", 0).findList();
 			
 		} else {
@@ -368,17 +368,17 @@ public class Jobs extends Controller {
 			return unauthorized("unauthorized");
 		
 		User user = User.authenticate(request(), session());
-		if (user == null || (user.id < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
+		if (user == null || (user.getId() < 0 && !"true".equals(Setting.get("users.guest.shareJobs"))))
 			return unauthorized("unauthorized");
 		
 		List<Job> jobList;
-		if (user.admin) {
+		if (user.isAdmin()) {
 			jobList = findWhere().findList();
 			
-		} else if (user.id >= 0) {
-			jobList = findWhere().eq("user", user.id).findList();
+		} else if (user.getId() >= 0) {
+			jobList = findWhere().eq("user", user.getId()).findList();
 			
-		} else if (user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))) {
+		} else if (user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))) {
 			jobList = findWhere().lt("user", 0).findList();
 			
 		} else {
@@ -407,9 +407,9 @@ public class Jobs extends Controller {
 			Logger.debug("Job #"+id+" was not found.");
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
-		if (!(	user.admin
-			||	webuiJob.getUser().equals(user.id)
-			||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+		if (!(	user.isAdmin()
+			||	webuiJob.getUser().equals(user.getId())
+			||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 				)) {
 			return forbidden("You are not allowed to view this job.");
 		}
@@ -436,15 +436,14 @@ public class Jobs extends Controller {
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
 		
-		if (!(	user.admin
-			||	webuiJob.getUser().equals(user.id)
-			||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+		if (!(	user.isAdmin()
+			||	webuiJob.getUser().equals(user.getId())
+			||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 			)) {
 			return forbidden("You are not allowed to view this job.");
 		}
 		
 		Map<String,Object> output = new HashMap<String,Object>();
-		System.out.println(play.libs.Json.toJson(webuiJob));
 		output.put("webuiJob", webuiJob);
 		org.daisy.pipeline.client.models.Job clientlibJob = null;
 		boolean jobAvailableInEngine = false;
@@ -492,9 +491,9 @@ public class Jobs extends Controller {
 			Logger.debug("Job #"+id+" was not found.");
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
-		if (!(	user.admin
-				||	webuiJob.getUser().equals(user.id)
-				||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+		if (!(	user.isAdmin()
+				||	webuiJob.getUser().equals(user.getId())
+				||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 					))
 				return forbidden("You are not allowed to view this job.");
 		
@@ -602,9 +601,9 @@ public class Jobs extends Controller {
 			Logger.debug("Job #"+id+" was not found.");
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
-		if (!(	user.admin
-				||	webuiJob.getUser().equals(user.id)
-				||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+		if (!(	user.isAdmin()
+				||	webuiJob.getUser().equals(user.getId())
+				||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 					))
 				return forbidden("You are not allowed to view this job.");
 		
@@ -638,7 +637,7 @@ public class Jobs extends Controller {
 			return notFound("The job with ID='"+jobId+"' was not found.");
 		}
 		
-		if (job.getUser() != user.id) {
+		if (job.getUser() != user.getId()) {
 			return forbidden("You can only run your own jobs.");
 		}
 		
@@ -649,7 +648,7 @@ public class Jobs extends Controller {
 		}
 		
 		String scriptId = params.get("_id")[0];
-		if ("false".equals(UserSetting.get(user.id, "scriptEnabled-"+scriptId))) {
+		if ("false".equals(UserSetting.get(user.getId(), "scriptEnabled-"+scriptId))) {
 			return forbidden();
 		}
 		
@@ -670,7 +669,7 @@ public class Jobs extends Controller {
 		clientlibJob.setScript(script);
 
 		// Parse the submitted form
-		Scripts.ScriptForm scriptForm = new Scripts.ScriptForm(user.id, script, params);
+		Scripts.ScriptForm scriptForm = new Scripts.ScriptForm(user.getId(), script, params);
 		scriptForm.validate();
 		
 		// If we're posting a template; delegate further processing to Templates.postTemplate
@@ -701,7 +700,7 @@ public class Jobs extends Controller {
 		NotificationConnection.pushJobNotification(job.getUser(), jobNotification);
 		job.pushNotifications();
 		
-		if (user.id < 0 && scriptForm.guestEmail != null && scriptForm.guestEmail.length() > 0) {
+		if (user.getId() < 0 && scriptForm.guestEmail != null && scriptForm.guestEmail.length() > 0) {
 			String jobUrl = Application.absoluteURL(routes.Jobs.getJob(job.getId()).absoluteURL(request())+"?guestid="+(models.User.parseUserId(session())!=null?-models.User.parseUserId(session()):""));
 			String html = views.html.Account.emailJobCreated.render(jobUrl, job.getNicename()).body();
 			String text = "To view your Pipeline 2 job, go to this web address: " + jobUrl;
@@ -729,9 +728,9 @@ public class Jobs extends Controller {
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
 		
-		if (!(	user.admin
-			||	webuiJob.getUser().equals(user.id)
-			||	webuiJob.getUser() < 0 && user.id < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+		if (!(	user.isAdmin()
+			||	webuiJob.getUser().equals(user.getId())
+			||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
 			)) {
 			return forbidden("You are not allowed to view this job.");
 		}
@@ -857,7 +856,7 @@ public class Jobs extends Controller {
 							
 				        	jobStorage.save(true); // true = move files instead of copying
 				        	
-							NotificationConnection.push(user.id, new Notification("uploads", result));
+							NotificationConnection.push(user.getId(), new Notification("uploads", result));
     					}
     				},
     				Akka.system().dispatcher()

@@ -104,7 +104,7 @@ public class Global extends GlobalSettings {
 									}
 									
 									for (NotificationConnection c : browsers) {
-										if (c.notifications.size() == 0) {
+										if (c.getNotifications().size() == 0) {
 	//										Logger.debug("*heartbeat* for user #"+userId+" and browser window #"+c.browserId);
 											c.push(new Notification("heartbeat", controllers.Application.pipeline2EngineAvailable()));
 										}
@@ -230,7 +230,7 @@ public class Global extends GlobalSettings {
 										User notLoggedIn = User.findById(-1L);
 										if (notLoggedIn == null) {
 											notLoggedIn = new User("not-logged-in@example.net", "Not logged in", "not logged in", false);
-											notLoggedIn.id = -1L;
+											notLoggedIn.setId(-1L);
 										}
 										Job webUiJob = new Job(notLoggedIn);
 										webUiJob.save();

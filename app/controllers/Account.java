@@ -27,7 +27,7 @@ public class Account extends Controller {
     		return redirect(routes.FirstUse.getFirstUse());
 		
 		User user = User.authenticate(request(), session());
-		if (user == null || user.id < 0)
+		if (user == null || user.getId() < 0)
 			return redirect(routes.Login.login());
     	
 		return ok(views.html.Account.overview.render(play.data.Form.form(User.class)));
@@ -43,7 +43,7 @@ public class Account extends Controller {
     		return redirect(routes.FirstUse.getFirstUse());
 		
 		User user = User.authenticate(request(), session());
-		if (user == null || user.id < 0)
+		if (user == null || user.getId() < 0)
 			return redirect(routes.Login.login());
 		
 		Form<User> filledForm = editDetailsForm.bindFromRequest();
@@ -52,12 +52,12 @@ public class Account extends Controller {
 		boolean changedEmail = false;
 		boolean changedPassword = false;
 		
-		if (!user.name.equals(filledForm.field("name").valueOr(""))) {
+		if (!user.getName().equals(filledForm.field("name").valueOr(""))) {
 			// Changed name
 			changedName = true;
 		}
 		
-		if (!user.email.equals(filledForm.field("email").valueOr(""))) {
+		if (!user.getEmail().equals(filledForm.field("email").valueOr(""))) {
 			// Changed email
 			changedEmail = true;
 			
@@ -79,7 +79,7 @@ public class Account extends Controller {
 				filledForm.reject("password", "You must enter your existing password, just so that we're extra sure that you are you.");
 				
 			} else {
-				User oldUser = User.authenticateUnencrypted(user.email, filledForm.field("password").valueOr(""), session());
+				User oldUser = User.authenticateUnencrypted(user.getEmail(), filledForm.field("password").valueOr(""), session());
 				if (oldUser == null)
 					filledForm.reject("password", "The password you entered is wrong, please correct it and try again.");
 			}
@@ -97,9 +97,9 @@ public class Account extends Controller {
         	
         } else {
         	if (changedName)
-        		user.name = filledForm.field("name").valueOr("");
+        		user.setName(filledForm.field("name").valueOr(""));
         	if (changedEmail)
-        		user.email = filledForm.field("email").valueOr("");
+        		user.setEmail(filledForm.field("email").valueOr(""));
         	if (changedPassword)
         		user.setPassword(filledForm.field("newPassword").valueOr(""));
         	user.save();
@@ -123,14 +123,14 @@ public class Account extends Controller {
     		return redirect(routes.FirstUse.getFirstUse());
 		
 		User user = User.findByEmail(email);
-		if (user == null || user.id < 0)
+		if (user == null || user.getId() < 0)
 			return redirect(routes.Login.login());
 		
 		if (resetUid == null || !resetUid.equals(user.getActivationUid())) {
 			return forbidden();
 		}
 		
-		return ok(views.html.Account.resetPassword.render(play.data.Form.form(UserSetPassword.class), email, resetUid, user.active));
+		return ok(views.html.Account.resetPassword.render(play.data.Form.form(UserSetPassword.class), email, resetUid, user.isActive()));
 	}
 	
 	/**
@@ -147,7 +147,7 @@ public class Account extends Controller {
     		return redirect(routes.FirstUse.getFirstUse());
 		
 		User user = User.findByEmail(email);
-		if (user == null || user.id < 0)
+		if (user == null || user.getId() < 0)
 			return redirect(routes.Login.login());
 		
 		if (resetUid == null || !resetUid.equals(user.getActivationUid()))
@@ -163,12 +163,12 @@ public class Account extends Controller {
     		filledForm.reject("repeatPassword", "Password doesn't match.");
         
         if (filledForm.hasErrors()) {
-        	return badRequest(views.html.Account.resetPassword.render(filledForm, email, resetUid, user.active));
+        	return badRequest(views.html.Account.resetPassword.render(filledForm, email, resetUid, user.isActive()));
         	
         } else {
         	user.setPassword(filledForm.field("password").valueOr(""));
-        	user.active = true;
-        	user.passwordLinkSent = null;
+        	user.setActive(true);
+        	user.setPasswordLinkSent(null);
         	user.save();
         	user.login(session());
         	return redirect(routes.Application.index());

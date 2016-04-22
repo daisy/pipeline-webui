@@ -3,16 +3,16 @@
 @helper.form(action = route) {
 	
 	<input type="hidden" name="formName" value="updateUser"/>
-	<input type="hidden" name="userid" value="@user.id"/>
-	<input type="hidden" name="admin" value="@user.admin" id="user-@{user.id}-admin-value"/>
+	<input type="hidden" name="userid" value="@user.getId()"/>
+	<input type="hidden" name="admin" value="@user.isAdmin()" id="user-@{user.getId()}-admin-value"/>
     
 	<fieldset>
-		<legend>Settings for @user.name</legend>
+		<legend>Settings for @user.getName()</legend>
         <br/>
         
         <div class="form-horizontal">
         	
-        	@if(models.User.parseUserId(session()) == user.id){
+        	@if(models.User.parseUserId(session()) == user.getId()){
         		<div class="control-group">
         			<p>To change your own name or e-mail, go to your account settings. To delete your account, ask another administrator to do it for you.</p>
         		</div>
@@ -20,28 +20,28 @@
        		}else{
        		
        			@if(Setting.get("mail.enable") == "true") {
-		        	<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.id && userForm.error("resetPassword") != null))" id="user-@{user.id}-resetPasswordGroup">
-						<label for="user-@{user.id}-resetPassword" class="control-label" id="updateUser-@{user.id}-password-label">Password</label>
+		        	<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.getId() && userForm.error("resetPassword") != null))" id="user-@{user.getId()}-resetPasswordGroup">
+						<label for="user-@{user.getId()}-resetPassword" class="control-label" id="updateUser-@{user.getId()}-password-label">Password</label>
 						<div class="controls">
-							<button name="resetPassword" id="user-@{user.id}-resetPassword" class="btn" onclick="window.location='@{alternativeRoute}?formName=resetPassword&userid=@{user.id}';return false;" aria-labelledby="updateUser-@{user.id}-password-label"><i class="icon-envelope"></i> @if(user.active){Send password reset link}else{Send new activation link}</button>
-							@if(user.active){
-								<span class="help-inline">An e-mail will be sent to @user.email, containing a link where @user.name can reset their password.</span>
+							<button name="resetPassword" id="user-@{user.getId()}-resetPassword" class="btn" onclick="window.location='@{alternativeRoute}?formName=resetPassword&userid=@{user.getId()}';return false;" aria-labelledby="updateUser-@{user.getId()}-password-label"><i class="icon-envelope"></i> @if(user.isActive()){Send password reset link}else{Send new activation link}</button>
+							@if(user.isActive()){
+								<span class="help-inline">An e-mail will be sent to @user.getEmail(), containing a link where @user.getName() can reset their password.</span>
 							}else{
-								<span class="help-inline">An e-mail will be sent to @user.email, containing a link where @user.name can set their password.</span>
+								<span class="help-inline">An e-mail will be sent to @user.getEmail(), containing a link where @user.getName() can set their password.</span>
 							}
 						</div>
 					</div>
 					<hr/>
 				}
 	        	
-	        	<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.id && userForm.error("name") != null))" id="user-@{user.id}-nameGroup">
-	        		<label for="user-@{user.id}-name" class="control-label">Name</label>
+	        	<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.getId() && userForm.error("name") != null))" id="user-@{user.getId()}-nameGroup">
+	        		<label for="user-@{user.getId()}-name" class="control-label">Name</label>
 		            <div class="controls">
-		        		<input type="text" name="name" id="user-@{user.id}-name" class="input-xlarge"
-		        			placeholder="&quot;@user.name&quot; is the users current name."
-		        			value="@{if (user.id+""==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("name").valueOr(""); else user.name;}"
-		        			onkeyup="if(this.value==='@user.name')document.getElementById('user-@{user.id}-nameGroup').style.backgroundColor='#FFF';else document.getElementById('user-@{user.id}-nameGroup').style.backgroundColor='#DDF';"/>
-						@if(userForm.field("userid").valueOr("") == ""+user.id && userForm.field("user-@{user.id}-name").errors().size() > 0){
+		        		<input type="text" name="name" id="user-@{user.getId()}-name" class="input-xlarge"
+		        			placeholder="&quot;@user.getName()&quot; is the users current name."
+		        			value="@{if (user.getId()+""==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("name").valueOr(""); else user.getName();}"
+		        			onkeyup="if(this.value==='@user.getName()')document.getElementById('user-@{user.getId()}-nameGroup').style.backgroundColor='#FFF';else document.getElementById('user-@{user.getId()}-nameGroup').style.backgroundColor='#DDF';"/>
+						@if(userForm.field("userid").valueOr("") == ""+user.getId() && userForm.field("user-@{user.getId()}-name").errors().size() > 0){
 							@if(userForm.error("name").message.startsWith("error.")){
 								<span class="help-inline">Users must have a name, and it must not consist of any special characters.</span>
 							}else{
@@ -51,14 +51,14 @@
 		            </div>
 				</div>
 				
-				<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.id && userForm.error("email") != null))" id="user-@{user.id}-emailGroup">
-					<label for="user-@{user.id}-email" class="control-label">E-mail</label>
+				<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.getId() && userForm.error("email") != null))" id="user-@{user.getId()}-emailGroup">
+					<label for="user-@{user.getId()}-email" class="control-label">E-mail</label>
 					<div class="controls">
-						<input type="email" name="email" id="user-@{user.id}-email" class="input-xlarge"
-							placeholder="&quot;@user.email&quot; is your current e-mail address."
-							value="@{if (user.id+""==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("email").valueOr(""); else user.email;}"
-							onkeyup="toggleChanged('user-@{user.id}-email', this.value==='@user.email');"/>
-						@if(userForm.field("userid").valueOr("") == ""+user.id && userForm.field("email").errors().size() > 0){
+						<input type="email" name="email" id="user-@{user.getId()}-email" class="input-xlarge"
+							placeholder="&quot;@user.getEmail()&quot; is your current e-mail address."
+							value="@{if (user.getId()+""==userForm.field("userid").valueOr("") && userForm.hasErrors()) userForm.field("email").valueOr(""); else user.getEmail();}"
+							onkeyup="toggleChanged('user-@{user.getId()}-email', this.value==='@user.getEmail()');"/>
+						@if(userForm.field("userid").valueOr("") == ""+user.getId() && userForm.field("email").errors().size() > 0){
 							@if(userForm.error("email").message.startsWith("error.")){
 								<span class="help-inline">A valid e-mail address must be provided.</span>
 							}else{
@@ -69,7 +69,7 @@
 				</div>
 				
 				@if(Setting.get("mail.enable") == "false") {
-					<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.id && userForm.error("password") != null))">
+					<div class="control-group @("error".when(userForm.field("userid").valueOr("") == ""+user.getId() && userForm.error("password") != null))">
 		           		<label for="password" class="control-label">Password</label>
 						<div class="controls">
 							<input type="password" name="password" id="password" placeholder="A password must be at least 6 characters." class="input-xlarge" value=""/>
@@ -80,18 +80,18 @@
 					</div>
 				}
 				
-				<div class="control-group @("error".when(user.id.toString().equals(userForm.field("userid").valueOr("")) && userForm.error("admin") != null))" id="user-@{user.id}-adminGroup">
-					<label class="control-label" id="updateUser-@{user.id}-admin-label" for="user-@{user.id}-admin" aria-label="user-@{user.id}-admin">Administrator</label>
+				<div class="control-group @("error".when(user.getId().toString().equals(userForm.field("userid").valueOr("")) && userForm.error("admin") != null))" id="user-@{user.getId()}-adminGroup">
+					<label class="control-label" id="updateUser-@{user.getId()}-admin-label" for="user-@{user.getId()}-admin" aria-label="user-@{user.getId()}-admin">Administrator</label>
 					<div class="controls">
-						<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="updateUser-@{user.id}-admin-label" id="user-@{user.id}-admin">
-							<button type="button" name="admin-on" class="btn @("active".when(user.admin))" id="user-@{user.id}-admin-on"
-								aria-role="radio" aria-checked="@(user.admin)"
-								onclick="toggleRadio('user-@{user.id}-admin', true, '@user.admin');">Yes</button>
-							<button type="button" name="admin-off" class="btn @("active".when(!user.admin))" id="user-@{user.id}-admin-off"
-								aria-role="radio" aria-checked="@(!user.admin)"
-								onclick="toggleRadio('user-@{user.id}-admin', false, '@user.admin');">No</button>
+						<div class="btn-group" data-toggle="buttons-radio" aria-role="radiogroup" aria-labelledby="updateUser-@{user.getId()}-admin-label" id="user-@{user.getId()}-admin">
+							<button type="button" name="admin-on" class="btn @("active".when(user.isAdmin()))" id="user-@{user.getId()}-admin-on"
+								aria-role="radio" aria-checked="@(user.isAdmin())"
+								onclick="toggleRadio('user-@{user.getId()}-admin', true, '@user.isAdmin()');">Yes</button>
+							<button type="button" name="admin-off" class="btn @("active".when(!user.isAdmin()))" id="user-@{user.getId()}-admin-off"
+								aria-role="radio" aria-checked="@(!user.isAdmin())"
+								onclick="toggleRadio('user-@{user.getId()}-admin', false, '@user.isAdmin()');">No</button>
 						</div>
-						@if(userForm.field("userid").valueOr("") == ""+user.id && userForm.field("admin").errors().size() > 0){
+						@if(userForm.field("userid").valueOr("") == ""+user.getId() && userForm.field("admin").errors().size() > 0){
 							<span class="help-inline">@userForm.error("admin").message</span>
 						}
 					</div>
@@ -100,9 +100,9 @@
 				<!-- TODO: configure user script permissions -->
 				
 				<div class="form-actions">
-					<button type="submit" class="btn btn-primary" id="user-@{user.id}-submit" name="submit">Save</button>
-					<button type="reset" class="btn" id="user-@{user.id}-reset" name="reset" onclick="toggleRadio('user-@{user.id}-admin', @user.admin, '@user.admin');toggleChanged('user-@{user.id}-name', '@user.name', '@user.name');toggleChanged('user-@{user.id}-email', '@user.email', '@user.email');">Clear</button>
-					<button name="delete" id="user-@{user.id}-delete" class="btn btn-danger" onclick="window.location='@{alternativeRoute}?formName=deleteUser&userid=@{user.id}';return false;"><i class="icon-trash icon-white"></i> Delete User</button>
+					<button type="submit" class="btn btn-primary" id="user-@{user.getId()}-submit" name="submit">Save</button>
+					<button type="reset" class="btn" id="user-@{user.getId()}-reset" name="reset" onclick="toggleRadio('user-@{user.getId()}-admin', @user.isAdmin(), '@user.isAdmin()');toggleChanged('user-@{user.getId()}-name', '@user.getName()', '@user.getName()');toggleChanged('user-@{user.getId()}-email', '@user.getEmail()', '@user.getEmail()');">Clear</button>
+					<button name="delete" id="user-@{user.getId()}-delete" class="btn btn-danger" onclick="window.location='@{alternativeRoute}?formName=deleteUser&userid=@{user.getId()}';return false;"><i class="icon-trash icon-white"></i> Delete User</button>
 				</div>
 			}
 		</div>

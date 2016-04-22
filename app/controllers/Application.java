@@ -98,10 +98,10 @@ public class Application extends Controller {
 		String landingPage = Setting.get("appearance.landingPage");
 		if ("welcome".equals(landingPage)) return redirect(routes.FirstUse.welcome());
 		if ("scripts".equals(landingPage)) return redirect(routes.Jobs.newJob());
-		if ("jobs".equals(landingPage) && !(user.id <= -2 && !"true".equals(Setting.get("users.guest.shareJobs")))) return redirect(routes.Jobs.getJobs());
+		if ("jobs".equals(landingPage) && !(user.getId() <= -2 && !"true".equals(Setting.get("users.guest.shareJobs")))) return redirect(routes.Jobs.getJobs());
 		if ("about".equals(landingPage)) return redirect(routes.Application.about());
-		if ("admin".equals(landingPage) && user.admin) return redirect(routes.Administrator.getSettings());
-		if ("account".equals(landingPage) && user.id >= 0) return redirect(routes.Account.overview());
+		if ("admin".equals(landingPage) && user.isAdmin()) return redirect(routes.Administrator.getSettings());
+		if ("account".equals(landingPage) && user.getId() >= 0) return redirect(routes.Account.overview());
 		
 		return redirect(routes.Jobs.newJob());
 	}

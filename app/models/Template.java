@@ -37,7 +37,7 @@ public class Template implements Comparable<Template> {
 		result.put("ownerId", ownerId);
 		result.put("shared", shared);
 		User owner = ownerId != null ? User.findById(ownerId) : null;
-		result.put("ownerName", owner != null ? owner.name : null);
+		result.put("ownerName", owner != null ? owner.getName() : null);
 		result.put("dirname", ownerTemplatesDirname);
 		result.put("lastUpdated", lastUpdated != null ? lastUpdated.getTime() : 0);
 		if (clientlibJob.getScript() != null) {
@@ -203,7 +203,7 @@ public class Template implements Comparable<Template> {
 			// determine which templates this user has access to
 			for (Object cacheKey : templateCache.keySet()) {
 				/* if (static shared dir || private templates dir || is admin) => access to all in this collection */
-				if (!(cacheKey instanceof Long) || (Long)cacheKey == user.id || user.admin) {
+				if (!(cacheKey instanceof Long) || (Long)cacheKey == user.getId() || user.isAdmin()) {
 					results.addAll(templateCache.get(cacheKey).values());
 					continue;
 				}
@@ -229,36 +229,36 @@ public class Template implements Comparable<Template> {
 		list(user, true); // force refresh of templateCache from disk to ensure the cache is in sync with the filesystem
 		
 		String userTemplatesDirname = null;
-		if (templateCache.containsKey(user.id)) {
-			Map<String, Template> userTemplates = templateCache.get(user.id);
+		if (templateCache.containsKey(user.getId())) {
+			Map<String, Template> userTemplates = templateCache.get(user.getId());
 			for (String key : userTemplates.keySet()) {
 				userTemplatesDirname = userTemplates.get(key).ownerTemplatesDirname;
 				break;
 			}
 			
 		} else {
-			templateCache.put(user.id, new HashMap<String,Template>());
+			templateCache.put(user.getId(), new HashMap<String,Template>());
 		}
 		
 		if (userTemplatesDirname == null) {
 			File templatesDir = new File(Setting.get("templates"));
 			for (File templateUserDir : templatesDir.listFiles()) {
-				if (templateUserDir.getName().startsWith(user.id+"-")) {
+				if (templateUserDir.getName().startsWith(user.getId()+"-")) {
 					userTemplatesDirname = templateUserDir.getName();
 				}
 			}
 		}
 		if (userTemplatesDirname == null) {
-			userTemplatesDirname = user.name.split(" ")[0];
-			userTemplatesDirname = user.id+"-"+userTemplatesDirname.replaceAll("[/\\\\?%*:\\|\"<>\\.\\s]", "");
-			if ((user.id+"-").equals(userTemplatesDirname)) {
-				userTemplatesDirname = user.id+"-"+user.email.split("@")[0];
+			userTemplatesDirname = user.getName().split(" ")[0];
+			userTemplatesDirname = user.getId()+"-"+userTemplatesDirname.replaceAll("[/\\\\?%*:\\|\"<>\\.\\s]", "");
+			if ((user.getId()+"-").equals(userTemplatesDirname)) {
+				userTemplatesDirname = user.getId()+"-"+user.getEmail().split("@")[0];
 			}
 		}
 		
 		File userTemplatesDir = new File(new File(Setting.get("templates")), userTemplatesDirname);
 		if (!userTemplatesDir.exists() && !userTemplatesDir.mkdirs()) {
-			userTemplatesDir = new File(new File(Setting.get("templates")), user.id+"-user");
+			userTemplatesDir = new File(new File(Setting.get("templates")), user.getId()+"-user");
 			if (!userTemplatesDir.exists() & !userTemplatesDir.mkdirs()) {
 				return null;
 			}
@@ -271,7 +271,7 @@ public class Template implements Comparable<Template> {
 			templateCount += templateCache.get(cacheKey).size();
 		}
 		String templateNicename = "Template "+templateCount;
-		while (templateCache.get(user.id).containsKey(templateNicename)) {
+		while (templateCache.get(user.getId()).containsKey(templateNicename)) {
 			templateNicename = "Template "+(++templateCount);
 		}
 		templateJob.setNicename(templateNicename);
@@ -285,9 +285,9 @@ public class Template implements Comparable<Template> {
 			new JobStorage(templateJob, userTemplatesDir, clientlibJob.getJobStorage(), templateJob.getNicename());
 		}
 		templateJob.getJobStorage().save();
-		Template template = new Template(templateJob.getNicename(), userTemplatesDirname, user.id, false, templateJob);
+		Template template = new Template(templateJob.getNicename(), userTemplatesDirname, user.getId(), false, templateJob);
 		
-		templateCache.get(user.id).put(templateJob.getNicename(), template);
+		templateCache.get(user.getId()).put(templateJob.getNicename(), template);
 		
 		return template;
 	}

@@ -20,6 +20,7 @@ import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
 import org.daisy.pipeline.client.filestorage.JobStorage;
 import org.daisy.pipeline.client.models.Job.Status;
+import org.daisy.pipeline.client.models.Message;
 import org.daisy.pipeline.client.models.Result;
 
 import play.Logger;
@@ -37,6 +38,7 @@ public class Job extends Model implements Comparable<Job> {
 	public static Map<String,Integer> lastMessageSequence = Collections.synchronizedMap(new HashMap<String,Integer>());
 	public static Map<String,String> lastStatus = Collections.synchronizedMap(new HashMap<String,String>());
 	public static Map<Long,Date> lastAccessed = Collections.synchronizedMap(new HashMap<Long,Date>());
+	public static Map<Long,List<Message>> runningMessages = Collections.synchronizedMap(new HashMap<Long,List<Message>>());
 	
 	@Id
 	private Long id;
@@ -71,15 +73,15 @@ public class Job extends Model implements Comparable<Job> {
 	/** Make job belonging to user */
 	public Job(User user) {
 		super();
-		this.user = user.id;
+		this.user = user.getId();
 		this.status = "NEW";
 		this.created = new Date();
 		this.notifiedCreated = false;
 		this.notifiedComplete = false;
-		if (user.id < 0)
+		if (user.getId() < 0)
 			this.userNicename = Setting.get("users.guest.name");
 		else
-			this.userNicename = User.findById(user.id).name;
+			this.userNicename = User.findById(user.getId()).getName();
 	}
 
 	public int compareTo(Job other) {
@@ -101,7 +103,7 @@ public class Job extends Model implements Comparable<Job> {
 			lastAccessed.put(id, new Date());
 			User user = User.findById(job.getUser());
 			if (user != null)
-				job.userNicename = user.name;
+				job.userNicename = user.getName();
 			else if (job.user < 0)
 				job.userNicename = Setting.get("users.guest.name");
 			else
@@ -116,7 +118,7 @@ public class Job extends Model implements Comparable<Job> {
 		if (job != null) {
 			User user = User.findById(job.getUser());
 			if (user != null)
-				job.userNicename = user.name;
+				job.userNicename = user.getName();
 			else if (job.user < 0)
 				job.userNicename = Setting.get("users.guest.name");
 			else
@@ -131,7 +133,7 @@ public class Job extends Model implements Comparable<Job> {
 			if (user == null || user < 0)
 				userNicename = Setting.get("users.guest.name");
 			else
-				userNicename = User.findById(user).name;
+				userNicename = User.findById(user).getName();
 		}
 		return userNicename;
 	}
@@ -141,6 +143,9 @@ public class Job extends Model implements Comparable<Job> {
 		if (pushNotifier != null) {
 			pushNotifier.cancel();
 			pushNotifier = null;
+		}
+		if (runningMessages.containsKey(id)) {
+			runningMessages.remove(id);
 		}
 	}
 	
@@ -222,6 +227,30 @@ public class Job extends Model implements Comparable<Job> {
 								if (messages.size() > 0) {
 									Job.lastMessageSequence.put(job.getId(), messages.get(messages.size()-1).sequence);
 								}
+							}
+							
+							if (messages != null) {
+								// update cached messages and add cached messages to job object so that progress can be calculated 
+								if (!runningMessages.containsKey(id)) {
+									runningMessages.put(id, new ArrayList<Message>());
+								}
+								Integer lastSeq = runningMessages.get(id).isEmpty() ? -1 : runningMessages.get(id).get(runningMessages.get(id).size()-1).sequence;
+								for (Message m : messages) {
+									if (m.sequence > lastSeq) {
+										if (m.timeStamp == null) {
+											m.timeStamp = new Date().getTime();
+										}
+										runningMessages.get(id).add(m);
+									}
+								}
+								job.setMessages(runningMessages.get(id));
+								
+								Map<String,String> progressMap = new HashMap<String,String>();
+								progressMap.put("from", job.getProgressFrom()+"");
+								progressMap.put("to", job.getProgressTo()+"");
+								progressMap.put("estimate", job.getProgressEstimate()+"");
+								Notification notification = new Notification("job-progress-"+webUiJob.id, progressMap);
+								NotificationConnection.pushJobNotification(webUiJob.getUser(), notification);
 							}
 							
 						} catch (javax.persistence.PersistenceException e) {

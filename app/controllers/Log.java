@@ -34,7 +34,7 @@ public class Log extends Controller {
 			return redirect(routes.FirstUse.getFirstUse());
 		
 		User user = User.authenticate(request(), session());
-		if (user == null || !user.admin)
+		if (user == null || !user.isAdmin())
 			return redirect(routes.Login.login());
 		
 		Result result = ok(logText("Pipeline 2 Web UI Log", null));
@@ -53,10 +53,10 @@ public class Log extends Controller {
 			List<String> settings = new ArrayList<String>();
 			settings.add("Database:");
 			for (Setting s : Setting.find.all()) {
-				if (Setting.obfuscatedSettings.contains(s.name))
-					settings.add("  "+s.name+": [hidden]");
+				if (Setting.getObfuscatedsettings().contains(s.getName()))
+					settings.add("  "+s.getName()+": [hidden]");
 				else
-					settings.add("  "+s.name+": "+s.value);
+					settings.add("  "+s.getName()+": "+s.getValue());
 			}
 			settings.add("application.conf and system variables:");
 			for (String config : Configuration.root().keys()) {
