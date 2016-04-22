@@ -131,6 +131,9 @@
 			</span>
 		</h2>
 		<br/>
+		<div class="progress progress-striped active" id="job-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-valuetext="Progress: 0%">
+		  	<div class="bar bar-info" style="width: 0%;"></div>
+		</div>
 		<ul style="list-style-type:none;text-align:left;padding-top:20px;"><li id="message-latest">
 		    <pre>&nbsp;</pre>
 	    </li></ul>
@@ -262,6 +265,14 @@
 			} else {
 				updateFuzzy("finished-fuzzy", time);
 				$("#finished").html(new Date(time)+"");
+			}
+		});
+		Notifications.listen("job-progress-@uiJob", function(message){
+			var progress = parseFloat(message.estimate);
+			if (!isNaN(progress)) {
+				$("#job-progress").attr("aria-valuetext", "Progress: "+Math.round(progress)+"%");
+				$("#job-progress").attr("aria-valuenow", progress);
+				$("#job-progress > div").css("width", progress+"%");
 			}
 		});
 		var updateResults = function(results){
