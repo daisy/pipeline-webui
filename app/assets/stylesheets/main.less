@@ -404,9 +404,22 @@ dl.enum-terms dt.enum-term-selected {
 	font-size: 120%;
 }
 
+
 /* #### highlight inputs with errors #### */
 
 input:invalid {
 	border-color: #b94a48;
 	color: #b94a48;
 }
+
+
+/* #### smoother progressbar #### */
+
+.progress .bar {
+  -webkit-transition: width 2s ease;
+  -moz-transition: width 2s ease;
+  -o-transition: width 2s ease;
+  transition: width 2s ease;
+}
+
+
