@@ -30,5 +30,5 @@ public class Notification {
 	public Date getTime() {
 		return (Date)notification.get("time");
 	}
-		
+	
 }

@@ -166,7 +166,7 @@
 <br/><br/>
 </div>
 
-<p id="message-list-loading"><em>
+<p id="message-list-loading"><em>Loading messages
 	<span aria-live="none">
 		<span id="runningDotLog1"                       >&nbsp;.&nbsp; &nbsp; &nbsp;</span>
 		<span id="runningDotLog2" style="display: none;">&nbsp;.&nbsp;.&nbsp; &nbsp;</span>
@@ -214,13 +214,19 @@
 <script type="text/javascript">
 	$(function(){
 		var addMessage = function(message) {
+			if (!(message.text)) {
+				return;
+			}
+			
 			if ($("#m"+message.sequence).size() > 0) {
 				$("#m"+message.sequence).replaceWith(li);
 				
 			} else {
 				var li = '<li id="m'+message.sequence+'" value="'+message.sequence+'" class="'+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><span class="message">'+message.level+' -- '+message.text+'</span></li>';
 				
-				if (message.level==="INFO" || $("#message-list > li").size() === 0) {
+				$("#message-latest").html("<pre>"+message.text+"</pre>");
+				
+				if (message.depth <= 1 || $("#message-list > li").size() === 0) {
 					// top-level message
 					
 					if (message.sequence < $("#message-list > li").last().attr("value")) {
@@ -231,7 +237,6 @@
 					}
 					else {
 						$("#message-list").append(li);
-						$("#message-latest").html("<pre>"+message.text+"</pre>");
 					}
 					
 				} else {
@@ -248,7 +253,20 @@
 					}
 					
 					if ($(firstPreceding).find("ol").size() === 0) {
-						$(firstPreceding).append('<ol aria-live="polite" role="log" class="messagelist"></ol>');
+						var listId = "message-sublist-"+$(firstPreceding).attr("value");
+						$(firstPreceding).append(
+							'<p><a data-toggle="collapse" href="#'+listId+'" id="'+listId+'-toggle" class="collapsed">'+
+						    '    <style>'+
+						    '        #'+listId+'-show { display:none; }'+
+						    '        #'+listId+'-toggle.collapsed #'+listId+'-show { display:inline; }'+
+						    '        #'+listId+'-hide { display:inline; }'+
+						    '        #'+listId+'-toggle.collapsed #'+listId+'-hide { display:none; }'+
+						    '    </style>'+
+						    '    <small id="'+listId+'-show"><i class="icon-chevron-down"></i>Show details</small>'+
+						    '    <small id="'+listId+'-hide"><i class="icon-chevron-up"></i>Hide details</small>'+
+						    '</a></p>'+
+							'<div class="collapse" id="'+listId+'"><ol aria-live="polite" role="log" class="messagelist"></ol></div>'
+						);
 					}
 					
 					if (message.sequence < $(firstPreceding).find("ol > li").last().attr("value")) {
@@ -259,6 +277,14 @@
 					}
 					else {
 						$(firstPreceding).find("ol").append(li);
+					}
+					
+					if (message.level=="ERROR") {
+						$(firstPreceding).removeClass("message-warn");
+						$(firstPreceding).addClass("message-error");
+						
+					} else if (message.level=="WARNING" && !$(firstPreceding).hasClass("message-error")) {
+						$(firstPreceding).addClass("message-warn");
 					}
 				}
 			}
