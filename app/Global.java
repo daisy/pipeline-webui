@@ -136,7 +136,12 @@ public class Global extends GlobalSettings {
 							
 							List<Job> jobs = Job.find.all();
 							for (Job job : jobs) {
-								if (job.getFinished() != null && job.getFinished().before(timeoutDate)) {
+								if (job.getCreated() == null) {
+									// if for some reason 'created' is null, set it to the current time
+									job.setCreated(new Date());
+									job.save();
+								}
+								if (job.getCreated().before(timeoutDate)) {
 									Logger.info("Deleting old job: "+job.getId()+" ("+job.getNicename()+")");
 									job.deleteFromEngineAndWebUi();
 								}
@@ -181,6 +186,7 @@ public class Global extends GlobalSettings {
 									continue;
 								}
 								
+								/*
 								if (webUiJob.getEngineId() != null) {
 									boolean exists = false;
 									for (org.daisy.pipeline.client.models.Job engineJob : engineJobs) {
@@ -190,17 +196,18 @@ public class Global extends GlobalSettings {
 										}
 									}
 									if (!exists) {
-										/* TODO: instead of deleting them:
-										 * - keep them in the webui (job xml is stored, results are not)
-										 * - allow for re-running these jobs
-										 * - have an automatic cleanup setting in the maintenance tab of the admin settings similar to the current job persistence option
-										 */
+										// TODO: instead of deleting them:
+										// - keep them in the webui (job xml is stored, results are not)
+										// - allow for re-running these jobs
+										// - have an automatic cleanup setting in the maintenance tab of the admin settings similar to the current job persistence option
+										//
 										//if ( should delete job ) {
 											//Logger.info("Deleting job that no longer exists in the Pipeline engine: "+webUiJob.getId()+" ("+webUiJob.getEngineId()+" - "+webUiJob.getNicename()+")");
 											//webUiJob.deleteFromEngineAndWebUi();
 										//}
 									}
 								}
+								*/
 							}
 							
 							Logger.debug("checking for jobs in engine that is not in webui...");
