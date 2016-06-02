@@ -509,6 +509,10 @@ public class Jobs extends Controller {
         		new Runnable() {
         			public void run() {
         				org.daisy.pipeline.client.models.Job job = webuiJob.getJobFromEngine(0);
+        				if (job == null) {
+        					Logger.warn("Web UI job #"+webuiJob.getId()+" was not found in the engine.");
+        					return;
+        				}
         				List<Message> messages = job.getMessages();
         				Job.estimateMissingTimestamps(messages, webuiJob);
         				if (messages != null) {
@@ -874,6 +878,7 @@ public class Jobs extends Controller {
 										jsonFileset.add(fileResult);
 									}
 									result.put("fileset", jsonFileset);
+									result.put("jobId", jobId);
 									
 									Logger.debug("zip file contains "+tempDir.listFiles().length+" files");
 									for (File dirFile : tempDir.listFiles()) {
