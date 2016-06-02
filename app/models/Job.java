@@ -218,10 +218,13 @@ public class Job extends Model implements Comparable<Job> {
 							}
 							
 							List<org.daisy.pipeline.client.models.Message> messages = job.getMessages();
+							estimateMissingTimestamps(messages, webUiJob);
 							if (messages != null) {
 								for (org.daisy.pipeline.client.models.Message message : messages) {
-									Notification notification = new Notification("job-message-"+webUiJob.id, message);
-									NotificationConnection.pushJobNotification(webUiJob.getUser(), notification);
+									if (!"".equals(message.getText())) { // don't bother sending the message if it is empty
+										Notification notification = new Notification("job-message-"+webUiJob.id, message);
+										NotificationConnection.pushJobNotification(webUiJob.getUser(), notification);
+									}
 								}
 								
 								if (messages.size() > 0) {
@@ -389,15 +392,19 @@ public class Job extends Model implements Comparable<Job> {
 		catch (IllegalArgumentException e) { Logger.debug("jobUpdateHelper: IllegalArgumentException: "+status); }
 		catch (NullPointerException e) { Logger.debug("jobUpdateHelper: NullPointerException: "+status); }
 	}
-
+	
 	public org.daisy.pipeline.client.models.Job asJob() {
+		return asJob(true);
+	}
+	
+	public org.daisy.pipeline.client.models.Job asJob(boolean parseMessages) {
 		if (clientlibJob == null) {
 			Logger.debug("getting client job (not cached from earlier, instance:"+this+")");
 			File jobStorageDir = new File(Setting.get("jobs"));
 			clientlibJob = JobStorage.loadJob(""+id, jobStorageDir);
 			if (clientlibJob == null) {
 				Logger.debug("not found in job storage");
-				getJobFromEngine(0);
+				getJobFromEngine(parseMessages ? 0 : -1);
 				if (clientlibJob != null) {
 					Logger.debug("got job from engine; setting job storage based on id");
 					new JobStorage(clientlibJob, jobStorageDir, ""+id);
@@ -414,71 +421,81 @@ public class Job extends Model implements Comparable<Job> {
 				clientlibJob.setNicename(nicename);
 				new JobStorage(clientlibJob, jobStorageDir, ""+id);
 			}
-			setJob(clientlibJob);
+			setJob(clientlibJob, parseMessages);
 		}
 		return clientlibJob;
 	}
 	
 	public void setJob(org.daisy.pipeline.client.models.Job job) {
+		setJob(job, true);
+	}
+	
+	public void setJob(org.daisy.pipeline.client.models.Job job, boolean parseMessages) {
 		if (clientlibJob == null) {
-			clientlibJob = asJob();
+			clientlibJob = asJob(parseMessages);
 		}
-		
+
 		if (job.getId() != null) {
-		    clientlibJob.setId(job.getId());
+			clientlibJob.setId(job.getId());
 		}
 		if (job.getHref() != null) {
-		    clientlibJob.setHref(job.getHref());
+			clientlibJob.setHref(job.getHref());
 		}
 		if (job.getStatus() != null) {
-		    clientlibJob.setStatus(job.getStatus());
+			clientlibJob.setStatus(job.getStatus());
 		}
 		if (job.getPriority() != null) {
-		    clientlibJob.setPriority(job.getPriority());
+			clientlibJob.setPriority(job.getPriority());
 		}
 		if (job.getLogHref() != null) {
-		    clientlibJob.setLogHref(job.getLogHref());
+			clientlibJob.setLogHref(job.getLogHref());
 		}
-		if (job.getMessages() != null) {
-		    clientlibJob.setMessages(job.getMessages());
+		if (parseMessages && job.getMessages() != null) {
+			new Exception().printStackTrace();
+			clientlibJob.setMessages(job.getMessages());
 		}
 		if (job.getResult() != null && job.getResults() != null) {
-		    clientlibJob.setResults(job.getResult(), job.getResults());
+			clientlibJob.setResults(job.getResult(), job.getResults());
 		}
-		
+
 		if (clientlibJob.getBatchId() == null && job.getBatchId() != null) {
 			clientlibJob.setBatchId(job.getBatchId());
 		}
 		if (clientlibJob.getCallback() == null && job.getCallback() != null) {
-		    clientlibJob.setCallback(job.getCallback());
+			clientlibJob.setCallback(job.getCallback());
 		}
 		if (clientlibJob.getNicename() == null && job.getNicename() != null) {
-		    clientlibJob.setNicename(job.getNicename());
+			clientlibJob.setNicename(job.getNicename());
 		}
 		if (clientlibJob.getInputs() == null && job.getInputs() != null) {
-		    clientlibJob.setInputs(job.getInputs());
+			clientlibJob.setInputs(job.getInputs());
 		}
 		if (clientlibJob.getOutputs() == null && job.getOutputs() != null) {
-		    clientlibJob.setOutputs(job.getOutputs());
+			clientlibJob.setOutputs(job.getOutputs());
 		}
 		if (clientlibJob.getScriptHref() == null && job.getScriptHref() != null) {
-		    clientlibJob.setScriptHref(job.getScriptHref());
+			clientlibJob.setScriptHref(job.getScriptHref());
 		}
 		if (clientlibJob.getScript() == null && job.getScript() != null) {
-		    clientlibJob.setScript(job.getScript());
+			clientlibJob.setScript(job.getScript());
 		}
 		if (clientlibJob.getScript() == null || job.getScript() != null && !clientlibJob.getScript().getId().equals(job.getScript().getId())) {
 			if (job.getScript() != null) {
 				clientlibJob.setScript(Application.ws.getScript(job.getScript().getId()));
 				clientlibJob.setInputs(clientlibJob.getInputs());
-			    clientlibJob.setOutputs(clientlibJob.getOutputs());
+				clientlibJob.setOutputs(clientlibJob.getOutputs());
 			}
 		}
-		
+
 		jobUpdateHelper();
+
 	}
 
-	/** Use this method to get the job from the engine to ensure that the XML in the webuis job storage is always up to date */
+	/**
+	 * Use this method to get the job from the engine to ensure that the XML in the webuis job storage is always up to date
+	 * 
+	 * @param fromSequence request messages from this message number; if negative will ignore messages (more efficient)
+	 */
 	public org.daisy.pipeline.client.models.Job getJobFromEngine(int fromSequence) {
 		Logger.debug("Getting job from engine: "+engineId);
 		if (engineId == null) {
@@ -488,7 +505,7 @@ public class Job extends Model implements Comparable<Job> {
 		if (clientlibJob == null) {
 			return null;
 		}
-		setJob(clientlibJob);
+		setJob(clientlibJob, fromSequence >= 0);
 		save();
 		return this.clientlibJob;
 	}
@@ -615,6 +632,22 @@ public class Job extends Model implements Comparable<Job> {
 		setStarted(null);
 		setFinished(null);
 		save();
+	}
+	
+	/** https://github.com/daisy/pipeline-framework/issues/109 */
+	public static void estimateMissingTimestamps(List<Message> messages, Job job) {
+		if (messages == null || messages.size() == 0 || job == null || job.started == null) {
+			return;
+		}
+		
+		// we have no idea when the messages arrived so let's just spread them out
+		long start = job.started.getTime();
+		long now = new Date().getTime();
+		long step = (now - start) / messages.size();
+		for (Message m : messages) {
+			m.timeStamp = now;
+			now += step;
+		}
 	}
 	
 }

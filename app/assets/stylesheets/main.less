@@ -42,7 +42,7 @@ ol.messagelist {
 	font-size: 0.8em;
 	
 	li {
-		white-space: nowrap;
+		//white-space: nowrap;
 		font-weight: 650;
 		padding-top: 0.25em;
 		
@@ -54,11 +54,11 @@ ol.messagelist {
 		}
 	}
 		
-	.message-error {
+	.message-error > span {
 		background-color: #FAA;
 	}
 	
-	.message-warn {
+	.message-warn > span {
 		background-color: #FFA;
 	}
 	
@@ -404,9 +404,22 @@ dl.enum-terms dt.enum-term-selected {
 	font-size: 120%;
 }
 
+
 /* #### highlight inputs with errors #### */
 
 input:invalid {
 	border-color: #b94a48;
 	color: #b94a48;
 }
+
+
+/* #### smoother progressbar #### */
+
+.progress .bar {
+  -webkit-transition: width 2s ease;
+  -moz-transition: width 2s ease;
+  -o-transition: width 2s ease;
+  transition: width 2s ease;
+}
+
+
