@@ -293,6 +293,10 @@
 			$("#message-list-loading").hide();
 		};
 		
+		Notifications.listen("job-unavailable-@uiJob", function(message){
+			$("#execution-log").hide();
+			$("#status-unavailable").show();
+		});
 		Notifications.listen("job-message-@uiJob", addMessage);
 		Notifications.listen("job-status-@uiJob", function(status){
 			$(".statusbox").hide();
@@ -404,6 +408,7 @@
 			},
 			success: function(job, textStatus, jqXHR) {
 				// updating page contents dynamically...
+				console.log(job);
 				updateFuzzy("created-fuzzy", job.webuiJob.created);
 				updateFuzzy("started-fuzzy", job.webuiJob.started);
 				updateFuzzy("finished-fuzzy", job.webuiJob.finished);
@@ -420,18 +425,33 @@
 				
 				$(".statusbox").hide();
 				$("#status-"+job.webuiJob.status.toLowerCase()).show();
-				
-				$("#message-list > li").remove();
-				if (job.engineJob.messages instanceof Array) {
-					for (var m = 0; m < job.engineJob.messages.length; m++) {
-						addMessage(job.engineJob.messages[m]);
+			}
+		});
+		$.ajax({
+			url: "@routes.Jobs.getEngineJobJson(uiJob)?"+new Date().getTime(),
+			error: function(jqXHR, textStatus, errorThrown) {
+				// error; too bad :(
+			},
+			success: function(job, textStatus, jqXHR) {
+				// updating page contents dynamically...
+				console.log(job);
+				if (typeof job.engineJob === "object") {
+					$("#message-list > li").remove();
+					if (job.engineJob.messages instanceof Array) {
+						for (var m = 0; m < job.engineJob.messages.length; m++) {
+							addMessage(job.engineJob.messages[m]);
+						}
 					}
+					
+					$("#arguments").html(argumentsToHtml(job.engineJob.arguments));
 				}
 				
-				$("#arguments").html(argumentsToHtml(job.engineJob.arguments));
-				
 				if (job.jobAvailableInEngine) {
-					$("#engine-id").html(job.engineJob.id);
+					$("#execution-log").show();
+					$("#status-unavailable").hide();
+					if (typeof job.engineJob === "object") {
+						$("#engine-id").html(job.engineJob.id);
+					}
 					updateResults(job.results);
 					
 				} else {

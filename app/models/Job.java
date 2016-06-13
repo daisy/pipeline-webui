@@ -451,7 +451,6 @@ public class Job extends Model implements Comparable<Job> {
 			clientlibJob.setLogHref(job.getLogHref());
 		}
 		if (parseMessages && job.getMessages() != null) {
-			new Exception().printStackTrace();
 			clientlibJob.setMessages(job.getMessages());
 		}
 		if (job.getResult() != null && job.getResults() != null) {

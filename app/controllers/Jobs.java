@@ -424,6 +424,14 @@ public class Jobs extends Controller {
 	}
 	
 	public static Result getJobJson(Long id) {
+		return getJobJson(id, false);
+	}
+	
+	public static Result getEngineJobJson(Long id) {
+		return getJobJson(id, true);
+	}
+	
+	private static Result getJobJson(Long id, boolean includeEngine) {
 		if (FirstUse.isFirstUse())
 			return unauthorized("unauthorized");
 		
@@ -446,88 +454,93 @@ public class Jobs extends Controller {
 		
 		Map<String,Object> output = new HashMap<String,Object>();
 		output.put("webuiJob", webuiJob);
-		org.daisy.pipeline.client.models.Job clientlibJob = null;
-		boolean jobAvailableInEngine = false;
-		if (webuiJob.getEngineId() != null) {
-			clientlibJob = webuiJob.getJobFromEngine(-1);
-			jobAvailableInEngine = clientlibJob != null;
-		}
-		
-		if (clientlibJob == null) {
-			clientlibJob = webuiJob.asJob();
-		}
-		
-		if (!jobAvailableInEngine && ("RUNNING".equals(webuiJob.getStatus()) || "IDLE".equals(webuiJob.getStatus()))) {
-			// When jobs are not available in the engine; don't leave them in a running or queued state.
-			webuiJob.setStatus("UNAVAILABLE");
-			webuiJob.save();
-		}
-		output.put("jobAvailableInEngine", jobAvailableInEngine);
-		
-		if (clientlibJob == null) {
-			Logger.error("An error occured while retrieving the job");
-			
-		} else {
-            Map<String,Object> clientlibJobMap = new HashMap<String,Object>();
-            Map<String,Object> clientlibScriptMap = new HashMap<String,Object>();
-            clientlibJobMap.put("id", clientlibJob.getId());
-            clientlibJobMap.put("href", clientlibJob.getHref());
-            clientlibJobMap.put("status", clientlibJob.getStatus());
-            clientlibJobMap.put("priority", clientlibJob.getPriority());
-            clientlibJobMap.put("scriptHref", clientlibJob.getScriptHref());
-            clientlibJobMap.put("nicename", clientlibJob.getNicename());
-            clientlibJobMap.put("description", clientlibJob.getDescription());
-            clientlibJobMap.put("batchId", clientlibJob.getBatchId());
-            clientlibJobMap.put("callback", clientlibJob.getCallback());
-            clientlibJobMap.put("logHref", clientlibJob.getLogHref());
-            clientlibJobMap.put("result", clientlibJob.getResult());
-            clientlibJobMap.put("results", clientlibJob.getResults());
-            clientlibJobMap.put("arguments", clientlibJob.getArguments());
-            clientlibJobMap.put("progressEstimate", clientlibJob.getProgressEstimate());
-            clientlibJobMap.put("progressFrom", clientlibJob.getProgressFrom());
-            clientlibJobMap.put("progressFromTime", clientlibJob.getProgressFromTime());
-            clientlibJobMap.put("progressTo", clientlibJob.getProgressTo());
-            if (clientlibJob.getScript() != null) {
-                clientlibScriptMap.put("id", clientlibJob.getScript().getId());
-                clientlibScriptMap.put("href", clientlibJob.getScript().getHref());
-                clientlibScriptMap.put("nicename", clientlibJob.getScript().getNicename());
-                clientlibScriptMap.put("version", clientlibJob.getScript().getVersion());
-                clientlibScriptMap.put("description", clientlibJob.getScript().getDescription());
-                clientlibScriptMap.put("homepage", clientlibJob.getScript().getHomepage());
-                clientlibScriptMap.put("inputFilesets", clientlibJob.getScript().getInputFilesets());
-                clientlibScriptMap.put("outputFilesets", clientlibJob.getScript().getOutputFilesets());
-            }
-            clientlibJobMap.put("script", clientlibScriptMap);
-            output.put("engineJob", clientlibJobMap);
-            output.put("results", Job.jsonifiableResults(clientlibJob));
-        }
-        JsonNode jobJson = play.libs.Json.toJson(output);
 
-        // messages can take a bit of time to parse so we parse them asynchronously and push them when they are ready
-        Akka.system().scheduler().scheduleOnce(
-        		Duration.create(0, TimeUnit.SECONDS),
-        		new Runnable() {
-        			public void run() {
-        				org.daisy.pipeline.client.models.Job job = webuiJob.getJobFromEngine(0);
-        				if (job == null) {
-        					Logger.warn("Web UI job #"+webuiJob.getId()+" was not found in the engine.");
-        					return;
-        				}
-        				List<Message> messages = job.getMessages();
-        				Job.estimateMissingTimestamps(messages, webuiJob);
-        				if (messages != null) {
-        					for (Message message : messages) {
-        						if (!"".equals(message.getText())) { // don't bother sending the message if it is empty
-        							Notification notification = new Notification("job-message-"+webuiJob.getId(), message);
-        							NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
-        						}
-        					}
-        				}
-        			}
-        		},
-        		Akka.system().dispatcher()
-        		);
+		if (includeEngine) {
+			org.daisy.pipeline.client.models.Job clientlibJob = null;
+			boolean jobAvailableInEngine = false;
+			if (webuiJob.getEngineId() != null) {
+				clientlibJob = webuiJob.getJobFromEngine(-1);
+				jobAvailableInEngine = clientlibJob != null;
+			}
+
+			if (clientlibJob == null) {
+				clientlibJob = webuiJob.asJob();
+			}
+
+			if (!jobAvailableInEngine && ("RUNNING".equals(webuiJob.getStatus()) || "IDLE".equals(webuiJob.getStatus()))) {
+				// When jobs are not available in the engine; don't leave them in a running or queued state.
+				webuiJob.setStatus("UNAVAILABLE");
+				webuiJob.save();
+			}
+			output.put("jobAvailableInEngine", jobAvailableInEngine);
+
+			if (clientlibJob == null) {
+				Logger.error("An error occured while retrieving the job");
+
+			} else {
+				Map<String,Object> clientlibJobMap = new HashMap<String,Object>();
+				Map<String,Object> clientlibScriptMap = new HashMap<String,Object>();
+				clientlibJobMap.put("id", clientlibJob.getId());
+				clientlibJobMap.put("href", clientlibJob.getHref());
+				clientlibJobMap.put("status", clientlibJob.getStatus());
+				clientlibJobMap.put("priority", clientlibJob.getPriority());
+				clientlibJobMap.put("scriptHref", clientlibJob.getScriptHref());
+				clientlibJobMap.put("nicename", clientlibJob.getNicename());
+				clientlibJobMap.put("description", clientlibJob.getDescription());
+				clientlibJobMap.put("batchId", clientlibJob.getBatchId());
+				clientlibJobMap.put("callback", clientlibJob.getCallback());
+				clientlibJobMap.put("logHref", clientlibJob.getLogHref());
+				clientlibJobMap.put("result", clientlibJob.getResult());
+				clientlibJobMap.put("results", clientlibJob.getResults());
+				clientlibJobMap.put("arguments", clientlibJob.getArguments());
+				clientlibJobMap.put("progressEstimate", clientlibJob.getProgressEstimate());
+				clientlibJobMap.put("progressFrom", clientlibJob.getProgressFrom());
+				clientlibJobMap.put("progressFromTime", clientlibJob.getProgressFromTime());
+				clientlibJobMap.put("progressTo", clientlibJob.getProgressTo());
+				if (clientlibJob.getScript() != null) {
+					clientlibScriptMap.put("id", clientlibJob.getScript().getId());
+					clientlibScriptMap.put("href", clientlibJob.getScript().getHref());
+					clientlibScriptMap.put("nicename", clientlibJob.getScript().getNicename());
+					clientlibScriptMap.put("version", clientlibJob.getScript().getVersion());
+					clientlibScriptMap.put("description", clientlibJob.getScript().getDescription());
+					clientlibScriptMap.put("homepage", clientlibJob.getScript().getHomepage());
+					clientlibScriptMap.put("inputFilesets", clientlibJob.getScript().getInputFilesets());
+					clientlibScriptMap.put("outputFilesets", clientlibJob.getScript().getOutputFilesets());
+				}
+				clientlibJobMap.put("script", clientlibScriptMap);
+				output.put("engineJob", clientlibJobMap);
+				output.put("results", Job.jsonifiableResults(clientlibJob));
+			}
+
+			// messages can take a bit of time to parse so we parse them asynchronously and push them when they are ready
+			Akka.system().scheduler().scheduleOnce(
+					Duration.create(0, TimeUnit.SECONDS),
+					new Runnable() {
+						public void run() {
+							org.daisy.pipeline.client.models.Job job = webuiJob.getJobFromEngine(0);
+							if (job == null) {
+								Logger.warn("Web UI job #"+webuiJob.getId()+" was not found in the engine.");
+								Notification notification = new Notification("job-unavailable-"+webuiJob.getId(), true);
+								NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
+								return;
+							}
+							List<Message> messages = job.getMessages();
+							Job.estimateMissingTimestamps(messages, webuiJob);
+							if (messages != null) {
+								for (Message message : messages) {
+									if (!"".equals(message.getText())) { // don't bother sending the message if it is empty
+										Notification notification = new Notification("job-message-"+webuiJob.getId(), message);
+										NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
+									}
+								}
+							}
+						}
+					},
+					Akka.system().dispatcher()
+					);
+		}
         
+        JsonNode jobJson = play.libs.Json.toJson(output);
 		return ok(jobJson);
 	}
 	

@@ -112,7 +112,7 @@ h2 {
 		var getTemplateContents = function() {
 			// Dynamically load any page contents (for instance if the job is based on a template, then the job will be pre-populated with arguments and context)
 			$.ajax({
-				url: "@routes.Jobs.getJobJson(jobId)?"+new Date().getTime(),
+				url: "@routes.Jobs.getEngineJobJson(jobId)?"+new Date().getTime(),
 				error: function(jqXHR, textStatus, errorThrown) {
 					// error; too bad :(
 					Job.doneAddingPreviousFiles = true;
