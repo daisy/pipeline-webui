@@ -62,27 +62,21 @@ public class Application extends Controller {
 	
 	public static final String version;
 	static {
-		URL versionFileURL = Play.application().classloader().getResource("version.properties");
-		if (versionFileURL == null) {
+		File versionFile = Play.application().getFile("conf/version.properties");
+		if (versionFile == null || !versionFile.isFile()) {
 			version = "dev";
 		} else {
-			File versionFile = new File(versionFileURL.getPath());
-			if (versionFile.isFile()) {
-				Properties versionProperties = new Properties();
-				try {
-					versionProperties.load(new FileInputStream(versionFile));
-				} catch (IOException e) {
-					Logger.error("Unable to read version.properties", e);
-				}
-				String v = versionProperties.getProperty("version");
-				if (v == null) {
-					version = "dev";
-				} else {
-					version = v;
-				}
-
-			} else {
+			Properties versionProperties = new Properties();
+			try {
+				versionProperties.load(new FileInputStream(versionFile));
+			} catch (IOException e) {
+				Logger.error("Unable to read version.properties", e);
+			}
+			String v = versionProperties.getProperty("version");
+			if (v == null) {
 				version = "dev";
+			} else {
+				version = v;
 			}
 		}
 	}
