@@ -33,17 +33,12 @@
 		.detailed-info { display: none; }
 		#job-details table td { text-align: right; }
 	</style>
+	<p>
+		<strong id="scriptname" style="display:none;">&nbsp;</strong>
+		<span id="scriptdesc" style="display:none;">&nbsp;</span>
+	</p>
 	<table class="table table-hover table-condensed">
 		<tbody>
-            <tr>
-                <th>Script:</th>
-                <td>
-                    <span id="scriptname">&nbsp;</span>
-                    <span class="detailed-info">
-                    	<br/><small id="scriptid" class="muted">&nbsp;</small>
-                   	</span>
-                </td>
-            </tr>
             <tr>
                 <th>Created:</th>
                 <td>
@@ -78,6 +73,12 @@
                 </td>
             </tr>
             <tr class="detailed-info">
+                <th>Script ID:</th>
+                <td>
+                    <span id="scriptid">&nbsp;</span>
+                </td>
+            </tr>
+            <tr>
                 <th>User:</th>
                 <td>
                     <span id="username">&nbsp;</span>
@@ -419,7 +420,7 @@
 				$("#engine-id").html(job.webuiJob.engineId);
 				$("#header-nicename, #nicename").html(job.webuiJob.nicename);
 				$("#scriptid").html(job.webuiJob.scriptId);
-				$("#scriptname").html(job.webuiJob.scriptName);
+				$("#scriptname").html(job.webuiJob.scriptName).show();
 				$("#username").html(job.webuiJob.userNicename);
 				$("#userid").html(job.webuiJob.user < 0 ? job.webuiJob.user : "&nbsp;");
 				
@@ -434,7 +435,7 @@
 			},
 			success: function(job, textStatus, jqXHR) {
 				// updating page contents dynamically...
-				console.log(job);
+				$("#scriptdesc").html(": "+job.engineJob.script.description).show();
 				if (typeof job.engineJob === "object") {
 					$("#message-list > li").remove();
 					if (job.engineJob.messages instanceof Array) {
