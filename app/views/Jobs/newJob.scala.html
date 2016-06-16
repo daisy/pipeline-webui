@@ -132,7 +132,7 @@ h2 {
 							    if (Notifications.handlers["uploads"]) {
 					                for (var i = 0; i < Notifications.handlers["uploads"].length; i++) {
 					                    var handler = Notifications.handlers["uploads"][i];
-					                    handler.fn({fileset: files}, handler.data);
+					                    handler.fn({fileset: files, jobId: @jobId}, handler.data);
 					                }
 					            }
 					            if (typeof job.engineJob === "object") {
