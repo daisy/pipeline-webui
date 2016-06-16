@@ -816,6 +816,39 @@ public class Jobs extends Controller {
 		}
 	}
 	
+	public static Result deleteRedirect(Long jobId) {
+		if (FirstUse.isFirstUse()) {
+			return redirect(routes.FirstUse.getFirstUse());
+		}
+
+		User user = User.authenticate(request(), session());
+		if (user == null) {
+			return redirect(routes.Login.login());
+		}
+		
+		Job job = Job.findById(jobId);
+		if (job == null) {
+			return notFound("The job with ID='"+jobId+"' was not found.");
+		}
+		
+		if (!(	user.isAdmin()
+			||	job.getUser().equals(user.getId())
+			||	job.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+			)) {
+			return forbidden("You are not allowed to view this job.");
+		}
+		
+		Logger.debug("deleting "+jobId);
+		boolean deletedSuccessfully = job.deleteFromEngineAndWebUi();
+		if (deletedSuccessfully) {
+			flash("success", "Job #"+jobId+" was deleted.");
+			return redirect(routes.Jobs.getJobs());
+		} else {
+			flash("error", "An error occured while trying to delete job #"+jobId+".");
+			return redirect(routes.Jobs.getJob(jobId));
+		}
+	}
+	
 	public static Result postUpload(Long jobId) {
 		if (FirstUse.isFirstUse())
 			return forbidden();

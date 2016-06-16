@@ -2,20 +2,6 @@
 
 @main("View job", "jobs", Array("createJob.js")) {
 
-@if(flash.contains("error")) {
-    <div role="alert" class="alert alert-error">
-    	<a class="close" data-dismiss="alert">&times;</a>
-        @flash.get("error")
-    </div>
-}
-
-@if(flash.contains("success")) {
-    <div role="alert" class="alert alert-success">
-    	<a class="close" data-dismiss="alert">&times;</a>
-        @flash.get("success")
-    </div>
-}
-
 <hgroup>
 	<h1>Job Summary<br/>
 	<small id="header-nicename">&nbsp;</small></h1>
@@ -205,6 +191,7 @@
 
 <br/>
 <div class="form-actions">
+<a class="btn btn-danger" href="@routes.Jobs.deleteRedirect(uiJob)"><i class="icon-trash icon-white"></i> Delete</a>
 <a class="btn btn-info" href="@routes.Jobs.restart(uiJob)"><span class="icon-refresh icon-white"></span> Restart job</a>
 <a class="btn btn-success" href="@routes.Jobs.newJobWithOldJob(uiJob)"><span class="icon-plus icon-white"></span> New job with same options</a>
 <a class="btn" href="@routes.Jobs.saveAsTemplate(uiJob)"><span class="icon-briefcase"></span> Save job as template</a>

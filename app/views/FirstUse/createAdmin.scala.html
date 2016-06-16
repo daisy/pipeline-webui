@@ -13,20 +13,6 @@
 		<p style="text-align:center;">This is the first time that you are using the Pipeline 2 Web UI. Please fill in the form below to configure an administrative account for this website.</p>
 		<br/>
 	  	
-	    @if(flash.contains("error")) {
-	        <div role="alert" class="alert alert-error">
-	        	<a class="close" data-dismiss="alert">&times;</a>
-	            @flash.get("error")
-	        </div>
-	    }
-	    
-	    @if(flash.contains("success")) {
-	        <div role="alert" class="alert alert-success">
-	        	<a class="close" data-dismiss="alert">&times;</a>
-	            @flash.get("success")
-	        </div>
-	    }
-	    
 	    <script type="text/javascript">
 	  		$(function(){ DP2Forms.startValidation("createAdmin", "@routes.FirstUse.postFirstUse()?validate", ["email","password","repeatPassword"]); });
 		</script>
