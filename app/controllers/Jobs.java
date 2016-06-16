@@ -511,34 +511,34 @@ public class Jobs extends Controller {
 				output.put("engineJob", clientlibJobMap);
 				output.put("results", Job.jsonifiableResults(clientlibJob));
 			}
-
-			// messages can take a bit of time to parse so we parse them asynchronously and push them when they are ready
-			Akka.system().scheduler().scheduleOnce(
-					Duration.create(0, TimeUnit.SECONDS),
-					new Runnable() {
-						public void run() {
-							org.daisy.pipeline.client.models.Job job = webuiJob.getJobFromEngine(0);
-							if (job == null) {
-								Logger.warn("Web UI job #"+webuiJob.getId()+" was not found in the engine.");
-								Notification notification = new Notification("job-unavailable-"+webuiJob.getId(), true);
-								NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
-								return;
-							}
-							List<Message> messages = job.getMessages();
-							Job.estimateMissingTimestamps(messages, webuiJob);
-							if (messages != null) {
-								for (Message message : messages) {
-									if (!"".equals(message.getText())) { // don't bother sending the message if it is empty
-										Notification notification = new Notification("job-message-"+webuiJob.getId(), message);
-										NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
-									}
+		}
+		
+		// messages can take a bit of time to parse so we parse them asynchronously and push them when they are ready
+		Akka.system().scheduler().scheduleOnce(
+				Duration.create(0, TimeUnit.SECONDS),
+				new Runnable() {
+					public void run() {
+						org.daisy.pipeline.client.models.Job job = includeEngine ? webuiJob.getJobFromEngine(0) : webuiJob.asJob();
+						if (job == null) {
+							Logger.warn("Web UI job #"+webuiJob.getId()+" was not found in "+(includeEngine ? "the engine." : "the job storage."));
+							Notification notification = new Notification("job-unavailable-"+webuiJob.getId(), true);
+							NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
+							return;
+						}
+						List<Message> messages = job.getMessages();
+						Job.estimateMissingTimestamps(messages, webuiJob);
+						if (messages != null) {
+							for (Message message : messages) {
+								if (!"".equals(message.getText())) { // don't bother sending the message if it is empty
+									Notification notification = new Notification("job-message-"+webuiJob.getId(), message);
+									NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
 								}
 							}
 						}
-					},
-					Akka.system().dispatcher()
-					);
-		}
+					}
+				},
+				Akka.system().dispatcher()
+				);
 		
 		JsonNode jobJson = play.libs.Json.toJson(output);
 		return ok(jobJson);
@@ -1021,6 +1021,7 @@ public class Jobs extends Controller {
 					contentType = ContentType.probe(href, new FileInputStream(files.get(href)));
 				} catch (FileNotFoundException e) {
 					Logger.error("[Job "+jobId+"] Could not probe "+href+" for its content type", e);
+					contentType = "application/octet-stream";
 				}
 				fileResult.put("fileName", href);
 				fileResult.put("contentType", contentType);

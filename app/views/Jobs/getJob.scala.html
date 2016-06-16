@@ -210,61 +210,58 @@
 				$("#m"+message.sequence).replaceWith(li);
 				
 			} else {
-				var li = '<li id="m'+message.sequence+'" value="'+message.sequence+'" class="'+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><span class="message">'+message.level+' -- '+message.text+'</span></li>';
+				var li = '<li data-depth="'+message.depth+'" data-level="'+message.level+'" id="m'+message.sequence+'" value="'+message.sequence+'" class="'+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><span class="message">'+message.text+'</span></li>';
 				
-				$("#message-latest").html("<pre>"+message.text+"</pre>");
+				if (message.depth < 2) {
+					$("#message-latest").html("<pre>"+message.text+"</pre>");
+				}
 				
-				if (message.depth <= 1 || $("#message-list > li").size() === 0) {
+				if (message.depth < 1) {
 					// top-level message
 					
-					if (message.sequence < $("#message-list > li").last().attr("value")) {
-						$("#message-list > li")
-							.filter(function(i){ return $(this).attr("value") < message.sequence; })
-							.last()
-							.after(li);
-					}
-					else {
+					var putAfter = $("#message-list > li")
+										.filter(function(i){ return $(this).attr("value") < message.sequence; })
+										.last();
+					
+					if ($(putAfter).size()) {
+						$(putAfter).after(li);
+						
+					} else {
 						$("#message-list").append(li);
 					}
 					
 				} else {
-					// message nested under first preceding top-level message
+					// nested message
 					
-					var firstPreceding;
-					if (message.sequence < $("#message-list > li").last().attr("value")) {
-						firstPreceding = $("#message-list > li")
-							.filter(function(i){ return $(this).attr("value") < message.sequence; })
+					var firstPreceding = $("#message-list li")
+							.filter(function(i){ return $(this).attr("value") < message.sequence && $(this).attr("data-depth") <= message.depth; })
 							.last();
-					}
-					else {
-						firstPreceding = $("#message-list > li").last();
-					}
+					var shouldNest = $(firstPreceding).attr("data-depth") < message.depth; 
 					
-					if ($(firstPreceding).find("ol").size() === 0) {
+					if (shouldNest && !$(firstPreceding).children("div").size()) {
 						var listId = "message-sublist-"+$(firstPreceding).attr("value");
-						$(firstPreceding).append(
-							'<p><a data-toggle="collapse" href="#'+listId+'" id="'+listId+'-toggle" class="collapsed">'+
-						    '    <style>'+
-						    '        #'+listId+'-show { display:none; }'+
-						    '        #'+listId+'-toggle.collapsed #'+listId+'-show { display:inline; }'+
-						    '        #'+listId+'-hide { display:inline; }'+
-						    '        #'+listId+'-toggle.collapsed #'+listId+'-hide { display:none; }'+
-						    '    </style>'+
-						    '    <small id="'+listId+'-show"><i class="icon-chevron-down"></i>Show details</small>'+
-						    '    <small id="'+listId+'-hide"><i class="icon-chevron-up"></i>Hide details</small>'+
-						    '</a></p>'+
-							'<div class="collapse" id="'+listId+'"><ol aria-live="polite" role="log" class="messagelist"></ol></div>'
-						);
+						$(firstPreceding).children(".message").after('<div class="'+($(firstPreceding).attr("data-depth") == 1 ? 'collapse' : '')+'" id="'+listId+'"><ol aria-live="polite" role="log" class="messagelist"></ol></div>');
+						if ($(firstPreceding).attr("data-depth") == 1) {
+							$(firstPreceding).children(".message").after(
+								'<p><a data-toggle="collapse" href="#'+listId+'" id="'+listId+'-toggle" class="collapsed">'+
+							    '    <style>'+
+							    '        #'+listId+'-show { display:none; }'+
+							    '        #'+listId+'-toggle.collapsed #'+listId+'-show { display:inline; }'+
+							    '        #'+listId+'-hide { display:inline; }'+
+							    '        #'+listId+'-toggle.collapsed #'+listId+'-hide { display:none; }'+
+							    '    </style>'+
+							    '    <small id="'+listId+'-show"><i class="icon-chevron-down"></i>Show details</small>'+
+							    '    <small id="'+listId+'-hide"><i class="icon-chevron-up"></i>Hide details</small>'+
+							    '</a></p>'
+							);
+						}
 					}
 					
-					if (message.sequence < $(firstPreceding).find("ol > li").last().attr("value")) {
-						$(firstPreceding).find("ol > li")
-							.filter(function(i){ return $(this).attr("value") < message.sequence; })
-							.last()
-							.after(li);
-					}
-					else {
-						$(firstPreceding).find("ol").append(li);
+					if (shouldNest) {
+						$(firstPreceding).children("div").children("ol").prepend(li);
+						
+					} else {
+						$(firstPreceding).after(li);
 					}
 					
 					if (message.level=="ERROR") {
@@ -282,7 +279,7 @@
 		};
 		
 		Notifications.listen("job-unavailable-@uiJob", function(message){
-			$("#execution-log").hide();
+			$("#detailed-log").hide();
 			$("#status-unavailable").show();
 		});
 		Notifications.listen("job-message-@uiJob", addMessage);
@@ -396,7 +393,6 @@
 			},
 			success: function(job, textStatus, jqXHR) {
 				// updating page contents dynamically...
-				console.log(job);
 				updateFuzzy("created-fuzzy", job.webuiJob.created);
 				updateFuzzy("started-fuzzy", job.webuiJob.started);
 				updateFuzzy("finished-fuzzy", job.webuiJob.finished);
@@ -423,27 +419,27 @@
 			success: function(job, textStatus, jqXHR) {
 				// updating page contents dynamically...
 				$("#scriptdesc").html(": "+job.engineJob.script.description).show();
-				if (typeof job.engineJob === "object") {
-					$("#message-list > li").remove();
-					if (job.engineJob.messages instanceof Array) {
-						for (var m = 0; m < job.engineJob.messages.length; m++) {
-							addMessage(job.engineJob.messages[m]);
-						}
-					}
-					
-					$("#arguments").html(argumentsToHtml(job.engineJob.arguments));
-				}
 				
 				if (job.jobAvailableInEngine) {
-					$("#execution-log").show();
-					$("#status-unavailable").hide();
 					if (typeof job.engineJob === "object") {
+						$("#message-list > li").remove();
+						if (job.engineJob.messages instanceof Array) {
+							for (var m = 0; m < job.engineJob.messages.length; m++) {
+								addMessage(job.engineJob.messages[m]);
+							}
+						}
+						
 						$("#engine-id").html(job.engineJob.id);
+						
+						$("#arguments").html(argumentsToHtml(job.engineJob.arguments));
 					}
+				
+					$("#detailed-log").show();
+					$("#status-unavailable").hide();
 					updateResults(job.results);
 					
 				} else {
-					$("#execution-log").hide();
+					$("#detailed-log").hide();
 					$("#status-unavailable").show();
 				}
 			}
