@@ -448,7 +448,7 @@ public class Jobs extends Controller {
 		if (!(	user.isAdmin()
 			||	webuiJob.getUser().equals(user.getId())
 			||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
-			)) {
+				)) {
 			return forbidden("You are not allowed to view this job.");
 		}
 		
@@ -539,8 +539,8 @@ public class Jobs extends Controller {
 					Akka.system().dispatcher()
 					);
 		}
-        
-        JsonNode jobJson = play.libs.Json.toJson(output);
+		
+		JsonNode jobJson = play.libs.Json.toJson(output);
 		return ok(jobJson);
 	}
 	
@@ -562,10 +562,11 @@ public class Jobs extends Controller {
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
 		if (!(	user.isAdmin()
-				||	webuiJob.getUser().equals(user.getId())
-				||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
-					))
+			||	webuiJob.getUser().equals(user.getId())
+			||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+					)) {
 				return forbidden("You are not allowed to view this job.");
+		}
 		
 //		try {
 			Logger.debug("retrieving result from Pipeline 2 engine...");
@@ -672,9 +673,9 @@ public class Jobs extends Controller {
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
 		if (!(	user.isAdmin()
-				||	webuiJob.getUser().equals(user.getId())
-				||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
-					))
+			||	webuiJob.getUser().equals(user.getId())
+			||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+			))
 				return forbidden("You are not allowed to view this job.");
 		
 		String jobLog = Application.ws.getJobLog(webuiJob.getEngineId());
@@ -692,7 +693,7 @@ public class Jobs extends Controller {
 		return ok(jobLog);
 	}
 
-    public static Result postJob(Long jobId) {
+	public static Result postJob(Long jobId) {
 		if (FirstUse.isFirstUse()) {
 			return redirect(routes.FirstUse.getFirstUse());
 		}
@@ -749,7 +750,7 @@ public class Jobs extends Controller {
 		}
 		Logger.debug("posted job is not a template");
 		
-		Logger.info("------------------------------ Posting job... ------------------------------");
+		Logger.debug("------------------------------ Posting job... ------------------------------");
 		Logger.debug(XML.toString(clientlibJob.toJobRequestXml(true)));
 		clientlibJob = Application.ws.postJob(clientlibJob);
 		if (clientlibJob == null) {
@@ -783,8 +784,8 @@ public class Jobs extends Controller {
 		Logger.debug("return redirect(controllers.routes.Jobs.getJob("+job.getId()+"));");
 		return redirect(controllers.routes.Jobs.getJob(job.getId()));
 	}
-    
-    public static Result delete(Long jobId) {
+	
+	public static Result delete(Long jobId) {
 		if (FirstUse.isFirstUse())
 			return unauthorized("unauthorized");
 		
@@ -804,8 +805,8 @@ public class Jobs extends Controller {
 			)) {
 			return forbidden("You are not allowed to view this job.");
 		}
-    	
-    	Logger.debug("deleting "+jobId);
+		
+		Logger.debug("deleting "+jobId);
 		boolean deletedSuccessfully = webuiJob.deleteFromEngineAndWebUi();
 		if (deletedSuccessfully) {
 			return ok();
@@ -813,9 +814,9 @@ public class Jobs extends Controller {
 			flash("error", "An error occured while trying to delete the job. Please try creating a new job instead.");
 			return internalServerError();
 		}
-    }
-    
-    public static Result postUpload(Long jobId) {
+	}
+	
+	public static Result postUpload(Long jobId) {
 		if (FirstUse.isFirstUse())
 			return forbidden();
 		
@@ -829,16 +830,16 @@ public class Jobs extends Controller {
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
 		
-        MultipartFormData body = request().body().asMultipartFormData();
-        List<FilePart> files = body.getFiles();
-        
-        List<Map<String,Object>> filesResult = new ArrayList<Map<String,Object>>();
-        
-        for (FilePart file : files) {
-        	Logger.info("uploaded file: "+file.getFile());
-        	// rename the uploaded file so that it is not automatically deleted by Play!
-        	File renamedFile = new File(file.getFile().getParentFile(), file.getFile().getName()+"_");
-        	try {
+		MultipartFormData body = request().body().asMultipartFormData();
+		List<FilePart> files = body.getFiles();
+		
+		List<Map<String,Object>> filesResult = new ArrayList<Map<String,Object>>();
+		
+		for (FilePart file : files) {
+			Logger.info("uploaded file: "+file.getFile());
+			// rename the uploaded file so that it is not automatically deleted by Play!
+			File renamedFile = new File(file.getFile().getParentFile(), file.getFile().getName()+"_");
+			try {
 				java.nio.file.Files.move(file.getFile().toPath(), renamedFile.toPath());
 				
 			} catch (IOException e) {
@@ -851,18 +852,18 @@ public class Jobs extends Controller {
 					return internalServerError("Could not rename or make a copy of uploaded file.");
 				}
 			}
-        	
-        	Logger.debug(request().method()+" | "+file.getContentType()+" | "+file.getFilename()+" | "+renamedFile.getAbsolutePath());
-        	
-        	Map<String,Object> fileObject = new HashMap<String,Object>();
-        	fileObject.put("name", file.getFilename());
-        	fileObject.put("size", file.getFile().length());
-        	filesResult.add(fileObject);
-        	
-        	Akka.system().scheduler().scheduleOnce(
-    				Duration.create(0, TimeUnit.SECONDS),
-    				new Runnable() {
-    					public void run() {
+			
+			Logger.debug(request().method()+" | "+file.getContentType()+" | "+file.getFilename()+" | "+renamedFile.getAbsolutePath());
+			
+			Map<String,Object> fileObject = new HashMap<String,Object>();
+			fileObject.put("name", file.getFilename());
+			fileObject.put("size", file.getFile().length());
+			filesResult.add(fileObject);
+			
+			Akka.system().scheduler().scheduleOnce(
+					Duration.create(0, TimeUnit.SECONDS),
+					new Runnable() {
+						public void run() {
 							JobStorage jobStorage = (JobStorage)webuiJob.asJob().getJobStorage();
 							File f = new File(file.getFile().getParentFile(), file.getFile().getName()+"_");
 							
@@ -925,33 +926,39 @@ public class Jobs extends Controller {
 								jobStorage.addContextFile(f, file.getFilename());
 							}
 							
-				        	jobStorage.save(true); // true = move files instead of copying
-				        	
+							if (System.getProperty("os.name").startsWith("Windows")) {
+								// Windows throws a java.nio.file.FileSystemException sometimes, complaining that the file is
+								// in use by another process and cannot be moved. So in Windows we copy the file instead of moving it.
+								jobStorage.save(false);
+							} else {
+								jobStorage.save(true);
+							}
+
 							NotificationConnection.push(user.getId(), new Notification("uploads", result));
-    					}
-    				},
-    				Akka.system().dispatcher()
-    				);
-        	
-        }
-        
-        Map<String,List<Map<String,Object>>> result = new HashMap<String,List<Map<String,Object>>>();
-        result.put("files", filesResult);
-        
+						}
+					},
+					Akka.system().dispatcher()
+					);
+			
+		}
+		
+		Map<String,List<Map<String,Object>>> result = new HashMap<String,List<Map<String,Object>>>();
+		result.put("files", filesResult);
+		
 		response().setContentType("text/html");
 		return ok(play.libs.Json.toJson(result));
 		
-    }
-    
-    /**
-     * Returns all the context files in the same format as is emitted when they were initially uploaded.
-     * This includes the filesize etc. and is useful for creating new jobs based on templates.
-     * 
-     * @param jobId
-     * @return context files as json
-     */
-    public static Result getUploadsJson(Long jobId) {
-    	if (FirstUse.isFirstUse())
+	}
+	
+	/**
+	 * Returns all the context files in the same format as is emitted when they were initially uploaded.
+	 * This includes the filesize etc. and is useful for creating new jobs based on templates.
+	 * 
+	 * @param jobId
+	 * @return context files as json
+	 */
+	public static Result getUploadsJson(Long jobId) {
+		if (FirstUse.isFirstUse())
 			return forbidden();
 		
 		User user = User.authenticate(request(), session());
@@ -991,10 +998,10 @@ public class Jobs extends Controller {
 		}
 		
 		return ok(play.libs.Json.toJson(jsonFileset));
-    }
-    
-    public static Result saveAsTemplate(Long jobId) {
-    	if (FirstUse.isFirstUse())
+	}
+	
+	public static Result saveAsTemplate(Long jobId) {
+		if (FirstUse.isFirstUse())
 			return unauthorized("unauthorized");
 		
 		User user = User.authenticate(request(), session());
@@ -1008,10 +1015,10 @@ public class Jobs extends Controller {
 		}
 		
 		return Templates.postTemplate(user, webuiJob, webuiJob.asJob());
-    }
-    
-    public static Result downloadContext(Long jobId) {
-    	if (FirstUse.isFirstUse())
+	}
+	
+	public static Result downloadContext(Long jobId) {
+		if (FirstUse.isFirstUse())
 			return unauthorized("unauthorized");
 		
 		User user = User.authenticate(request(), session());

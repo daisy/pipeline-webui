@@ -25,35 +25,44 @@ public class Application extends Controller {
 	
 	public static final String DEFAULT_DP2_ENDPOINT = "http://localhost:8181/ws";
 	public static final String DP2DATA;
+	public static final String DP2DATA_ENGINE;
 	static {
 		String os = System.getProperty("os.name");
 		String home = System.getProperty("user.home");
 		
 		// get data directory for webui
 		String dp2data = System.getenv("DP2DATA");
+		String dp2dataEngine = System.getenv("DP2DATA_ENGINE");
 		try {
 			if (dp2data == null || "".equals(dp2data)) {
 				File dp2dataDir = null;
+				File dp2dataEngineDir = null;
 				if (os.startsWith("Windows")) {
-					dp2dataDir = new File(new File(new File(System.getenv("APPDATA")), "DAISY Pipeline 2"), "webui");
+					dp2dataDir = new File(new File(System.getenv("APPDATA")), "DAISY Pipeline 2 Web UI");
+					dp2dataEngineDir = new File(new File(System.getenv("APPDATA")), "DAISY Pipeline 2");
 					
 				} else if (os.startsWith("Mac OS X")) {
-					dp2dataDir = new File(home + "/Library/Application Support/DAISY Pipeline 2/webui");
+					dp2dataDir = new File(home + "/Library/Application Support/DAISY Pipeline 2 Web UI");
+					dp2dataEngineDir = new File(home + "/Library/Application Support/DAISY Pipeline 2");
 					
 				} else { // Linux etc.
+					// will be /var/opt/daisy-pipeline-webui when installed as a deb/rpm, set through DP2DATA env. variable
 					dp2dataDir = new File(home + "/.daisy-pipeline/webui");
+					dp2dataEngineDir = new File(home + "/.daisy-pipeline");
 				}
 				if (dp2dataDir.exists()) {
 					dp2dataDir.delete();
 				}
 				dp2dataDir.mkdirs();
 				dp2data = dp2dataDir.getCanonicalPath();
+				dp2dataEngine = dp2dataEngineDir.getCanonicalPath();
 			}
 			
 		} catch (IOException e) {
 			Logger.error("Could not get canonical path for "+dp2data, e);
 		}
 		DP2DATA = dp2data;
+		DP2DATA_ENGINE = dp2dataEngine;
 	}
 	
 	public static WSInterface ws = new WS();
