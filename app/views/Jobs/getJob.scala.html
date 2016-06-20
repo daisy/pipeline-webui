@@ -202,15 +202,32 @@
 <script type="text/javascript">
 	$(function(){
 		var addMessage = function(message) {
+			var empty = false;
+			var emptyNoText = false;
+			
 			if (!(message.text)) {
-				return;
+				empty = true;
+				if (message.progressInfo) {
+					var progress = message.progressInfo.split(/\]/)[0].split(/ /);
+					message.text = progress.length === 4 ? progress[3] : progress[1].match(/^[0-9/-]$/) ? progress[2] : "";
+				}
+				if (!(message.text)) {
+					emptyNoText = true;
+					message.text = "(empty message)";
+				}
 			}
 			
+			var li = '<li data-depth="'+message.depth+'" data-level="'+message.level+'" data-inferred-level="'+message.inferredLevel+'" id="m'+message.sequence+'" value="'+message.sequence+'" class="'+(message.inferredLevel=="ERROR"?"message-error":"")+(message.inferredLevel=="WARNING"?"message-warn":"")+(emptyNoText ? " message-empty" : "")+'"><span class="message" style="'+(empty ? 'font-style: italic;' : '')+'">'+message.text+'</span></li>';
+			
 			if ($("#m"+message.sequence).size() > 0) {
-				$("#m"+message.sequence).replaceWith(li);
+				$("#m"+message.sequence).attr("data-depth", message.depth)
+										.attr("data-level", message.level)
+										.attr("data-inferred-level", message.inferredLevel)
+										.attr("class", (message.inferredLevel=="ERROR"?"message-error":"")+(message.inferredLevel=="WARNING"?"message-warn":"")+(emptyNoText ? " message-empty" : ""))
+										.children(".message").attr("style", (empty ? 'font-style: italic;' : ''))
+															 .text(message.text);
 				
 			} else {
-				var li = '<li data-depth="'+message.depth+'" data-level="'+message.level+'" id="m'+message.sequence+'" value="'+message.sequence+'" class="'+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><span class="message">'+message.text+'</span></li>';
 				
 				if (message.depth < 2) {
 					$("#message-latest").html("<pre>"+message.text+"</pre>");
@@ -262,14 +279,6 @@
 						
 					} else {
 						$(firstPreceding).after(li);
-					}
-					
-					if (message.level=="ERROR") {
-						$(firstPreceding).removeClass("message-warn");
-						$(firstPreceding).addClass("message-error");
-						
-					} else if (message.level=="WARNING" && !$(firstPreceding).hasClass("message-error")) {
-						$(firstPreceding).addClass("message-warn");
 					}
 				}
 			}

@@ -529,10 +529,8 @@ public class Jobs extends Controller {
 						Job.estimateMissingTimestamps(messages, webuiJob);
 						if (messages != null) {
 							for (Message message : messages) {
-								if (!"".equals(message.getText())) { // don't bother sending the message if it is empty
-									Notification notification = new Notification("job-message-"+webuiJob.getId(), message);
-									NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
-								}
+								Notification notification = new Notification("job-message-"+webuiJob.getId(), message);
+								NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
 							}
 						}
 					}
