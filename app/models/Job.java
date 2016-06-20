@@ -221,10 +221,8 @@ public class Job extends Model implements Comparable<Job> {
 							estimateMissingTimestamps(messages, webUiJob);
 							if (messages != null) {
 								for (org.daisy.pipeline.client.models.Message message : messages) {
-									if (!"".equals(message.getText())) { // don't bother sending the message if it is empty
-										Notification notification = new Notification("job-message-"+webUiJob.id, message);
-										NotificationConnection.pushJobNotification(webUiJob.getUser(), notification);
-									}
+									Notification notification = new Notification("job-message-"+webUiJob.id, message);
+									NotificationConnection.pushJobNotification(webUiJob.getUser(), notification);
 								}
 								
 								if (messages.size() > 0) {
