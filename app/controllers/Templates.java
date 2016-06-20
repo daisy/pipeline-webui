@@ -13,6 +13,7 @@ import models.Job;
 import models.Setting;
 import models.Template;
 import models.User;
+import models.UserSetting;
 import play.Logger;
 import play.mvc.Controller;
 import play.mvc.Result;
@@ -51,7 +52,10 @@ public class Templates extends Controller {
 		List<Template> templates = Template.list(user, false);
 		List<Object> templatesJsonFriendly = new ArrayList<Object>();
 		for (Template template : templates) {
-			templatesJsonFriendly.add(template.asJsonifyableObject(user, true));
+			String scriptId = template.clientlibJob != null && template.clientlibJob.getScript() != null ? template.clientlibJob.getScript().getId() : null;
+			if (scriptId == null || !"false".equals(UserSetting.get(-2L, "scriptEnabled-"+scriptId))) {
+				templatesJsonFriendly.add(template.asJsonifyableObject(user, true));
+			}
 		}
 		
 		return ok(play.libs.Json.toJson(templatesJsonFriendly));

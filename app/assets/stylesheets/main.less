@@ -37,9 +37,8 @@ ol.messagelist {
 	/*font-family:"Courier New",Courier,mono;*/
 	color: #999999;
 	margin:0;
-	padding:1em 0 1em 2.8em;
+  padding:0em 0 0.5em 2.8em;
 	width:96%;
-	font-size: 0.8em;
 	
 	li {
 		//white-space: nowrap;
@@ -52,6 +51,10 @@ ol.messagelist {
 			border: 0px #FFF;
 			font-size: 1.25em;
 		}
+	}
+	
+	.message-empty:not(ul) {
+		display: none;
 	}
 		
 	.message-error > span {

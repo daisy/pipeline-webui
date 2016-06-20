@@ -424,6 +424,14 @@ public class Jobs extends Controller {
 	}
 	
 	public static Result getJobJson(Long id) {
+		return getJobJson(id, false);
+	}
+	
+	public static Result getEngineJobJson(Long id) {
+		return getJobJson(id, true);
+	}
+	
+	private static Result getJobJson(Long id, boolean includeEngine) {
 		if (FirstUse.isFirstUse())
 			return unauthorized("unauthorized");
 		
@@ -440,94 +448,97 @@ public class Jobs extends Controller {
 		if (!(	user.isAdmin()
 			||	webuiJob.getUser().equals(user.getId())
 			||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
-			)) {
+				)) {
 			return forbidden("You are not allowed to view this job.");
 		}
 		
 		Map<String,Object> output = new HashMap<String,Object>();
 		output.put("webuiJob", webuiJob);
-		org.daisy.pipeline.client.models.Job clientlibJob = null;
-		boolean jobAvailableInEngine = false;
-		if (webuiJob.getEngineId() != null) {
-			clientlibJob = webuiJob.getJobFromEngine(-1);
-			jobAvailableInEngine = clientlibJob != null;
-		}
-		
-		if (clientlibJob == null) {
-			clientlibJob = webuiJob.asJob();
-		}
-		
-		if (!jobAvailableInEngine && ("RUNNING".equals(webuiJob.getStatus()) || "IDLE".equals(webuiJob.getStatus()))) {
-			// When jobs are not available in the engine; don't leave them in a running or queued state.
-			webuiJob.setStatus("UNAVAILABLE");
-			webuiJob.save();
-		}
-		output.put("jobAvailableInEngine", jobAvailableInEngine);
-		
-		if (clientlibJob == null) {
-			Logger.error("An error occured while retrieving the job");
-			
-		} else {
-            Map<String,Object> clientlibJobMap = new HashMap<String,Object>();
-            Map<String,Object> clientlibScriptMap = new HashMap<String,Object>();
-            clientlibJobMap.put("id", clientlibJob.getId());
-            clientlibJobMap.put("href", clientlibJob.getHref());
-            clientlibJobMap.put("status", clientlibJob.getStatus());
-            clientlibJobMap.put("priority", clientlibJob.getPriority());
-            clientlibJobMap.put("scriptHref", clientlibJob.getScriptHref());
-            clientlibJobMap.put("nicename", clientlibJob.getNicename());
-            clientlibJobMap.put("description", clientlibJob.getDescription());
-            clientlibJobMap.put("batchId", clientlibJob.getBatchId());
-            clientlibJobMap.put("callback", clientlibJob.getCallback());
-            clientlibJobMap.put("logHref", clientlibJob.getLogHref());
-            clientlibJobMap.put("result", clientlibJob.getResult());
-            clientlibJobMap.put("results", clientlibJob.getResults());
-            clientlibJobMap.put("arguments", clientlibJob.getArguments());
-            clientlibJobMap.put("progressEstimate", clientlibJob.getProgressEstimate());
-            clientlibJobMap.put("progressFrom", clientlibJob.getProgressFrom());
-            clientlibJobMap.put("progressFromTime", clientlibJob.getProgressFromTime());
-            clientlibJobMap.put("progressTo", clientlibJob.getProgressTo());
-            if (clientlibJob.getScript() != null) {
-                clientlibScriptMap.put("id", clientlibJob.getScript().getId());
-                clientlibScriptMap.put("href", clientlibJob.getScript().getHref());
-                clientlibScriptMap.put("nicename", clientlibJob.getScript().getNicename());
-                clientlibScriptMap.put("version", clientlibJob.getScript().getVersion());
-                clientlibScriptMap.put("description", clientlibJob.getScript().getDescription());
-                clientlibScriptMap.put("homepage", clientlibJob.getScript().getHomepage());
-                clientlibScriptMap.put("inputFilesets", clientlibJob.getScript().getInputFilesets());
-                clientlibScriptMap.put("outputFilesets", clientlibJob.getScript().getOutputFilesets());
-            }
-            clientlibJobMap.put("script", clientlibScriptMap);
-            output.put("engineJob", clientlibJobMap);
-            output.put("results", Job.jsonifiableResults(clientlibJob));
-        }
-        JsonNode jobJson = play.libs.Json.toJson(output);
 
-        // messages can take a bit of time to parse so we parse them asynchronously and push them when they are ready
-        Akka.system().scheduler().scheduleOnce(
-        		Duration.create(0, TimeUnit.SECONDS),
-        		new Runnable() {
-        			public void run() {
-        				org.daisy.pipeline.client.models.Job job = webuiJob.getJobFromEngine(0);
-        				if (job == null) {
-        					Logger.warn("Web UI job #"+webuiJob.getId()+" was not found in the engine.");
-        					return;
-        				}
-        				List<Message> messages = job.getMessages();
-        				Job.estimateMissingTimestamps(messages, webuiJob);
-        				if (messages != null) {
-        					for (Message message : messages) {
-        						if (!"".equals(message.getText())) { // don't bother sending the message if it is empty
-        							Notification notification = new Notification("job-message-"+webuiJob.getId(), message);
-        							NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
-        						}
-        					}
-        				}
-        			}
-        		},
-        		Akka.system().dispatcher()
-        		);
-        
+		if (includeEngine) {
+			org.daisy.pipeline.client.models.Job clientlibJob = null;
+			boolean jobAvailableInEngine = false;
+			if (webuiJob.getEngineId() != null) {
+				clientlibJob = webuiJob.getJobFromEngine(-1);
+				jobAvailableInEngine = clientlibJob != null;
+			}
+
+			if (clientlibJob == null) {
+				clientlibJob = webuiJob.asJob();
+			}
+
+			if (!jobAvailableInEngine && ("RUNNING".equals(webuiJob.getStatus()) || "IDLE".equals(webuiJob.getStatus()))) {
+				// When jobs are not available in the engine; don't leave them in a running or queued state.
+				webuiJob.setStatus("UNAVAILABLE");
+				webuiJob.save();
+			}
+			output.put("jobAvailableInEngine", jobAvailableInEngine);
+
+			if (clientlibJob == null) {
+				Logger.error("An error occured while retrieving the job");
+
+			} else {
+				Map<String,Object> clientlibJobMap = new HashMap<String,Object>();
+				Map<String,Object> clientlibScriptMap = new HashMap<String,Object>();
+				clientlibJobMap.put("id", clientlibJob.getId());
+				clientlibJobMap.put("href", clientlibJob.getHref());
+				clientlibJobMap.put("status", clientlibJob.getStatus());
+				clientlibJobMap.put("priority", clientlibJob.getPriority());
+				clientlibJobMap.put("scriptHref", clientlibJob.getScriptHref());
+				clientlibJobMap.put("nicename", clientlibJob.getNicename());
+				clientlibJobMap.put("description", clientlibJob.getDescription());
+				clientlibJobMap.put("batchId", clientlibJob.getBatchId());
+				clientlibJobMap.put("callback", clientlibJob.getCallback());
+				clientlibJobMap.put("logHref", clientlibJob.getLogHref());
+				clientlibJobMap.put("result", clientlibJob.getResult());
+				clientlibJobMap.put("results", clientlibJob.getResults());
+				clientlibJobMap.put("arguments", clientlibJob.getArguments());
+				clientlibJobMap.put("progressEstimate", clientlibJob.getProgressEstimate());
+				clientlibJobMap.put("progressFrom", clientlibJob.getProgressFrom());
+				clientlibJobMap.put("progressFromTime", clientlibJob.getProgressFromTime());
+				clientlibJobMap.put("progressTo", clientlibJob.getProgressTo());
+				if (clientlibJob.getScript() != null) {
+					clientlibScriptMap.put("id", clientlibJob.getScript().getId());
+					clientlibScriptMap.put("href", clientlibJob.getScript().getHref());
+					clientlibScriptMap.put("nicename", clientlibJob.getScript().getNicename());
+					clientlibScriptMap.put("version", clientlibJob.getScript().getVersion());
+					clientlibScriptMap.put("description", clientlibJob.getScript().getDescription());
+					clientlibScriptMap.put("homepage", clientlibJob.getScript().getHomepage());
+					clientlibScriptMap.put("inputFilesets", clientlibJob.getScript().getInputFilesets());
+					clientlibScriptMap.put("outputFilesets", clientlibJob.getScript().getOutputFilesets());
+				}
+				clientlibJobMap.put("script", clientlibScriptMap);
+				output.put("engineJob", clientlibJobMap);
+				output.put("results", Job.jsonifiableResults(clientlibJob));
+			}
+		}
+		
+		// messages can take a bit of time to parse so we parse them asynchronously and push them when they are ready
+		Akka.system().scheduler().scheduleOnce(
+				Duration.create(0, TimeUnit.SECONDS),
+				new Runnable() {
+					public void run() {
+						org.daisy.pipeline.client.models.Job job = includeEngine ? webuiJob.getJobFromEngine(0) : webuiJob.asJob();
+						if (job == null) {
+							Logger.warn("Web UI job #"+webuiJob.getId()+" was not found in "+(includeEngine ? "the engine." : "the job storage."));
+							Notification notification = new Notification("job-unavailable-"+webuiJob.getId(), true);
+							NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
+							return;
+						}
+						List<Message> messages = job.getMessages();
+						Job.estimateMissingTimestamps(messages, webuiJob);
+						if (messages != null) {
+							for (Message message : messages) {
+								Notification notification = new Notification("job-message-"+webuiJob.getId(), message);
+								NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
+							}
+						}
+					}
+				},
+				Akka.system().dispatcher()
+				);
+		
+		JsonNode jobJson = play.libs.Json.toJson(output);
 		return ok(jobJson);
 	}
 	
@@ -549,10 +560,11 @@ public class Jobs extends Controller {
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
 		if (!(	user.isAdmin()
-				||	webuiJob.getUser().equals(user.getId())
-				||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
-					))
+			||	webuiJob.getUser().equals(user.getId())
+			||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+					)) {
 				return forbidden("You are not allowed to view this job.");
+		}
 		
 //		try {
 			Logger.debug("retrieving result from Pipeline 2 engine...");
@@ -659,9 +671,9 @@ public class Jobs extends Controller {
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
 		if (!(	user.isAdmin()
-				||	webuiJob.getUser().equals(user.getId())
-				||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
-					))
+			||	webuiJob.getUser().equals(user.getId())
+			||	webuiJob.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+			))
 				return forbidden("You are not allowed to view this job.");
 		
 		String jobLog = Application.ws.getJobLog(webuiJob.getEngineId());
@@ -679,7 +691,7 @@ public class Jobs extends Controller {
 		return ok(jobLog);
 	}
 
-    public static Result postJob(Long jobId) {
+	public static Result postJob(Long jobId) {
 		if (FirstUse.isFirstUse()) {
 			return redirect(routes.FirstUse.getFirstUse());
 		}
@@ -736,7 +748,7 @@ public class Jobs extends Controller {
 		}
 		Logger.debug("posted job is not a template");
 		
-		Logger.info("------------------------------ Posting job... ------------------------------");
+		Logger.debug("------------------------------ Posting job... ------------------------------");
 		Logger.debug(XML.toString(clientlibJob.toJobRequestXml(true)));
 		clientlibJob = Application.ws.postJob(clientlibJob);
 		if (clientlibJob == null) {
@@ -770,8 +782,8 @@ public class Jobs extends Controller {
 		Logger.debug("return redirect(controllers.routes.Jobs.getJob("+job.getId()+"));");
 		return redirect(controllers.routes.Jobs.getJob(job.getId()));
 	}
-    
-    public static Result delete(Long jobId) {
+	
+	public static Result delete(Long jobId) {
 		if (FirstUse.isFirstUse())
 			return unauthorized("unauthorized");
 		
@@ -791,8 +803,8 @@ public class Jobs extends Controller {
 			)) {
 			return forbidden("You are not allowed to view this job.");
 		}
-    	
-    	Logger.debug("deleting "+jobId);
+		
+		Logger.debug("deleting "+jobId);
 		boolean deletedSuccessfully = webuiJob.deleteFromEngineAndWebUi();
 		if (deletedSuccessfully) {
 			return ok();
@@ -800,9 +812,42 @@ public class Jobs extends Controller {
 			flash("error", "An error occured while trying to delete the job. Please try creating a new job instead.");
 			return internalServerError();
 		}
-    }
-    
-    public static Result postUpload(Long jobId) {
+	}
+	
+	public static Result deleteRedirect(Long jobId) {
+		if (FirstUse.isFirstUse()) {
+			return redirect(routes.FirstUse.getFirstUse());
+		}
+
+		User user = User.authenticate(request(), session());
+		if (user == null) {
+			return redirect(routes.Login.login());
+		}
+		
+		Job job = Job.findById(jobId);
+		if (job == null) {
+			return notFound("The job with ID='"+jobId+"' was not found.");
+		}
+		
+		if (!(	user.isAdmin()
+			||	job.getUser().equals(user.getId())
+			||	job.getUser() < 0 && user.getId() < 0 && "true".equals(Setting.get("users.guest.shareJobs"))
+			)) {
+			return forbidden("You are not allowed to view this job.");
+		}
+		
+		Logger.debug("deleting "+jobId);
+		boolean deletedSuccessfully = job.deleteFromEngineAndWebUi();
+		if (deletedSuccessfully) {
+			flash("success", "Job #"+jobId+" was deleted.");
+			return redirect(routes.Jobs.getJobs());
+		} else {
+			flash("error", "An error occured while trying to delete job #"+jobId+".");
+			return redirect(routes.Jobs.getJob(jobId));
+		}
+	}
+	
+	public static Result postUpload(Long jobId) {
 		if (FirstUse.isFirstUse())
 			return forbidden();
 		
@@ -816,16 +861,16 @@ public class Jobs extends Controller {
 			return notFound("Sorry; something seems to have gone wrong. The job was not found.");
 		}
 		
-        MultipartFormData body = request().body().asMultipartFormData();
-        List<FilePart> files = body.getFiles();
-        
-        List<Map<String,Object>> filesResult = new ArrayList<Map<String,Object>>();
-        
-        for (FilePart file : files) {
-        	Logger.info("uploaded file: "+file.getFile());
-        	// rename the uploaded file so that it is not automatically deleted by Play!
-        	File renamedFile = new File(file.getFile().getParentFile(), file.getFile().getName()+"_");
-        	try {
+		MultipartFormData body = request().body().asMultipartFormData();
+		List<FilePart> files = body.getFiles();
+		
+		List<Map<String,Object>> filesResult = new ArrayList<Map<String,Object>>();
+		
+		for (FilePart file : files) {
+			Logger.info("uploaded file: "+file.getFile());
+			// rename the uploaded file so that it is not automatically deleted by Play!
+			File renamedFile = new File(file.getFile().getParentFile(), file.getFile().getName()+"_");
+			try {
 				java.nio.file.Files.move(file.getFile().toPath(), renamedFile.toPath());
 				
 			} catch (IOException e) {
@@ -838,18 +883,18 @@ public class Jobs extends Controller {
 					return internalServerError("Could not rename or make a copy of uploaded file.");
 				}
 			}
-        	
-        	Logger.debug(request().method()+" | "+file.getContentType()+" | "+file.getFilename()+" | "+renamedFile.getAbsolutePath());
-        	
-        	Map<String,Object> fileObject = new HashMap<String,Object>();
-        	fileObject.put("name", file.getFilename());
-        	fileObject.put("size", file.getFile().length());
-        	filesResult.add(fileObject);
-        	
-        	Akka.system().scheduler().scheduleOnce(
-    				Duration.create(0, TimeUnit.SECONDS),
-    				new Runnable() {
-    					public void run() {
+			
+			Logger.debug(request().method()+" | "+file.getContentType()+" | "+file.getFilename()+" | "+renamedFile.getAbsolutePath());
+			
+			Map<String,Object> fileObject = new HashMap<String,Object>();
+			fileObject.put("name", file.getFilename());
+			fileObject.put("size", file.getFile().length());
+			filesResult.add(fileObject);
+			
+			Akka.system().scheduler().scheduleOnce(
+					Duration.create(0, TimeUnit.SECONDS),
+					new Runnable() {
+						public void run() {
 							JobStorage jobStorage = (JobStorage)webuiJob.asJob().getJobStorage();
 							File f = new File(file.getFile().getParentFile(), file.getFile().getName()+"_");
 							
@@ -912,33 +957,39 @@ public class Jobs extends Controller {
 								jobStorage.addContextFile(f, file.getFilename());
 							}
 							
-				        	jobStorage.save(true); // true = move files instead of copying
-				        	
+							if (System.getProperty("os.name").startsWith("Windows")) {
+								// Windows throws a java.nio.file.FileSystemException sometimes, complaining that the file is
+								// in use by another process and cannot be moved. So in Windows we copy the file instead of moving it.
+								jobStorage.save(false);
+							} else {
+								jobStorage.save(true);
+							}
+
 							NotificationConnection.push(user.getId(), new Notification("uploads", result));
-    					}
-    				},
-    				Akka.system().dispatcher()
-    				);
-        	
-        }
-        
-        Map<String,List<Map<String,Object>>> result = new HashMap<String,List<Map<String,Object>>>();
-        result.put("files", filesResult);
-        
+						}
+					},
+					Akka.system().dispatcher()
+					);
+			
+		}
+		
+		Map<String,List<Map<String,Object>>> result = new HashMap<String,List<Map<String,Object>>>();
+		result.put("files", filesResult);
+		
 		response().setContentType("text/html");
 		return ok(play.libs.Json.toJson(result));
 		
-    }
-    
-    /**
-     * Returns all the context files in the same format as is emitted when they were initially uploaded.
-     * This includes the filesize etc. and is useful for creating new jobs based on templates.
-     * 
-     * @param jobId
-     * @return context files as json
-     */
-    public static Result getUploadsJson(Long jobId) {
-    	if (FirstUse.isFirstUse())
+	}
+	
+	/**
+	 * Returns all the context files in the same format as is emitted when they were initially uploaded.
+	 * This includes the filesize etc. and is useful for creating new jobs based on templates.
+	 * 
+	 * @param jobId
+	 * @return context files as json
+	 */
+	public static Result getUploadsJson(Long jobId) {
+		if (FirstUse.isFirstUse())
 			return forbidden();
 		
 		User user = User.authenticate(request(), session());
@@ -968,6 +1019,7 @@ public class Jobs extends Controller {
 					contentType = ContentType.probe(href, new FileInputStream(files.get(href)));
 				} catch (FileNotFoundException e) {
 					Logger.error("[Job "+jobId+"] Could not probe "+href+" for its content type", e);
+					contentType = "application/octet-stream";
 				}
 				fileResult.put("fileName", href);
 				fileResult.put("contentType", contentType);
@@ -978,10 +1030,10 @@ public class Jobs extends Controller {
 		}
 		
 		return ok(play.libs.Json.toJson(jsonFileset));
-    }
-    
-    public static Result saveAsTemplate(Long jobId) {
-    	if (FirstUse.isFirstUse())
+	}
+	
+	public static Result saveAsTemplate(Long jobId) {
+		if (FirstUse.isFirstUse())
 			return unauthorized("unauthorized");
 		
 		User user = User.authenticate(request(), session());
@@ -995,10 +1047,10 @@ public class Jobs extends Controller {
 		}
 		
 		return Templates.postTemplate(user, webuiJob, webuiJob.asJob());
-    }
-    
-    public static Result downloadContext(Long jobId) {
-    	if (FirstUse.isFirstUse())
+	}
+	
+	public static Result downloadContext(Long jobId) {
+		if (FirstUse.isFirstUse())
 			return unauthorized("unauthorized");
 		
 		User user = User.authenticate(request(), session());

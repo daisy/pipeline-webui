@@ -142,7 +142,7 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 					});
 					
 					Job.setFromTemplateHandlers.push(function(arg, uploads) {
-						if (arg.name === "@arg.getName()") { 
+						if (arg.name === "@arg.getName()") {
 							$("#selectedfiles-@scriptId-@{arg.getName()} option").prop('selected', true)
 							$("#removefile-@scriptId-@{arg.getName()}").click();
 							if (arg.defined && arg.asList.length > 0) {
@@ -198,7 +198,7 @@ Job.matchingMediaType["@{scriptId}"]["@{arg.getName()}"] = function(file, upload
 			<script type="text/javascript">
 				$(function(){
 					Job.setFromTemplateHandlers.push(function(arg, uploads) {
-						if (arg.name === "@arg.getName()") { 
+						if (arg.name === "@arg.getName()") {
 							if (arg.defined && arg.asList.length > 0) {
 								$("#file-@scriptId-@{arg.getName()} option[value='"+arg.asList[0].replace(/'/g,"\\'")+"']").prop('selected', true);
 							} else {

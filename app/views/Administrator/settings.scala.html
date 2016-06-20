@@ -4,8 +4,7 @@
 
 @if(forms.userForm != null && forms.userForm.hasGlobalErrors()
 	|| forms.guestForm != null && forms.guestForm.hasGlobalErrors()
-	|| forms.globalForm != null && forms.globalForm.hasGlobalErrors()
-	|| Controller.flash("error") != null) {
+	|| forms.globalForm != null && forms.globalForm.hasGlobalErrors()) {
     <div role="alert" class="alert alert-error">
     	<a class="close" data-dismiss="alert">&times;</a>
     	@if(forms.userForm != null && forms.userForm.hasGlobalErrors) {
@@ -17,17 +16,6 @@
         @if(forms.globalForm != null && forms.globalForm.hasGlobalErrors) {
         	<p>@forms.globalForm.globalError.message</p>
         }
-        @if(Controller.flash("error") != null) {
-        	<p>@Controller.flash("error")</p>
-        }
-    </div>
-    <br/>
-}
-
-@if(Controller.flash.contains("success")) {
-    <div role="alert" class="alert alert-success">
-    	<a class="close" data-dismiss="alert">&times;</a>
-        @Controller.flash.get("success")
     </div>
     <br/>
 }

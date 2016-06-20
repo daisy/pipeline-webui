@@ -2,20 +2,6 @@
 
 @main("View job", "jobs", Array("createJob.js")) {
 
-@if(flash.contains("error")) {
-    <div role="alert" class="alert alert-error">
-    	<a class="close" data-dismiss="alert">&times;</a>
-        @flash.get("error")
-    </div>
-}
-
-@if(flash.contains("success")) {
-    <div role="alert" class="alert alert-success">
-    	<a class="close" data-dismiss="alert">&times;</a>
-        @flash.get("success")
-    </div>
-}
-
 <hgroup>
 	<h1>Job Summary<br/>
 	<small id="header-nicename">&nbsp;</small></h1>
@@ -33,17 +19,12 @@
 		.detailed-info { display: none; }
 		#job-details table td { text-align: right; }
 	</style>
+	<p>
+		<strong id="scriptname" style="display:none;">&nbsp;</strong>
+		<span id="scriptdesc" style="display:none;">&nbsp;</span>
+	</p>
 	<table class="table table-hover table-condensed">
 		<tbody>
-            <tr>
-                <th>Script:</th>
-                <td>
-                    <span id="scriptname">&nbsp;</span>
-                    <span class="detailed-info">
-                    	<br/><small id="scriptid" class="muted">&nbsp;</small>
-                   	</span>
-                </td>
-            </tr>
             <tr>
                 <th>Created:</th>
                 <td>
@@ -78,6 +59,12 @@
                 </td>
             </tr>
             <tr class="detailed-info">
+                <th>Script ID:</th>
+                <td>
+                    <span id="scriptid">&nbsp;</span>
+                </td>
+            </tr>
+            <tr>
                 <th>User:</th>
                 <td>
                     <span id="username">&nbsp;</span>
@@ -204,6 +191,7 @@
 
 <br/>
 <div class="form-actions">
+<a class="btn btn-danger" href="@routes.Jobs.deleteRedirect(uiJob)"><i class="icon-trash icon-white"></i> Delete</a>
 <a class="btn btn-info" href="@routes.Jobs.restart(uiJob)"><span class="icon-refresh icon-white"></span> Restart job</a>
 <a class="btn btn-success" href="@routes.Jobs.newJobWithOldJob(uiJob)"><span class="icon-plus icon-white"></span> New job with same options</a>
 <a class="btn" href="@routes.Jobs.saveAsTemplate(uiJob)"><span class="icon-briefcase"></span> Save job as template</a>
@@ -214,77 +202,83 @@
 <script type="text/javascript">
 	$(function(){
 		var addMessage = function(message) {
+			var empty = false;
+			var emptyNoText = false;
+			
 			if (!(message.text)) {
-				return;
+				empty = true;
+				if (message.progressInfo) {
+					var progress = message.progressInfo.split(/\]/)[0].split(/ /);
+					message.text = progress.length === 4 ? progress[3] : progress[1].match(/^[0-9/-]$/) ? progress[2] : "";
+				}
+				if (!(message.text)) {
+					emptyNoText = true;
+					message.text = "(empty message)";
+				}
 			}
 			
+			var li = '<li data-depth="'+message.depth+'" data-level="'+message.level+'" data-inferred-level="'+message.inferredLevel+'" id="m'+message.sequence+'" value="'+message.sequence+'" class="'+(message.inferredLevel=="ERROR"?"message-error":"")+(message.inferredLevel=="WARNING"?"message-warn":"")+(emptyNoText ? " message-empty" : "")+'"><span class="message" style="'+(empty ? 'font-style: italic;' : '')+'">'+message.text+'</span></li>';
+			
 			if ($("#m"+message.sequence).size() > 0) {
-				$("#m"+message.sequence).replaceWith(li);
+				$("#m"+message.sequence).attr("data-depth", message.depth)
+										.attr("data-level", message.level)
+										.attr("data-inferred-level", message.inferredLevel)
+										.attr("class", (message.inferredLevel=="ERROR"?"message-error":"")+(message.inferredLevel=="WARNING"?"message-warn":"")+(emptyNoText ? " message-empty" : ""))
+										.children(".message").attr("style", (empty ? 'font-style: italic;' : ''))
+															 .text(message.text);
 				
 			} else {
-				var li = '<li id="m'+message.sequence+'" value="'+message.sequence+'" class="'+(message.level=="ERROR"?"message-error":"")+(message.level=="WARNING"?"message-warn":"")+'"><span class="message">'+message.level+' -- '+message.text+'</span></li>';
 				
-				$("#message-latest").html("<pre>"+message.text+"</pre>");
+				if (message.depth < 2) {
+					$("#message-latest").html("<pre>"+message.text+"</pre>");
+				}
 				
-				if (message.depth <= 1 || $("#message-list > li").size() === 0) {
+				if (message.depth < 1) {
 					// top-level message
 					
-					if (message.sequence < $("#message-list > li").last().attr("value")) {
-						$("#message-list > li")
-							.filter(function(i){ return $(this).attr("value") < message.sequence; })
-							.last()
-							.after(li);
-					}
-					else {
+					var putAfter = $("#message-list > li")
+										.filter(function(i){ return $(this).attr("value") < message.sequence; })
+										.last();
+					
+					if ($(putAfter).size()) {
+						$(putAfter).after(li);
+						
+					} else {
 						$("#message-list").append(li);
 					}
 					
 				} else {
-					// message nested under first preceding top-level message
+					// nested message
 					
-					var firstPreceding;
-					if (message.sequence < $("#message-list > li").last().attr("value")) {
-						firstPreceding = $("#message-list > li")
-							.filter(function(i){ return $(this).attr("value") < message.sequence; })
+					var firstPreceding = $("#message-list li")
+							.filter(function(i){ return $(this).attr("value") < message.sequence && $(this).attr("data-depth") <= message.depth; })
 							.last();
-					}
-					else {
-						firstPreceding = $("#message-list > li").last();
-					}
+					var shouldNest = $(firstPreceding).attr("data-depth") < message.depth; 
 					
-					if ($(firstPreceding).find("ol").size() === 0) {
+					if (shouldNest && !$(firstPreceding).children("div").size()) {
 						var listId = "message-sublist-"+$(firstPreceding).attr("value");
-						$(firstPreceding).append(
-							'<p><a data-toggle="collapse" href="#'+listId+'" id="'+listId+'-toggle" class="collapsed">'+
-						    '    <style>'+
-						    '        #'+listId+'-show { display:none; }'+
-						    '        #'+listId+'-toggle.collapsed #'+listId+'-show { display:inline; }'+
-						    '        #'+listId+'-hide { display:inline; }'+
-						    '        #'+listId+'-toggle.collapsed #'+listId+'-hide { display:none; }'+
-						    '    </style>'+
-						    '    <small id="'+listId+'-show"><i class="icon-chevron-down"></i>Show details</small>'+
-						    '    <small id="'+listId+'-hide"><i class="icon-chevron-up"></i>Hide details</small>'+
-						    '</a></p>'+
-							'<div class="collapse" id="'+listId+'"><ol aria-live="polite" role="log" class="messagelist"></ol></div>'
-						);
+						$(firstPreceding).children(".message").after('<div class="'+($(firstPreceding).attr("data-depth") == 1 ? 'collapse' : '')+'" id="'+listId+'"><ol aria-live="polite" role="log" class="messagelist"></ol></div>');
+						if ($(firstPreceding).attr("data-depth") == 1) {
+							$(firstPreceding).children(".message").after(
+								'<p><a data-toggle="collapse" href="#'+listId+'" id="'+listId+'-toggle" class="collapsed">'+
+							    '    <style>'+
+							    '        #'+listId+'-show { display:none; }'+
+							    '        #'+listId+'-toggle.collapsed #'+listId+'-show { display:inline; }'+
+							    '        #'+listId+'-hide { display:inline; }'+
+							    '        #'+listId+'-toggle.collapsed #'+listId+'-hide { display:none; }'+
+							    '    </style>'+
+							    '    <small id="'+listId+'-show"><i class="icon-chevron-down"></i>Show details</small>'+
+							    '    <small id="'+listId+'-hide"><i class="icon-chevron-up"></i>Hide details</small>'+
+							    '</a></p>'
+							);
+						}
 					}
 					
-					if (message.sequence < $(firstPreceding).find("ol > li").last().attr("value")) {
-						$(firstPreceding).find("ol > li")
-							.filter(function(i){ return $(this).attr("value") < message.sequence; })
-							.last()
-							.after(li);
-					}
-					else {
-						$(firstPreceding).find("ol").append(li);
-					}
-					
-					if (message.level=="ERROR") {
-						$(firstPreceding).removeClass("message-warn");
-						$(firstPreceding).addClass("message-error");
+					if (shouldNest) {
+						$(firstPreceding).children("div").children("ol").prepend(li);
 						
-					} else if (message.level=="WARNING" && !$(firstPreceding).hasClass("message-error")) {
-						$(firstPreceding).addClass("message-warn");
+					} else {
+						$(firstPreceding).after(li);
 					}
 				}
 			}
@@ -293,6 +287,10 @@
 			$("#message-list-loading").hide();
 		};
 		
+		Notifications.listen("job-unavailable-@uiJob", function(message){
+			$("#detailed-log").hide();
+			$("#status-unavailable").show();
+		});
 		Notifications.listen("job-message-@uiJob", addMessage);
 		Notifications.listen("job-status-@uiJob", function(status){
 			$(".statusbox").hide();
@@ -414,28 +412,43 @@
 				$("#engine-id").html(job.webuiJob.engineId);
 				$("#header-nicename, #nicename").html(job.webuiJob.nicename);
 				$("#scriptid").html(job.webuiJob.scriptId);
-				$("#scriptname").html(job.webuiJob.scriptName);
+				$("#scriptname").html(job.webuiJob.scriptName).show();
 				$("#username").html(job.webuiJob.userNicename);
 				$("#userid").html(job.webuiJob.user < 0 ? job.webuiJob.user : "&nbsp;");
 				
 				$(".statusbox").hide();
 				$("#status-"+job.webuiJob.status.toLowerCase()).show();
-				
-				$("#message-list > li").remove();
-				if (job.engineJob.messages instanceof Array) {
-					for (var m = 0; m < job.engineJob.messages.length; m++) {
-						addMessage(job.engineJob.messages[m]);
-					}
-				}
-				
-				$("#arguments").html(argumentsToHtml(job.engineJob.arguments));
+			}
+		});
+		$.ajax({
+			url: "@routes.Jobs.getEngineJobJson(uiJob)?"+new Date().getTime(),
+			error: function(jqXHR, textStatus, errorThrown) {
+				// error; too bad :(
+			},
+			success: function(job, textStatus, jqXHR) {
+				// updating page contents dynamically...
+				$("#scriptdesc").html(": "+job.engineJob.script.description).show();
 				
 				if (job.jobAvailableInEngine) {
-					$("#engine-id").html(job.engineJob.id);
+					if (typeof job.engineJob === "object") {
+						$("#message-list > li").remove();
+						if (job.engineJob.messages instanceof Array) {
+							for (var m = 0; m < job.engineJob.messages.length; m++) {
+								addMessage(job.engineJob.messages[m]);
+							}
+						}
+						
+						$("#engine-id").html(job.engineJob.id);
+						
+						$("#arguments").html(argumentsToHtml(job.engineJob.arguments));
+					}
+				
+					$("#detailed-log").show();
+					$("#status-unavailable").hide();
 					updateResults(job.results);
 					
 				} else {
-					$("#execution-log").hide();
+					$("#detailed-log").hide();
 					$("#status-unavailable").show();
 				}
 			}

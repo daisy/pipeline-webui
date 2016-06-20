@@ -82,7 +82,6 @@
 	});
 	@if(controllers.Application.debug){
 		$(function(){Notifications.debug=true;DP2Forms.debug=true;});
-		if (typeof console === "object") console.log("browser id", @flash().get("browserId"));
 	}
 	</script>
   </head>
@@ -164,9 +163,25 @@
 	</div>
 	
 	<div class="container">
-   	
+		
+		@if(flash.contains("error")) {
+		    <div role="alert" class="alert alert-error">
+		    	<a class="close" data-dismiss="alert">&times;</a>
+		        @flash.get("error")
+		    </div>
+		    <br/>
+		}
+		
+		@if(flash.contains("success")) {
+		    <div role="alert" class="alert alert-success">
+		    	<a class="close" data-dismiss="alert">&times;</a>
+		        @flash.get("success")
+		    </div>
+		    <br/>
+		}
+   		
 		@content
-	
+		
 	</div>
 	
 	<!-- Scripts -->

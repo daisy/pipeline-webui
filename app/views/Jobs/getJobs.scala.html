@@ -139,7 +139,7 @@ addJob = function(job) {
 	html += '    </td>'+"\n";
 	@if(Controller.flash("showOwner")=="true"){
 		html += '    <td data-sortvalue="'+job.userNicename.replace(/[^a-zA-Z0-9 _-]/g,"").toLowerCase()+'">'+"\n";
-		html += '        '+job.userNicename.replace(/[^a-zA-Z0-9 _-]/g,"")+'<br/>'+"\n";
+		html += '        '+job.userNicename.replace(/[<>]/g,"")+'<br/>'+"\n";
 		if (job.user < 0) {
 			html += '        <small class="muted">#'+(-job.user)+'</small>'+"\n";
 		}
