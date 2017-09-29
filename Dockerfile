@@ -2,6 +2,8 @@
 FROM java as builder
 ADD . /usr/src/webui
 WORKDIR /usr/src/webui
+# use the sbt docker plugin to create the artifacts
+# (http://www.scala-sbt.org/sbt-native-packager/formats/docker.html)
 RUN ./activator clean docker:stage
 # the webui expects the db under data/db
 WORKDIR /usr/src/webui/target/docker/stage/opt/docker
