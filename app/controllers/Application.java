@@ -30,7 +30,7 @@ public class Application extends Controller {
 		String os = System.getProperty("os.name");
 		String home = System.getProperty("user.home");
 		
-		String dp2endpoint = System.getenv("DP2ENDPOINT");
+		String dp2endpoint = System.getenv("DAISY_PIPELINE2_URL");
 		if (dp2endpoint == null || "".equals(dp2endpoint)) {
 			DEFAULT_DP2_ENDPOINT = "http://localhost:8181/ws";
 		} else {
