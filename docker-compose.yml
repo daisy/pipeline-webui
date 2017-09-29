@@ -1,0 +1,15 @@
+version: "3"
+services:
+  pipeline:
+    image: daisyorg/pipeline2
+    environment:
+      PIPELINE2_AUTH: "false"
+      PIPELINE2_LOCAL: "false"
+    expose:
+      - "8181"
+  webui:
+    image: daisyorg/webui
+    ports:
+      - "9000:9000"
+    depends_on:
+      - pipeline
