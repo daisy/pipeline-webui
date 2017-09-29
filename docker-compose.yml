@@ -5,8 +5,6 @@ services:
     environment:
       PIPELINE2_AUTH: "false"
       PIPELINE2_LOCAL: "false"
-    expose:
-      - "8181"
   webui:
     image: daisyorg/webui
     ports:
