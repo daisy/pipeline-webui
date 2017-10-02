@@ -8,7 +8,7 @@ services:
   webui:
     image: daisyorg/webui
     environment:
-      DP2ENDPOINT: http://pipeline:8181/ws
+      DAISY_PIPELINE2_URL: http://pipeline:8181/ws
     ports:
       - "9000:9000"
     depends_on:
