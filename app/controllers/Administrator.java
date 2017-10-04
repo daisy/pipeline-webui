@@ -128,6 +128,8 @@ public class Administrator extends Controller {
 			Setting.set("dp2ws.authid", filledForm.field("authid").valueOr(""));
 			if (Setting.get("dp2ws.secret") == null || !"".equals(filledForm.field("secret").value()))
 				Setting.set("dp2ws.secret", filledForm.field("secret").valueOr(""));
+			Application.ws.setEndpoint(Setting.get("dp2ws.endpoint"));
+			Application.ws.setCredentials(Setting.get("dp2ws.authid"), Setting.get("dp2ws.secret"));
 		}
 
 		public String getEndpoint() {
