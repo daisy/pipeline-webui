@@ -5,6 +5,7 @@ services:
     environment:
       PIPELINE2_AUTH: "false"
       PIPELINE2_LOCAL: "false"
+      PIPELINE2_HOST: "pipeline"
   webui:
     image: daisyorg/webui
     environment:
