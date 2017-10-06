@@ -12,5 +12,10 @@ services:
       DAISY_PIPELINE2_URL: http://pipeline:8181/ws
     ports:
       - "9000:9000"
+    volumes:
+      - "webui-data:/opt/pipeline2-webui/data"
     depends_on:
       - pipeline
+
+volumes:
+  webui-data:
