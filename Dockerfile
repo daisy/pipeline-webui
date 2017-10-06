@@ -1,5 +1,11 @@
 # Build the webui
 FROM java as builder
+
+# Uncomment the following during development to reduce build time
+#RUN apt install git && \
+#    cd /tmp && git clone https://github.com/daisy/pipeline-webui && \
+#    cd /tmp/pipeline-webui && ./activator publish-local
+
 ADD . /usr/src/webui
 WORKDIR /usr/src/webui
 # use the sbt docker plugin to create the artifacts
