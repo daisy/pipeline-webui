@@ -1,4 +1,4 @@
-version: "3"
+version: "2.1"
 services:
   pipeline:
     image: daisyorg/pipeline2
@@ -15,7 +15,8 @@ services:
     volumes:
       - "webui-data:/opt/pipeline2-webui/data"
     depends_on:
-      - pipeline
+      pipeline:
+        condition: service_healthy
 
 volumes:
   webui-data:
