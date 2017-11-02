@@ -3,9 +3,9 @@ services:
   pipeline:
     image: daisyorg/pipeline2
     environment:
-      PIPELINE2_AUTH: "false"
-      PIPELINE2_LOCAL: "false"
-      PIPELINE2_HOST: "pipeline"
+      PIPELINE2_WS_AUTHENTICATION: "false"
+      PIPELINE2_WS_LOCALFS: "false"
+      PIPELINE2_WS_HOST: "pipeline"
   webui:
     image: daisyorg/webui
     environment:
