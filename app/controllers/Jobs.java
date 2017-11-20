@@ -532,6 +532,17 @@ public class Jobs extends Controller {
 								Notification notification = new Notification("job-message-"+webuiJob.getId(), message);
 								NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
 							}
+							
+							Map<String,String> progressMap = new HashMap<String,String>();
+							progressMap.put("from", job.getProgressFrom()+"");
+							progressMap.put("to", job.getProgressTo()+"");
+							double estimate = job.getProgressEstimate();
+							if (estimate < job.getProgressFrom() || estimate >= job.getProgressTo()) {
+								estimate = job.getProgressFrom(); // for some reason there's an error in the calculation (probably due to timestamps or similar); use "from" as estimate instead
+							}
+							progressMap.put("estimate", estimate+"");
+							Notification notification = new Notification("job-progress-"+webuiJob.getId(), progressMap);
+							NotificationConnection.pushJobNotification(webuiJob.getUser(), notification);
 						}
 					}
 				},
@@ -770,6 +781,7 @@ public class Jobs extends Controller {
 		job.pushNotifications();
 		
 		if (user.getId() < 0 && scriptForm.guestEmail != null && scriptForm.guestEmail.length() > 0) {
+			scriptForm.guestEmail = scriptForm.guestEmail.toLowerCase();
 			String jobUrl = Application.absoluteURL(routes.Jobs.getJob(job.getId()).absoluteURL(request())+"?guestid="+(models.User.parseUserId(session())!=null?-models.User.parseUserId(session()):""));
 			String html = views.html.Account.emailJobCreated.render(jobUrl, job.getNicename()).body();
 			String text = "To view your Pipeline 2 job, go to this web address: " + jobUrl;
