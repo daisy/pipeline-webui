@@ -13,7 +13,7 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - "webui-data:/opt/pipeline2-webui/data"
+      - "webui-data:/opt/daisy-pipeline2-webui/data"
     depends_on:
       pipeline:
         condition: service_healthy
