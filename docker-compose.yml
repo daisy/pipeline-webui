@@ -4,7 +4,6 @@ services:
     image: daisyorg/pipeline-assembly
     environment:
       PIPELINE2_WS_AUTHENTICATION: "false"
-      PIPELINE2_WS_LOCALFS: "false"
       PIPELINE2_WS_HOST: "pipeline"
   webui:
     image: daisyorg/pipeline-webui
