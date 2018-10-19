@@ -75,8 +75,6 @@ public class Scripts extends Controller {
 			    "boolean".equals(type) ||
 			    "integer".equals(type) ||
 			    "string".equals(type) ||
-			    "xs:anyDirURI".equals(type) ||
-			    "xs:anyFileURI".equals(type) ||
 			    "xs:anyURI".equals(type) ||
 			    "xs:boolean".equals(type) ||
 			    "xs:integer".equals(type) ||
