@@ -6,7 +6,7 @@ import com.typesafe.sbt.packager.windows.WixHelper
 
 organization := "org.daisy.pipeline"
 name := "webui"
-version := "2.6.2-SNAPSHOT"
+version := "2.6.2"
 
 organizationName := "The DAISY Consortium"
 organizationHomepage := Some(url("http://daisy.org"))
