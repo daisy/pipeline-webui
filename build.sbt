@@ -189,6 +189,7 @@ libraryDependencies ++= Seq(
   "org.hibernate" % "hibernate-entitymanager" % "4.3.10.Final",
   "org.avaje.ebeanorm" % "avaje-ebeanorm-api" % "3.1.1",
   "org.apache.derby" % "derby" % "10.11.1.1",
+  "mysql" % "mysql-connector-java" % "8.0.15",
   "org.daisy.pipeline" % "clientlib-java" % "4.8.1",
   "org.daisy.pipeline" % "clientlib-java-httpclient" % "2.0.2",
   "org.apache.commons" % "commons-compress" % "1.9",

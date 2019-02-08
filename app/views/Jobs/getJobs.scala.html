@@ -118,7 +118,7 @@ addJob = function(job) {
 	html = '<tr id="job-'+job.id+'" class="job '+statusClass+'" data-user="'+job.user+'"'+(!visible?' style="display:none;"':'')+'>'+"\n";
 	html += '    <td id="job-status-'+job.id+'" data-sortvalue="'+sortableStatus+'">'+statusText+'</td>'+"\n";
 	html += '    <td id="job-script-'+job.id+'" data-sortvalue="'+job.scriptName.replace(/[^a-zA-Z0-9 _-]/g,"").toLowerCase()+'">'+(typeof job.scriptName === "string" ? job.scriptName : "Unknown")+'</td>'+"\n";
-	html += '    <td id="job-name-'+job.id+'" data-sortvalue="'+job.nicename.replace(/[^a-zA-Z0-9 _-]/g,"").toLowerCase()+'">'+"\n";
+	html += '    <td id="job-name-'+job.id+'" data-sortvalue="'+(job.nicename+"").replace(/[^a-zA-Z0-9 _-]/g,"").toLowerCase()+'">'+"\n";
 	html += '        <a href="@routes.Jobs.getJobs()/'+job.id+'">'+job.nicename+'<br/>'+"\n";
 	html += '            <small class="muted">'+job.id+'</small>'+"\n";
 	html += '        </a>'+"\n";

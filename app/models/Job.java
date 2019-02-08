@@ -11,10 +11,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Transient;
+import javax.persistence.*;
 
 import org.daisy.pipeline.client.Pipeline2Exception;
 import org.daisy.pipeline.client.Pipeline2Logger;
@@ -94,11 +91,19 @@ public class Job extends Model implements Comparable<Job> {
 
 	// -- Queries
 
-	public static Model.Finder<Long,Job> find = new Model.Finder<Long, Job>(Job.class);
+    @Transient
+	public static Model.Finder<String,Job> _find = null;
+    
+    public static Model.Finder<String,Job> find() {
+        if (Job._find == null) {
+            Job._find = new Model.Finder<String, Job>(Setting.ebeanServer(), Job.class);
+        }
+        return Job._find;
+    }
 	
 	/** Retrieve a Job by its id. */
 	public static Job findById(Long id) {
-		Job job = find.where().eq("id", id).ne("status", "TEMPLATE").findUnique();
+		Job job = find().where().eq("id", id).ne("status", "TEMPLATE").findUnique();
 		if (job != null) {
 			lastAccessed.put(id, new Date());
 			User user = User.findById(job.getUser());
@@ -114,7 +119,7 @@ public class Job extends Model implements Comparable<Job> {
 
 	/** Retrieve a Job by its engine id. */
 	public static Job findByEngineId(String id) {
-		Job job = find.where().eq("engine_id", id).ne("status", "TEMPLATE").findUnique();
+		Job job = find().where().eq("engine_id", id).ne("status", "TEMPLATE").findUnique();
 		if (job != null) {
 			User user = User.findById(job.getUser());
 			if (user != null)
@@ -335,7 +340,7 @@ public class Job extends Model implements Comparable<Job> {
 		}
 		asJob().getJobStorage().delete();
 		lastAccessed.remove(id);
-		super.delete();
+		db(Setting.ebeanServer()).delete(this);
 		return true;
 	}
 	
@@ -352,15 +357,15 @@ public class Job extends Model implements Comparable<Job> {
 	@Override
 	public void save() {
 		synchronized (this) {
-			super.save();
+			db(Setting.ebeanServer()).save(this);
 			
 			if (id == null) {
-				id = (Long) Job.find.orderBy("id desc").findIds().get(0);
-				if (nicename == null) {
-					nicename = "Job #"+id;
-				}
-				super.save();
+				id = (Long) Job.find().orderBy("id desc").findIds().get(0);
 			}
+			if (nicename == null) {
+				nicename = "Job #"+id;
+			}
+			db(Setting.ebeanServer()).save(this);
 			refresh();
 			
 			// save to job storage as well
@@ -371,6 +376,21 @@ public class Job extends Model implements Comparable<Job> {
 			}
 		}
 	}
+	
+	@Override
+    public void update() {
+    	db(Setting.ebeanServer()).update(this);
+    }
+    
+	@Override
+    public void insert() {
+    	db(Setting.ebeanServer()).insert(this);
+    }
+    
+	@Override
+    public void refresh() {
+    	db(Setting.ebeanServer()).refresh(this);
+    }
 
 	private void jobUpdateHelper() {
 		engineId = clientlibJob.getId();
