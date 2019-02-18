@@ -74,9 +74,9 @@ jobStatusText = function(string) {
 
 jobStatusClass = function(string) {
 	if (typeof string === "string") {
-		if (string === "DONE") {
+		if (string === "SUCCESS") {
 			return "success";
-		} else if (string === "ERROR" || string === "VALIDATION_FAIL") {
+		} else if (string === "ERROR" || string === "FAIL") {
 			return "error";
 		} else if (string === "RUNNING") {
 			return "info";
@@ -103,13 +103,13 @@ addJob = function(job) {
 		case "running":
 			sortableStatus = "2";
 			break;
-		case "done":
+		case "success":
 			sortableStatus = "3";
 			break;
 		case "error":
 			sortableStatus = "4";
 			break;
-		case "validation_fail":
+		case "fail":
 			sortableStatus = "5";
 			break;
 	}
@@ -124,11 +124,11 @@ addJob = function(job) {
 	html += '        </a>'+"\n";
 	html += '    </td>'+"\n";
 	/*html += '    <td id="job-results-'+job.id+'">'+"\n";
-	if (job.status==="DONE" || job.status==="VALIDATION_FAIL") {
+	if (job.status==="SUCCESS" || job.status==="FAIL") {
 		html += '        <span><a class="btn btn-mini btn-success" href="#"><i class="icon-download-alt icon-white"></i> Download</a></span>'+"\n";
 		//if (job.results!==null) {
 		//	for (i = 0; i < job.results.results.length; i++) {
-		//		html += '        <span><a class="btn btn-mini btn-'+(job.status==="DONE"?'success':'error')+'" href="'+'@routes.Jobs.getResult(-1L,"")'.replace('-1',job.id)+job.results.results[i].name+'"><i class="icon-download-alt icon-white"></i> Download</a></span>'+"\n";
+		//		html += '        <span><a class="btn btn-mini btn-'+(job.status==="SUCCESS"?'success':'error')+'" href="'+'@routes.Jobs.getResult(-1L,"")'.replace('-1',job.id)+job.results.results[i].name+'"><i class="icon-download-alt icon-white"></i> Download</a></span>'+"\n";
 		//	}
 		//}
 	}
@@ -201,7 +201,7 @@ addJob = function(job) {
 		var statusClass = jobStatusClass(status);
 		$("#job-status-"+id).html(statusText);
 		$("#job-"+id).attr("class", "job "+statusClass);
-		/*if (status==="DONE" || status==="VALIDATION_FAIL") {
+		/*if (status==="SUCCESS" || status==="FAIL") {
 			//$("#job-results-"+id).html(' <span><a class="btn btn-mini btn-success" href="'+'@@routes.Jobs.getResult(-1L,"")'.replace('-1',id)+'"><i class="icon-download-alt icon-white"></i> Download</a></span>');
 			$("#job-results-"+id).html(' <span><a class="btn btn-mini btn-success" href="#"><i class="icon-download-alt icon-white"></i> Download</a></span>');
 		}*/
