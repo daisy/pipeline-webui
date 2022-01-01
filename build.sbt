@@ -193,9 +193,7 @@ libraryDependencies ++= Seq(
   "org.daisy.pipeline" % "clientlib-java" % "5.0.0",
   "org.daisy.pipeline" % "clientlib-java-httpclient" % "2.1.1",
   "org.apache.commons" % "commons-compress" % "1.9",
-  "org.apache.commons" % "commons-email" % "1.4",
-  "log4j" % "log4j" % "1.2.17",
-  "log4j" % "apache-log4j-extras" % "1.2.17"
+  "org.apache.commons" % "commons-email" % "1.4"
 )
 
 scalacOptions += "-deprecation"
