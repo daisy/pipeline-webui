@@ -7,5 +7,8 @@ help :
 
 .PHONY : docker-image
 docker-image :
-	docker build -t "daisyorg/pipeline-webui:latest-snapshot" .
-	docker image push "daisyorg/pipeline-webui:latest-snapshot"
+	docker buildx create --use --name=mybuilder \
+	                     --driver docker-container \
+	                     --driver-opt image=moby/buildkit:buildx-stable-1
+	docker buildx build --platform linux/amd64,linux/arm64 -t daisyorg/pipeline-webui:latest-snapshot --push .
+	docker buildx rm mybuilder
